@@ -1,0 +1,567 @@
+{
+ "spec": {
+  "kind": "plate",
+  "units": "mm",
+  "source": {
+   "width": {
+    "page": 2,
+    "line": 2,
+    "section": "2 Geometry",
+    "text": "Overall size 150 x 90 mm.",
+    "match": "150 x 90 mm",
+    "span": [
+     13,
+     24
+    ]
+   },
+   "height": {
+    "page": 2,
+    "line": 2,
+    "section": "2 Geometry",
+    "text": "Overall size 150 x 90 mm.",
+    "match": "150 x 90 mm",
+    "span": [
+     13,
+     24
+    ]
+   },
+   "thickness": {
+    "page": 2,
+    "line": 3,
+    "section": "2 Geometry",
+    "text": "Thickness 5 mm.",
+    "match": "Thickness 5 mm",
+    "span": [
+     0,
+     14
+    ]
+   },
+   "material": {
+    "page": 2,
+    "line": 8,
+    "section": "3 Holes",
+    "text": "Material: S355",
+    "match": "Material: S355",
+    "span": [
+     0,
+     14
+    ]
+   }
+  },
+  "width": 150.0,
+  "height": 90.0,
+  "thickness": 5.0,
+  "material": "S355",
+  "holes": [
+   {
+    "pattern": "corners",
+    "diameter": 9.0,
+    "edge_offset": 15.0,
+    "source": {
+     "hole_diameter": {
+      "page": 2,
+      "line": 5,
+      "section": "3 Holes",
+      "text": "Four through holes, diameter 9 mm, located at each corner,",
+      "match": "diameter 9 mm",
+      "span": [
+       20,
+       33
+      ]
+     },
+     "edge_offset": {
+      "page": 2,
+      "line": 6,
+      "section": "3 Holes",
+      "text": "15 mm from the adjacent edges.",
+      "match": "15 mm from the adjacent edges",
+      "span": [
+       0,
+       29
+      ]
+     },
+     "hole_pattern": {
+      "page": 2,
+      "line": 5,
+      "section": "3 Holes",
+      "text": "Four through holes, diameter 9 mm, located at each corner,",
+      "match": "each corner",
+      "span": [
+       46,
+       57
+      ]
+     }
+    }
+   }
+  ],
+  "dimensions": "full",
+  "name": "C_bracket_spec"
+ },
+ "traceability": {
+  "width": [
+   {
+    "page": 2,
+    "line": 2,
+    "section": "2 Geometry",
+    "text": "Overall size 150 x 90 mm.",
+    "match": "150 x 90 mm",
+    "span": [
+     13,
+     24
+    ]
+   }
+  ],
+  "height": [
+   {
+    "page": 2,
+    "line": 2,
+    "section": "2 Geometry",
+    "text": "Overall size 150 x 90 mm.",
+    "match": "150 x 90 mm",
+    "span": [
+     13,
+     24
+    ]
+   }
+  ],
+  "thickness": [
+   {
+    "page": 2,
+    "line": 3,
+    "section": "2 Geometry",
+    "text": "Thickness 5 mm.",
+    "match": "Thickness 5 mm",
+    "span": [
+     0,
+     14
+    ]
+   }
+  ],
+  "material": [
+   {
+    "page": 2,
+    "line": 8,
+    "section": "3 Holes",
+    "text": "Material: S355",
+    "match": "Material: S355",
+    "span": [
+     0,
+     14
+    ]
+   }
+  ],
+  "units": [
+   {
+    "page": 1,
+    "line": 4,
+    "section": "1 Scope",
+    "text": "All dimensions are in mm.",
+    "match": "All dimensions are in mm",
+    "span": [
+     0,
+     24
+    ]
+   }
+  ],
+  "hole_diameter": [
+   {
+    "page": 2,
+    "line": 5,
+    "section": "3 Holes",
+    "text": "Four through holes, diameter 9 mm, located at each corner,",
+    "match": "diameter 9 mm",
+    "span": [
+     20,
+     33
+    ]
+   }
+  ],
+  "hole_count": [
+   {
+    "page": 2,
+    "line": 5,
+    "section": "3 Holes",
+    "text": "Four through holes, diameter 9 mm, located at each corner,",
+    "match": "Four through holes",
+    "span": [
+     0,
+     18
+    ]
+   }
+  ],
+  "hole_pattern": [
+   {
+    "page": 2,
+    "line": 5,
+    "section": "3 Holes",
+    "text": "Four through holes, diameter 9 mm, located at each corner,",
+    "match": "each corner",
+    "span": [
+     46,
+     57
+    ]
+   }
+  ],
+  "edge_offset": [
+   {
+    "page": 2,
+    "line": 6,
+    "section": "3 Holes",
+    "text": "15 mm from the adjacent edges.",
+    "match": "15 mm from the adjacent edges",
+    "span": [
+     0,
+     29
+    ]
+   }
+  ]
+ },
+ "verification": [
+  {
+   "requirement": "outline",
+   "status": "pass",
+   "expected": {
+    "width": 150.0,
+    "height": 90.0
+   },
+   "actual": {
+    "width": 150.0,
+    "height": 90.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": {
+    "page": 2,
+    "line": 2,
+    "section": "2 Geometry",
+    "text": "Overall size 150 x 90 mm.",
+    "match": "150 x 90 mm",
+    "span": [
+     13,
+     24
+    ]
+   }
+  },
+  {
+   "requirement": "hole.bl",
+   "status": "pass",
+   "expected": {
+    "center": [
+     15.0,
+     15.0
+    ],
+    "diameter": 9.0
+   },
+   "actual": {
+    "center": [
+     15.0,
+     15.0
+    ],
+    "diameter": 9.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": {
+    "hole_diameter": {
+     "page": 2,
+     "line": 5,
+     "section": "3 Holes",
+     "text": "Four through holes, diameter 9 mm, located at each corner,",
+     "match": "diameter 9 mm",
+     "span": [
+      20,
+      33
+     ]
+    },
+    "edge_offset": {
+     "page": 2,
+     "line": 6,
+     "section": "3 Holes",
+     "text": "15 mm from the adjacent edges.",
+     "match": "15 mm from the adjacent edges",
+     "span": [
+      0,
+      29
+     ]
+    },
+    "hole_pattern": {
+     "page": 2,
+     "line": 5,
+     "section": "3 Holes",
+     "text": "Four through holes, diameter 9 mm, located at each corner,",
+     "match": "each corner",
+     "span": [
+      46,
+      57
+     ]
+    }
+   }
+  },
+  {
+   "requirement": "hole.br",
+   "status": "pass",
+   "expected": {
+    "center": [
+     135.0,
+     15.0
+    ],
+    "diameter": 9.0
+   },
+   "actual": {
+    "center": [
+     135.0,
+     15.0
+    ],
+    "diameter": 9.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": {
+    "hole_diameter": {
+     "page": 2,
+     "line": 5,
+     "section": "3 Holes",
+     "text": "Four through holes, diameter 9 mm, located at each corner,",
+     "match": "diameter 9 mm",
+     "span": [
+      20,
+      33
+     ]
+    },
+    "edge_offset": {
+     "page": 2,
+     "line": 6,
+     "section": "3 Holes",
+     "text": "15 mm from the adjacent edges.",
+     "match": "15 mm from the adjacent edges",
+     "span": [
+      0,
+      29
+     ]
+    },
+    "hole_pattern": {
+     "page": 2,
+     "line": 5,
+     "section": "3 Holes",
+     "text": "Four through holes, diameter 9 mm, located at each corner,",
+     "match": "each corner",
+     "span": [
+      46,
+      57
+     ]
+    }
+   }
+  },
+  {
+   "requirement": "hole.tr",
+   "status": "pass",
+   "expected": {
+    "center": [
+     135.0,
+     75.0
+    ],
+    "diameter": 9.0
+   },
+   "actual": {
+    "center": [
+     135.0,
+     75.0
+    ],
+    "diameter": 9.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": {
+    "hole_diameter": {
+     "page": 2,
+     "line": 5,
+     "section": "3 Holes",
+     "text": "Four through holes, diameter 9 mm, located at each corner,",
+     "match": "diameter 9 mm",
+     "span": [
+      20,
+      33
+     ]
+    },
+    "edge_offset": {
+     "page": 2,
+     "line": 6,
+     "section": "3 Holes",
+     "text": "15 mm from the adjacent edges.",
+     "match": "15 mm from the adjacent edges",
+     "span": [
+      0,
+      29
+     ]
+    },
+    "hole_pattern": {
+     "page": 2,
+     "line": 5,
+     "section": "3 Holes",
+     "text": "Four through holes, diameter 9 mm, located at each corner,",
+     "match": "each corner",
+     "span": [
+      46,
+      57
+     ]
+    }
+   }
+  },
+  {
+   "requirement": "hole.tl",
+   "status": "pass",
+   "expected": {
+    "center": [
+     15.0,
+     75.0
+    ],
+    "diameter": 9.0
+   },
+   "actual": {
+    "center": [
+     15.0,
+     75.0
+    ],
+    "diameter": 9.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": {
+    "hole_diameter": {
+     "page": 2,
+     "line": 5,
+     "section": "3 Holes",
+     "text": "Four through holes, diameter 9 mm, located at each corner,",
+     "match": "diameter 9 mm",
+     "span": [
+      20,
+      33
+     ]
+    },
+    "edge_offset": {
+     "page": 2,
+     "line": 6,
+     "section": "3 Holes",
+     "text": "15 mm from the adjacent edges.",
+     "match": "15 mm from the adjacent edges",
+     "span": [
+      0,
+      29
+     ]
+    },
+    "hole_pattern": {
+     "page": 2,
+     "line": 5,
+     "section": "3 Holes",
+     "text": "Four through holes, diameter 9 mm, located at each corner,",
+     "match": "each corner",
+     "span": [
+      46,
+      57
+     ]
+    }
+   }
+  },
+  {
+   "requirement": "hole_count",
+   "status": "pass",
+   "expected": 4,
+   "actual": 4,
+   "deviation": 0.0,
+   "tolerance": 0,
+   "document_source": null
+  },
+  {
+   "requirement": "hole_count.d9",
+   "status": "pass",
+   "expected": 4,
+   "actual": 4,
+   "deviation": 0.0,
+   "tolerance": 0,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.width",
+   "status": "pass",
+   "expected": 150.0,
+   "actual": 150.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.height",
+   "status": "pass",
+   "expected": 90.0,
+   "actual": 90.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.holes0.dia",
+   "status": "pass",
+   "expected": 9.0,
+   "actual": 9.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.holes0.x",
+   "status": "pass",
+   "expected": 15.0,
+   "actual": 15.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.holes0.y",
+   "status": "pass",
+   "expected": 15.0,
+   "actual": 15.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.holes0.pitch_x",
+   "status": "pass",
+   "expected": 120.0,
+   "actual": 120.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.holes0.pitch_y",
+   "status": "pass",
+   "expected": 60.0,
+   "actual": 60.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "material",
+   "status": "pass",
+   "expected": "S355",
+   "actual": 1,
+   "deviation": null,
+   "tolerance": 0,
+   "document_source": {
+    "page": 2,
+    "line": 8,
+    "section": "3 Holes",
+    "text": "Material: S355",
+    "match": "Material: S355",
+    "span": [
+     0,
+     14
+    ]
+   }
+  }
+ ],
+ "issues": []
+}

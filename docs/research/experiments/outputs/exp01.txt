@@ -1,0 +1,36 @@
+ezdxf 1.4.5 | new() acadver: AC1024 R2010
+header defaults: $INSUNITS= 6 $MEASUREMENT= 1 $LUNITS= 2 $AUNITS= 0 $ANGBASE= 0.0 $ANGDIR= 0 $DIMASSOC= 2 $MIRRTEXT= 1
+doc.units = 6
+handles before save: {'line': '8B', 'circle': '8C', 'arc': '8D', 'arc2': '8E', 'lwpoly': '8F', 'text': '90', 'mtext': '91', 'dimlin': '92', 'dimrad': 'A1'}
+$HANDSEED before save: 100
+arc dxf angles as stored: -90.0 450.0 | 370.0 10.0
+dimlin: geometry block = *D1  actual_measurement(42) = None  get_measurement() = 100.0
+dimrad: geometry block = *D2  42 = None
+bulge_to_arc(start=(0,0), end=(10,0), bulge=1) -> center=(5.0, 0.0), start_angle(rad)=3.141593, end_angle(rad)=0.000000, r=5.0
+saved exp01_r2010.dxf size 47112 bytes; $HANDSEED after save: AE
+reload line    handle   8B -> LINE
+reload circle  handle   8C -> CIRCLE
+reload arc     handle   8D -> ARC
+reload arc2    handle   8E -> ARC
+reload lwpoly  handle   8F -> LWPOLYLINE
+reload text    handle   90 -> TEXT
+reload mtext   handle   91 -> MTEXT
+reload dimlin  handle   92 -> DIMENSION
+reload dimrad  handle   A1 -> DIMENSION
+reloaded acadver: AC1024  $HANDSEED: AE  $INSUNITS: 6
+reloaded arc angles: -90.0 450.0
+reloaded dimlin 42: None  block: *D1  block exists: True  block entity types: ['INSERT', 'LINE', 'MTEXT', 'POINT']
+reloaded lwpoly points (x,y,sw,ew,bulge): [(np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(1.0)), (np.float64(10.0), np.float64(0.0), np.float64(0.0), np.float64(0.0), np.float64(0.0)), (np.float64(10.0), np.float64(10.0), np.float64(0.0), np.float64(0.0), np.float64(0.0))]  closed: False
+reloaded text: 'Hello \u4e2d\u6587'  insert: (5.0, 5.0, 0.0)  rotation: 30.0
+--- raw group codes for line (8B) ---
+  0:LINE | 5:8B | 330:17 | 100:AcDbEntity | 8:WALL | 100:AcDbLine | 10:0.0 | 20:0.0 | 30:0.0 | 11:100.0 | 21:0.0 | 31:0.0
+--- raw group codes for circle (8C) ---
+  0:CIRCLE | 5:8C | 330:17 | 100:AcDbEntity | 8:0 | 100:AcDbCircle | 10:50.0 | 20:50.0 | 30:0.0 | 40:25.0
+--- raw group codes for arc (8D) ---
+  0:ARC | 5:8D | 330:17 | 100:AcDbEntity | 8:0 | 100:AcDbCircle | 10:0.0 | 20:0.0 | 30:0.0 | 40:10.0 | 100:AcDbArc | 50:-90.0 | 51:450.0
+--- raw group codes for lwpoly (8F) ---
+  0:LWPOLYLINE | 5:8F | 330:17 | 100:AcDbEntity | 8:0 | 100:AcDbPolyline | 90:3 | 70:0 | 10:0.0 | 20:0.0 | 42:1.0 | 10:10.0 | 20:0.0 | 10:10.0 | 20:10.0
+--- raw group codes for text (90) ---
+  0:TEXT | 5:90 | 330:17 | 100:AcDbEntity | 8:0 | 100:AcDbText | 10:5.0 | 20:5.0 | 30:0.0 | 40:2.5 | 1:'Hello \u4e2d\u6587' | 50:30.0 | 11:5.0 | 21:5.0 | 31:0.0 | 100:AcDbText
+--- raw group codes for dimlin (92) ---
+  0:DIMENSION | 5:92 | 330:17 | 100:AcDbEntity | 8:0 | 100:AcDbDimension | 280:0 | 2:*D1 | 3:EZDXF | 10:0.0 | 20:-10.0 | 30:0.0 | 11:50.0 | 21:-9.775 | 31:0.0 | 70:32 | 71:5 | 1:'<>' | 100:AcDbAlignedDimension | 13:0.0 | 23:0.0 | 33:0.0 | 14:100.0 | 24:0.0 | 34:0.0 | 50:0.0 | 100:AcDbRotatedDimension

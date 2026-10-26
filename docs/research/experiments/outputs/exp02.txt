@@ -1,0 +1,40 @@
+[readfile missing] builtins.FileNotFoundError: [Errno 2] No such file or directory: 'out\\no_such.dxf'
+      MRO: ['FileNotFoundError', 'OSError', 'Exception', 'BaseException', 'object']
+[readfile garbage] builtins.OSError: File 'out\garbage.dxf' is not a DXF file.
+      MRO: ['OSError', 'Exception', 'BaseException', 'object']
+[readfile empty] builtins.OSError: File 'out\empty.dxf' is not a DXF file.
+      MRO: ['OSError', 'Exception', 'BaseException', 'object']
+[readfile trunc 30%] ezdxf.lldxf.const.DXFStructureError: DXFStructureError: missing ENDSEC tag.
+      MRO: ['DXFStructureError', 'DXFError', 'Exception', 'BaseException', 'object']
+[recover trunc 30%] OK -> recovered: ver=AC1024 msp_entities=0 types=[] auditor.errors=0 fixes=0 has_errors=False
+[readfile trunc 60%] ezdxf.lldxf.const.DXFStructureError: DXFStructureError: missing ENDSEC tag.
+      MRO: ['DXFStructureError', 'DXFError', 'Exception', 'BaseException', 'object']
+[recover trunc 60%] OK -> recovered: ver=AC1024 msp_entities=0 types=[] auditor.errors=0 fixes=0 has_errors=False
+[readfile trunc 95%] ezdxf.lldxf.const.DXFStructureError: DXFStructureError: missing ENDSEC tag.
+      MRO: ['DXFStructureError', 'DXFError', 'Exception', 'BaseException', 'object']
+[recover trunc 95%] OK -> recovered: ver=AC1024 msp_entities=9 types=['ARC', 'CIRCLE', 'DIMENSION', 'LINE', 'LWPOLYLINE', 'MTEXT', 'TEXT'] auditor.errors=0 fixes=0 has_errors=False
+[recover garbage] ezdxf.lldxf.const.DXFStructureError: Invalid group code "this is not a dxf file" at line 1.
+      MRO: ['DXFStructureError', 'DXFError', 'Exception', 'BaseException', 'object']
+[audit undefined layer] errors: 0 fixes: []
+   layer now in table?: False
+[layers.add('A<B')] ezdxf.lldxf.const.DXFValueError: Invalid value A<B for attribute "name" in entity LAYER(#None).
+      MRO: ['DXFValueError', 'DXFError', 'ValueError', 'Exception', 'BaseException', 'object']
+[is_valid_layer_name('A<B')] builtins.AttributeError: module 'ezdxf' has no attribute 'is_valid_layer_name'
+      MRO: ['AttributeError', 'Exception', 'BaseException', 'object']
+[add_line with layer 'A<B' (dxfattribs)] ezdxf.lldxf.const.DXFValueError: Invalid value A<B for attribute "layer" in entity LINE(#None).
+      MRO: ['DXFValueError', 'DXFError', 'ValueError', 'Exception', 'BaseException', 'object']
+[add_circle radius=-1] OK -> -1.0
+[add_circle radius=0] OK -> 0.0
+[add_line zero length] OK -> 32
+[add_line with NaN] OK -> (nan, 0.0, 0.0)
+section HEADER   starts at byte 18 (0%)
+section CLASSES  starts at byte 7137 (15%)
+section TABLES   starts at byte 7689 (16%)
+section BLOCKS   starts at byte 30881 (66%)
+section ENTITIES starts at byte 35221 (75%)
+section OBJECTS  starts at byte 36942 (78%)
+[readfile trunc mid-ENTITIES] ezdxf.lldxf.const.DXFStructureError: DXFStructureError: missing ENDSEC tag.
+      MRO: ['DXFStructureError', 'DXFError', 'Exception', 'BaseException', 'object']
+[recover trunc mid-ENTITIES] OK -> msp entities=0 handles=[] errors=0 fixes=0 objects-section dict ok=True
+entitydb has 8B (LINE)? False | entities in entitydb by type: ['LINE', 'LWPOLYLINE']
+modelspace block_record handle: 17

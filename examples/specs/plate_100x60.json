@@ -1,0 +1,10 @@
+{
+  "kind": "plate",
+  "units": "mm",
+  "name": "Mounting plate",
+  "width": 100,
+  "height": 60,
+  "holes": [{"pattern": "corners", "diameter": 8, "edge_offset": 10}],
+  "material": "Q235",
+  "thickness": 3
+}

@@ -1,0 +1,20 @@
+EZDXF dimstyle dimlfac= 100.0 | Standard dimlfac= 1
+aligned  : dimtype(70)=32 type&7=0 block=*D1 get_measurement()=50.0 42=None text(1)='<>'
+diameter : dimtype(70)=35 type&7=3 block=*D2 get_measurement()=20.0 42=None text(1)='<>'
+angular2l: dimtype(70)=34 type&7=2 block=*D3 get_measurement()=90.0 42=None text(1)='<>'
+override dim text(1): L=<> mm | XDATA ACAD (DSTYLE): [DXFTag(1000, 'DSTYLE'), DXFTag(1002, '{'), DXFTag(1070, 271), DXFTag(1070, 2), DXFTag(1002, '}')]
+rendered MTEXT inside dim block: 'L=1234.56 mm'
+after moving p2 (group 14) to x=50 without re-render: get_measurement()= 50.0  block text still: 'L=1234.56 mm'
+$DIMASSOC= 2 | dim reactors: None | ACAD_DIMASSOC objects: 0
+INSERT attribs: [('NO', 'A-01', (101.4142, 98.5858, 0.0))]
+virtual_entities (explode preview): ['ELLIPSE']
+[delete block in use] DXFBlockInUseError: Block "TAG" is still in use.
+[add_blockref undefined block] OK -> NOPE
+[delete layer in use (doc.layers.remove)] OK -> removed
+rotate90 then translate(5,0): line (5.0, 0.0, 0.0) (5.000000000000001, 10.0, 0.0)
+[non-uniform scale CIRCLE.transform(scale(2,1,1))] NonUniformScalingError: CIRCLE/ARC does not support non uniform scaling
+[CIRCLE.to_ellipse() then transform] OK -> ELLIPSE
+offset_vertices_2d square by 1 (closed): [(1.0, 1.0), (9.0, 1.0), (9.0, 9.0), (1.0, 9.0)]
+ezdxf has trim/extend/fillet API on entities?: False
+doc.units setter: 4 | $MEASUREMENT unchanged: 1
+ezdxf.units.conversion_factor(MM->IN): 0.039370078739999995

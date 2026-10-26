@@ -1,0 +1,242 @@
+{
+ "ok": false,
+ "tool": "revise_from_document",
+ "error": {
+  "code": "SPEC_CONFLICT",
+  "category": "spec",
+  "message": "Document requirements are conflict: Contradictory values for width: ['100.0', '110.0']",
+  "entities": [],
+  "retryable": false,
+  "partial_changes": false,
+  "hint": "Resolve via 'overrides' (recorded as caller decisions) or fix the document",
+  "details": {
+   "issues": [
+    {
+     "code": "SPEC_CONFLICT",
+     "severity": "error",
+     "field": "width",
+     "message": "Contradictory values for width: ['100.0', '110.0']",
+     "sources": [
+      {
+       "page": 1,
+       "line": 5,
+       "section": "2. Outline",
+       "text": "The plate is 100 x 60 mm.",
+       "match": "100 x 60 mm",
+       "span": [
+        13,
+        24
+       ]
+      },
+      {
+       "page": 1,
+       "line": 7,
+       "section": "3. Revision note",
+       "text": "Width: 110 mm",
+       "match": "Width: 110 mm",
+       "span": [
+        0,
+        13
+       ]
+      }
+     ]
+    }
+   ],
+   "facts": [
+    {
+     "field": "units",
+     "value": "mm",
+     "unit": null,
+     "source": {
+      "page": 1,
+      "line": 3,
+      "section": "1. General",
+      "text": "All dimensions are in mm.",
+      "match": "All dimensions are in mm",
+      "span": [
+       0,
+       24
+      ]
+     }
+    },
+    {
+     "field": "width",
+     "value": 100.0,
+     "unit": "mm",
+     "source": {
+      "page": 1,
+      "line": 5,
+      "section": "2. Outline",
+      "text": "The plate is 100 x 60 mm.",
+      "match": "100 x 60 mm",
+      "span": [
+       13,
+       24
+      ]
+     }
+    },
+    {
+     "field": "height",
+     "value": 60.0,
+     "unit": "mm",
+     "source": {
+      "page": 1,
+      "line": 5,
+      "section": "2. Outline",
+      "text": "The plate is 100 x 60 mm.",
+      "match": "100 x 60 mm",
+      "span": [
+       13,
+       24
+      ]
+     }
+    },
+    {
+     "field": "width",
+     "value": 110.0,
+     "unit": "mm",
+     "source": {
+      "page": 1,
+      "line": 7,
+      "section": "3. Revision note",
+      "text": "Width: 110 mm",
+      "match": "Width: 110 mm",
+      "span": [
+       0,
+       13
+      ]
+     }
+    },
+    {
+     "field": "hole_diameter",
+     "value": 8.0,
+     "unit": "mm",
+     "source": {
+      "page": 1,
+      "line": 9,
+      "section": "4. Holes",
+      "text": "Four holes, diameter 8 mm, one at each corner, 10 mm from the adjacent edges.",
+      "match": "diameter 8 mm",
+      "span": [
+       12,
+       25
+      ]
+     }
+    },
+    {
+     "field": "edge_offset",
+     "value": 10.0,
+     "unit": "mm",
+     "source": {
+      "page": 1,
+      "line": 9,
+      "section": "4. Holes",
+      "text": "Four holes, diameter 8 mm, one at each corner, 10 mm from the adjacent edges.",
+      "match": "10 mm from the adjacent edges",
+      "span": [
+       47,
+       76
+      ]
+     }
+    },
+    {
+     "field": "hole_count",
+     "value": 4,
+     "unit": null,
+     "source": {
+      "page": 1,
+      "line": 9,
+      "section": "4. Holes",
+      "text": "Four holes, diameter 8 mm, one at each corner, 10 mm from the adjacent edges.",
+      "match": "Four holes",
+      "span": [
+       0,
+       10
+      ]
+     }
+    },
+    {
+     "field": "hole_pattern",
+     "value": "corners",
+     "unit": null,
+     "source": {
+      "page": 1,
+      "line": 9,
+      "section": "4. Holes",
+      "text": "Four holes, diameter 8 mm, one at each corner, 10 mm from the adjacent edges.",
+      "match": "each corner",
+      "span": [
+       34,
+       45
+      ]
+     }
+    }
+   ],
+   "partial_spec": {
+    "kind": "plate",
+    "units": "mm",
+    "source": {
+     "height": {
+      "page": 1,
+      "line": 5,
+      "section": "2. Outline",
+      "text": "The plate is 100 x 60 mm.",
+      "match": "100 x 60 mm",
+      "span": [
+       13,
+       24
+      ]
+     }
+    },
+    "height": 60.0,
+    "holes": [
+     {
+      "pattern": "corners",
+      "diameter": 8.0,
+      "edge_offset": 10.0,
+      "source": {
+       "hole_diameter": {
+        "page": 1,
+        "line": 9,
+        "section": "4. Holes",
+        "text": "Four holes, diameter 8 mm, one at each corner, 10 mm from the adjacent edges.",
+        "match": "diameter 8 mm",
+        "span": [
+         12,
+         25
+        ]
+       },
+       "edge_offset": {
+        "page": 1,
+        "line": 9,
+        "section": "4. Holes",
+        "text": "Four holes, diameter 8 mm, one at each corner, 10 mm from the adjacent edges.",
+        "match": "10 mm from the adjacent edges",
+        "span": [
+         47,
+         76
+        ]
+       },
+       "hole_pattern": {
+        "page": 1,
+        "line": 9,
+        "section": "4. Holes",
+        "text": "Four holes, diameter 8 mm, one at each corner, 10 mm from the adjacent edges.",
+        "match": "each corner",
+        "span": [
+         34,
+         45
+        ]
+       }
+      }
+     }
+    ]
+   }
+  }
+ },
+ "metrics": {
+  "duration_ms": 2.09,
+  "input_bytes": 42,
+  "output_bytes": 3435
+ }
+}

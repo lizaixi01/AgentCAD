@@ -1,0 +1,7 @@
+MOUNTING PLATE - REQUIREMENTS
+1. Outline
+The plate is 100 x 60.
+2. Holes
+Four mounting holes at each corner, 10 from the adjacent edges.
+3. Material
+Material: 6061-T6

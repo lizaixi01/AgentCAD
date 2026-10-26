@@ -1,0 +1,406 @@
+{
+ "file": "E_tampered.dxf",
+ "readable": true,
+ "issues": [],
+ "requirements": [
+  {
+   "id": "outline",
+   "type": "outline",
+   "status": "pass",
+   "expected": {
+    "width": 100.0,
+    "height": 60.0
+   },
+   "actual": {
+    "width": 100.0,
+    "height": 60.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "entities": [
+    "93"
+   ],
+   "message": "",
+   "source": null
+  },
+  {
+   "id": "hole.bl",
+   "type": "hole",
+   "status": "pass",
+   "expected": {
+    "center": [
+     10,
+     10
+    ],
+    "diameter": 8.0
+   },
+   "actual": {
+    "center": [
+     10.0,
+     10.0
+    ],
+    "diameter": 8.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "entities": [
+    "95"
+   ],
+   "message": "",
+   "source": null
+  },
+  {
+   "id": "hole.br",
+   "type": "hole",
+   "status": "pass",
+   "expected": {
+    "center": [
+     90,
+     10
+    ],
+    "diameter": 8.0
+   },
+   "actual": {
+    "center": [
+     90.0,
+     10.0
+    ],
+    "diameter": 8.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "entities": [
+    "98"
+   ],
+   "message": "",
+   "source": null
+  },
+  {
+   "id": "hole.tr",
+   "type": "hole",
+   "status": "fail",
+   "expected": {
+    "center": [
+     90,
+     50
+    ],
+    "diameter": 8.0
+   },
+   "actual": {
+    "center": [
+     91.5,
+     50.0
+    ],
+    "diameter": 8.0
+   },
+   "deviation": 1.5,
+   "tolerance": 0.001,
+   "entities": [
+    "9B"
+   ],
+   "message": "nearest hole off by position 1.5, diameter 0",
+   "source": null
+  },
+  {
+   "id": "hole.tl",
+   "type": "hole",
+   "status": "pass",
+   "expected": {
+    "center": [
+     10,
+     50
+    ],
+    "diameter": 8.0
+   },
+   "actual": {
+    "center": [
+     10.0,
+     50.0
+    ],
+    "diameter": 8.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "entities": [
+    "9E"
+   ],
+   "message": "",
+   "source": null
+  },
+  {
+   "id": "hole_count",
+   "type": "hole_count",
+   "status": "pass",
+   "expected": 4,
+   "actual": 4,
+   "deviation": 0.0,
+   "tolerance": 0,
+   "entities": [
+    "95",
+    "98",
+    "9B",
+    "9E"
+   ],
+   "message": ""
+  },
+  {
+   "id": "hole_count.d8",
+   "type": "hole_count",
+   "status": "pass",
+   "expected": 4,
+   "actual": 4,
+   "deviation": 0.0,
+   "tolerance": 0,
+   "entities": [
+    "95",
+    "98",
+    "9B",
+    "9E"
+   ],
+   "message": ""
+  },
+  {
+   "id": "dim.width",
+   "type": "dimension",
+   "status": "fail",
+   "expected": 100.0,
+   "actual": 80.0,
+   "deviation": 20.0,
+   "tolerance": 0.001,
+   "entities": [
+    "EA"
+   ],
+   "message": "No linear dimension measures 100.0"
+  },
+  {
+   "id": "dim.height",
+   "type": "dimension",
+   "status": "pass",
+   "expected": 60.0,
+   "actual": 60.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "entities": [
+    "B0"
+   ],
+   "message": ""
+  },
+  {
+   "id": "dim.holes0.dia",
+   "type": "dimension",
+   "status": "pass",
+   "expected": 8.0,
+   "actual": 8.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "entities": [
+    "BF"
+   ],
+   "message": ""
+  },
+  {
+   "id": "dim.holes0.x",
+   "type": "dimension",
+   "status": "pass",
+   "expected": 10,
+   "actual": 10.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "entities": [
+    "CC"
+   ],
+   "message": ""
+  },
+  {
+   "id": "dim.holes0.y",
+   "type": "dimension",
+   "status": "pass",
+   "expected": 10,
+   "actual": 10.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "entities": [
+    "CC"
+   ],
+   "message": ""
+  },
+  {
+   "id": "dim.holes0.pitch_x",
+   "type": "dimension",
+   "status": "pass",
+   "expected": 80,
+   "actual": 80.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "entities": [
+    "EA"
+   ],
+   "message": ""
+  },
+  {
+   "id": "dim.holes0.pitch_y",
+   "type": "dimension",
+   "status": "pass",
+   "expected": 40,
+   "actual": 40.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "entities": [
+    "F9"
+   ],
+   "message": ""
+  },
+  {
+   "id": "within_sheet",
+   "type": "within_bounds",
+   "status": "pass",
+   "expected": {
+    "min": [
+     0,
+     0
+    ],
+    "max": [
+     297.0,
+     210.0
+    ]
+   },
+   "actual": {
+    "min": [
+     0.0,
+     0.0
+    ],
+    "max": [
+     297.0,
+     210.0
+    ]
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "entities": [],
+   "message": ""
+  },
+  {
+   "id": "title",
+   "type": "text",
+   "status": "pass",
+   "expected": "Mounting plate",
+   "actual": 1,
+   "deviation": null,
+   "tolerance": 0,
+   "entities": [
+    "121"
+   ],
+   "message": ""
+  },
+  {
+   "id": "material",
+   "type": "text",
+   "status": "pass",
+   "expected": "Q235",
+   "actual": 2,
+   "deviation": null,
+   "tolerance": 0,
+   "entities": [
+    "121",
+    "12B"
+   ],
+   "message": "",
+   "source": null
+  }
+ ],
+ "recognized": {
+  "outline": {
+   "entities": [
+    "93"
+   ],
+   "bbox": [
+    30.0,
+    60.0,
+    130.0,
+    120.0
+   ],
+   "size": [
+    100.0,
+    60.0
+   ]
+  },
+  "circles": [
+   {
+    "id": "95",
+    "center": [
+     40.0,
+     70.0
+    ],
+    "diameter": 8.0
+   },
+   {
+    "id": "98",
+    "center": [
+     120.0,
+     70.0
+    ],
+    "diameter": 8.0
+   },
+   {
+    "id": "9B",
+    "center": [
+     121.5,
+     110.0
+    ],
+    "diameter": 8.0
+   },
+   {
+    "id": "9E",
+    "center": [
+     40.0,
+     110.0
+    ],
+    "diameter": 8.0
+   }
+  ],
+  "dimensions": [
+   {
+    "id": "B0",
+    "kind": "linear",
+    "measurement": 60.0
+   },
+   {
+    "id": "BF",
+    "kind": "diameter",
+    "measurement": 8.0
+   },
+   {
+    "id": "CC",
+    "kind": "linear",
+    "measurement": 10.0
+   },
+   {
+    "id": "DB",
+    "kind": "linear",
+    "measurement": 10.0
+   },
+   {
+    "id": "EA",
+    "kind": "linear",
+    "measurement": 80.0
+   },
+   {
+    "id": "F9",
+    "kind": "linear",
+    "measurement": 40.0
+   }
+  ],
+  "closed_contours": 3,
+  "entity_count": 23,
+  "ezdxf_version": "1.4.5"
+ },
+ "summary": {
+  "errors": 0,
+  "warnings": 0,
+  "requirements_total": 17,
+  "requirements_failed": 2
+ },
+ "passed": false,
+ "duration_ms": 16.97,
+ "requirements_source": "stored_part_spec"
+}

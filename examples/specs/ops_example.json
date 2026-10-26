@@ -1,0 +1,5 @@
+[
+  {"op": "add_circle", "center": [50, 30], "diameter": "12mm", "layer": "HOLES", "tag": "center_bore"},
+  {"op": "add_diameter_dim", "target": "$0", "angle": 30, "layer": "DIM"},
+  {"op": "add_text", "text": "DEBURR ALL EDGES", "insert": [0, -30], "height": 3.5, "layer": "TEXT"}
+]

@@ -1,0 +1,11 @@
+ARC 50=   -90 51=        450: stored=(-90.0,450.0) start_point=(0.0, -1.0) end_point=(0.0, 1.0) arc_angle_span_deg=180.000000
+ARC 50=   370 51=         10: stored=(370.0,10.0) start_point=(0.984808, 0.173648) end_point=(0.984808, 0.173648) arc_angle_span_deg=360.000000
+ARC 50=   350 51=         10: stored=(350.0,10.0) start_point=(0.984808, -0.173648) end_point=(0.984808, 0.173648) arc_angle_span_deg=20.000000
+ARC 50=    10 51=        350: stored=(10.0,350.0) start_point=(0.984808, 0.173648) end_point=(0.984808, -0.173648) arc_angle_span_deg=340.000000
+ARC 50=     0 51=          0: stored=(0.0,0.0) start_point=(1.0, 0.0) end_point=(1.0, 0.0) arc_angle_span_deg=0.000000
+ARC 50=     0 51=        360: stored=(0.0,360.0) start_point=(1.0, 0.0) end_point=(1.0, -0.0) arc_angle_span_deg=360.000000
+ARC 50=    90 51= 90.0000001: stored=(90.0,90.0000001) start_point=(0.0, 1.0) end_point=(-0.0, 1.0) arc_angle_span_deg=0.000000
+bulge=+1.000000: center=(5.0, 0.0) r=5.000000 start=180.000deg end=0.000deg (arc is CCW from start to end)
+bulge=-1.000000: center=(5.0, -0.0) r=5.000000 start=0.000deg end=180.000deg (arc is CCW from start to end)
+bulge=+0.414214: center=(5.0, 5.0) r=7.071068 start=-135.000deg end=-45.000deg (arc is CCW from start to end)
+arc_to_bulge(center=(0,0), start=0, end=90deg, r=1): ((1.0, 0.0), (0.0, 1.0), 0.414214)

@@ -1,0 +1,51 @@
+{
+ "A": {
+  "passed": true,
+  "errors": 0,
+  "warnings": 0,
+  "requirements_total": 17,
+  "requirements_failed": 0
+ },
+ "B": {
+  "passed": true,
+  "diff": {
+   "added": 0,
+   "deleted": 0,
+   "modified": 10,
+   "unchanged": 14
+  },
+  "errors": 0,
+  "warnings": 0,
+  "requirements_total": 17,
+  "requirements_failed": 0
+ },
+ "C": {
+  "pdf_passed": true,
+  "zh_passed": true,
+  "conflict_refused": true,
+  "conflict_code": "SPEC_CONFLICT"
+ },
+ "E": {
+  "passed": false,
+  "failed": [
+   "hole.tr",
+   "dim.width"
+  ]
+ },
+ "metrics": {
+  "ok": true,
+  "tool": "get_metrics",
+  "tool_calls": 14,
+  "failures": 1,
+  "total_duration_ms": 2404.96,
+  "input_bytes": 1339,
+  "output_bytes": 61100,
+  "model_calls": 0,
+  "model_cost_usd": 0.0,
+  "metrics": {
+   "duration_ms": 0.03,
+   "input_bytes": 8,
+   "output_bytes": 1657
+  }
+ }
+}

@@ -1,0 +1,9 @@
+MOUNTING PLATE - REQUIREMENTS
+1. General
+All dimensions are in mm.
+2. Outline
+The plate is 100 x 60 mm.
+3. Revision note
+Width: 110 mm
+4. Holes
+Four holes, diameter 8 mm, one at each corner, 10 mm from the adjacent edges.

@@ -1,0 +1,29 @@
+Drawing units ($INSUNITS) are not exported for DXF R12.
+Downgrade from DXF R2010 to R12 may create an invalid DXF file.
+Drawing units ($INSUNITS) are not exported for DXF R12.
+raw LINE coordinate tags: AcDbLine| 10|0.30000000000000004| 20|3.141592653589793| 30|0.0| 11|123456789.12345679| 21|0.3333333333333333| 31|0.0|  0|ENDSEC|  0|SECTION|  2|OBJECT
+float round-trip exact: True
+handle deleted=2F, next new=30, reused=False
+copy() handle before add: assigned on add -> 31 (orig 30)
+is_alive after delete: False
+mirrored ARC: center (10.0, 0.0, 0.0) extrusion (0.0, 0.0, -1.0) angles 0.0 90.0
+  ARC WCS start/end points: [(-15.0, 0.0, 0.0), (-10.0, 5.0, 0.0)]
+mirrored CIRCLE: center(OCS) (10.0, 0.0, 0.0) extrusion (0.0, 0.0, -1.0)
+mirrored TEXT: insert (10.0, 0.0, 0.0) rotation 0.0 text_generation_flag(71) None extrusion (0.0, 0.0, -1.0)
+OCS(0,0,-1) ux,uy,uz = (-1.0, 0.0, 0.0) (0.0, 1.0, 0.0) (0.0, 0.0, -1.0) | to_wcs((15,0,0)) = (-15.0, 0.0, 0.0)
+xdata round-trip: [DXFTag(1000, 'op:42'), DXFTag(1040, 3.14), DXFTag(1071, 7)]
+xrecord round-trip: [DXFTag(1, 'schema=1'), DXFTag(40, 1.5), DXFTag(90, 12345)]
+[set_xdata with unregistered appid] OK -> accepted
+[audit >16KB xdata] OK -> no complaints
+[R12 add_lwpolyline] DXFVersionError: LWPOLYLINE requires DXF R2000
+[R12 add_polyline2d] OK -> POLYLINE
+[R12 add_mtext] DXFVersionError: MTEXT requires DXF R2000
+[saveas R2010 doc as R12 via dxfversion change] OK -> written: []
+  entities in downgraded R12 file: []
+supported versions: ['AC1009', 'AC1015', 'AC1018', 'AC1021', 'AC1024', 'AC1027', 'AC1032']
+two identical builds byte-identical: False
+  differing lines (first 6): [('{213B9BC8-497D-4046-8912-F6C5775277D3}', '{5FBCB673-306C-4699-97CA-062C782783EE}'), ('{0589B7AB-8E18-4C96-88AD-1E263588EBDD}', '{D05CE4B5-E94B-4939-8316-5F256A29E7AE}'), ('1.4.5 @ 2026-10-26T13:51:19.538435+00:00', '1.4.5 @ 2026-10-26T13:51:19.541759+00:00'), ('1.4.5 @ 2026-10-26T13:51:19.539436+00:00', '1.4.5 @ 2026-10-26T13:51:19.541759+00:00')]
+with options.write_fixed_meta_data_for_testing=True byte-identical: True
+audit unregistered appid: errors [] fixes [] | appid now registered: False
+r12export -> AC1009 ['POLYLINE']
+odafc (ODA File Converter) installed: False

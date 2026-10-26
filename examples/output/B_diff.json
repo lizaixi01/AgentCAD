@@ -1,0 +1,343 @@
+{
+ "against": "cp-0001",
+ "summary": {
+  "added": 0,
+  "deleted": 0,
+  "modified": 10,
+  "unchanged": 14
+ },
+ "added": [],
+ "deleted": [],
+ "modified": [
+  {
+   "id": "93",
+   "type": "LWPOLYLINE",
+   "tag": "outline",
+   "changes": {
+    "points": {
+     "old": [
+      [
+       30.0,
+       60.0
+      ],
+      [
+       130.0,
+       60.0
+      ],
+      [
+       130.0,
+       120.0
+      ],
+      [
+       30.0,
+       120.0
+      ]
+     ],
+     "new": [
+      [
+       30.0,
+       60.0
+      ],
+      [
+       150.0,
+       60.0
+      ],
+      [
+       150.0,
+       120.0
+      ],
+      [
+       30.0,
+       120.0
+      ]
+     ]
+    }
+   }
+  },
+  {
+   "id": "98",
+   "type": "CIRCLE",
+   "tag": "hole.br",
+   "changes": {
+    "center": {
+     "old": [
+      120.0,
+      70.0
+     ],
+     "new": [
+      140.0,
+      70.0
+     ]
+    }
+   }
+  },
+  {
+   "id": "99",
+   "type": "LINE",
+   "tag": "cl.hole.br.h",
+   "changes": {
+    "start": {
+     "old": [
+      114.0,
+      70.0
+     ],
+     "new": [
+      134.0,
+      70.0
+     ]
+    },
+    "end": {
+     "old": [
+      126.0,
+      70.0
+     ],
+     "new": [
+      146.0,
+      70.0
+     ]
+    }
+   }
+  },
+  {
+   "id": "9A",
+   "type": "LINE",
+   "tag": "cl.hole.br.v",
+   "changes": {
+    "start": {
+     "old": [
+      120.0,
+      64.0
+     ],
+     "new": [
+      140.0,
+      64.0
+     ]
+    },
+    "end": {
+     "old": [
+      120.0,
+      76.0
+     ],
+     "new": [
+      140.0,
+      76.0
+     ]
+    }
+   }
+  },
+  {
+   "id": "9B",
+   "type": "CIRCLE",
+   "tag": "hole.tr",
+   "changes": {
+    "center": {
+     "old": [
+      120.0,
+      110.0
+     ],
+     "new": [
+      140.0,
+      110.0
+     ]
+    }
+   }
+  },
+  {
+   "id": "9C",
+   "type": "LINE",
+   "tag": "cl.hole.tr.h",
+   "changes": {
+    "start": {
+     "old": [
+      114.0,
+      110.0
+     ],
+     "new": [
+      134.0,
+      110.0
+     ]
+    },
+    "end": {
+     "old": [
+      126.0,
+      110.0
+     ],
+     "new": [
+      146.0,
+      110.0
+     ]
+    }
+   }
+  },
+  {
+   "id": "9D",
+   "type": "LINE",
+   "tag": "cl.hole.tr.v",
+   "changes": {
+    "start": {
+     "old": [
+      120.0,
+      104.0
+     ],
+     "new": [
+      140.0,
+      104.0
+     ]
+    },
+    "end": {
+     "old": [
+      120.0,
+      116.0
+     ],
+     "new": [
+      140.0,
+      116.0
+     ]
+    }
+   }
+  },
+  {
+   "id": "A1",
+   "type": "DIMENSION",
+   "tag": "dim.width",
+   "changes": {
+    "defpoints": {
+     "old": {
+      "defpoint": [
+       30.0,
+       40.0
+      ],
+      "defpoint2": [
+       30.0,
+       60.0
+      ],
+      "defpoint3": [
+       130.0,
+       60.0
+      ],
+      "text_midpoint": [
+       80.0,
+       42.375
+      ]
+     },
+     "new": {
+      "defpoint": [
+       30.0,
+       40.0
+      ],
+      "defpoint2": [
+       30.0,
+       60.0
+      ],
+      "defpoint3": [
+       150.0,
+       60.0
+      ],
+      "text_midpoint": [
+       90.0,
+       42.375
+      ]
+     }
+    },
+    "measurement": {
+     "old": 100.0,
+     "new": 120.0
+    }
+   }
+  },
+  {
+   "id": "EA",
+   "type": "DIMENSION",
+   "tag": "dim.holes0.pitch_x",
+   "changes": {
+    "defpoints": {
+     "old": {
+      "defpoint": [
+       40.0,
+       130.0
+      ],
+      "defpoint2": [
+       40.0,
+       110.0
+      ],
+      "defpoint3": [
+       120.0,
+       110.0
+      ],
+      "text_midpoint": [
+       80.0,
+       132.375
+      ]
+     },
+     "new": {
+      "defpoint": [
+       40.0,
+       130.0
+      ],
+      "defpoint2": [
+       40.0,
+       110.0
+      ],
+      "defpoint3": [
+       140.0,
+       110.0
+      ],
+      "text_midpoint": [
+       90.0,
+       132.375
+      ]
+     }
+    },
+    "measurement": {
+     "old": 80.0,
+     "new": 100.0
+    }
+   }
+  },
+  {
+   "id": "F9",
+   "type": "DIMENSION",
+   "tag": "dim.holes0.pitch_y",
+   "changes": {
+    "defpoints": {
+     "old": {
+      "defpoint": [
+       140.0,
+       70.0
+      ],
+      "defpoint2": [
+       120.0,
+       70.0
+      ],
+      "defpoint3": [
+       120.0,
+       110.0
+      ],
+      "text_midpoint": [
+       137.625,
+       90.0
+      ]
+     },
+     "new": {
+      "defpoint": [
+       160.0,
+       70.0
+      ],
+      "defpoint2": [
+       140.0,
+       70.0
+      ],
+      "defpoint3": [
+       140.0,
+       110.0
+      ],
+      "text_midpoint": [
+       157.625,
+       90.0
+      ]
+     }
+    }
+   }
+  }
+ ]
+}

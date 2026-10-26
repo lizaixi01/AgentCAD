@@ -1,0 +1,599 @@
+{
+ "spec": {
+  "kind": "plate",
+  "units": "mm",
+  "source": {
+   "width": {
+    "page": 1,
+    "line": 10,
+    "section": "3. 外形尺寸",
+    "text": "外形尺寸 120 × 80 mm，板厚 4 mm。",
+    "match": "120 × 80 mm",
+    "span": [
+     5,
+     16
+    ]
+   },
+   "height": {
+    "page": 1,
+    "line": 10,
+    "section": "3. 外形尺寸",
+    "text": "外形尺寸 120 × 80 mm，板厚 4 mm。",
+    "match": "120 × 80 mm",
+    "span": [
+     5,
+     16
+    ]
+   },
+   "corner_radius": {
+    "page": 1,
+    "line": 11,
+    "section": "3. 外形尺寸",
+    "text": "四角圆角半径 R5。",
+    "match": "圆角半径 R5",
+    "span": [
+     2,
+     9
+    ]
+   },
+   "thickness": {
+    "page": 1,
+    "line": 10,
+    "section": "3. 外形尺寸",
+    "text": "外形尺寸 120 × 80 mm，板厚 4 mm。",
+    "match": "板厚 4 mm",
+    "span": [
+     17,
+     24
+    ]
+   },
+   "material": {
+    "page": 1,
+    "line": 18,
+    "section": "5. 材料",
+    "text": "材料：Q235",
+    "match": "材料：Q235",
+    "span": [
+     0,
+     7
+    ]
+   }
+  },
+  "width": 120.0,
+  "height": 80.0,
+  "corner_radius": 5.0,
+  "thickness": 4.0,
+  "material": "Q235",
+  "holes": [
+   {
+    "pattern": "corners",
+    "diameter": 10.0,
+    "edge_offset": 12.0,
+    "source": {
+     "hole_diameter": {
+      "page": 1,
+      "line": 14,
+      "section": "4. 安装孔",
+      "text": "四角各有一个安装孔，孔径 Ø10 mm。",
+      "match": "Ø10 mm",
+      "span": [
+       13,
+       19
+      ]
+     },
+     "edge_offset": {
+      "page": 1,
+      "line": 15,
+      "section": "4. 安装孔",
+      "text": "孔中心距相邻边缘均为 12 mm。",
+      "match": "距相邻边缘均为 12 mm",
+      "span": [
+       3,
+       16
+      ]
+     },
+     "hole_pattern": {
+      "page": 1,
+      "line": 11,
+      "section": "3. 外形尺寸",
+      "text": "四角圆角半径 R5。",
+      "match": "四角",
+      "span": [
+       0,
+       2
+      ]
+     }
+    }
+   }
+  ],
+  "dimensions": "full",
+  "name": "C_plate_spec_zh"
+ },
+ "traceability": {
+  "width": [
+   {
+    "page": 1,
+    "line": 10,
+    "section": "3. 外形尺寸",
+    "text": "外形尺寸 120 × 80 mm，板厚 4 mm。",
+    "match": "120 × 80 mm",
+    "span": [
+     5,
+     16
+    ]
+   }
+  ],
+  "height": [
+   {
+    "page": 1,
+    "line": 10,
+    "section": "3. 外形尺寸",
+    "text": "外形尺寸 120 × 80 mm，板厚 4 mm。",
+    "match": "120 × 80 mm",
+    "span": [
+     5,
+     16
+    ]
+   }
+  ],
+  "corner_radius": [
+   {
+    "page": 1,
+    "line": 11,
+    "section": "3. 外形尺寸",
+    "text": "四角圆角半径 R5。",
+    "match": "圆角半径 R5",
+    "span": [
+     2,
+     9
+    ]
+   }
+  ],
+  "thickness": [
+   {
+    "page": 1,
+    "line": 10,
+    "section": "3. 外形尺寸",
+    "text": "外形尺寸 120 × 80 mm，板厚 4 mm。",
+    "match": "板厚 4 mm",
+    "span": [
+     17,
+     24
+    ]
+   }
+  ],
+  "material": [
+   {
+    "page": 1,
+    "line": 18,
+    "section": "5. 材料",
+    "text": "材料：Q235",
+    "match": "材料：Q235",
+    "span": [
+     0,
+     7
+    ]
+   }
+  ],
+  "units": [
+   {
+    "page": 1,
+    "line": 7,
+    "section": "2. 单位",
+    "text": "单位：mm",
+    "match": "单位：mm",
+    "span": [
+     0,
+     5
+    ]
+   }
+  ],
+  "hole_diameter": [
+   {
+    "page": 1,
+    "line": 14,
+    "section": "4. 安装孔",
+    "text": "四角各有一个安装孔，孔径 Ø10 mm。",
+    "match": "Ø10 mm",
+    "span": [
+     13,
+     19
+    ]
+   }
+  ],
+  "hole_pattern": [
+   {
+    "page": 1,
+    "line": 11,
+    "section": "3. 外形尺寸",
+    "text": "四角圆角半径 R5。",
+    "match": "四角",
+    "span": [
+     0,
+     2
+    ]
+   },
+   {
+    "page": 1,
+    "line": 14,
+    "section": "4. 安装孔",
+    "text": "四角各有一个安装孔，孔径 Ø10 mm。",
+    "match": "四角",
+    "span": [
+     0,
+     2
+    ]
+   }
+  ],
+  "edge_offset": [
+   {
+    "page": 1,
+    "line": 15,
+    "section": "4. 安装孔",
+    "text": "孔中心距相邻边缘均为 12 mm。",
+    "match": "距相邻边缘均为 12 mm",
+    "span": [
+     3,
+     16
+    ]
+   }
+  ]
+ },
+ "verification": [
+  {
+   "requirement": "outline",
+   "status": "pass",
+   "expected": {
+    "width": 120.0,
+    "height": 80.0
+   },
+   "actual": {
+    "width": 120.0,
+    "height": 80.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": {
+    "page": 1,
+    "line": 10,
+    "section": "3. 外形尺寸",
+    "text": "外形尺寸 120 × 80 mm，板厚 4 mm。",
+    "match": "120 × 80 mm",
+    "span": [
+     5,
+     16
+    ]
+   }
+  },
+  {
+   "requirement": "hole.bl",
+   "status": "pass",
+   "expected": {
+    "center": [
+     12.0,
+     12.0
+    ],
+    "diameter": 10.0
+   },
+   "actual": {
+    "center": [
+     12.0,
+     12.0
+    ],
+    "diameter": 10.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": {
+    "hole_diameter": {
+     "page": 1,
+     "line": 14,
+     "section": "4. 安装孔",
+     "text": "四角各有一个安装孔，孔径 Ø10 mm。",
+     "match": "Ø10 mm",
+     "span": [
+      13,
+      19
+     ]
+    },
+    "edge_offset": {
+     "page": 1,
+     "line": 15,
+     "section": "4. 安装孔",
+     "text": "孔中心距相邻边缘均为 12 mm。",
+     "match": "距相邻边缘均为 12 mm",
+     "span": [
+      3,
+      16
+     ]
+    },
+    "hole_pattern": {
+     "page": 1,
+     "line": 11,
+     "section": "3. 外形尺寸",
+     "text": "四角圆角半径 R5。",
+     "match": "四角",
+     "span": [
+      0,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "requirement": "hole.br",
+   "status": "pass",
+   "expected": {
+    "center": [
+     108.0,
+     12.0
+    ],
+    "diameter": 10.0
+   },
+   "actual": {
+    "center": [
+     108.0,
+     12.0
+    ],
+    "diameter": 10.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": {
+    "hole_diameter": {
+     "page": 1,
+     "line": 14,
+     "section": "4. 安装孔",
+     "text": "四角各有一个安装孔，孔径 Ø10 mm。",
+     "match": "Ø10 mm",
+     "span": [
+      13,
+      19
+     ]
+    },
+    "edge_offset": {
+     "page": 1,
+     "line": 15,
+     "section": "4. 安装孔",
+     "text": "孔中心距相邻边缘均为 12 mm。",
+     "match": "距相邻边缘均为 12 mm",
+     "span": [
+      3,
+      16
+     ]
+    },
+    "hole_pattern": {
+     "page": 1,
+     "line": 11,
+     "section": "3. 外形尺寸",
+     "text": "四角圆角半径 R5。",
+     "match": "四角",
+     "span": [
+      0,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "requirement": "hole.tr",
+   "status": "pass",
+   "expected": {
+    "center": [
+     108.0,
+     68.0
+    ],
+    "diameter": 10.0
+   },
+   "actual": {
+    "center": [
+     108.0,
+     68.0
+    ],
+    "diameter": 10.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": {
+    "hole_diameter": {
+     "page": 1,
+     "line": 14,
+     "section": "4. 安装孔",
+     "text": "四角各有一个安装孔，孔径 Ø10 mm。",
+     "match": "Ø10 mm",
+     "span": [
+      13,
+      19
+     ]
+    },
+    "edge_offset": {
+     "page": 1,
+     "line": 15,
+     "section": "4. 安装孔",
+     "text": "孔中心距相邻边缘均为 12 mm。",
+     "match": "距相邻边缘均为 12 mm",
+     "span": [
+      3,
+      16
+     ]
+    },
+    "hole_pattern": {
+     "page": 1,
+     "line": 11,
+     "section": "3. 外形尺寸",
+     "text": "四角圆角半径 R5。",
+     "match": "四角",
+     "span": [
+      0,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "requirement": "hole.tl",
+   "status": "pass",
+   "expected": {
+    "center": [
+     12.0,
+     68.0
+    ],
+    "diameter": 10.0
+   },
+   "actual": {
+    "center": [
+     12.0,
+     68.0
+    ],
+    "diameter": 10.0
+   },
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": {
+    "hole_diameter": {
+     "page": 1,
+     "line": 14,
+     "section": "4. 安装孔",
+     "text": "四角各有一个安装孔，孔径 Ø10 mm。",
+     "match": "Ø10 mm",
+     "span": [
+      13,
+      19
+     ]
+    },
+    "edge_offset": {
+     "page": 1,
+     "line": 15,
+     "section": "4. 安装孔",
+     "text": "孔中心距相邻边缘均为 12 mm。",
+     "match": "距相邻边缘均为 12 mm",
+     "span": [
+      3,
+      16
+     ]
+    },
+    "hole_pattern": {
+     "page": 1,
+     "line": 11,
+     "section": "3. 外形尺寸",
+     "text": "四角圆角半径 R5。",
+     "match": "四角",
+     "span": [
+      0,
+      2
+     ]
+    }
+   }
+  },
+  {
+   "requirement": "hole_count",
+   "status": "pass",
+   "expected": 4,
+   "actual": 4,
+   "deviation": 0.0,
+   "tolerance": 0,
+   "document_source": null
+  },
+  {
+   "requirement": "hole_count.d10",
+   "status": "pass",
+   "expected": 4,
+   "actual": 4,
+   "deviation": 0.0,
+   "tolerance": 0,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.width",
+   "status": "pass",
+   "expected": 120.0,
+   "actual": 120.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.height",
+   "status": "pass",
+   "expected": 80.0,
+   "actual": 80.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.corner_radius",
+   "status": "pass",
+   "expected": 5.0,
+   "actual": 5.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.holes0.dia",
+   "status": "pass",
+   "expected": 10.0,
+   "actual": 10.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.holes0.x",
+   "status": "pass",
+   "expected": 12.0,
+   "actual": 12.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.holes0.y",
+   "status": "pass",
+   "expected": 12.0,
+   "actual": 12.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.holes0.pitch_x",
+   "status": "pass",
+   "expected": 96.0,
+   "actual": 96.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "dim.holes0.pitch_y",
+   "status": "pass",
+   "expected": 56.0,
+   "actual": 56.0,
+   "deviation": 0.0,
+   "tolerance": 0.001,
+   "document_source": null
+  },
+  {
+   "requirement": "material",
+   "status": "pass",
+   "expected": "Q235",
+   "actual": 1,
+   "deviation": null,
+   "tolerance": 0,
+   "document_source": {
+    "page": 1,
+    "line": 18,
+    "section": "5. 材料",
+    "text": "材料：Q235",
+    "match": "材料：Q235",
+    "span": [
+     0,
+     7
+    ]
+   }
+  }
+ ],
+ "issues": []
+}
