@@ -13,6 +13,26 @@ P = Param
 DIMSTYLE = "AGENTCAD"
 
 
+# GB engineering SHX fonts that ship with every AutoCAD; gbcbig is the big font for Chinese characters.
+# Without a big font AutoCAD shows CJK text as '???' (seen in AutoCAD 2027 plots).
+TEXT_FONT, BIG_FONT = "gbenor.shx", "gbcbig.shx"
+
+
+def setup_text_style(doc) -> None:
+    st = doc.styles.get("Standard")
+    st.dxf.font = TEXT_FONT
+    st.dxf.bigfont = BIG_FONT
+
+
+def apply_annotation_scale(doc, scale: float) -> None:
+    """Plot scale 1:scale. Dimension sizes (DIMSCALE) and linetype patterns (LTSCALE) grow with it, so a
+    6000 mm room drawn at 1:50 gets readable arrows and dash-dot axes."""
+    doc.header["$DIMSCALE"] = scale
+    doc.header["$LTSCALE"] = scale
+    if DIMSTYLE in doc.dimstyles:
+        doc.dimstyles.get(DIMSTYLE).dxf.dimscale = scale
+
+
 def _dimstyle(ctx: Ctx) -> str:
     return DIMSTYLE if DIMSTYLE in ctx.doc.dimstyles else "Standard"
 
@@ -203,6 +223,22 @@ def add_table(ctx: Ctx, insert, rows, col_widths, row_height, text_height, **p):
     return {"created": created}
 
 
+@op("set_annotation_scale", "annotate", "Set the plot scale 1:scale for annotations: dimension arrows/text/gaps "
+    "(DIMSCALE) and linetype dash lengths (LTSCALE) are multiplied by 'scale'. Use e.g. 50 or 100 for building "
+    "plans in mm. Existing dimensions are re-rendered.",
+    {"scale": P("number", True, gt=0, description="N of the plot scale 1:N")})
+def set_annotation_scale(ctx: Ctx, scale):
+    apply_annotation_scale(ctx.doc, float(scale))
+    from .edit import rerender_dimension
+    done = []
+    for d in ctx.msp.query("DIMENSION"):
+        if d.dxf.get("dimstyle") == DIMSTYLE:  # per-entity overrides (text_height) are kept by override()
+            rerender_dimension(ctx, d)
+            ctx.touched(d)
+            done.append(d.dxf.handle)
+    return {"scale": float(scale), "rerendered": done}
+
+
 TITLE_FIELDS = ["TITLE", "DWG_NO", "MATERIAL", "SCALE", "UNITS", "DRAWN_BY", "DATE", "SHEET"]
 TITLE_BLOCK = "AGENTCAD_TITLE"
 
@@ -224,10 +260,11 @@ def ensure_title_block(ctx: Ctx, k: float) -> None:
     cells = {"TITLE": (x0 + 2 * k, 24 * k, 5 * k), "DWG_NO": (x0 + 120 * k, 24 * k, 3.5 * k)}
     labels = {"MATERIAL": (0, 8), "SCALE": (45, 8), "UNITS": (90, 8), "SHEET": (135, 8),
               "DRAWN_BY": (0, 0), "DATE": (45, 0)}
+    # Small label in the top of each 8 mm cell, value below it: no overlap whatever the font width.
     for f, (xx, yy) in labels.items():
-        cells[f] = (x0 + xx * k + 12 * k, yy * k + 2.5 * k, 2.5 * k)
-        t = blk.add_text(f.replace("_", " ").title() + ":", height=1.8 * k, dxfattribs=a)
-        t.set_placement((x0 + xx * k + 1 * k, yy * k + 2.5 * k), align=TextEntityAlignment.LEFT)
+        cells[f] = (x0 + xx * k + 1.5 * k, yy * k + 1.2 * k, 2.5 * k)
+        t = blk.add_text(f.replace("_", " ").title(), height=1.5 * k, dxfattribs=a)
+        t.set_placement((x0 + xx * k + 1 * k, yy * k + 5.6 * k), align=TextEntityAlignment.LEFT)
     for f in TITLE_FIELDS:
         x, y, h = cells[f]
         blk.add_attdef(f, insert=(x, y), height=h, text="", dxfattribs=a)

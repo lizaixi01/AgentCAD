@@ -46,15 +46,15 @@
   "tool": "get_metrics",
   "tool_calls": 21,
   "failures": 1,
-  "total_duration_ms": 33456.85,
+  "total_duration_ms": 31470.58,
   "input_bytes": 1647,
-  "output_bytes": 63935,
+  "output_bytes": 63524,
   "model_calls": 0,
   "model_cost_usd": 0.0,
   "metrics": {
    "duration_ms": 0.05,
    "input_bytes": 8,
-   "output_bytes": 2384
+   "output_bytes": 2376
   }
  }
 }

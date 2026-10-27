@@ -6,3 +6,7 @@ __pycache__/
 *.egg-info/
 .acadtmp/
 ErrorReports/
+# Autodesk sample drawings and files derived from them (not ours to redistribute)
+examples/trials/ws/real_dwg/
+examples/trials/ws/T7_real_dwg/
+examples/trials/round1/ws/T7_real_dwg/

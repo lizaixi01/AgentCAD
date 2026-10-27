@@ -1,0 +1,4403 @@
+[
+ {
+  "sample": "ActiveX\\ExtAttr\\Assembly Sample.dwg",
+  "bytes": 228512,
+  "import_ok": true,
+  "import_s": 3.7,
+  "import_validation_passed": false,
+  "units": null,
+  "entities": 2306,
+  "types": {
+   "LINE": 1305,
+   "LWPOLYLINE": 582,
+   "INSERT": 46,
+   "ARC": 187,
+   "CIRCLE": 64,
+   "TEXT": 64,
+   "SOLID": 58
+  },
+  "layers": 10,
+  "extents": [
+   [
+    -0.0,
+    0.0
+   ],
+   [
+    91.837108,
+    61.224739
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "warning:UNITS_UNDEFINED": 1,
+   "error:DUPLICATE_ENTITY": 5,
+   "error:DEGENERATE_GEOMETRY": 2
+  },
+  "summary": {
+   "errors": 7,
+   "warnings": 1,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 2309
+  },
+  "entities_after_edit": 2307,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "warning:UNITS_UNDEFINED": 1,
+    "error:DUPLICATE_ENTITY": 5,
+    "error:DEGENERATE_GEOMETRY": 2
+   }
+  }
+ },
+ {
+  "sample": "ActiveX\\SheetSetVBA\\Label Block.dwg",
+  "bytes": 49184,
+  "import_ok": true,
+  "import_s": 2.6,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 1,
+  "types": {
+   "INSERT": 1
+  },
+  "layers": 2,
+  "extents": [
+   [
+    -1.757104,
+    -0.129486
+   ],
+   [
+    1.757104,
+    0.129486
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 2
+  },
+  "entities_after_edit": 2,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "ActiveX\\SheetSetVBA\\Pointer Blocks.dwg",
+  "bytes": 51488,
+  "import_ok": true,
+  "import_s": 2.3,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 4,
+  "types": {
+   "INSERT": 4
+  },
+  "layers": 2,
+  "extents": [
+   [
+    20.039198,
+    15.010825
+   ],
+   [
+    22.599859,
+    17.571485
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 5
+  },
+  "entities_after_edit": 5,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "ActiveX\\SheetSetVBA\\Sheet1.dwg",
+  "bytes": 52512,
+  "import_ok": true,
+  "import_s": 2.6,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 0,
+  "types": {},
+  "layers": 2,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "ActiveX\\SheetSetVBA\\Sheet2.dwg",
+  "bytes": 52512,
+  "import_ok": true,
+  "import_s": 2.3,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 0,
+  "types": {},
+  "layers": 2,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "ActiveX\\SheetSetVBA\\Sheet3.dwg",
+  "bytes": 52512,
+  "import_ok": true,
+  "import_s": 2.4,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 0,
+  "types": {},
+  "layers": 2,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Database Connectivity\\Floor Plan Sample.dwg",
+  "bytes": 231872,
+  "import_ok": true,
+  "import_s": 4.8,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 4422,
+  "types": {
+   "LWPOLYLINE": 2193,
+   "LINE": 1737,
+   "INSERT": 437,
+   "TEXT": 2,
+   "MTEXT": 53
+  },
+  "layers": 30,
+  "extents": [
+   [
+    736.0,
+    736.0
+   ],
+   [
+    3540.0,
+    3540.0
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 38,
+   "error:DEGENERATE_GEOMETRY": 6
+  },
+  "summary": {
+   "errors": 44,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 4425
+  },
+  "entities_after_edit": 4423,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 38,
+    "error:DEGENERATE_GEOMETRY": 6
+   }
+  }
+ },
+ {
+  "sample": "Mechanical Sample\\Data Extraction and Multileaders Sample.dwg",
+  "bytes": 290432,
+  "import_ok": true,
+  "import_s": 4.9,
+  "import_validation_passed": false,
+  "units": null,
+  "entities": 100,
+  "types": {
+   "INSERT": 24,
+   "LWPOLYLINE": 30,
+   "LINE": 42,
+   "ARC": 4
+  },
+  "layers": 70,
+  "extents": [
+   [
+    -9162.242625,
+    -22853.874782
+   ],
+   [
+    163199.999946,
+    90306.942498
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "warning:UNITS_UNDEFINED": 1,
+   "error:DUPLICATE_ENTITY": 7
+  },
+  "summary": {
+   "errors": 7,
+   "warnings": 1,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 208
+  },
+  "entities_after_edit": 101,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "warning:UNITS_UNDEFINED": 1,
+    "error:DUPLICATE_ENTITY": 7
+   }
+  }
+ },
+ {
+  "sample": "Mechanical Sample\\Mechanical - Data Links.dwg",
+  "bytes": 167904,
+  "import_ok": true,
+  "import_s": 4.2,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 0,
+  "types": {},
+  "layers": 19,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Mechanical Sample\\Mechanical - Multileaders.dwg",
+  "bytes": 137856,
+  "import_ok": true,
+  "import_s": 2.9,
+  "import_validation_passed": true,
+  "units": null,
+  "entities": 8,
+  "types": {
+   "LINE": 5,
+   "LWPOLYLINE": 1,
+   "INSERT": 2
+  },
+  "layers": 56,
+  "extents": [
+   [
+    523020722.87431,
+    1558594689.197282
+   ],
+   [
+    523046961.477829,
+    1558667186.547633
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {
+   "warning:UNITS_UNDEFINED": 1
+  },
+  "summary": {
+   "errors": 0,
+   "warnings": 1,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 200
+  },
+  "entities_after_edit": 9,
+  "revalidated": {
+   "passed": true,
+   "issues": {
+    "warning:UNITS_UNDEFINED": 1
+   }
+  }
+ },
+ {
+  "sample": "Mechanical Sample\\Mechanical - Text and Tables.dwg",
+  "bytes": 135424,
+  "import_ok": true,
+  "import_s": 2.9,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 0,
+  "types": {},
+  "layers": 20,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Mechanical Sample\\Mechanical - Xref.dwg",
+  "bytes": 325216,
+  "import_ok": true,
+  "import_s": 4.5,
+  "import_validation_passed": false,
+  "units": null,
+  "entities": 3903,
+  "types": {
+   "MTEXT": 106,
+   "ARC": 669,
+   "LINE": 2649,
+   "HATCH": 15,
+   "CIRCLE": 155,
+   "LWPOLYLINE": 132,
+   "LEADER": 34,
+   "ELLIPSE": 52,
+   "DIMENSION": 37,
+   "SPLINE": 20,
+   "INSERT": 34
+  },
+  "layers": 38,
+  "extents": [
+   [
+    522909431.86982,
+    1558478544.737035
+   ],
+   [
+    523121556.385921,
+    1558746119.268354
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "warning:UNITS_UNDEFINED": 1,
+   "error:DUPLICATE_ENTITY": 24,
+   "warning:DIMENSION_NOT_ATTACHED": 34,
+   "error:DIMENSION_TEXT_MISMATCH": 2,
+   "warning:DIMENSION_STALE": 1
+  },
+  "summary": {
+   "errors": 26,
+   "warnings": 36,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 3905
+  },
+  "entities_after_edit": 3904,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "warning:UNITS_UNDEFINED": 1,
+    "error:DUPLICATE_ENTITY": 24,
+    "warning:DIMENSION_NOT_ATTACHED": 33,
+    "error:DIMENSION_TEXT_MISMATCH": 2,
+    "warning:DIMENSION_STALE": 1
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\A-01.dwg",
+  "bytes": 132128,
+  "import_ok": true,
+  "import_s": 3.0,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 2,
+  "types": {
+   "INSERT": 2
+  },
+  "layers": 64,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\A-02.dwg",
+  "bytes": 123808,
+  "import_ok": true,
+  "import_s": 2.8,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 1,
+  "types": {
+   "INSERT": 1
+  },
+  "layers": 24,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\A-03.dwg",
+  "bytes": 298144,
+  "import_ok": true,
+  "import_s": 3.8,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 678,
+  "types": {
+   "LWPOLYLINE": 42,
+   "LINE": 487,
+   "ARC": 29,
+   "HATCH": 15,
+   "DIMENSION": 24,
+   "TEXT": 36,
+   "INSERT": 7,
+   "MTEXT": 20,
+   "LEADER": 18
+  },
+  "layers": 26,
+  "extents": [
+   [
+    -36.434506,
+    -371.378289
+   ],
+   [
+    1350.009685,
+    142.906787
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 8,
+   "error:DEGENERATE_GEOMETRY": 3,
+   "warning:DIMENSION_NOT_ATTACHED": 1
+  },
+  "summary": {
+   "errors": 11,
+   "warnings": 1,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 700
+  },
+  "entities_after_edit": 679,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 8,
+    "error:DEGENERATE_GEOMETRY": 3
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\A-04.dwg",
+  "bytes": 111808,
+  "import_ok": true,
+  "import_s": 3.0,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 1,
+  "types": {
+   "INSERT": 1
+  },
+  "layers": 64,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\A-05.dwg",
+  "bytes": 127296,
+  "import_ok": true,
+  "import_s": 3.1,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 2,
+  "types": {
+   "INSERT": 2
+  },
+  "layers": 74,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\AS-01.dwg",
+  "bytes": 237184,
+  "import_ok": true,
+  "import_s": 3.9,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 782,
+  "types": {
+   "LINE": 368,
+   "ARC": 200,
+   "TEXT": 2,
+   "INSERT": 1,
+   "LWPOLYLINE": 200,
+   "CIRCLE": 6,
+   "HATCH": 5
+  },
+  "layers": 22,
+  "extents": [
+   [
+    262.504644,
+    -1459.282746
+   ],
+   [
+    4163.30922,
+    700.717254
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 1
+  },
+  "summary": {
+   "errors": 1,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 893
+  },
+  "entities_after_edit": 783,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 1
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\Building Section.dwg",
+  "bytes": 115904,
+  "import_ok": true,
+  "import_s": 3.5,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 1102,
+  "types": {
+   "LINE": 826,
+   "HATCH": 17,
+   "ARC": 182,
+   "INSERT": 6,
+   "LWPOLYLINE": 8,
+   "LEADER": 21,
+   "MTEXT": 34,
+   "DIMENSION": 6,
+   "TEXT": 2
+  },
+  "layers": 30,
+  "extents": [
+   [
+    -3795.994768,
+    1152.267832
+   ],
+   [
+    2698.893938,
+    2186.799465
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 5,
+   "error:DEGENERATE_GEOMETRY": 2,
+   "warning:DIMENSION_STALE": 6,
+   "warning:DIMENSION_NOT_ATTACHED": 6
+  },
+  "summary": {
+   "errors": 7,
+   "warnings": 12,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 1108
+  },
+  "entities_after_edit": 1103,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 5,
+    "error:DEGENERATE_GEOMETRY": 2,
+    "warning:DIMENSION_STALE": 6,
+    "warning:DIMENSION_NOT_ATTACHED": 6
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\Exterior Elevations.dwg",
+  "bytes": 146400,
+  "import_ok": true,
+  "import_s": 3.4,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 791,
+  "types": {
+   "LINE": 420,
+   "LWPOLYLINE": 155,
+   "ARC": 18,
+   "CIRCLE": 8,
+   "HATCH": 19,
+   "TEXT": 36,
+   "DIMENSION": 105,
+   "MTEXT": 15,
+   "LEADER": 13,
+   "SOLID": 2
+  },
+  "layers": 13,
+  "extents": [
+   [
+    -2273.416158,
+    -1885.620559
+   ],
+   [
+    1280.921268,
+    1073.896885
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 5,
+   "error:DEGENERATE_GEOMETRY": 1,
+   "warning:DIMENSION_NOT_ATTACHED": 56
+  },
+  "summary": {
+   "errors": 6,
+   "warnings": 56,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 793
+  },
+  "entities_after_edit": 792,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 5,
+    "error:DEGENERATE_GEOMETRY": 1,
+    "warning:DIMENSION_NOT_ATTACHED": 47
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\Grid Plan.dwg",
+  "bytes": 56064,
+  "import_ok": true,
+  "import_s": 2.6,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 22,
+  "types": {
+   "LINE": 11,
+   "INSERT": 11
+  },
+  "layers": 4,
+  "extents": [
+   [
+    -234.968358,
+    -1404.056832
+   ],
+   [
+    1307.028295,
+    261.700095
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 24
+  },
+  "entities_after_edit": 23,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\Pile Detail.dwg",
+  "bytes": 58240,
+  "import_ok": true,
+  "import_s": 2.9,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 42,
+  "types": {
+   "DIMENSION": 2,
+   "MTEXT": 5,
+   "LEADER": 5,
+   "LINE": 24,
+   "ARC": 6
+  },
+  "layers": 6,
+  "extents": [
+   [
+    1881.698131,
+    -755.764418
+   ],
+   [
+    1945.900606,
+    -570.877315
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 1
+  },
+  "summary": {
+   "errors": 1,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 44
+  },
+  "entities_after_edit": 43,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 1
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\Section1.dwg",
+  "bytes": 82592,
+  "import_ok": true,
+  "import_s": 3.2,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 360,
+  "types": {
+   "LINE": 288,
+   "LWPOLYLINE": 8,
+   "INSERT": 16,
+   "HATCH": 1,
+   "CIRCLE": 6,
+   "ARC": 21,
+   "MTEXT": 8,
+   "LEADER": 6,
+   "DIMENSION": 6
+  },
+  "layers": 19,
+  "extents": [
+   [
+    132.04561,
+    371.913742
+   ],
+   [
+    284.456184,
+    618.598611
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {
+   "warning:DIMENSION_STALE": 6,
+   "warning:DIMENSION_NOT_ATTACHED": 4
+  },
+  "summary": {
+   "errors": 0,
+   "warnings": 10,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 362
+  },
+  "entities_after_edit": 361,
+  "revalidated": {
+   "passed": true,
+   "issues": {
+    "warning:DIMENSION_STALE": 6
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\Section2.dwg",
+  "bytes": 80704,
+  "import_ok": true,
+  "import_s": 3.3,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 203,
+  "types": {
+   "LINE": 165,
+   "CIRCLE": 3,
+   "LWPOLYLINE": 3,
+   "ARC": 6,
+   "INSERT": 9,
+   "DIMENSION": 4,
+   "MTEXT": 7,
+   "LEADER": 5,
+   "TEXT": 1
+  },
+  "layers": 21,
+  "extents": [
+   [
+    127.650091,
+    369.76961
+   ],
+   [
+    323.355814,
+    607.037135
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {
+   "warning:DIMENSION_STALE": 4,
+   "warning:DIMENSION_NOT_ATTACHED": 2
+  },
+  "summary": {
+   "errors": 0,
+   "warnings": 6,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 205
+  },
+  "entities_after_edit": 204,
+  "revalidated": {
+   "passed": true,
+   "issues": {
+    "warning:DIMENSION_STALE": 4
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\Sections.dwg",
+  "bytes": 773216,
+  "import_ok": true,
+  "import_s": 13.0,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 8375,
+  "types": {
+   "LINE": 6303,
+   "ARC": 633,
+   "HATCH": 176,
+   "DIMENSION": 192,
+   "LEADER": 288,
+   "MTEXT": 310,
+   "LWPOLYLINE": 222,
+   "INSERT": 135,
+   "TEXT": 67,
+   "CIRCLE": 45,
+   "SOLID": 4
+  },
+  "layers": 78,
+  "extents": [
+   [
+    -229.27901,
+    -1206.588469
+   ],
+   [
+    9761.186483,
+    3579.756839
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 72,
+   "error:DEGENERATE_GEOMETRY": 5,
+   "warning:DIMENSION_NOT_ATTACHED": 166,
+   "error:DIMENSION_TEXT_MISMATCH": 18,
+   "warning:DIMENSION_STALE": 20
+  },
+  "summary": {
+   "errors": 95,
+   "warnings": 186,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 8377
+  },
+  "entities_after_edit": 8376,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 72,
+    "error:DEGENERATE_GEOMETRY": 5,
+    "warning:DIMENSION_TEXT_MISMATCH": 18,
+    "warning:DIMENSION_STALE": 20
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\STAIR.dwg",
+  "bytes": 68192,
+  "import_ok": true,
+  "import_s": 3.1,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 154,
+  "types": {
+   "LINE": 125,
+   "LWPOLYLINE": 11,
+   "HATCH": 18
+  },
+  "layers": 10,
+  "extents": [
+   [
+    -2934.455291,
+    -1166.247745
+   ],
+   [
+    2341.598669,
+    2259.357278
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 198
+  },
+  "entities_after_edit": 155,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\STAIR1.dwg",
+  "bytes": 140576,
+  "import_ok": true,
+  "import_s": 3.6,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 744,
+  "types": {
+   "LINE": 566,
+   "ARC": 29,
+   "LWPOLYLINE": 21,
+   "DIMENSION": 26,
+   "INSERT": 11,
+   "HATCH": 6,
+   "LEADER": 36,
+   "MTEXT": 38,
+   "SOLID": 2,
+   "CIRCLE": 2,
+   "TEXT": 7
+  },
+  "layers": 35,
+  "extents": [
+   [
+    -63.523652,
+    -89.977038
+   ],
+   [
+    649.06253,
+    477.54654
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DEGENERATE_GEOMETRY": 6,
+   "error:DUPLICATE_ENTITY": 1,
+   "warning:DIMENSION_NOT_ATTACHED": 23,
+   "error:DIMENSION_TEXT_MISMATCH": 2
+  },
+  "summary": {
+   "errors": 9,
+   "warnings": 23,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 788
+  },
+  "entities_after_edit": 745,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DEGENERATE_GEOMETRY": 6,
+    "error:DUPLICATE_ENTITY": 1,
+    "warning:DIMENSION_NOT_ATTACHED": 13,
+    "warning:DIMENSION_TEXT_MISMATCH": 1,
+    "error:DIMENSION_TEXT_MISMATCH": 1
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\STAIR2.dwg",
+  "bytes": 111168,
+  "import_ok": true,
+  "import_s": 3.3,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 724,
+  "types": {
+   "LINE": 614,
+   "INSERT": 8,
+   "LWPOLYLINE": 11,
+   "HATCH": 8,
+   "ARC": 30,
+   "DIMENSION": 13,
+   "LEADER": 20,
+   "MTEXT": 20
+  },
+  "layers": 26,
+  "extents": [
+   [
+    607.447744,
+    -32.688835
+   ],
+   [
+    1292.56617,
+    287.782785
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 1,
+   "error:DEGENERATE_GEOMETRY": 6,
+   "warning:DIMENSION_NOT_ATTACHED": 11,
+   "error:DIMENSION_TEXT_MISMATCH": 3
+  },
+  "summary": {
+   "errors": 10,
+   "warnings": 11,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 727
+  },
+  "entities_after_edit": 725,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 1,
+    "error:DEGENERATE_GEOMETRY": 6,
+    "warning:DIMENSION_NOT_ATTACHED": 7,
+    "warning:DIMENSION_TEXT_MISMATCH": 2
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\Structural Base1.dwg",
+  "bytes": 165600,
+  "import_ok": true,
+  "import_s": 3.3,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 869,
+  "types": {
+   "LWPOLYLINE": 109,
+   "CIRCLE": 120,
+   "LINE": 393,
+   "HATCH": 25,
+   "SPLINE": 2,
+   "INSERT": 45,
+   "DIMENSION": 57,
+   "TEXT": 105,
+   "LEADER": 5,
+   "MTEXT": 6,
+   "POINT": 2
+  },
+  "layers": 18,
+  "extents": [
+   [
+    -409.505583,
+    -1547.255029
+   ],
+   [
+    1282.364323,
+    373.3105
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 30,
+   "warning:DIMENSION_NOT_ATTACHED": 53
+  },
+  "summary": {
+   "errors": 30,
+   "warnings": 53,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 871
+  },
+  "entities_after_edit": 870,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 30,
+    "warning:DIMENSION_NOT_ATTACHED": 13
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\Structural Base2.dwg",
+  "bytes": 209248,
+  "import_ok": true,
+  "import_s": 3.5,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 1110,
+  "types": {
+   "LWPOLYLINE": 45,
+   "CIRCLE": 56,
+   "LINE": 719,
+   "ELLIPSE": 2,
+   "DIMENSION": 59,
+   "TEXT": 136,
+   "INSERT": 84,
+   "LEADER": 3,
+   "MTEXT": 2,
+   "SPLINE": 2,
+   "HATCH": 2
+  },
+  "layers": 20,
+  "extents": [
+   [
+    -351.501017,
+    -1537.922635
+   ],
+   [
+    1282.364323,
+    230.920889
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 35,
+   "error:DIMENSION_TEXT_MISMATCH": 17,
+   "warning:DIMENSION_NOT_ATTACHED": 59
+  },
+  "summary": {
+   "errors": 52,
+   "warnings": 59,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 1112
+  },
+  "entities_after_edit": 1111,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 35,
+    "warning:DIMENSION_TEXT_MISMATCH": 17,
+    "warning:DIMENSION_NOT_ATTACHED": 59
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\Res\\Wall Base.dwg",
+  "bytes": 277568,
+  "import_ok": true,
+  "import_s": 4.6,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 2295,
+  "types": {
+   "LINE": 1516,
+   "ARC": 23,
+   "LWPOLYLINE": 203,
+   "HATCH": 10,
+   "INSERT": 188,
+   "SPLINE": 4,
+   "TEXT": 102,
+   "CIRCLE": 9,
+   "DIMENSION": 218,
+   "SOLID": 7,
+   "MTEXT": 6,
+   "LEADER": 7,
+   "POINT": 2
+  },
+  "layers": 51,
+  "extents": [
+   [
+    -288.82552,
+    -1587.125635
+   ],
+   [
+    2723.26625,
+    302.709248
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 96,
+   "warning:DIMENSION_NOT_ATTACHED": 166
+  },
+  "summary": {
+   "errors": 96,
+   "warnings": 166,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 2297
+  },
+  "entities_after_edit": 2296,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 96,
+    "warning:DIMENSION_NOT_ATTACHED": 92
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\S-01.dwg",
+  "bytes": 116800,
+  "import_ok": true,
+  "import_s": 3.0,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 2,
+  "types": {
+   "INSERT": 2
+  },
+  "layers": 36,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\S-02.dwg",
+  "bytes": 259296,
+  "import_ok": true,
+  "import_s": 3.2,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 1,
+  "types": {
+   "INSERT": 1
+  },
+  "layers": 93,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\S-03.dwg",
+  "bytes": 156768,
+  "import_ok": true,
+  "import_s": 3.0,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 21,
+  "types": {
+   "LINE": 16,
+   "INSERT": 5
+  },
+  "layers": 126,
+  "extents": [
+   [
+    -2934.455291,
+    -1166.247745
+   ],
+   [
+    2341.598669,
+    2259.357278
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 43
+  },
+  "entities_after_edit": 22,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\S-04.dwg",
+  "bytes": 470144,
+  "import_ok": true,
+  "import_s": 5.5,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 4867,
+  "types": {
+   "LINE": 3858,
+   "LWPOLYLINE": 59,
+   "ARC": 347,
+   "HATCH": 93,
+   "DIMENSION": 73,
+   "LEADER": 157,
+   "MTEXT": 152,
+   "INSERT": 81,
+   "TEXT": 13,
+   "CIRCLE": 30,
+   "SOLID": 4
+  },
+  "layers": 190,
+  "extents": [
+   [
+    -43.50025,
+    -1166.247745
+   ],
+   [
+    9761.186483,
+    3579.756839
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 47,
+   "error:DEGENERATE_GEOMETRY": 5,
+   "warning:DIMENSION_NOT_ATTACHED": 61,
+   "error:DIMENSION_TEXT_MISMATCH": 9,
+   "warning:DIMENSION_STALE": 18
+  },
+  "summary": {
+   "errors": 61,
+   "warnings": 79,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 4920
+  },
+  "entities_after_edit": 4868,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 47,
+    "error:DEGENERATE_GEOMETRY": 5,
+    "warning:DIMENSION_TEXT_MISMATCH": 9,
+    "warning:DIMENSION_STALE": 18
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Architectural\\T-01.dwg",
+  "bytes": 128896,
+  "import_ok": true,
+  "import_s": 2.9,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 0,
+  "types": {},
+  "layers": 12,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\Drainage Summary.dwg",
+  "bytes": 335104,
+  "import_ok": true,
+  "import_s": 3.8,
+  "import_validation_passed": true,
+  "units": "ft",
+  "entities": 0,
+  "types": {},
+  "layers": 6,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\Erosion Control Plan.dwg",
+  "bytes": 377312,
+  "import_ok": true,
+  "import_s": 4.6,
+  "import_validation_passed": true,
+  "units": "ft",
+  "entities": 242,
+  "types": {
+   "INSERT": 104,
+   "TEXT": 129,
+   "LEADER": 8,
+   "LWPOLYLINE": 1
+  },
+  "layers": 267,
+  "extents": [
+   [
+    1024237.90169,
+    90299.648282
+   ],
+   [
+    1026814.01454,
+    93955.15875
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 613
+  },
+  "entities_after_edit": 243,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\Existing Conditions Plan.dwg",
+  "bytes": 346720,
+  "import_ok": true,
+  "import_s": 3.8,
+  "import_validation_passed": true,
+  "units": "ft",
+  "entities": 448,
+  "types": {
+   "INSERT": 201,
+   "MTEXT": 1,
+   "LWPOLYLINE": 25,
+   "TEXT": 198,
+   "ARC": 1,
+   "DIMENSION": 10,
+   "LINE": 6,
+   "LEADER": 6
+  },
+  "layers": 244,
+  "extents": [
+   [
+    1024408.46732,
+    90260.690791
+   ],
+   [
+    1026695.19273,
+    94177.070777
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {
+   "warning:DIMENSION_NOT_ATTACHED": 10
+  },
+  "summary": {
+   "errors": 0,
+   "warnings": 10,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 472
+  },
+  "entities_after_edit": 449,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\Master Site Plan.dwg",
+  "bytes": 322528,
+  "import_ok": true,
+  "import_s": 3.3,
+  "import_validation_passed": true,
+  "units": "ft",
+  "entities": 223,
+  "types": {
+   "INSERT": 13,
+   "HATCH": 3,
+   "WIPEOUT": 6,
+   "LWPOLYLINE": 6,
+   "TEXT": 182,
+   "LEADER": 11,
+   "CIRCLE": 1,
+   "LINE": 1
+  },
+  "layers": 337,
+  "extents": [
+   [
+    1024237.90169,
+    90188.353
+   ],
+   [
+    1026817.726035,
+    94132.770906
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 707
+  },
+  "entities_after_edit": 224,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\PB-BASE.dwg",
+  "bytes": 519808,
+  "import_ok": true,
+  "import_s": 7.0,
+  "import_validation_passed": false,
+  "units": "ft",
+  "entities": 6421,
+  "types": {
+   "TEXT": 843,
+   "MTEXT": 5,
+   "INSERT": 1098,
+   "LINE": 2163,
+   "LWPOLYLINE": 1444,
+   "WIPEOUT": 1,
+   "ARC": 744,
+   "LEADER": 56,
+   "POLYLINE": 1,
+   "HATCH": 13,
+   "DIMENSION": 6,
+   "CIRCLE": 29,
+   "SOLID": 18
+  },
+  "layers": 83,
+  "extents": [
+   [
+    1024296.808866,
+    90439.094729
+   ],
+   [
+    1030997.582317,
+    94481.042847
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 10,
+   "error:DEGENERATE_GEOMETRY": 3,
+   "warning:DIMENSION_NOT_ATTACHED": 6
+  },
+  "summary": {
+   "errors": 13,
+   "warnings": 6,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 6423
+  },
+  "entities_after_edit": 6422,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 10,
+    "error:DEGENERATE_GEOMETRY": 3
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\PB-EX41.dwg",
+  "bytes": 1538944,
+  "import_ok": true,
+  "import_s": 11.4,
+  "import_validation_passed": false,
+  "units": "ft",
+  "entities": 12993,
+  "types": {
+   "TEXT": 1301,
+   "INSERT": 8603,
+   "ARC": 39,
+   "LWPOLYLINE": 2586,
+   "DIMENSION": 2,
+   "LINE": 356,
+   "LEADER": 45,
+   "WIPEOUT": 4,
+   "MTEXT": 4,
+   "POLYLINE": 33,
+   "ATTDEF": 2,
+   "HATCH": 14,
+   "CIRCLE": 4
+  },
+  "layers": 165,
+  "extents": [
+   [
+    1023941.43766,
+    90263.956325
+   ],
+   [
+    1026769.223724,
+    94497.452535
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 4,
+   "warning:DIMENSION_NOT_ATTACHED": 2
+  },
+  "summary": {
+   "errors": 4,
+   "warnings": 2,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 12995
+  },
+  "entities_after_edit": 12994,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 4
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\PB-EX61.dwg",
+  "bytes": 380160,
+  "import_ok": true,
+  "import_s": 4.6,
+  "import_validation_passed": false,
+  "units": "ft",
+  "entities": 2877,
+  "types": {
+   "LWPOLYLINE": 1207,
+   "INSERT": 561,
+   "TEXT": 141,
+   "LINE": 945,
+   "HATCH": 21,
+   "POLYLINE": 2
+  },
+  "layers": 51,
+  "extents": [
+   [
+    1024280.2,
+    89369.55
+   ],
+   [
+    1029256.018983,
+    94535.92
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DEGENERATE_GEOMETRY": 1
+  },
+  "summary": {
+   "errors": 1,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 2879
+  },
+  "entities_after_edit": 2878,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DEGENERATE_GEOMETRY": 1
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\PB-TITLE.dwg",
+  "bytes": 75168,
+  "import_ok": true,
+  "import_s": 2.6,
+  "import_validation_passed": true,
+  "units": "ft",
+  "entities": 14,
+  "types": {
+   "INSERT": 2,
+   "TEXT": 8,
+   "MTEXT": 4
+  },
+  "layers": 3,
+  "extents": [
+   [
+    -2.301924,
+    0.56426
+   ],
+   [
+    -0.589404,
+    23.785047
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 16
+  },
+  "entities_after_edit": 15,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\Road Profile.dwg",
+  "bytes": 310016,
+  "import_ok": true,
+  "import_s": 4.0,
+  "import_validation_passed": false,
+  "units": "in",
+  "entities": 1738,
+  "types": {
+   "TEXT": 826,
+   "LINE": 787,
+   "DIMENSION": 22,
+   "CIRCLE": 44,
+   "INSERT": 29,
+   "POLYLINE": 22,
+   "LWPOLYLINE": 4,
+   "LEADER": 4
+  },
+  "layers": 31,
+  "extents": [
+   [
+    41.686386,
+    212.336273
+   ],
+   [
+    5942.200903,
+    3802.678369
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 10,
+   "error:DEGENERATE_GEOMETRY": 4
+  },
+  "summary": {
+   "errors": 14,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 2207
+  },
+  "entities_after_edit": 1739,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 10,
+    "error:DEGENERATE_GEOMETRY": 4,
+    "warning:DIMENSION_TEXT_MISMATCH": 22
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\Sewer Profiles.dwg",
+  "bytes": 231296,
+  "import_ok": true,
+  "import_s": 3.4,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 1031,
+  "types": {
+   "INSERT": 41,
+   "LWPOLYLINE": 21,
+   "TEXT": 154,
+   "LINE": 783,
+   "LEADER": 25,
+   "HATCH": 4,
+   "DIMENSION": 1,
+   "ELLIPSE": 2
+  },
+  "layers": 28,
+  "extents": [
+   [
+    1500.792361,
+    2319.636853
+   ],
+   [
+    3023.727484,
+    3450.674275
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {
+   "warning:DIMENSION_NOT_ATTACHED": 1
+  },
+  "summary": {
+   "errors": 0,
+   "warnings": 1,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 1045
+  },
+  "entities_after_edit": 1032,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\Site Grading Plan.dwg",
+  "bytes": 300256,
+  "import_ok": true,
+  "import_s": 3.4,
+  "import_validation_passed": true,
+  "units": "ft",
+  "entities": 3,
+  "types": {
+   "INSERT": 3
+  },
+  "layers": 307,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\Site Layout Plan.dwg",
+  "bytes": 281920,
+  "import_ok": true,
+  "import_s": 3.5,
+  "import_validation_passed": true,
+  "units": "ft",
+  "entities": 3,
+  "types": {
+   "INSERT": 3
+  },
+  "layers": 308,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\Site Utility Plan.dwg",
+  "bytes": 300544,
+  "import_ok": true,
+  "import_s": 4.3,
+  "import_validation_passed": true,
+  "units": "ft",
+  "entities": 175,
+  "types": {
+   "INSERT": 3,
+   "TEXT": 126,
+   "LEADER": 45,
+   "DIMENSION": 1
+  },
+  "layers": 311,
+  "extents": [
+   [
+    1024729.725114,
+    90831.275593
+   ],
+   [
+    1026539.593854,
+    93526.22277
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {
+   "warning:DIMENSION_NOT_ATTACHED": 1
+  },
+  "summary": {
+   "errors": 0,
+   "warnings": 1,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 289
+  },
+  "entities_after_edit": 176,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Civil\\Title Sheet.dwg",
+  "bytes": 400160,
+  "import_ok": true,
+  "import_s": 5.2,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 0,
+  "types": {},
+  "layers": 29,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\Cover Sheet.dwg",
+  "bytes": 96224,
+  "import_ok": true,
+  "import_s": 3.7,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 0,
+  "types": {},
+  "layers": 5,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-0142.dwg",
+  "bytes": 171616,
+  "import_ok": true,
+  "import_s": 4.2,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 119,
+  "types": {
+   "CIRCLE": 84,
+   "ARC": 4,
+   "LINE": 30,
+   "INSERT": 1
+  },
+  "layers": 12,
+  "extents": [
+   [
+    -197.743238,
+    -24.79186
+   ],
+   [
+    1134.92057,
+    855.596947
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 375
+  },
+  "entities_after_edit": 120,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-0143.dwg",
+  "bytes": 201216,
+  "import_ok": true,
+  "import_s": 4.2,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 201,
+  "types": {
+   "CIRCLE": 80,
+   "ARC": 52,
+   "LINE": 69
+  },
+  "layers": 11,
+  "extents": [
+   [
+    -163.622748,
+    130.291726
+   ],
+   [
+    1166.06247,
+    850.291726
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 579
+  },
+  "entities_after_edit": 202,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-0200.dwg",
+  "bytes": 305568,
+  "import_ok": true,
+  "import_s": 4.0,
+  "import_validation_passed": false,
+  "units": "mm",
+  "entities": 1630,
+  "types": {
+   "LINE": 1221,
+   "ARC": 124,
+   "POLYLINE": 16,
+   "ELLIPSE": 269
+  },
+  "layers": 14,
+  "extents": [
+   [
+    199.358758,
+    101.968391
+   ],
+   [
+    928.850922,
+    3359.240815
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 4
+  },
+  "summary": {
+   "errors": 4,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 3364
+  },
+  "entities_after_edit": 1631,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 4
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-0203-1.dwg",
+  "bytes": 425088,
+  "import_ok": true,
+  "import_s": 4.8,
+  "import_validation_passed": false,
+  "units": "mm",
+  "entities": 1047,
+  "types": {
+   "INSERT": 1,
+   "LINE": 780,
+   "ARC": 112,
+   "POLYLINE": 154
+  },
+  "layers": 17,
+  "extents": [
+   [
+    -446.538593,
+    -11.404245
+   ],
+   [
+    3728.878727,
+    1358.213445
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 12
+  },
+  "summary": {
+   "errors": 12,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 2090
+  },
+  "entities_after_edit": 1048,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 12
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-0300.dwg",
+  "bytes": 644096,
+  "import_ok": true,
+  "import_s": 6.9,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 1838,
+  "types": {
+   "LINE": 1207,
+   "POLYLINE": 287,
+   "ELLIPSE": 6,
+   "ARC": 332,
+   "CIRCLE": 6
+  },
+  "layers": 13,
+  "extents": [
+   [
+    291.186156,
+    206.821803
+   ],
+   [
+    921.208528,
+    3425.174266
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 3711
+  },
+  "entities_after_edit": 1839,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-0500-N.dwg",
+  "bytes": 166656,
+  "import_ok": true,
+  "import_s": 3.2,
+  "import_validation_passed": false,
+  "units": "mm",
+  "entities": 299,
+  "types": {
+   "LINE": 270,
+   "POLYLINE": 11,
+   "CIRCLE": 3,
+   "INSERT": 1,
+   "ARC": 14
+  },
+  "layers": 19,
+  "extents": [
+   [
+    34.646656,
+    -8.48418
+   ],
+   [
+    3847.940136,
+    1469.214055
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 6
+  },
+  "summary": {
+   "errors": 6,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 657
+  },
+  "entities_after_edit": 300,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 6
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-0500.dwg",
+  "bytes": 470944,
+  "import_ok": true,
+  "import_s": 5.1,
+  "import_validation_passed": false,
+  "units": "mm",
+  "entities": 2035,
+  "types": {
+   "ARC": 38,
+   "POLYLINE": 128,
+   "CIRCLE": 12,
+   "LINE": 1857
+  },
+  "layers": 15,
+  "extents": [
+   [
+    459.762534,
+    241.181352
+   ],
+   [
+    1240.962081,
+    3281.381352
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 208
+  },
+  "summary": {
+   "errors": 208,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 4297
+  },
+  "entities_after_edit": 2036,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 208
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-0600.dwg",
+  "bytes": 200736,
+  "import_ok": true,
+  "import_s": 3.5,
+  "import_validation_passed": false,
+  "units": "mm",
+  "entities": 937,
+  "types": {
+   "LINE": 719,
+   "CIRCLE": 19,
+   "ARC": 49,
+   "POLYLINE": 7,
+   "ELLIPSE": 143
+  },
+  "layers": 11,
+  "extents": [
+   [
+    697.40968,
+    123.432902
+   ],
+   [
+    4745.474505,
+    2784.379465
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 2
+  },
+  "summary": {
+   "errors": 2,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 1905
+  },
+  "entities_after_edit": 938,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 2
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-0900.dwg",
+  "bytes": 423936,
+  "import_ok": true,
+  "import_s": 6.2,
+  "import_validation_passed": false,
+  "units": "mm",
+  "entities": 1089,
+  "types": {
+   "INSERT": 1,
+   "LINE": 813,
+   "POLYLINE": 163,
+   "ARC": 105,
+   "CIRCLE": 7
+  },
+  "layers": 14,
+  "extents": [
+   [
+    50.511163,
+    -25.870566
+   ],
+   [
+    1351.414835,
+    717.243513
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 53
+  },
+  "summary": {
+   "errors": 53,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 2226
+  },
+  "entities_after_edit": 1090,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 53
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-0901.dwg",
+  "bytes": 209888,
+  "import_ok": true,
+  "import_s": 5.4,
+  "import_validation_passed": false,
+  "units": "mm",
+  "entities": 371,
+  "types": {
+   "LINE": 233,
+   "ARC": 68,
+   "CIRCLE": 2,
+   "ELLIPSE": 13,
+   "INSERT": 1,
+   "POLYLINE": 54
+  },
+  "layers": 14,
+  "extents": [
+   [
+    10.659818,
+    -39.971414
+   ],
+   [
+    1120.515416,
+    756.911502
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 74
+  },
+  "summary": {
+   "errors": 74,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 804
+  },
+  "entities_after_edit": 372,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 74
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-1000.dwg",
+  "bytes": 130304,
+  "import_ok": true,
+  "import_s": 2.9,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 108,
+  "types": {
+   "INSERT": 1,
+   "LINE": 84,
+   "ELLIPSE": 15,
+   "CIRCLE": 8
+  },
+  "layers": 14,
+  "extents": [
+   [
+    49.67429,
+    12.931812
+   ],
+   [
+    401.059606,
+    258.646274
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 262
+  },
+  "entities_after_edit": 109,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-02-1600.dwg",
+  "bytes": 252512,
+  "import_ok": true,
+  "import_s": 3.7,
+  "import_validation_passed": false,
+  "units": "mm",
+  "entities": 1464,
+  "types": {
+   "LINE": 1154,
+   "ELLIPSE": 60,
+   "CIRCLE": 108,
+   "ARC": 141,
+   "INSERT": 1
+  },
+  "layers": 16,
+  "extents": [
+   [
+    4.250984,
+    -30.596766
+   ],
+   [
+    6792.166186,
+    4560.48673
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 417
+  },
+  "summary": {
+   "errors": 417,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 3040
+  },
+  "entities_after_edit": 1465,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 417
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-03-1200.dwg",
+  "bytes": 422656,
+  "import_ok": true,
+  "import_s": 4.9,
+  "import_validation_passed": false,
+  "units": "mm",
+  "entities": 1067,
+  "types": {
+   "LINE": 726,
+   "ARC": 24,
+   "POLYLINE": 151,
+   "ELLIPSE": 165,
+   "INSERT": 1
+  },
+  "layers": 14,
+  "extents": [
+   [
+    124.263448,
+    8.944605
+   ],
+   [
+    802.794478,
+    445.88665
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "error:DUPLICATE_ENTITY": 5
+  },
+  "summary": {
+   "errors": 5,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 2188
+  },
+  "entities_after_edit": 1068,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "error:DUPLICATE_ENTITY": 5
+   }
+  }
+ },
+ {
+  "sample": "Sheet Sets\\Manufacturing\\VW252-03-1300.dwg",
+  "bytes": 189728,
+  "import_ok": true,
+  "import_s": 3.5,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 275,
+  "types": {
+   "LINE": 216,
+   "ARC": 18,
+   "POLYLINE": 38,
+   "CIRCLE": 3
+  },
+  "layers": 12,
+  "extents": [
+   [
+    206.107681,
+    232.000794
+   ],
+   [
+    955.479231,
+    726.23272
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 594
+  },
+  "entities_after_edit": 276,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "VBA\\Map2Globe.Dwg",
+  "bytes": 563136,
+  "import_ok": true,
+  "import_s": 3.9,
+  "import_validation_passed": false,
+  "units": null,
+  "entities": 1288,
+  "types": {
+   "LWPOLYLINE": 980,
+   "LINE": 34,
+   "TEXT": 253,
+   "CIRCLE": 11,
+   "INSERT": 9,
+   "IMAGE": 1
+  },
+  "layers": 16,
+  "extents": [
+   [
+    -6367.0,
+    -6367.0
+   ],
+   [
+    6367.0,
+    6367.0
+   ]
+  ],
+  "validate_passed": false,
+  "issue_codes": {
+   "warning:UNITS_UNDEFINED": 1,
+   "error:DUPLICATE_ENTITY": 15
+  },
+  "summary": {
+   "errors": 15,
+   "warnings": 1,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 1291
+  },
+  "entities_after_edit": 1289,
+  "revalidated": {
+   "passed": false,
+   "issues": {
+    "warning:UNITS_UNDEFINED": 1,
+    "error:DUPLICATE_ENTITY": 15
+   }
+  }
+ },
+ {
+  "sample": "VBA\\Tower.dwg",
+  "bytes": 347072,
+  "import_ok": true,
+  "import_s": 2.5,
+  "import_validation_passed": true,
+  "units": null,
+  "entities": 39,
+  "types": {
+   "INSERT": 8,
+   "LINE": 31
+  },
+  "layers": 10,
+  "extents": [
+   [
+    -1817.220393,
+    -1684.105083
+   ],
+   [
+    2784.246656,
+    0.0
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {
+   "warning:UNITS_UNDEFINED": 1
+  },
+  "summary": {
+   "errors": 0,
+   "warnings": 1,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 45
+  },
+  "entities_after_edit": 40,
+  "revalidated": {
+   "passed": true,
+   "issues": {
+    "warning:UNITS_UNDEFINED": 1
+   }
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Analog Integrated Circuits.dwg",
+  "bytes": 46398,
+  "import_ok": true,
+  "import_s": 2.9,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 19,
+  "types": {
+   "INSERT": 19
+  },
+  "layers": 2,
+  "extents": [
+   [
+    0.0,
+    0.045644
+   ],
+   [
+    14.309549,
+    10.959884
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 24
+  },
+  "entities_after_edit": 20,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\AutoCAD Textstyles and Linetypes.dwg",
+  "bytes": 21894,
+  "import_ok": true,
+  "import_s": 2.8,
+  "import_validation_passed": true,
+  "units": null,
+  "entities": 0,
+  "types": {},
+  "layers": 2,
+  "extents": null,
+  "validate_passed": true,
+  "issue_codes": {
+   "warning:UNITS_UNDEFINED": 1
+  },
+  "summary": {
+   "errors": 0,
+   "warnings": 1,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_skipped": "no model-space extents",
+  "revalidated": {
+   "passed": true,
+   "issues": {
+    "warning:UNITS_UNDEFINED": 1
+   }
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Basic Electronics.dwg",
+  "bytes": 37622,
+  "import_ok": true,
+  "import_s": 2.6,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 24,
+  "types": {
+   "INSERT": 24
+  },
+  "layers": 2,
+  "extents": [
+   [
+    -0.03914,
+    6.953484
+   ],
+   [
+    10.477103,
+    8.508423
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 29
+  },
+  "entities_after_edit": 25,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\CMOS Integrated Circuits.dwg",
+  "bytes": 48128,
+  "import_ok": true,
+  "import_s": 2.7,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 25,
+  "types": {
+   "INSERT": 25
+  },
+  "layers": 2,
+  "extents": [
+   [
+    -0.181133,
+    0.331523
+   ],
+   [
+    12.583369,
+    9.054498
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 30
+  },
+  "entities_after_edit": 26,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Electrical Power.dwg",
+  "bytes": 35412,
+  "import_ok": true,
+  "import_s": 2.7,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 20,
+  "types": {
+   "INSERT": 20
+  },
+  "layers": 2,
+  "extents": [
+   [
+    0.304876,
+    6.48714
+   ],
+   [
+    11.821617,
+    9.142508
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 25
+  },
+  "entities_after_edit": 21,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Fasteners - Metric.dwg",
+  "bytes": 38870,
+  "import_ok": true,
+  "import_s": 2.4,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 20,
+  "types": {
+   "INSERT": 20
+  },
+  "layers": 2,
+  "extents": [
+   [
+    1.537267,
+    -0.92175
+   ],
+   [
+    136.294521,
+    283.898655
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 25
+  },
+  "entities_after_edit": 21,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Fasteners - US.dwg",
+  "bytes": 38582,
+  "import_ok": true,
+  "import_s": 2.5,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 20,
+  "types": {
+   "INSERT": 20
+  },
+  "layers": 2,
+  "extents": [
+   [
+    -0.080903,
+    4.903596
+   ],
+   [
+    11.178617,
+    9.053704
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 25
+  },
+  "entities_after_edit": 21,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Home - Space Planner.dwg",
+  "bytes": 73632,
+  "import_ok": true,
+  "import_s": 2.6,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 20,
+  "types": {
+   "INSERT": 20
+  },
+  "layers": 2,
+  "extents": [
+   [
+    -0.049769,
+    -5.274922
+   ],
+   [
+    283.968775,
+    181.346104
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 25
+  },
+  "entities_after_edit": 21,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\House Designer.dwg",
+  "bytes": 43388,
+  "import_ok": true,
+  "import_s": 2.5,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 20,
+  "types": {
+   "INSERT": 20
+  },
+  "layers": 2,
+  "extents": [
+   [
+    20.592941,
+    58.889585
+   ],
+   [
+    457.50862,
+    287.802046
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 25
+  },
+  "entities_after_edit": 21,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\HVAC - Heating Ventilation Air Conditioning.dwg",
+  "bytes": 42904,
+  "import_ok": true,
+  "import_s": 2.6,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 19,
+  "types": {
+   "INSERT": 19
+  },
+  "layers": 2,
+  "extents": [
+   [
+    -1.36013,
+    -3.763341
+   ],
+   [
+    122.583722,
+    85.785866
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 24
+  },
+  "entities_after_edit": 20,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Hydraulic - Pneumatic.dwg",
+  "bytes": 33490,
+  "import_ok": true,
+  "import_s": 2.7,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 20,
+  "types": {
+   "INSERT": 20
+  },
+  "layers": 2,
+  "extents": [
+   [
+    0.040984,
+    4.479092
+   ],
+   [
+    11.755605,
+    9.00838
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 25
+  },
+  "entities_after_edit": 21,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Kitchens.dwg",
+  "bytes": 53919,
+  "import_ok": true,
+  "import_s": 2.6,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 21,
+  "types": {
+   "INSERT": 21
+  },
+  "layers": 2,
+  "extents": [
+   [
+    0.331368,
+    1.067019
+   ],
+   [
+    241.861085,
+    179.543178
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 26
+  },
+  "entities_after_edit": 22,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Landscaping.dwg",
+  "bytes": 70687,
+  "import_ok": true,
+  "import_s": 2.5,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 17,
+  "types": {
+   "INSERT": 17
+  },
+  "layers": 3,
+  "extents": [
+   [
+    -7.06055,
+    -1.99997
+   ],
+   [
+    735.001421,
+    600.103942
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 22
+  },
+  "entities_after_edit": 18,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Pipe Fittings.dwg",
+  "bytes": 36246,
+  "import_ok": true,
+  "import_s": 2.8,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 20,
+  "types": {
+   "INSERT": 20
+  },
+  "layers": 2,
+  "extents": [
+   [
+    0.07184,
+    6.220694
+   ],
+   [
+    10.904282,
+    9.007867
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 25
+  },
+  "entities_after_edit": 21,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Plant Process.dwg",
+  "bytes": 52863,
+  "import_ok": true,
+  "import_s": 2.7,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 20,
+  "types": {
+   "INSERT": 20
+  },
+  "layers": 3,
+  "extents": [
+   [
+    0.39661,
+    2.284168
+   ],
+   [
+    10.533917,
+    8.964512
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 25
+  },
+  "entities_after_edit": 21,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\DesignCenter\\Welding.dwg",
+  "bytes": 26487,
+  "import_ok": true,
+  "import_s": 2.4,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 20,
+  "types": {
+   "INSERT": 20
+  },
+  "layers": 2,
+  "extents": [
+   [
+    0.111864,
+    6.319924
+   ],
+   [
+    11.4,
+    8.892682
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 25
+  },
+  "entities_after_edit": 21,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Annotation - Imperial.dwg",
+  "bytes": 60733,
+  "import_ok": true,
+  "import_s": 2.9,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 10,
+  "types": {
+   "INSERT": 10
+  },
+  "layers": 2,
+  "extents": [
+   [
+    -1.374521,
+    -0.25
+   ],
+   [
+    2.8125,
+    23.5
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": false,
+   "import_rejected": false,
+   "audit_errors": 24,
+   "entities_seen_by_autocad": 11
+  },
+  "entities_after_edit": 11,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  },
+  "audit_baseline": {
+   "passed": false,
+   "audit_errors": 24,
+   "messages": []
+  },
+  "audit_after_edit": {
+   "passed": false,
+   "audit_errors": 24,
+   "messages": []
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Annotation - Metric.dwg",
+  "bytes": 61729,
+  "import_ok": true,
+  "import_s": 3.0,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 10,
+  "types": {
+   "INSERT": 10
+  },
+  "layers": 2,
+  "extents": [
+   [
+    -37.220954,
+    -6.35
+   ],
+   [
+    71.4375,
+    529.734758
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": false,
+   "import_rejected": false,
+   "audit_errors": 24,
+   "entities_seen_by_autocad": 12
+  },
+  "entities_after_edit": 11,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  },
+  "audit_baseline": {
+   "passed": false,
+   "audit_errors": 24,
+   "messages": []
+  },
+  "audit_after_edit": {
+   "passed": false,
+   "audit_errors": 24,
+   "messages": []
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Architectural - Imperial.dwg",
+  "bytes": 171271,
+  "import_ok": true,
+  "import_s": 3.7,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 9,
+  "types": {
+   "INSERT": 9
+  },
+  "layers": 3,
+  "extents": [
+   [
+    -70.146,
+    -128.659087
+   ],
+   [
+    195.66422,
+    501.167
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 10
+  },
+  "entities_after_edit": 10,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Architectural - Metric.dwg",
+  "bytes": 172903,
+  "import_ok": true,
+  "import_s": 4.0,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 9,
+  "types": {
+   "INSERT": 9
+  },
+  "layers": 3,
+  "extents": [
+   [
+    -1781.7084,
+    -2766.585146
+   ],
+   [
+    4969.87118,
+    12609.6418
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 10
+  },
+  "entities_after_edit": 10,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Civil - Imperial.dwg",
+  "bytes": 73923,
+  "import_ok": true,
+  "import_s": 3.0,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 9,
+  "types": {
+   "INSERT": 9
+  },
+  "layers": 3,
+  "extents": [
+   [
+    -562.707094,
+    -643.034584
+   ],
+   [
+    689.576214,
+    1812.0
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": false,
+   "import_rejected": false,
+   "audit_errors": 2,
+   "entities_seen_by_autocad": 10
+  },
+  "entities_after_edit": 10,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  },
+  "audit_baseline": {
+   "passed": false,
+   "audit_errors": 2,
+   "messages": []
+  },
+  "audit_after_edit": {
+   "passed": false,
+   "audit_errors": 2,
+   "messages": []
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Civil - Metric.dwg",
+  "bytes": 75296,
+  "import_ok": true,
+  "import_s": 2.6,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 9,
+  "types": {
+   "INSERT": 9
+  },
+  "layers": 3,
+  "extents": [
+   [
+    -14067.677358,
+    -12978.637278
+   ],
+   [
+    16985.78008,
+    45300.0
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": false,
+   "import_rejected": false,
+   "audit_errors": 2,
+   "entities_seen_by_autocad": 10
+  },
+  "entities_after_edit": 10,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  },
+  "audit_baseline": {
+   "passed": false,
+   "audit_errors": 2,
+   "messages": []
+  },
+  "audit_after_edit": {
+   "passed": false,
+   "audit_errors": 2,
+   "messages": []
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Electrical - Imperial.dwg",
+  "bytes": 39184,
+  "import_ok": true,
+  "import_s": 2.6,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 6,
+  "types": {
+   "INSERT": 6
+  },
+  "layers": 2,
+  "extents": [
+   [
+    -0.310067,
+    -0.133511
+   ],
+   [
+    0.310067,
+    12.596
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": false,
+   "import_rejected": false,
+   "audit_errors": 32,
+   "entities_seen_by_autocad": 7
+  },
+  "entities_after_edit": 7,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  },
+  "audit_baseline": {
+   "passed": false,
+   "audit_errors": 32,
+   "messages": []
+  },
+  "audit_after_edit": {
+   "passed": false,
+   "audit_errors": 32,
+   "messages": []
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Electrical - Metric.dwg",
+  "bytes": 39537,
+  "import_ok": true,
+  "import_s": 2.8,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 6,
+  "types": {
+   "INSERT": 6
+  },
+  "layers": 2,
+  "extents": [
+   [
+    -7.792926,
+    -3.298821
+   ],
+   [
+    7.792926,
+    314.42
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": false,
+   "import_rejected": false,
+   "audit_errors": 32,
+   "entities_seen_by_autocad": 7
+  },
+  "entities_after_edit": 7,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  },
+  "audit_baseline": {
+   "passed": false,
+   "audit_errors": 32,
+   "messages": []
+  },
+  "audit_after_edit": {
+   "passed": false,
+   "audit_errors": 32,
+   "messages": []
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Mechanical - Imperial.dwg",
+  "bytes": 89737,
+  "import_ok": true,
+  "import_s": 2.8,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 8,
+  "types": {
+   "INSERT": 8
+  },
+  "layers": 5,
+  "extents": [
+   [
+    -1.021783,
+    -7.120486
+   ],
+   [
+    4.373915,
+    20.1875
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 9
+  },
+  "entities_after_edit": 9,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Mechanical - Metric.dwg",
+  "bytes": 99151,
+  "import_ok": true,
+  "import_s": 2.8,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 9,
+  "types": {
+   "INSERT": 9
+  },
+  "layers": 5,
+  "extents": [
+   [
+    -24.01,
+    -93.142965
+   ],
+   [
+    100.0,
+    509.5
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 14
+  },
+  "entities_after_edit": 10,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Multileader Tools.dwg",
+  "bytes": 24968,
+  "import_ok": true,
+  "import_s": 2.6,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 14,
+  "types": {
+   "INSERT": 12,
+   "MTEXT": 2
+  },
+  "layers": 2,
+  "extents": [
+   [
+    2.129321,
+    1.692506
+   ],
+   [
+    5.838985,
+    7.188407
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 15
+  },
+  "entities_after_edit": 15,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Structural - Imperial.dwg",
+  "bytes": 67393,
+  "import_ok": true,
+  "import_s": 2.7,
+  "import_validation_passed": true,
+  "units": "in",
+  "entities": 7,
+  "types": {
+   "INSERT": 7
+  },
+  "layers": 3,
+  "extents": [
+   [
+    -1.237796,
+    40.0
+   ],
+   [
+    4.0551,
+    87.0
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": true,
+   "import_rejected": false,
+   "audit_errors": 0,
+   "entities_seen_by_autocad": 8
+  },
+  "entities_after_edit": 8,
+  "revalidated": {
+   "passed": true,
+   "issues": {
+    "warning:TEXT_GLYPHS_MISSING": 1
+   }
+  }
+ },
+ {
+  "sample": "zh-CN\\Dynamic Blocks\\Structural - Metric.dwg",
+  "bytes": 58431,
+  "import_ok": true,
+  "import_s": 3.0,
+  "import_validation_passed": true,
+  "units": "mm",
+  "entities": 7,
+  "types": {
+   "INSERT": 7
+  },
+  "layers": 3,
+  "extents": [
+   [
+    -5.878516,
+    1000.0
+   ],
+   [
+    104.121484,
+    2099.999993
+   ]
+  ],
+  "validate_passed": true,
+  "issue_codes": {},
+  "summary": {
+   "errors": 0,
+   "warnings": 0,
+   "requirements_total": 0,
+   "requirements_failed": 0
+  },
+  "edit_ok": true,
+  "acad_audit": {
+   "passed": false,
+   "import_rejected": false,
+   "audit_errors": 4,
+   "entities_seen_by_autocad": 8
+  },
+  "entities_after_edit": 8,
+  "revalidated": {
+   "passed": true,
+   "issues": {}
+  },
+  "audit_baseline": {
+   "passed": false,
+   "audit_errors": 4,
+   "messages": [
+    {
+     "message": "在块符号表中发现无效的无名块“*U9”。",
+     "count": 2
+    },
+    {
+     "message": "在块符号表中发现无效的无名块“*U11”。",
+     "count": 2
+    }
+   ]
+  },
+  "audit_after_edit": {
+   "passed": false,
+   "audit_errors": 4,
+   "messages": [
+    {
+     "message": "在块符号表中发现无效的无名块“*U9”。",
+     "count": 2
+    },
+    {
+     "message": "在块符号表中发现无效的无名块“*U11”。",
+     "count": 2
+    }
+   ]
+  }
+ }
+]

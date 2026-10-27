@@ -44,6 +44,7 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("create", help="Create an empty drawing")
     s.add_argument("path"); s.add_argument("--units", default="mm"); s.add_argument("--template", default="mechanical")
     s.add_argument("--dxf-version", default="R2010"); s.add_argument("--overwrite", action="store_true")
+    s.add_argument("--annotation-scale", type=float, default=1.0, help="Plot scale 1:N for dimension/linetype sizes")
 
     s = sub.add_parser("inspect", help="Drawing summary: units, extents, layers, counts, tags, metadata")
     s.add_argument("path")
@@ -126,7 +127,7 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
     rt = Runtime(policy)
     c = a.cmd
     if c == "create":
-        r = rt.create_drawing(a.path, a.units, a.template, a.dxf_version, a.overwrite)
+        r = rt.create_drawing(a.path, a.units, a.template, a.dxf_version, a.overwrite, a.annotation_scale)
     elif c == "inspect":
         r = rt.read_drawing(a.path)
     elif c == "entities":

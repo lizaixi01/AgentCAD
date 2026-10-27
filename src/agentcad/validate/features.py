@@ -61,6 +61,8 @@ class Features:
     points: list[tuple[G.Vec, str]] = field(default_factory=list)  # snap points (vertex/center) + entity
     curves: list[tuple[G.Vec, float, str]] = field(default_factory=list)  # circles/arcs: center, radius, entity
     texts: list[tuple[str, str]] = field(default_factory=list)
+    segments: list[tuple[G.Vec, G.Vec]] = field(default_factory=list)  # straight edges (dimension anchors may sit
+    # anywhere along a wall or edge, not only at a vertex)
 
 
 def _flatten(e) -> list[G.Vec]:
@@ -96,6 +98,18 @@ def measure_dimension(e) -> tuple[str, float | None]:
     return kind, None
 
 
+def dimension_direction(e) -> G.Vec | None:
+    """Unit measurement direction of a linear/aligned dimension (None for other kinds)."""
+    x = e.dxf
+    kind, _ = measure_dimension(e)
+    if kind == "aligned":
+        d = G.sub((x.defpoint3.x, x.defpoint3.y), (x.defpoint2.x, x.defpoint2.y))
+        return G.unit(d) if G.norm(d) > 0 else None
+    if kind == "linear":
+        return G.polar((0.0, 0.0), 1.0, x.get("angle", 0.0))
+    return None
+
+
 def dimension_anchor_points(e) -> list[G.Vec]:
     """Points of the measured geometry a dimension refers to."""
     x = e.dxf
@@ -122,6 +136,7 @@ def extract(doc: Drawing) -> Features:
             pts = [(p[0], p[1]) for p in lwpoly_wcs(e)]
             for p in pts:
                 f.points.append((p, h))
+            f.segments += list(zip(pts, pts[1:] + (pts[:1] if e.closed else [])))
             closed = e.closed or (len(pts) > 2 and G.dist(pts[0], pts[-1]) < CONNECT_TOL)
             if closed and len(pts) >= 3:
                 f.contours.append(Contour([h], _flatten(e), e.dxf.layer, "polyline"))
@@ -130,6 +145,7 @@ def extract(doc: Drawing) -> Features:
         elif t == "LINE":
             s, q = (e.dxf.start.x, e.dxf.start.y), (e.dxf.end.x, e.dxf.end.y)
             f.points += [(s, h), (q, h), (((s[0] + q[0]) / 2, (s[1] + q[1]) / 2), h)]
+            f.segments.append((s, q))
             loose.append((h, e.dxf.layer, s, q, e))
         elif t == "ARC":
             c, _r, a1, a2 = circle_wcs(e)
@@ -149,14 +165,41 @@ def extract(doc: Drawing) -> Features:
             kind, m = measure_dimension(e)
             f.dimensions.append({"id": h, "kind": kind, "measurement": m, "layer": e.dxf.layer,
                                  "text": e.dxf.get("text", ""), "anchors": dimension_anchor_points(e),
+                                 "direction": dimension_direction(e),
                                  "stored": e.dxf.get("actual_measurement"), "tag": get_tag(e)})
         elif t in ("TEXT", "MTEXT"):
             f.texts.append((e.dxf.text if t == "TEXT" else e.plain_text(), h))
         elif t == "INSERT":
             for a in e.attribs:
                 f.texts.append((a.dxf.text, h))
+        else:
+            sp = snap_points(e)
+            f.points += [(p, h) for p in sp]
+            if e.dxftype() == "POLYLINE":
+                f.segments += list(zip(sp, sp[1:] + (sp[:1] if e.is_closed else [])))
     _chain_loops(f, loose)
     return f
+
+
+def snap_points(e) -> list[G.Vec]:
+    """Vertices of the entity types not handled above, so dimensions anchored on them count as attached
+    (real drawings use old-style POLYLINEs, ellipses, solids and splines; examples/trials/real_dwg_survey)."""
+    t = e.dxftype()
+    try:
+        if t == "POLYLINE" and e.is_2d_polyline:
+            return [(v.dxf.location.x, v.dxf.location.y) for v in e.vertices]
+        if t == "ELLIPSE":
+            return [(p.x, p.y) for p in (e.dxf.center, e.start_point, e.end_point)]
+        if t in ("SOLID", "TRACE", "3DFACE"):
+            return [(p.x, p.y) for p in e.wcs_vertices()]
+        if t == "SPLINE":
+            pts = list(e.control_points) or list(e.fit_points)
+            return [(p[0], p[1]) for p in (pts[0], pts[-1])] if pts else []
+        if t == "POINT":
+            return [(e.dxf.location.x, e.dxf.location.y)]
+    except Exception:  # malformed foreign entity: no snap points rather than a crash
+        return []
+    return []
 
 
 def _chain_loops(f: Features, loose) -> None:

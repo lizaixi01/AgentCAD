@@ -8,7 +8,7 @@
    ▼
 service.Runtime          ← 唯一业务层：信封、指标、锁、journal、调用下层
    ├─ engine             ← 批量事务执行（预校验 → 内存执行 → 失败整体丢弃）；spec 修订的就地协调
-   │    └─ ops/*         ← 40 个类型化操作（同一定义生成参数校验 + JSON Schema）
+   │    └─ ops/*         ← 41 个类型化操作（同一定义生成参数校验 + JSON Schema）
    ├─ validate/*         ← 独立验证器：只读磁盘文件
    ├─ constraints        ← 约束检查 / 顺序直接强制
    ├─ spec / docspec     ← 规格 → 操作计划 + 需求；文档 → 带溯源的规格
@@ -31,6 +31,7 @@ ezdxf (DXF 内核)
 | 零件规格 | rootdict → `AGENTCAD` 字典 → XRECORD `part_spec`（JSON 分块存在 group 1 中），另有 `plan_tags`。随 DXF 文件一起移动 |
 | 标注 | 真实 DIMENSION 实体 + 渲染块 `*D<n>`；Runtime 写入 group 42（实测值）；验证器从定义点重新测量，不信任文字或 group 42 |
 | 角度 | 度、逆时针、WCS。外来文件中 extrusion (0,0,-1) 的圆/弧/多段线按 WCS 读取（AutoCAD 会原样保留这种实体）；被编辑时先归一化为 (0,0,1)。多段线 bulge = tan(θ/4)，正值为逆时针。角度标注的 group 42 按 AutoCAD 约定存弧度，API 中仍用度 |
+| 文字与出图比例 | Standard 文字样式为 `gbenor.shx` + 大字体 `gbcbig.shx`（中文可显示）。`annotation_scale`（1:N）写入 `$DIMSCALE`、`$LTSCALE` 和 AGENTCAD 标注样式 |
 | 单位输入 | 数字 = 图纸单位；`"8mm"`、`"0.5in"` 这类字符串会被显式换算；未知单位、或图纸没有单位时报错 |
 
 ## 状态目录（每张图纸一份）
@@ -88,7 +89,7 @@ ezdxf (DXF 内核)
 
 `validate_file(path)` 自己从磁盘读取文件（解析失败本身就是一项结果），不使用生成过程中的任何对象：
 
-- **通用检查**：`$INSUNITS` 是否明确；零长度、零半径、非有限坐标、少于 2 个顶点；引用了未定义的块或图层；重复实体（几何规范化后比较，线段方向无关，标注考虑方向）；标注文字与重新测量值矛盾；group 42 与定义点不一致（`DIMENSION_STALE`）；标注锚点没有落在任何几何上（`DIMENSION_NOT_ATTACHED`）；指定图层上存在开口轮廓；超出给定边界；ezdxf audit 错误。
+- **通用检查**：`$INSUNITS` 是否明确；零长度、零半径、非有限坐标、少于 2 个顶点；引用了未定义的块或图层；重复实体（几何规范化后比较，线段方向无关，标注考虑方向）；标注文字与重新测量值矛盾；group 42 与定义点不一致（`DIMENSION_STALE`）；标注锚点没有落在任何几何上（`DIMENSION_NOT_ATTACHED`）；指定图层上存在开口轮廓；超出给定边界；ezdxf audit 错误。出图可读性（来自 AutoCAD 出图复核，见 [trials-report.md](trials-report.md)）：标注文字重复 Ø/R 前缀（`DIMENSION_DOUBLE_PREFIX`）、中文用了无大字体的 SHX 字体（`TEXT_GLYPHS_MISSING`）、箭头相对标注长度过小（`ANNOTATION_TOO_SMALL`）。标注附着检查接受顶点、圆/弧、与测量方向相交的边，以及块参照内的几何；含外部参照的图纸不做附着检查。
 - **特征识别**：闭合多段线，以及 LINE/ARC 首尾相接形成的环 → 轮廓；轮廓内的圆 → 孔；标注 → 类型和实测值。
 - **需求检查**：`outline`、`hole`（位置相对轮廓左下角）、`hole_count`（可按直径分组）、`dimension`（可用 `tag` 指定实体）、`entity_count`、`text`、`within_bounds`。每项给出 expected、actual、deviation、tolerance 和相关实体；需求来自文档时还附带文档来源。需求里的未知字段不会被静默忽略，而是返回 `warnings`。
 

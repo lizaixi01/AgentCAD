@@ -157,6 +157,15 @@ def intersections(a: Seg | Circ, b: Seg | Circ, *, a_infinite: bool = False) -> 
     return pts
 
 
+def dist_to_segment(p: Vec, a: Vec, b: Vec) -> float:
+    ab = sub(b, a)
+    L2 = dot(ab, ab)
+    if L2 == 0:
+        return dist(p, a)
+    t = max(0.0, min(1.0, dot(sub(p, a), ab) / L2))
+    return dist(p, add(a, mul(ab, t)))
+
+
 def polygon_area(pts: list[Vec]) -> float:
     s = 0.0
     for i in range(len(pts)):

@@ -168,6 +168,14 @@ Insert the standard 180x32 mm title block (ISO-like) with attributes ['TITLE', '
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
 
+### `set_annotation_scale`
+
+Set the plot scale 1:scale for annotations: dimension arrows/text/gaps (DIMSCALE) and linetype dash lengths (LTSCALE) are multiplied by 'scale'. Use e.g. 50 or 100 for building plans in mm. Existing dimensions are re-rendered.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `scale` | number >0 | 是 |  | N of the plot scale 1:N |
+
 ## block
 
 ### `define_block`

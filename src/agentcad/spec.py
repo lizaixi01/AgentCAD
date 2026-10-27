@@ -179,10 +179,12 @@ def compile_plate(spec: dict) -> dict[str, Any]:
         th = 3.5 if (normalize_unit(spec["units"]) == "mm") else 0.14
         off = 10.0 if normalize_unit(spec["units"]) == "mm" else 0.4
         dim = {"layer": "DIM"}
+        # a negative offset lies to the right of p1->p2: below for the horizontal dims, while the upward
+        # vertical dims need a positive offset to land left of the plate (outside it, not across the holes)
         ops.append({"op": "add_linear_dim", "p1": [ox, oy], "p2": [ox + W, oy], "orientation": "horizontal",
                     "offset": -2 * off, "tag": "dim.width", **dim})
         ops.append({"op": "add_linear_dim", "p1": [ox, oy], "p2": [ox, oy + H], "orientation": "vertical",
-                    "offset": -2 * off, "tag": "dim.height", **dim})
+                    "offset": 2 * off, "tag": "dim.height", **dim})
         reqs += [{"id": "dim.width", "type": "dimension", "kind": "linear", "value": W},
                  {"id": "dim.height", "type": "dimension", "kind": "linear", "value": H}]
         if r > 0:
@@ -197,13 +199,13 @@ def compile_plate(spec: dict) -> dict[str, Any]:
             c0 = [ox + first["center"][0], oy + first["center"][1]]
             n = len(hs)
             ops.append({"op": "add_diameter_dim", "target": f"tag:{first['tag']}", "angle": 45,
-                        "text": (f"{n}X %%c<>" if n > 1 else "%%c<>"), "tag": f"dim.holes{g}.dia", **dim})
+                        "text": (f"{n}X <>" if n > 1 else "<>"), "tag": f"dim.holes{g}.dia", **dim})
             reqs.append({"id": f"dim.holes{g}.dia", "type": "dimension", "kind": "diameter", "value": first["diameter"]})
             # position of the first hole of the group from the left / bottom edge
             ops.append({"op": "add_linear_dim", "p1": [ox, oy], "p2": c0, "orientation": "horizontal",
                         "offset": -off, "tag": f"dim.holes{g}.x", **dim})
             ops.append({"op": "add_linear_dim", "p1": [ox, oy], "p2": c0, "orientation": "vertical",
-                        "offset": -off, "tag": f"dim.holes{g}.y", **dim})
+                        "offset": off, "tag": f"dim.holes{g}.y", **dim})
             reqs += [{"id": f"dim.holes{g}.x", "type": "dimension", "kind": "linear", "value": first["center"][0]},
                      {"id": f"dim.holes{g}.y", "type": "dimension", "kind": "linear", "value": first["center"][1]}]
             if n == 4 and all("edge_ref" in h for h in hs):

@@ -25,7 +25,7 @@
   "entities_seen_by_autocad": 28
  },
  "A_mounting_plate_100x60.dwg": {
-  "bytes": 27768,
+  "bytes": 27895,
   "readback": {
    "readable": true,
    "entities": 24,
@@ -34,7 +34,7 @@
   }
  },
  "B_mounting_plate.dwg": {
-  "bytes": 27900,
+  "bytes": 27959,
   "readback": {
    "readable": true,
    "entities": 24,

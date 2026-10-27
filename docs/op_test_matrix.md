@@ -8,20 +8,20 @@
 | `add_angular_dim` | annotate | test_autocad_findings.py, test_h_operations.py |
 | `add_arc` | draw | test_autocad_findings.py, test_h_operations.py |
 | `add_circle` | draw | test_autocad_findings.py, test_b_revision.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py |
-| `add_diameter_dim` | annotate | test_h_operations.py |
+| `add_diameter_dim` | annotate | test_autocad_findings.py, test_h_operations.py |
 | `add_ellipse` | draw | test_h_operations.py |
 | `add_leader` | annotate | test_h_operations.py |
 | `add_line` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_h_operations.py, test_security.py |
-| `add_linear_dim` | annotate | test_b_revision.py, test_f_repro_recovery.py, test_h_operations.py |
+| `add_linear_dim` | annotate | test_autocad_findings.py, test_b_revision.py, test_f_repro_recovery.py, test_h_operations.py |
 | `add_mtext` | annotate | test_h_operations.py |
 | `add_point` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_h_operations.py, test_security.py |
 | `add_polyline` | draw | test_h_operations.py |
-| `add_radius_dim` | annotate | test_h_operations.py |
-| `add_rectangle` | draw | test_b_revision.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py |
+| `add_radius_dim` | annotate | test_autocad_findings.py, test_h_operations.py |
+| `add_rectangle` | draw | test_autocad_findings.py, test_b_revision.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py |
 | `add_spline` | draw | test_h_operations.py |
 | `add_table` | annotate | test_h_operations.py |
-| `add_text` | annotate | test_b_revision.py, test_h_operations.py |
-| `add_title_block` | annotate | test_h_operations.py |
+| `add_text` | annotate | test_autocad_findings.py, test_b_revision.py, test_h_operations.py |
+| `add_title_block` | annotate | test_autocad_findings.py, test_h_operations.py |
 | `array_polar` | edit | test_h_operations.py |
 | `array_rect` | edit | test_h_operations.py, test_security.py |
 | `chamfer` | edit | test_h_operations.py |
@@ -41,9 +41,10 @@
 | `offset` | edit | test_autocad_findings.py, test_h_operations.py |
 | `rotate` | edit | test_h_operations.py |
 | `scale` | edit | test_h_operations.py |
+| `set_annotation_scale` | annotate | test_autocad_findings.py |
 | `set_attributes` | block | test_h_operations.py |
 | `set_properties` | edit | test_h_operations.py |
 | `stretch` | edit | test_b_revision.py, test_h_operations.py |
 | `trim` | edit | test_autocad_findings.py, test_d_errors.py, test_h_operations.py |
 
-共 40 个操作，未被任何测试调用: 无
+共 41 个操作，未被任何测试调用: 无

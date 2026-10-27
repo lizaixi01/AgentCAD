@@ -148,7 +148,7 @@ agentcad --root work create bracket.dxf --units mm
 | `"tag:hole.left"` | 带该标签的实体 |
 | `"$1"` | 本批第 1 步（从 0 数）创建的实体 |
 
-长度可以带单位，例如 `"diameter": "0.5in"`，会换算成图纸单位。全部 40 个操作及参数见 [operations.md](operations.md)，也可以运行 `agentcad ops` 获取（带 JSON Schema）。
+长度可以带单位，例如 `"diameter": "0.5in"`，会换算成图纸单位。全部 41 个操作及参数见 [operations.md](operations.md)，也可以运行 `agentcad ops` 获取（带 JSON Schema）。
 
 要求文件 `bracket_req.json`，写你希望成品满足的条件：
 
@@ -452,5 +452,8 @@ curl -X POST localhost:8765/v1/validate_drawing -H "Content-Type: application/js
 | `validate` 报 `hole_count` 比预期多 | 图纸是由规格生成的，默认按存储的规格核对。见第 5 节的注意事项。 |
 | DWG 命令卡住不动 | 你在 Git Bash 里运行了。改用 PowerShell 或 cmd。 |
 | DWG 命令返回 `DEPENDENCY_MISSING` | 没找到 AutoCAD。设置 `AGENTCAD_ACCORECONSOLE`。 |
+| 建筑平面等大尺寸图纸出图后箭头看不见、点画线像实线 | 用 `create --annotation-scale 50`（1:50 出图）新建图纸，或对已有图纸执行操作 `{"op": "set_annotation_scale", "scale": 50}`。验证器会用 `ANNOTATION_TOO_SMALL` 提醒。 |
+| 直径标注显示成 "ØØ12" | 标注文字里的 `<>` 已经带 Ø / R 前缀，写 `4X <>` 即可，不要写 `Ø<>`。验证器会报 `DIMENSION_DOUBLE_PREFIX`。 |
+| 想看图纸实际出图效果 | 装有 AutoCAD 时：`python examples/trials/render_png.py 输出目录 图纸.dxf`（在 PowerShell 中运行），用 AutoCAD 打印成 PNG。 |
 | 想看某个操作有哪些参数 | `agentcad ops`，或查看 [operations.md](operations.md)。参数写错时错误信息的 `hint` 里也会列出。 |
 | 想看完整演示 | `python examples/run_demo.py`，输出在 `examples/output/`。 |

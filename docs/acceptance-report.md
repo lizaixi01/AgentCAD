@@ -1,7 +1,7 @@
 # 验收报告（测试 A–H）
 
 运行环境：Windows 11，Python 3.12.10，ezdxf 1.4.5，mcp 1.30.0，Pillow（SVG 导出），LibreOffice portable（仅用于独立导入检查），**AutoCAD 2027**（2026-10-27 起，仅通过无头的 accoreconsole 使用）。
-自动化测试：**112 passed**（完整逐项输出见 [test-results.txt](test-results.txt)）。其中 27 项是 AutoCAD 差分测试（不需要 AutoCAD），5 项是 AutoCAD 实机测试（未安装 AutoCAD 时自动跳过）。演示产物：`python examples/run_demo.py` → `examples/output/`。
+自动化测试：**116 passed**（完整逐项输出见 [test-results.txt](test-results.txt)）。其中 27 项是 AutoCAD 差分测试（不需要 AutoCAD），5 项是 AutoCAD 实机测试（未安装 AutoCAD 时自动跳过）。演示产物：`python examples/run_demo.py` → `examples/output/`。
 
 ## AutoCAD 2027 实机验证（2026-10-27 新增）
 
@@ -119,7 +119,7 @@
 
 ## 测试 H：常用功能覆盖
 
-`tests/test_h_operations.py`（24 项）加上 AutoCAD 差分测试（27 项，见上文）以及其它测试文件：**全部 40 个操作都至少被一个测试调用**（[op_test_matrix.md](op_test_matrix.md)，由脚本根据测试源码生成）。每个操作的测试都包含：成功执行、**从磁盘重读后**的几何断言，以及至少一个失败用例的错误码断言。功能状态分类见 [coverage.md](coverage.md)。
+`tests/test_h_operations.py`（24 项）加上 AutoCAD 差分测试（27 项，见上文）以及其它测试文件：**全部 41 个操作都至少被一个测试调用**（[op_test_matrix.md](op_test_matrix.md)，由脚本根据测试源码生成）。每个操作的测试都包含：成功执行、**从磁盘重读后**的几何断言，以及至少一个失败用例的错误码断言。功能状态分类见 [coverage.md](coverage.md)。
 
 ## 性能与 Agent 使用成本
 

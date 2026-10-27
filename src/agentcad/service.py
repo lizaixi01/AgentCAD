@@ -23,7 +23,7 @@ from .errors import AgentCADError, input_error, policy_error
 from .metadata import all_meta, get_meta, set_meta
 from .model import entity_to_dict, get_tag, select
 from .ops import catalog
-from .ops.annotate import DIMSTYLE
+from .ops.annotate import DIMSTYLE, apply_annotation_scale, setup_text_style
 from .policy import Policy
 from .store import DrawingStore, finalize, read_dxf, now
 from .units import UNITS, normalize_unit, unit_from_insunits
@@ -66,7 +66,7 @@ def _units_of(doc) -> str | None:
     return unit_from_insunits(doc.header.get("$INSUNITS", 0))
 
 
-def setup_document(units: str, template: str, version: str):
+def setup_document(units: str, template: str, version: str, annotation_scale: float = 1.0):
     if version not in DXF_VERSIONS:
         raise input_error("UNSUPPORTED_DXF_VERSION", f"Unknown DXF version {version!r}", hint=f"Use one of {list(DXF_VERSIONS)}")
     if version == "R12":
@@ -84,6 +84,10 @@ def setup_document(units: str, template: str, version: str):
                      "dimlfac": 1.0, "dimtad": 1, "dimtih": 0, "dimtoh": 0, "dimcen": 2.5 * k, "dimtxsty": "Standard",
                      "dimlunit": 2, "dimdsep": ord(".")}.items():
         ds.dxf.set(key, val)
+    setup_text_style(doc)
+    if annotation_scale <= 0:
+        raise input_error("INVALID_VALUE", "annotation_scale must be > 0", hint="e.g. 1 for parts, 50 for building plans in mm")
+    apply_annotation_scale(doc, float(annotation_scale))
     if template == "mechanical":
         for o in specmod.LAYERS:
             lt = o.get("linetype", "Continuous")
@@ -149,17 +153,18 @@ class Runtime:
 
     @tool
     def create_drawing(self, path: str, units: str = "mm", template: str = "mechanical", dxf_version: str = "R2010",
-                       overwrite: bool = False) -> dict[str, Any]:
+                       overwrite: bool = False, annotation_scale: float = 1.0) -> dict[str, Any]:
         self.policy.check_write()
         u = normalize_unit(units)
         p, store = self._drawing(path, must_exist=False)
         if p.exists() and not overwrite:
             raise input_error("FILE_EXISTS", f"{path} already exists", hint="Pass overwrite=true to replace it (a checkpoint is kept)")
-        doc = setup_document(u, template, dxf_version)
+        doc = setup_document(u, template, dxf_version, annotation_scale)
         with self._lock(store):
             info = store.commit(doc, label="create_drawing")
             seq = store.journal({"tool": "create_drawing", "args": {"units": u, "template": template,
-                                                                    "dxf_version": dxf_version}, "ok": True, **info})
+                                                                    "dxf_version": dxf_version,
+                                                                    "annotation_scale": annotation_scale}, "ok": True, **info})
         return {"drawing": self._rel(p), "units": u, "dxf_version": dxf_version, "journal_seq": seq, **info}
 
     @tool

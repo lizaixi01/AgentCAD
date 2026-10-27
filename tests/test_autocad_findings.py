@@ -101,3 +101,68 @@ def test_mirrored_block_is_really_mirrored(rt, ws, blank):
     assert circle_wcs(world)[0] == (A(-15), A(10))  # block content mirrored (virtual entity is -Z: read in WCS)
     att = b.attribs[0]
     assert att.dxf.halign == 2 and att.dxf.align_point.x == A(-10)  # attribute text stays readable
+
+
+def test_diameter_text_prefix_not_doubled(rt, ws):
+    """In AutoCAD's plot, '%%c<>' on a diameter dimension shows 'ØØ8': '<>' already carries the prefix."""
+    ok(rt.create_drawing("d.dxf", units="mm"))
+    ok(rt.apply_operations("d.dxf", [
+        {"op": "add_circle", "center": [0, 0], "diameter": 8},
+        {"op": "add_diameter_dim", "target": "$0", "text": "4X %%c<>"},
+        {"op": "add_circle", "center": [50, 0], "diameter": 10},
+        {"op": "add_diameter_dim", "target": "$2", "text": "4X <>"},
+        {"op": "add_radius_dim", "target": "$2", "text": "R<>"}]))
+    issues = ok(rt.validate_drawing("d.dxf"))["validation"]["issues"]
+    doubled = [i for i in issues if i["code"] == "DIMENSION_DOUBLE_PREFIX"]
+    assert len(doubled) == 2 and all(i["severity"] == "warning" for i in doubled)
+    # the spec compiler no longer writes the prefix itself
+    ok(rt.draw_from_spec({"kind": "plate", "units": "mm", "width": 100, "height": 60,
+                          "holes": [{"pattern": "corners", "diameter": 8, "edge_offset": 10}]}, "p.dxf"))
+    assert "DIMENSION_DOUBLE_PREFIX" not in codes(rt, "p.dxf")
+
+
+def test_title_block_labels_do_not_overlap_values(rt, ws):
+    """AutoCAD's plot showed 'Material:' running into its value; labels now sit above the values."""
+    ok(rt.create_drawing("t.dxf", units="mm"))
+    ok(rt.apply_operations("t.dxf", [{"op": "add_title_block", "insert": [400, 10], "fields": {"MATERIAL": "Q235"}}]))
+    blk = reread(ws, "t.dxf").blocks.get("AGENTCAD_TITLE")
+    labels = {t.dxf.text: t.dxf.insert.y for t in blk.query("TEXT")}
+    values = {a.dxf.tag: (a.dxf.insert.y, a.dxf.height) for a in blk.query("ATTDEF")}
+    y_val, h_val = values["MATERIAL"]
+    assert labels["Material"] >= y_val + h_val  # label baseline above the value's cap height
+
+
+def test_chinese_text_gets_a_big_font(rt, ws):
+    """AutoCAD showed '???' for Chinese text in an SHX style without a big font."""
+    ok(rt.create_drawing("cn.dxf", units="mm"))
+    ok(rt.apply_operations("cn.dxf", [{"op": "add_text", "text": "法兰盘", "insert": [0, 0], "height": 5}]))
+    st = reread(ws, "cn.dxf").styles.get("Standard")
+    assert (st.dxf.font, st.dxf.bigfont) == ("gbenor.shx", "gbcbig.shx")
+    assert "TEXT_GLYPHS_MISSING" not in codes(rt, "cn.dxf")
+    # a foreign file with plain txt.shx is reported
+    def build(doc):
+        doc.styles.get("Standard").dxf.font = "txt"
+        doc.modelspace().add_text("法兰盘", dxfattribs={"height": 5})
+    assert "TEXT_GLYPHS_MISSING" in codes(rt, foreign(ws, "txt.dxf", build))
+
+
+def test_annotation_scale_for_building_plans(rt, ws):
+    """A 6000 mm room with 2.5 mm arrows plotted with invisible arrows and solid-looking axes."""
+    room = [{"op": "add_rectangle", "corner": [0, 0], "width": 6000, "height": 4000, "layer": "OUTLINE"},
+            {"op": "add_linear_dim", "p1": [0, 0], "p2": [6000, 0], "offset": -600, "layer": "DIM"}]
+    ok(rt.create_drawing("r1.dxf", units="mm"))
+    ok(rt.apply_operations("r1.dxf", room))
+    assert "ANNOTATION_TOO_SMALL" in codes(rt, "r1.dxf")
+    r = ok(rt.apply_operations("r1.dxf", [{"op": "set_annotation_scale", "scale": 50}]))
+    assert len(r["results"][0]["rerendered"]) == 1 and r["changes"]["modified"]
+    doc = reread(ws, "r1.dxf")
+    assert doc.header["$LTSCALE"] == 50 and doc.dimstyles.get("AGENTCAD").dxf.dimscale == 50
+    assert "ANNOTATION_TOO_SMALL" not in codes(rt, "r1.dxf")
+    # the re-rendered dimension block is 50x larger: 3.5 mm text becomes 175 mm
+    dim = next(iter(doc.modelspace().query("DIMENSION")))
+    text = next(iter(doc.blocks.get(dim.dxf.geometry).query("MTEXT")))
+    assert text.dxf.char_height == A(175)
+    # same result when the scale is chosen up front
+    ok(rt.create_drawing("r2.dxf", units="mm", annotation_scale=50))
+    ok(rt.apply_operations("r2.dxf", room))
+    assert "ANNOTATION_TOO_SMALL" not in codes(rt, "r2.dxf")

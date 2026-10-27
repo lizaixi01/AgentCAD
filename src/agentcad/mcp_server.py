@@ -35,9 +35,12 @@ def build_server(policy: Policy | None = None) -> FastMCP:
     def create_drawing(path: Path_, units: Literal["mm", "cm", "m", "in", "ft"] = "mm",
                        template: Literal["mechanical", "blank"] = "mechanical",
                        dxf_version: Literal["R2000", "R2004", "R2007", "R2010", "R2013", "R2018"] = "R2010",
-                       overwrite: bool = False) -> dict:
+                       overwrite: bool = False,
+                       annotation_scale: Annotated[float, Field(gt=0, description="N of plot scale 1:N; dimension and "
+                                                                "linetype sizes are multiplied by N. 1 for parts, "
+                                                                "50-100 for building plans in mm")] = 1.0) -> dict:
         """Create an empty drawing with an explicit length unit. 'mechanical' adds OUTLINE/HOLES/CENTER/DIM/TEXT/BORDER layers."""
-        return rt.create_drawing(path, units, template, dxf_version, overwrite)
+        return rt.create_drawing(path, units, template, dxf_version, overwrite, annotation_scale)
 
     @mcp.tool()
     def read_drawing(path: Path_) -> dict:
