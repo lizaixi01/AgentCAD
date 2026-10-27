@@ -19,6 +19,8 @@ uv pip install --python .venv -e ".[dev]"     # dev 包含 pytest 和 Pillow（S
 
 ## 30 秒上手（CLI）
 
+完整的分步教程见 [docs/tutorial.md](docs/tutorial.md)。
+
 所有命令都向 stdout 输出一个 JSON 信封。退出码：0 成功，1 验证未通过，2 输入/规格/几何错误，3 文件错误，4 策略拒绝，5 内部错误。
 
 ```bash
@@ -113,6 +115,7 @@ python examples/run_demo.py
 
 | 文档 | 内容 |
 |---|---|
+| [docs/tutorial.md](docs/tutorial.md) | **操作教程**：从生成、校验、修订、回滚到 DWG 与 Agent 接入，每步附实测输出 |
 | [docs/audit/existing-projects.md](docs/audit/existing-projects.md) | 现有项目审计（实际安装运行、commit、许可证） |
 | [docs/research/autocad-dxf-research.md](docs/research/autocad-dxf-research.md) | AutoCAD API / 命令 / DXF·DWG 研究与 ezdxf 实验 |
 | [docs/research/autocad-observations.md](docs/research/autocad-observations.md) | AutoCAD 2027 实机研究：无头自动化的坑、互操作、被阻塞项的实测、27 个命令差分 |
