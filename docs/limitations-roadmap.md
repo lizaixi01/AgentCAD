@@ -9,12 +9,12 @@
 | pypdf ≥4（实测 6.21） | BSD-3 | PDF 文字提取 | |
 | Pillow（可选 `[preview]`） | MIT-CMU | SVG 导出（ezdxf drawing 插件需要） | 未安装时返回 `dependency/DEPENDENCY_MISSING` |
 
-不依赖 AutoCAD、ODA、FreeCAD，也不调用任何模型 API。
+核心不依赖 AutoCAD、ODA、FreeCAD，也不调用任何模型 API。**可选**：安装了 AutoCAD 时（自动发现，或设置 `AGENTCAD_ACCORECONSOLE`），可以启用 DWG 导入/导出和 AutoCAD AUDIT（`backends/autocad.py`，通过无头的 accoreconsole 运行）。
 
 ## 已知限制
 
-1. **没有在 AutoCAD 中做打开验证**：本机没有 AutoCAD 授权，黑盒行为研究被阻塞，研究只基于公开文档和 ezdxf 实验。兼容性只经过 ezdxf 重读和 LibreOffice 独立导入两种方式验证。
-2. **DWG**：不支持。ODA File Converter 是专有软件，LibreDWG 是 GPL-3.0 且写入版本有限，只适合作为可选插件。
+1. **AutoCAD 验证范围**：已在 AutoCAD 2027（中文版，accoreconsole）中验证文件可读性、往返和 27 个编辑命令（见 [research/autocad-observations.md](research/autocad-observations.md)）。没有在 GUI 中目视检查，也没有覆盖其它 AutoCAD 版本或 LT 版。
+2. **DWG**：只能通过可选的 AutoCAD 后端处理（需要用户自己的 AutoCAD 授权，每次转换约 3–4 秒）。没有 AutoCAD 时不支持。ODA File Converter 是专有软件，LibreDWG 是 GPL-3.0 且写入版本有限。
 3. **约束**：没有联立求解器。`enforce` 逐条修改，冲突时拒绝保存，不会"尽量满足"。
 4. **文档提取**：内置提取器是规则式的，只覆盖板件常见措辞，不认识的说法会被报告为缺失，而不是被猜测。复杂文档应由外部 Agent 理解后，通过引文核验路线提交。
 5. **零件族**：规格编译器目前只支持矩形板 + 孔（四角、单孔）+ 圆角。其它零件需要用 `kind:"plan"` 或直接调用 `apply_operations`。
@@ -24,9 +24,10 @@
 9. **标注样式**：只有一个 `AGENTCAD` 样式（按单位换算尺寸），没有 ISO/ANSI 样式库。
 10. **并发**：使用文件锁实现单写者；锁超过 120 s 视为过期。不支持多进程同时写同一图纸。
 11. **字节级可复现**：几何和 handle 是确定的，但 DXF 头部的时间戳和 GUID 每次保存都会变（研究中 E 实验已确认），所以要用几何等价性来比较。
+12. **AutoCAD 后端的运行条件**：工作目录必须能映射到纯 ASCII 路径（后端会自动退回系统临时目录）；只能从 Python 进程启动（在 Git Bash 中直接启动会挂起，原因未知）；后端不会修改 AutoCAD 的任何持久设置。
 
 ## 路线图
 
 - **P1 收尾**：两线角度标注创建、HATCH、MLEADER、坐标标注；为 `mirror` 作用于标注/块、开口多段线偏移补测试。
 - **P2**：更多零件族（法兰、L 形支架、长圆孔、孔阵列图案）；ISO/ANSI 标注样式与图层标准模板；块属性模板库；批量处理多图纸的工具；增量读取（按 handle 范围或修改时间）；规格修订时检测"手工修改过的标签实体"并要求确认。
-- **P3**：DWG 可选插件（ODA File Converter，许可证由用户自行确认）；在有授权的环境中运行 AutoCAD 行为对照测试（研究记录 §5.8 列出了最先要做的 5 项）；联立约束求解（可评估 SolveSpace 求解库，GPL，需要隔离）；3D 与参数化建模。
+- **P3**：不依赖 AutoCAD 的 DWG 方案（ODA File Converter，许可证由用户自行确认）；为 mirror 作用于标注/椭圆、HATCH 等补充 AutoCAD 差分用例；联立约束求解（可评估 SolveSpace 求解库，GPL，需要隔离）；3D 与参数化建模。

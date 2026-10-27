@@ -1,0 +1,192 @@
+[
+ {
+  "file": "examples\\output\\A_mounting_plate_100x60.dxf",
+  "rc": 0,
+  "seconds": 3.34,
+  "insunits": "4",
+  "nent": "24",
+  "counts": {
+   "CIRCLE": 4,
+   "LINE": 8,
+   "DIMENSION": 7,
+   "LWPOLYLINE": 3,
+   "INSERT": 1,
+   "MTEXT": 1
+  },
+  "dims": [
+   "F9 40",
+   "EA 80",
+   "DB 10",
+   "CC 10",
+   "BF 8",
+   "B0 60",
+   "A1 100"
+  ],
+  "tags": 24,
+  "agentcad_dict": "present",
+  "ext": [
+   "0,0",
+   "297,210"
+  ],
+  "saved": "yes",
+  "audit_log": "共发现 0 个错误，已修复 0 个 | 共发现 0 个错误，已修复 0 个",
+  "job_dir": "D:\\Projects\\AgentCAD\\.acadtmp\\open_A_mounting_plate_100x60"
+ },
+ {
+  "file": "examples\\output\\B_mounting_plate.dxf",
+  "rc": 0,
+  "seconds": 3.35,
+  "insunits": "4",
+  "nent": "24",
+  "counts": {
+   "CIRCLE": 4,
+   "LINE": 8,
+   "DIMENSION": 7,
+   "LWPOLYLINE": 3,
+   "INSERT": 1,
+   "MTEXT": 1
+  },
+  "dims": [
+   "F9 40",
+   "EA 100",
+   "DB 10",
+   "CC 10",
+   "BF 8",
+   "B0 60",
+   "A1 120"
+  ],
+  "tags": 24,
+  "agentcad_dict": "present",
+  "ext": [
+   "0,0",
+   "297,210"
+  ],
+  "saved": "yes",
+  "audit_log": "共发现 0 个错误，已修复 0 个 | 共发现 0 个错误，已修复 0 个",
+  "job_dir": "D:\\Projects\\AgentCAD\\.acadtmp\\open_B_mounting_plate"
+ },
+ {
+  "file": "examples\\output\\C_bracket_from_pdf.dxf",
+  "rc": 0,
+  "seconds": 3.62,
+  "insunits": "4",
+  "nent": "21",
+  "counts": {
+   "LWPOLYLINE": 1,
+   "CIRCLE": 4,
+   "LINE": 8,
+   "DIMENSION": 7,
+   "MTEXT": 1
+  },
+  "dims": [
+   "F9 60",
+   "EA 120",
+   "DB 15",
+   "CC 15",
+   "BF 9",
+   "B0 90",
+   "A1 150"
+  ],
+  "tags": 21,
+  "agentcad_dict": "present",
+  "ext": [
+   "-10.1906790798,-49.3333333333",
+   "161.25,104.125"
+  ],
+  "saved": "yes",
+  "audit_log": "共发现 0 个错误，已修复 0 个 | 共发现 0 个错误，已修复 0 个",
+  "job_dir": "D:\\Projects\\AgentCAD\\.acadtmp\\open_C_bracket_from_pdf"
+ },
+ {
+  "file": "examples\\output\\C_plate_from_zh_md.dxf",
+  "rc": 0,
+  "seconds": 3.85,
+  "insunits": "4",
+  "nent": "22",
+  "counts": {
+   "LWPOLYLINE": 1,
+   "CIRCLE": 4,
+   "LINE": 8,
+   "DIMENSION": 8,
+   "MTEXT": 1
+  },
+  "dims": [
+   "104 56",
+   "F5 96",
+   "E6 12",
+   "D7 12",
+   "CA 10",
+   "BF 5",
+   "B0 80",
+   "A1 120"
+  ],
+  "tags": 22,
+  "agentcad_dict": "present",
+  "ext": [
+   "-16.0191062045,-49.3333333333",
+   "131.25,94.125"
+  ],
+  "saved": "yes",
+  "audit_log": "共发现 0 个错误，已修复 0 个 | 共发现 0 个错误，已修复 0 个",
+  "job_dir": "D:\\Projects\\AgentCAD\\.acadtmp\\open_C_plate_from_zh_md"
+ },
+ {
+  "file": "examples\\output\\A_mounting_plate_100x60_R12.dxf",
+  "rc": 0,
+  "seconds": 3.49,
+  "insunits": "0",
+  "nent": "28",
+  "counts": {
+   "CIRCLE": 4,
+   "LINE": 8,
+   "DIMENSION": 7,
+   "LWPOLYLINE": 3,
+   "INSERT": 1,
+   "TEXT": 5
+  },
+  "dims": [
+   "140 -1",
+   "13F -1",
+   "13E -1",
+   "13D -1",
+   "13C -1",
+   "13B -1",
+   "13A -1"
+  ],
+  "tags": 20,
+  "agentcad_dict": "missing",
+  "ext": [
+   "0,0",
+   "297,210"
+  ],
+  "saved": "yes",
+  "audit_log": "共发现 0 个错误，已修复 0 个 | 共发现 0 个错误，已修复 0 个",
+  "job_dir": "D:\\Projects\\AgentCAD\\.acadtmp\\open_A_mounting_plate_100x60_R12"
+ },
+ {
+  "file": "examples\\agent_codex\\ws\\bracket.dxf",
+  "rc": 0,
+  "seconds": 3.33,
+  "insunits": "4",
+  "nent": "8",
+  "counts": {
+   "LWPOLYLINE": 1,
+   "CIRCLE": 4,
+   "DIMENSION": 3
+  },
+  "dims": [
+   "BA 8",
+   "AB 60",
+   "9C 120"
+  ],
+  "tags": 8,
+  "agentcad_dict": "present",
+  "ext": [
+   "-16.125,-13.25",
+   "120,60"
+  ],
+  "saved": "yes",
+  "audit_log": "共发现 0 个错误，已修复 0 个 | 共发现 0 个错误，已修复 0 个",
+  "job_dir": "D:\\Projects\\AgentCAD\\.acadtmp\\open_bracket"
+ }
+]

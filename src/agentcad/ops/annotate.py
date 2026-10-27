@@ -30,10 +30,14 @@ def _finish_dim(ctx: Ctx, dimov, p: dict[str, Any], text: str | None) -> dict[st
 
 
 def store_measurement(dim) -> None:
-    """ezdxf does not write group 42 (actual measurement); AutoCAD does. Write it."""
-    from ..model import measure_dimension
+    """ezdxf does not write group 42 (actual measurement); AutoCAD does. Write it.
+    AutoCAD stores angular measurements in radians (observed in AutoCAD 2027);
+    the runtime API reports degrees."""
+    from ..model import DIMTYPES, measure_dimension
     m = measure_dimension(dim)
     if m is not None:
+        if DIMTYPES.get(dim.dxf.dimtype & 0x0F) in ("angular", "angular3p"):
+            m = math.radians(m)
         dim.dxf.actual_measurement = m
 
 
@@ -83,7 +87,9 @@ def _circle_of(ctx: Ctx, target, center, radius):
             raise input_error("UNSUPPORTED_ENTITY", "target must be exactly one CIRCLE or ARC",
                               entities=[e.dxf.handle for e in ents])
         e = ents[0]
-        return (e.dxf.center.x, e.dxf.center.y), e.dxf.radius
+        from ..model import circle_wcs
+        c, rad, _, _ = circle_wcs(e)
+        return c, rad
     if center is None or radius is None:
         raise input_error("MISSING_PARAM", "Give 'target' (circle/arc) or 'center' + 'radius'")
     return center, radius

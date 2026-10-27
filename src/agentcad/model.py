@@ -88,19 +88,52 @@ def entity_to_dict(e: DXFGraphic, *, detail: bool = True) -> dict[str, Any]:
     return d
 
 
+def flipped_ocs(e: DXFGraphic) -> bool:
+    """True for extrusion (0,0,-1): AutoCAD keeps such entities as they are, so
+    every reader must map OCS to WCS (x -> -x, angles a -> 180-a, bulge -> -bulge)."""
+    if not e.dxf.hasattr("extrusion"):
+        return False
+    ex = e.dxf.extrusion
+    return abs(ex[0]) < 1e-12 and abs(ex[1]) < 1e-12 and ex[2] < 0
+
+
+def circle_wcs(e: DXFGraphic) -> tuple[tuple[float, float], float, float | None, float | None]:
+    """(center, radius, start, end) of a CIRCLE/ARC in WCS, angles CCW in [0, 360)."""
+    c = e.dxf.center
+    s = e.dxf.get("start_angle") if e.dxftype() == "ARC" else None
+    en = e.dxf.get("end_angle") if e.dxftype() == "ARC" else None
+    if flipped_ocs(e):
+        center = (-c.x, c.y)
+        if s is not None:
+            s, en = 180.0 - en, 180.0 - s
+    else:
+        center = (c.x, c.y)
+    if s is not None:
+        s, en = s % 360.0, en % 360.0
+    return center, e.dxf.radius, s, en
+
+
+def lwpoly_wcs(e: DXFGraphic) -> list[tuple[float, float, float]]:
+    pts = [(px, py, b) for px, py, _s, _e, b in e.get_points("xyseb")]
+    if flipped_ocs(e):
+        pts = [(-px, py, -b) for px, py, b in pts]
+    return pts
+
+
 def geometry_of(e: DXFGraphic) -> dict[str, Any]:
     t = e.dxftype()
     x = e.dxf
     if t == "LINE":
         return {"start": pt(x.start), "end": pt(x.end), "length": r((x.end - x.start).magnitude)}
     if t == "CIRCLE":
-        return {"center": pt(x.center), "radius": r(x.radius), "diameter": r(2 * x.radius)}
+        c, rad, _, _ = circle_wcs(e)
+        return {"center": pt(c), "radius": r(rad), "diameter": r(2 * rad)}
     if t == "ARC":
-        return {"center": pt(x.center), "radius": r(x.radius),
-                "start_angle": r(x.start_angle % 360), "end_angle": r(x.end_angle % 360)}
+        c, rad, s, en = circle_wcs(e)
+        return {"center": pt(c), "radius": r(rad), "start_angle": r(s), "end_angle": r(en)}
     if t == "LWPOLYLINE":
         pts = []
-        for px, py, _s, _e, b in e.get_points("xyseb"):
+        for px, py, b in lwpoly_wcs(e):
             pts.append([r(px), r(py), r(b)] if abs(b) > 1e-12 else [r(px), r(py)])
         return {"points": pts, "closed": bool(e.closed)}
     if t == "ELLIPSE":
@@ -114,8 +147,10 @@ def geometry_of(e: DXFGraphic) -> dict[str, Any]:
     if t == "TEXT":
         return {"text": x.text, "insert": pt(x.insert), "height": r(x.height), "rotation": r(x.rotation)}
     if t == "MTEXT":
+        # width 0 and "absent" both mean "no wrapping" (AutoCAD writes 0 explicitly)
+        w = x.get("width", 0.0)
         return {"text": e.text, "insert": pt(x.insert), "char_height": r(x.char_height),
-                "width": r(x.width) if x.hasattr("width") else None}
+                "width": r(w) if w and w > 0 else None}
     if t == "DIMENSION":
         return dimension_info(e)
     if t == "INSERT":

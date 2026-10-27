@@ -9,7 +9,7 @@ from ezdxf.math import Matrix44, Vec3
 
 from .. import geom as G
 from ..errors import geometry_error, input_error, policy_error
-from ..model import get_tag, select, set_tag
+from ..model import circle_wcs, get_tag, lwpoly_wcs, select, set_tag
 from .registry import Ctx, Param, op
 
 P = Param
@@ -61,13 +61,63 @@ def normalize_extrusion(e) -> None:
         e.dxf.extrusion = (0, 0, 1)
 
 
+TEXT_PLACEMENT = ("halign", "valign", "insert", "align_point", "rotation", "extrusion", "text_generation_flag")
+
+
+def mirror_text(e, m: Matrix44) -> None:
+    """MIRRTEXT=0: keep text readable and mirror its *box*, as AutoCAD 2027 does
+    (tests/golden/autocad_ops.json, mirror_* cases). AutoCAD keeps the alignment and
+    shifts the insertion point by font metrics; we instead swap the alignment
+    (left<->right, baseline/bottom<->top) and anchor at the mirrored point, which gives
+    the same box without needing the font (exact when the glyph side bearings are equal)."""
+    a = math.radians(e.dxf.get("rotation", 0.0))
+    u, v = Vec3(math.cos(a), math.sin(a), 0), Vec3(-math.sin(a), math.cos(a), 0)
+    flip_x = m.transform_direction(u).dot(u) < 0
+    flip_y = m.transform_direction(v).dot(v) < 0
+    if e.dxftype() == "MTEXT":
+        ap = e.dxf.get("attachment_point", 1)
+        row, col = divmod(ap - 1, 3)
+        if flip_x:
+            col = 2 - col
+        if flip_y:
+            row = 2 - row
+        e.dxf.attachment_point = row * 3 + col + 1
+        e.dxf.insert = m.transform(e.dxf.insert)
+        return
+    h, vv = e.dxf.get("halign", 0), e.dxf.get("valign", 0)
+    if h in (3, 5):  # aligned / fit: both points define the baseline
+        p1, p2 = m.transform(e.dxf.insert), m.transform(e.dxf.align_point)
+        e.dxf.insert, e.dxf.align_point = (p2, p1) if flip_x else (p1, p2)
+        return
+    anchor = e.dxf.insert if (h == 0 and vv == 0) else e.dxf.get("align_point", e.dxf.insert)
+    new = m.transform(anchor)
+    if flip_x:
+        h = {0: 2, 2: 0}.get(h, h)
+    if flip_y:
+        vv = {0: 3, 1: 3, 3: 1}.get(vv, vv)
+    e.dxf.halign, e.dxf.valign = h, vv
+    e.dxf.insert = new
+    if h == 0 and vv == 0:
+        e.dxf.discard("align_point")
+    else:
+        e.dxf.align_point = new
+
+
 def transform(ctx: Ctx, e, m: Matrix44, *, reflect: bool = False) -> None:
     t = e.dxftype()
-    if reflect and t in ("TEXT", "MTEXT", "INSERT"):
-        # MIRRTEXT=0 semantics: reflect the insertion point only, keep text readable
-        ins = e.dxf.insert
-        newp = m.transform(ins)
-        e.translate(newp.x - ins.x, newp.y - ins.y, 0)
+    if reflect and t in ("TEXT", "MTEXT"):
+        mirror_text(e, m)
+    elif reflect and t == "INSERT":
+        # the block geometry is mirrored (negative scale, as AutoCAD does); attribute
+        # texts stay readable like plain text
+        saved = [(a, {k: a.dxf.get(k) for k in TEXT_PLACEMENT if a.dxf.hasattr(k)}) for a in e.attribs]
+        e.transform(m)
+        for a, attrs in saved:
+            for k in TEXT_PLACEMENT:
+                a.dxf.discard(k)
+            for k, val in attrs.items():
+                a.dxf.set(k, val)
+            mirror_text(a, m)
     else:
         e.transform(m)
         normalize_extrusion(e)
@@ -293,6 +343,7 @@ def modify(ctx: Ctx, target, set):  # noqa: A002 - matches the public parameter 
                           entities=[e.dxf.handle for e in ents])
     e = ents[0]
     t = e.dxftype()
+    normalize_extrusion(e)
     allowed = GEOM_FIELDS.get(t)
     if not allowed:
         raise input_error("UNSUPPORTED_ENTITY", f"modify does not support {t}", entities=[e.dxf.handle])
@@ -355,6 +406,8 @@ def stretch(ctx: Ctx, window, delta):
                     x.set(name, (p.x + dx, p.y + dy, p.z))
                     hit = True
         elif t == "LWPOLYLINE":
+            if any(_inside((px, py), lo, hi) for px, py, _b in lwpoly_wcs(e)):
+                normalize_extrusion(e)
             pts = list(e.get_points("xyseb"))
             new = []
             for px, py, s, en, b in pts:
@@ -378,7 +431,7 @@ def stretch(ctx: Ctx, window, delta):
                     x.discard("text_midpoint")
                 rerender_dimension(ctx, e)
         elif t in ("CIRCLE", "ARC", "ELLIPSE"):
-            if _inside(x.center, lo, hi):
+            if _inside(circle_wcs(e)[0] if t != "ELLIPSE" else x.center, lo, hi):
                 e.translate(dx, dy, 0)
                 hit = True
         elif t in ("TEXT", "MTEXT", "INSERT"):
@@ -407,6 +460,7 @@ def offset(ctx: Ctx, target, distance, side_point, **p):
     created = []
     for e in ents:
         t = e.dxftype()
+        normalize_extrusion(e)
         d = abs(distance)
         sign = 1.0 if distance >= 0 else -1.0
         attrs = {"layer": e.dxf.layer, **ctx.attribs(p)}
@@ -469,9 +523,11 @@ def _prims(e) -> list:
     if t == "LINE":
         return [G.Seg(_vec(e.dxf.start), _vec(e.dxf.end))]
     if t == "CIRCLE":
-        return [G.Circ(_vec(e.dxf.center), e.dxf.radius)]
+        c, rad, _, _ = circle_wcs(e)
+        return [G.Circ(c, rad)]
     if t == "ARC":
-        return [G.Circ(_vec(e.dxf.center), e.dxf.radius, e.dxf.start_angle % 360, e.dxf.end_angle % 360)]
+        c, rad, s, en = circle_wcs(e)
+        return [G.Circ(c, rad, s, en)]
     if t == "LWPOLYLINE":
         out = []
         for v in e.virtual_entities():
@@ -501,6 +557,7 @@ def trim(ctx: Ctx, target, edges, pick):
         raise input_error("TARGET_NOT_UNIQUE", "trim needs exactly one target", entities=[e.dxf.handle for e in ents])
     e = ents[0]
     t = e.dxftype()
+    normalize_extrusion(e)  # edit in WCS terms (AutoCAD keeps -Z entities from other sources)
     prims = _edge_prims(ctx, edges, e.dxf.handle)
     if t == "LINE":
         seg = G.Seg(_vec(e.dxf.start), _vec(e.dxf.end))

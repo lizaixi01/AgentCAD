@@ -14,7 +14,7 @@ from ezdxf import path as ezpath
 from ezdxf.document import Drawing
 
 from .. import geom as G
-from ..model import get_tag
+from ..model import circle_wcs, get_tag, lwpoly_wcs
 
 CONNECT_TOL = 1e-6
 FLATTEN = 0.01
@@ -119,7 +119,7 @@ def extract(doc: Drawing) -> Features:
         t = e.dxftype()
         h = e.dxf.handle
         if t == "LWPOLYLINE":
-            pts = [(p[0], p[1]) for p in e.get_points("xy")]
+            pts = [(p[0], p[1]) for p in lwpoly_wcs(e)]
             for p in pts:
                 f.points.append((p, h))
             closed = e.closed or (len(pts) > 2 and G.dist(pts[0], pts[-1]) < CONNECT_TOL)
@@ -132,15 +132,14 @@ def extract(doc: Drawing) -> Features:
             f.points += [(s, h), (q, h), (((s[0] + q[0]) / 2, (s[1] + q[1]) / 2), h)]
             loose.append((h, e.dxf.layer, s, q, e))
         elif t == "ARC":
-            c = (e.dxf.center.x, e.dxf.center.y)
-            s = G.polar(c, e.dxf.radius, e.dxf.start_angle)
-            q = G.polar(c, e.dxf.radius, e.dxf.end_angle)
+            c, _r, a1, a2 = circle_wcs(e)
+            s = G.polar(c, e.dxf.radius, a1)
+            q = G.polar(c, e.dxf.radius, a2)
             f.points += [(c, h), (s, h), (q, h)]
             f.curves.append((c, e.dxf.radius, h))
             loose.append((h, e.dxf.layer, s, q, e))
         elif t == "CIRCLE":
-            c = (e.dxf.center.x, e.dxf.center.y)
-            r = e.dxf.radius
+            c, r, _, _ = circle_wcs(e)
             f.circles.append(Hole(h, c, 2 * r, e.dxf.layer, get_tag(e)))
             f.curves.append((c, r, h))
             f.points.append((c, h))

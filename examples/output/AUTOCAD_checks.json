@@ -1,0 +1,45 @@
+{
+ "A_mounting_plate_100x60.dxf": {
+  "passed": true,
+  "audit_errors": 0,
+  "entities_seen_by_autocad": 24
+ },
+ "B_mounting_plate.dxf": {
+  "passed": true,
+  "audit_errors": 0,
+  "entities_seen_by_autocad": 24
+ },
+ "C_bracket_from_pdf.dxf": {
+  "passed": true,
+  "audit_errors": 0,
+  "entities_seen_by_autocad": 21
+ },
+ "C_plate_from_zh_md.dxf": {
+  "passed": true,
+  "audit_errors": 0,
+  "entities_seen_by_autocad": 22
+ },
+ "A_mounting_plate_100x60_R12.dxf": {
+  "passed": true,
+  "audit_errors": 0,
+  "entities_seen_by_autocad": 28
+ },
+ "A_mounting_plate_100x60.dwg": {
+  "bytes": 27768,
+  "readback": {
+   "readable": true,
+   "entities": 24,
+   "source_entities": 24,
+   "issues": []
+  }
+ },
+ "B_mounting_plate.dwg": {
+  "bytes": 27900,
+  "readback": {
+   "readable": true,
+   "entities": 24,
+   "source_entities": 24,
+   "issues": []
+  }
+ }
+}

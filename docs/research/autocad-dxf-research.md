@@ -14,6 +14,8 @@
 | **[推断]** | 由文档或实测推出的结论，未直接验证 |
 | **[未知]** | 无法在本环境确认 |
 
+> **2026-10-27 更新**：用户已安装 AutoCAD 2027。本文中所有 BLOCKED 项（§5.8 的 ①–⑤）、MIRRTEXT/FILLETRAD/TRIMMODE 的默认值，以及编辑命令的实际行为，都已在 AutoCAD 中实测，结果见 [autocad-observations.md](autocad-observations.md)。下面的原文保留作为当时的记录。
+>
 > **阻塞声明（BLOCKED）**：本环境（Windows 11 Home 10.0.26200、Python 3.12.10、uv 0.12.16、Git Bash）**没有 AutoCAD 许可证或安装**，也未安装 ODA File Converter（`odafc.is_installed() == False`，见 exp03）。因此 **AutoCAD 黑盒行为测试全部无法执行**：凡是写着“AutoCAD 会……”的内容均来自公开文档或推断，不是观察结果。“实测”只针对 ezdxf 这个参考 DXF 实现。若后续拿到 AutoCAD（或 accoreconsole），第 5.7 节列出的用例应当首先补测。
 
 ---

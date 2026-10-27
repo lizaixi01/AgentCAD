@@ -93,6 +93,23 @@ def main() -> None:
     summary["E"] = {"passed": e_rep["passed"],
                     "failed": [r["id"] for r in e_rep["requirements"] if r["status"] != "pass"]}
 
+    # --- optional AutoCAD backend: DWG deliverables and AutoCAD's own AUDIT verdict ------------
+    from agentcad.backends.autocad import find_accoreconsole
+    if find_accoreconsole() is not None:
+        acad = {}
+        for name in ("A_mounting_plate_100x60.dxf", "B_mounting_plate.dxf", "C_bracket_from_pdf.dxf",
+                     "C_plate_from_zh_md.dxf", "A_mounting_plate_100x60_R12.dxf"):
+            a = must(rt.autocad_audit(name))
+            acad[name] = {"passed": a["passed"], "audit_errors": a["audit_errors"],
+                          "entities_seen_by_autocad": a["entities_seen_by_autocad"]}
+        for name in ("A_mounting_plate_100x60", "B_mounting_plate"):
+            d = must(rt.export_drawing(f"{name}.dxf", f"{name}.dwg", "dwg"))
+            acad[f"{name}.dwg"] = {"bytes": d["bytes"], "readback": d["readback"]}
+        save("AUTOCAD_checks.json", acad)
+        summary["autocad"] = {k: v.get("passed", v.get("readback", {}).get("readable")) for k, v in acad.items()}
+    else:
+        summary["autocad"] = "skipped: AutoCAD backend not installed"
+
     summary["metrics"] = {k: v for k, v in must(rt.get_metrics()).items() if k != "calls"}
     save("SUMMARY.json", summary)
     print(json.dumps(summary, indent=1, ensure_ascii=False))

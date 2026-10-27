@@ -144,11 +144,24 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         return rt.recover(path)
 
     @mcp.tool()
-    def export_drawing(path: Path_, output: str, format: Literal["dxf", "svg", "json"] = "dxf",  # noqa: A002
+    def export_drawing(path: Path_, output: str, format: Literal["dxf", "svg", "json", "dwg"] = "dxf",  # noqa: A002
                        dxf_version: Literal["R12", "R2000", "R2004", "R2007", "R2010", "R2013", "R2018"] | None = None,
                        overwrite: bool = False) -> dict:
-        """Export to another DXF version (R12 via a safe converter), SVG preview or JSON."""
+        """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, or DWG (needs the optional
+        AutoCAD backend; dxf_version then selects the DWG release; the DWG is read back and validated)."""
         return rt.export_drawing(path, output, format, dxf_version, overwrite)
+
+    @mcp.tool()
+    def import_drawing(source: Annotated[str, Field(description="DWG file in the workspace")], output: Path_,
+                       overwrite: bool = False) -> dict:
+        """Import a DWG as a DXF drawing (optional AutoCAD backend), then validate it."""
+        return rt.import_drawing(source, output, overwrite)
+
+    @mcp.tool()
+    def autocad_audit(path: Path_) -> dict:
+        """Open the drawing in AutoCAD headlessly and run AUDIT (no fixes): AutoCAD's own verdict on the file.
+        Needs the optional AutoCAD backend; returns a dependency error otherwise."""
+        return rt.autocad_audit(path)
 
     @mcp.tool()
     def get_metrics() -> dict:

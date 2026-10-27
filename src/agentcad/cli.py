@@ -1,6 +1,6 @@
 """``agentcad`` command-line interface. Every command prints one JSON envelope
 on stdout. Exit codes: 0 ok, 1 validation failed, 2 input/spec/geometry
-error, 3 file error, 4 policy refusal, 5 internal error."""
+error, 3 file error, 4 policy refusal, 5 internal error, 6 optional dependency missing."""
 from __future__ import annotations
 
 import argparse
@@ -12,7 +12,7 @@ from typing import Any
 from .policy import Policy
 from .service import Runtime
 
-EXIT = {"validation": 1, "input": 2, "spec": 2, "geometry": 2, "file": 3, "policy": 4, "internal": 5}
+EXIT = {"validation": 1, "input": 2, "spec": 2, "geometry": 2, "file": 3, "policy": 4, "internal": 5, "dependency": 6}
 
 
 def _json_arg(value: str | None, file: str | None, what: str) -> Any:
@@ -98,6 +98,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("path"); s.add_argument("output"); s.add_argument("--format", default=None)
     s.add_argument("--dxf-version"); s.add_argument("--overwrite", action="store_true")
 
+    s = sub.add_parser("import", help="Import a DWG as DXF (optional AutoCAD backend)")
+    s.add_argument("source"); s.add_argument("output"); s.add_argument("--overwrite", action="store_true")
+    s = sub.add_parser("acad-audit", help="Run AutoCAD's AUDIT on a drawing (optional AutoCAD backend)")
+    s.add_argument("path")
+
     s = sub.add_parser("ops", help="Operation catalog with JSON schemas"); s.add_argument("--category")
     sub.add_parser("mcp", help="Run the MCP server on stdio")
     s = sub.add_parser("serve", help="Run the HTTP JSON API"); s.add_argument("--host", default="127.0.0.1")
@@ -172,13 +177,17 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
     elif c == "export":
         fmt = a.format or Path(a.output).suffix.lstrip(".") or "dxf"
         r = rt.export_drawing(a.path, a.output, fmt, a.dxf_version, a.overwrite)
+    elif c == "import":
+        r = rt.import_drawing(a.source, a.output, a.overwrite)
+    elif c == "acad-audit":
+        r = rt.autocad_audit(a.path)
     elif c == "ops":
         r = rt.list_operations(a.category)
     else:  # pragma: no cover
         _die(f"unknown command {c}")
     if not r["ok"]:
         code = EXIT.get(r["error"]["category"], 5)
-    elif c == "validate" and not r["validation"]["passed"]:
+    elif (c == "validate" and not r["validation"]["passed"]) or (c == "acad-audit" and not r["passed"]):
         code = 1
     else:
         code = 0

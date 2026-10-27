@@ -73,7 +73,13 @@ def test_no_shell_or_arbitrary_execution_surface():
     import inspect
     import agentcad
     from pathlib import Path
-    for f in Path(agentcad.__file__).parent.rglob("*.py"):
+    pkg = Path(agentcad.__file__).parent
+    for f in pkg.rglob("*.py"):
         text = f.read_text("utf-8")
-        assert "subprocess" not in text and "os.system" not in text and "eval(" not in text and "exec(" not in text, f
+        assert "os.system" not in text and "eval(" not in text and "exec(" not in text, f
+        if f != pkg / "backends" / "autocad.py":
+            assert "subprocess" not in text, f
+    # the optional AutoCAD backend is the single process launcher: fixed executable, no shell
+    backend = (pkg / "backends" / "autocad.py").read_text("utf-8")
+    assert "shell=False" in backend and "shell=True" not in backend and "Popen(args" in backend
     assert all(callable(d.fn) for d in REGISTRY.values())

@@ -9,7 +9,7 @@ from ezdxf import bbox
 from ezdxf.document import Drawing
 
 from .. import geom as G
-from ..model import get_tag
+from ..model import circle_wcs, get_tag
 from ..units import unit_from_insunits
 from .features import Features, measure_dimension
 
@@ -42,7 +42,8 @@ def geometry_key(e, q: float) -> tuple | None:
     if t == "CIRCLE":
         return (t, x.layer, rp(x.center), round(x.radius / q))
     if t == "ARC":
-        return (t, x.layer, rp(x.center), round(x.radius / q), round(x.start_angle % 360, 4), round(x.end_angle % 360, 4))
+        c, rad, s, en = circle_wcs(e)
+        return (t, x.layer, rp(c), round(rad / q), round(s, 4), round(en, 4))
     if t == "LWPOLYLINE":
         pts = tuple(rp(p) + (round(b, 6),) for *p, b in ((p[0], p[1], p[2]) for p in e.get_points("xyb")))
         return (t, x.layer, bool(e.closed), pts)
@@ -58,6 +59,29 @@ def geometry_key(e, q: float) -> tuple | None:
                 rp(x.defpoint2) if x.hasattr("defpoint2") else rp(x.defpoint),
                 rp(x.defpoint3) if x.hasattr("defpoint3") else rp(x.defpoint4), None if m is None else round(m / q))
     return None
+
+
+XDATA_LIMIT = 16 * 1024
+
+
+def xdata_issues(doc: Drawing, e) -> list[dict[str, Any]]:
+    """AutoCAD 2027 discards the *entire* drawing on DXFIN when an entity carries XDATA
+    of an unregistered APPID or more than 16 KB of XDATA (research/autocad, exp_blocked_items)."""
+    xd = getattr(e, "xdata", None)
+    if not xd or not xd.data:
+        return []
+    out = []
+    size = 0
+    for app, tags in xd.data.items():
+        if app not in doc.appids:
+            out.append(issue("XDATA_APPID_UNREGISTERED", "error",
+                             f"XDATA uses APPID {app!r} that is not in the APPID table; AutoCAD rejects the whole file",
+                             [e.dxf.handle], appid=app))
+        size += len(app) + sum(len(str(t.value).encode("utf-8")) + 2 for t in tags)
+    if size > XDATA_LIMIT:
+        out.append(issue("XDATA_TOO_LARGE", "error", f"XDATA of {size} bytes exceeds AutoCAD's 16 KB per entity; "
+                         "AutoCAD rejects the whole file", [e.dxf.handle], bytes=size))
+    return out
 
 
 def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = None,
@@ -92,6 +116,10 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
             out.append(issue("UNDEFINED_BLOCK", "error", f"Block {x.name!r} is not defined", [h]))
         if x.layer not in doc.layers:
             out.append(issue("UNDEFINED_LAYER", "warning", f"Layer {x.layer!r} has no layer table entry", [h]))
+        if t == "ARC" and not (0 <= x.start_angle < 360 and 0 <= x.end_angle < 360):
+            out.append(issue("ARC_ANGLE_NOT_NORMALIZED", "warning",
+                             f"Arc angles {x.start_angle}/{x.end_angle} outside [0, 360): AutoCAD AUDIT reports them", [h]))
+        out.extend(xdata_issues(doc, e))
         # duplicates
         k = geometry_key(e, max(tolerance, 1e-9))
         if k is not None:
@@ -113,6 +141,8 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
                                  f"Dimension text {txt!r} disagrees with measured value {d['measurement']:.6g}",
                                  [d["id"]], expected=d["measurement"], actual_text=txt))
         stored = d.get("stored")
+        if stored is not None and d["kind"] in ("angular", "angular3p"):
+            stored = math.degrees(stored)  # group 42 holds radians for angular dimensions
         if stored is not None and abs(stored - d["measurement"]) > max(tolerance, 1e-6):
             out.append(issue("DIMENSION_STALE", "warning",
                              f"Stored measurement {stored:.6g} != re-measured {d['measurement']:.6g}", [d["id"]]))

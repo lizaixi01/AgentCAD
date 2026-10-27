@@ -515,18 +515,37 @@ class Runtime:
     @tool
     def export_drawing(self, path: str, output: str, format: str = "dxf",  # noqa: A002
                        dxf_version: str | None = None, overwrite: bool = False) -> dict[str, Any]:
-        """Export to dxf (optionally another DXF version, incl. R12 via ezdxf.addons.r12export), svg or json."""
+        """Export to dxf (optionally another DXF version, incl. R12 via ezdxf.addons.r12export), svg, json, or
+        dwg (optional AutoCAD backend; ``dxf_version`` then selects the DWG release, default 2018)."""
         self.policy.check_write()
         p, store = self._drawing(path)
         fmt = format.lower()
-        suffix = {"dxf": ".dxf", "svg": ".svg", "json": ".json"}.get(fmt)
+        suffix = {"dxf": ".dxf", "svg": ".svg", "json": ".json", "dwg": ".dwg"}.get(fmt)
         if suffix is None:
-            raise input_error("UNSUPPORTED_FORMAT", f"Unsupported export format {format!r}", hint="dxf | svg | json")
+            raise input_error("UNSUPPORTED_FORMAT", f"Unsupported export format {format!r}", hint="dxf | svg | json | dwg")
         out = self.policy.resolve(output, suffixes=(suffix,))
         if out.exists() and not overwrite:
             raise input_error("FILE_EXISTS", f"{output} exists", hint="overwrite=true")
         if out == p:
             raise input_error("SAME_FILE", "Export target must differ from the source drawing")
+        if fmt == "dwg":
+            from .backends import autocad
+            ver = (dxf_version or "2018").removeprefix("R")
+            if ver not in autocad.DWG_VERSIONS:
+                raise input_error("UNSUPPORTED_DWG_VERSION", f"DWG version {dxf_version!r} not supported",
+                                  hint=f"Use one of {sorted(autocad.DWG_VERSIONS)}")
+            jobs = self.policy.state_dir() / "acad"
+            info = autocad.dxf_to_dwg(p, out, jobs, ver)
+            # read the DWG back through AutoCAD and validate the resulting DXF independently
+            back = jobs / f"readback-{out.stem}.dxf"
+            autocad.dwg_to_dxf(out, back, jobs, "2018")
+            rb = validate_file(back)
+            src_n = len(store.load().modelspace())
+            store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": "dwg"})
+            return {"drawing": self._rel(p), "output": self._rel(out), "format": "dwg", "dwg_version": ver,
+                    "bytes": info["bytes"], "backend": "autocad", "seconds": info["seconds"],
+                    "readback": {"readable": rb["readable"], "entities": rb.get("recognized", {}).get("entity_count"),
+                                 "source_entities": src_n, "issues": rb["issues"][:20]}}
         doc = store.load()
         finalize(doc)
         out.parent.mkdir(parents=True, exist_ok=True)
@@ -535,6 +554,7 @@ class Runtime:
             if ver == "R12":
                 from ezdxf.addons import r12export
                 r12export.saveas(doc, out)
+                clean_r12(out)
             else:
                 if ver not in DXF_VERSIONS:
                     raise input_error("UNSUPPORTED_DXF_VERSION", f"Unknown DXF version {ver!r}")
@@ -567,6 +587,37 @@ class Runtime:
         return {"drawing": self._rel(p), "output": self._rel(out), "format": fmt, "bytes": out.stat().st_size, **extra}
 
     @tool
+    def import_drawing(self, source: str, output: str, overwrite: bool = False) -> dict[str, Any]:
+        """Import a DWG into the workspace as DXF through the optional AutoCAD backend, then validate it."""
+        self.policy.check_write()
+        from .backends import autocad
+        src = self.policy.resolve(source, must_exist=True, suffixes=(".dwg",))
+        out, store = self._drawing(output, must_exist=False)
+        if out.exists() and not overwrite:
+            raise input_error("FILE_EXISTS", f"{output} exists", hint="overwrite=true")
+        jobs = self.policy.state_dir() / "acad"
+        tmp = jobs / f"import-{out.stem}.dxf"
+        info = autocad.dwg_to_dxf(src, tmp, jobs, "2018")
+        doc = read_dxf(tmp, self.policy)
+        with self._lock(store):
+            commit = store.commit(doc, label="import_drawing")
+            seq = store.journal({"tool": "import_drawing", "ok": True, "source": self._rel(src), **commit})
+        rep = validate_file(out)
+        return {"drawing": self._rel(out), "source": self._rel(src), "backend": "autocad", "seconds": info["seconds"],
+                "units": _units_of(doc), "entity_count": len(doc.modelspace()), "validation": _brief(rep),
+                "journal_seq": seq, **commit}
+
+    @tool
+    def autocad_audit(self, path: str) -> dict[str, Any]:
+        """Open the DXF in AutoCAD (headless, optional backend) and run AUDIT without fixing: a second,
+        independent opinion on file validity from the reference implementation."""
+        from .backends import autocad
+        p, _ = self._drawing(path)
+        res = autocad.audit_dxf(p, self.policy.state_dir() / "acad")
+        res["passed"] = not res["import_rejected"] and res["audit_errors"] == 0
+        return {"drawing": self._rel(p), "backend": "autocad", **res}
+
+    @tool
     def get_metrics(self) -> dict[str, Any]:
         calls = len(self.metrics)
         fails = sum(1 for m in self.metrics if not m["ok"])
@@ -575,6 +626,31 @@ class Runtime:
                 "input_bytes": sum(m["input_bytes"] for m in self.metrics),
                 "output_bytes": sum(m["output_bytes"] for m in self.metrics),
                 "model_calls": 0, "model_cost_usd": 0.0, "calls": self.metrics[-200:]}
+
+
+def clean_r12(path: Path) -> None:
+    """Post-process ezdxf's R12 export so AutoCAD's AUDIT accepts it.
+
+    Observed in AutoCAD 2027 (research/autocad/exp_r12_bisect.py): BYBLOCK/BYLAYER
+    LTYPE entries (built-ins, not table records in R12) and unused text styles
+    trigger 233 audit errors on DXFIN; removing both gives 0.
+    """
+    doc = ezdxf.readfile(path)
+    for name in ("BYBLOCK", "BYLAYER"):
+        if name in doc.linetypes:
+            doc.linetypes.remove(name)
+    used = {"STANDARD"}
+    for layout in [doc.modelspace(), *doc.blocks]:
+        for e in layout:
+            if e.dxf.hasattr("style"):
+                used.add(e.dxf.style.upper())
+    for ds in doc.dimstyles:
+        if ds.dxf.hasattr("dimtxsty"):
+            used.add(str(ds.dxf.dimtxsty).upper())
+    for s in [s.dxf.name for s in doc.styles]:
+        if s.upper() not in used:
+            doc.styles.remove(s)
+    doc.saveas(path)
 
 
 def _changes(res: dict[str, Any]) -> dict[str, Any]:

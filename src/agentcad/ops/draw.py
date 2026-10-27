@@ -5,7 +5,6 @@ import math
 from typing import Any
 
 from ezdxf.enums import TextEntityAlignment
-from ezdxf.math import ConstructionArc
 
 from ..errors import geometry_error, input_error
 from .registry import Ctx, Param, check_tag, op
@@ -109,17 +108,33 @@ def add_arc(ctx: Ctx, center, radius, start_angle, end_angle, start, mid, end, *
     if start is not None or mid is not None or end is not None:
         if None in (start, mid, end):
             raise input_error("MISSING_PARAM", "add_arc 3-point form needs start, mid and end")
-        try:
-            ca = ConstructionArc.from_3p(start, end, mid)
-        except Exception as exc:
-            raise geometry_error("DEGENERATE_GEOMETRY", f"Cannot fit an arc through the 3 points: {exc}")
-        center, radius, start_angle, end_angle = ca.center, ca.radius, ca.start_angle, ca.end_angle
+        center, radius, start_angle, end_angle = arc_from_3p(start, mid, end)
     elif None in (center, radius, start_angle, end_angle):
         raise input_error("MISSING_PARAM", "add_arc needs center, radius, start_angle, end_angle (or start/mid/end)")
     if abs((end_angle - start_angle) % 360.0) < 1e-9:
         raise geometry_error("DEGENERATE_GEOMETRY", "Arc start and end angle coincide (use add_circle for a full circle)")
     e = ctx.layout.add_arc(center, radius, start_angle % 360.0, end_angle % 360.0, dxfattribs=ctx.attribs(p))
     return _single(ctx, e, p)
+
+
+def arc_from_3p(s, m, e):
+    """Arc through start, mid, end. DXF arcs are always CCW, so a clockwise pick
+    order is stored as the CCW arc from end to start (AutoCAD 2027 does the same,
+    tests/golden/autocad_ops.json: arc_three_point_cw)."""
+    from .. import geom as G
+    ax, ay = s[0], s[1]
+    bx, by = m[0], m[1]
+    cx, cy = e[0], e[1]
+    d = 2 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by))
+    if abs(d) < 1e-12:
+        raise geometry_error("DEGENERATE_GEOMETRY", "Cannot fit an arc through 3 collinear or coincident points")
+    ux = ((ax * ax + ay * ay) * (by - cy) + (bx * bx + by * by) * (cy - ay) + (cx * cx + cy * cy) * (ay - by)) / d
+    uy = ((ax * ax + ay * ay) * (cx - bx) + (bx * bx + by * by) * (ax - cx) + (cx * cx + cy * cy) * (bx - ax)) / d
+    c = (ux, uy)
+    a_s, a_m, a_e = (G.angle_of(G.sub(p, c)) for p in (s, m, e))
+    if G.angle_in_arc(a_m, a_s, a_e):
+        return c, G.dist(c, s), a_s, a_e
+    return c, G.dist(c, s), a_e, a_s
 
 
 @op("add_ellipse", "draw", "Draw an ellipse (or elliptical arc) by semi-axes rx, ry and rotation.",

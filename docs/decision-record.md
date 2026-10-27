@@ -31,3 +31,19 @@
 - P0 全部完成，P1 中除"表格对象（AutoCAD TABLE 实体）"与"多页 PDF 版式"外完成；详见 [coverage.md](coverage.md)。
 - 约束系统明确分两层：检查 15 类；强制 12 类，采用顺序直接修改，不是联立求解，冲突时拒绝保存。
 - 已知限制见 [limitations-roadmap.md](limitations-roadmap.md)。
+
+---
+
+# ADR-002：AutoCAD 作为可选后端与测试 oracle
+
+日期：2026-10-27　状态：已采纳并实现
+
+**背景**：用户安装了 AutoCAD 2027，原研究中被阻塞的实机验证由此可以进行（[research/autocad-observations.md](research/autocad-observations.md)）。
+
+**决策**
+
+1. **核心仍然不依赖 AutoCAD。** `backends/autocad.py` 是可选模块：未安装 AutoCAD 时，相关工具返回 `dependency/DEPENDENCY_MISSING`，其余功能不受影响。
+2. **只通过 accoreconsole（无头）调用。** 不驱动 GUI，不用 COM。脚本内联在 .scr 里（SECURELOAD 不允许 `load`，而我们不修改安全设置），作业目录只用 ASCII 路径，坐标参数加 `_non` 绕开对象捕捉。
+3. **AutoCAD 的角色是互操作通道和 oracle，而不是执行内核。** DWG 导入/导出和 AUDIT 交给 AutoCAD；几何操作仍由 AgentCAD 自己执行，并用 AutoCAD 录制的 golden 数据做差分回归。这样测试在没有 AutoCAD 的机器上（例如 CI）也能运行。
+4. **遇到差异时以 AutoCAD 的约定为准。** 包括：三点弧方向、角度标注 42 用弧度、MIRRTEXT=0 时镜像包围盒、块参照真正镜像、R12 表项。文字水平位置的残差取决于字形度量，我们记录下来，不去模拟字体。
+5. **不改动宿主环境。** 实验中曾误改用户的 TRIMEXTENDMODE 和 FILEDIA，已恢复并记录在案。之后所有会持久化的系统变量都在同一会话内保存并恢复，并用注册表前后比对来验证。

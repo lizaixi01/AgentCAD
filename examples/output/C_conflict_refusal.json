@@ -235,7 +235,7 @@
   }
  },
  "metrics": {
-  "duration_ms": 2.09,
+  "duration_ms": 6.94,
   "input_bytes": 42,
   "output_bytes": 3435
  }

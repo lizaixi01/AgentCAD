@@ -22,7 +22,7 @@ from ezdxf.document import Drawing
 
 from . import geom as G
 from .errors import input_error
-from .model import select
+from .model import circle_wcs, lwpoly_wcs, select
 
 CHECK_TYPES = {"coincident", "parallel", "perpendicular", "horizontal", "vertical", "tangent", "concentric",
                "distance", "length", "angle", "symmetric", "equal", "radius", "diameter", "fixed"}
@@ -54,14 +54,17 @@ def get_point(e, name: str) -> G.Vec:
     if name == "mid" and t == "LINE":
         return ((x.start.x + x.end.x) / 2, (x.start.y + x.end.y) / 2)
     if name in ("start", "end") and t == "ARC":
-        return G.polar((x.center.x, x.center.y), x.radius, x.start_angle if name == "start" else x.end_angle)
-    if name == "center" and t in ("CIRCLE", "ARC", "ELLIPSE"):
+        c, rad, s, en = circle_wcs(e)
+        return G.polar(c, rad, s if name == "start" else en)
+    if name == "center" and t in ("CIRCLE", "ARC"):
+        return circle_wcs(e)[0]
+    if name == "center" and t == "ELLIPSE":
         return (x.center.x, x.center.y)
     if name in ("insert", "location") and x.hasattr(name):
         p = x.get(name)
         return (p.x, p.y)
     if name.startswith("v") and t == "LWPOLYLINE":
-        pts = e.get_points("xy")
+        pts = [(p[0], p[1]) for p in lwpoly_wcs(e)]
         i = int(name[1:])
         if not -len(pts) <= i < len(pts):
             raise input_error("BAD_POINT_REF", f"Vertex {i} out of range ({len(pts)} vertices)", entities=[x.handle])
@@ -179,14 +182,14 @@ def _tangent_error(a, b) -> tuple[float, float]:
         a, b = b, a
     if a.dxftype() not in ("CIRCLE", "ARC"):
         raise input_error("UNSUPPORTED_ENTITY", "tangent needs at least one CIRCLE/ARC")
-    c, r = (a.dxf.center.x, a.dxf.center.y), a.dxf.radius
+    c, r, _, _ = circle_wcs(a)
     if b.dxftype() == "LINE":
         s = (b.dxf.start.x, b.dxf.start.y)
         u = G.unit(_dir(b))
         d = abs(G.cross(u, G.sub(c, s)))
         return d, abs(d - r)
     if b.dxftype() in ("CIRCLE", "ARC"):
-        c2, r2 = (b.dxf.center.x, b.dxf.center.y), b.dxf.radius
+        c2, r2, _, _ = circle_wcs(b)
         d = G.dist(c, c2)
         return d, min(abs(d - (r + r2)), abs(d - abs(r - r2)))
     raise input_error("UNSUPPORTED_ENTITY", f"tangent does not support {b.dxftype()}")

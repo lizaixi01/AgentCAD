@@ -2,3 +2,4 @@
 *.png binary
 *.dxf -text
 *.svg -text
+*.dwg binary

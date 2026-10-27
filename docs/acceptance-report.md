@@ -1,7 +1,21 @@
 # 验收报告（测试 A–H）
 
-运行环境：Windows 11，Python 3.12.10，ezdxf 1.4.5，mcp 1.30.0，Pillow（SVG 导出），LibreOffice portable（仅用于独立导入检查）。
-自动化测试：**74 passed**（完整逐项输出见 [test-results.txt](test-results.txt)）。演示产物：`python examples/run_demo.py` → `examples/output/`。
+运行环境：Windows 11，Python 3.12.10，ezdxf 1.4.5，mcp 1.30.0，Pillow（SVG 导出），LibreOffice portable（仅用于独立导入检查），**AutoCAD 2027**（2026-10-27 起，仅通过无头的 accoreconsole 使用）。
+自动化测试：**112 passed**（完整逐项输出见 [test-results.txt](test-results.txt)）。其中 27 项是 AutoCAD 差分测试（不需要 AutoCAD），5 项是 AutoCAD 实机测试（未安装 AutoCAD 时自动跳过）。演示产物：`python examples/run_demo.py` → `examples/output/`。
+
+## AutoCAD 2027 实机验证（2026-10-27 新增）
+
+详细记录见 [research/autocad-observations.md](research/autocad-observations.md)。
+
+| 检查 | 结果 |
+|---|---|
+| 5 张交付 DXF（A、B、C-PDF、C-中文、R12）和 Codex 产出在 AutoCAD 中 DXFIN + AUDIT | 6/6 **0 个错误**；单位、实体数、标注值、XDATA 标签、存储的规格全部保留（`examples/output/AUTOCAD_checks.json`） |
+| R12 导出 | 修复前 233 个错误（ezdxf r12export 写出了 BYBLOCK/BYLAYER 线型表项和未用文字样式），修复后 0 个 |
+| 由 AutoCAD 写出的 DXF / DWG 再回到 AgentCAD | 独立验证 17/17 通过；规格修订仍只修改 10 个实体；修订后的文件再交给 AutoCAD，0 个错误 |
+| DWG 交付 | `A_mounting_plate_100x60.dwg`、`B_mounting_plate.dwg`（DWG 2018），由 AutoCAD 读回并通过验证 |
+| AutoCAD 作为 oracle 的 27 个编辑命令差分用例 | 首轮发现 AgentCAD 的 4 个真实缺陷：三点弧顺时针点序、角度标注 42 的单位、文字镜像、块参照镜像。全部修复，现在 27/27 一致 |
+| 原研究中被阻塞的 5 项 | 全部实测（其中 NaN、未注册 APPID、XDATA 超过 16 KB 会导致 AutoCAD 整文件拒绝），并转化为验证器规则 |
+| 我们的验证器与 AutoCAD 是否一致 | AutoCAD 拒绝的文件，我们的验证器同样判为失败（`test_validator_and_autocad_agree_on_rejected_file`） |
 
 下面的每个结论都来自实际运行：要么是测试断言，要么是演示产物文件。
 
@@ -11,13 +25,13 @@
 
 | 验收标准 | 结果 | 证据 |
 |---|---|---|
-| 有效 DXF | 通过 | ezdxf 能独立重读；LibreOffice 能独立导入并渲染（`examples/lo_render/A_mounting_plate_100x60.png`） |
+| 有效 DXF | 通过 | ezdxf 能独立重读；LibreOffice 能独立导入并渲染（`examples/lo_render/A_mounting_plate_100x60.png`）；**AutoCAD 2027 AUDIT 0 个错误**，AutoCAD 读到的标注值与设计一致 |
 | 外轮廓 100 × 60 | 通过 | 测试直接从 OUTLINE 层多段线的顶点计算尺寸，不读规格 |
 | 4 孔 Ø8 | 通过 | 从 CIRCLE 半径计算 |
 | 孔心距相邻边 10 mm | 通过 | 孔心坐标减去轮廓左下角，得到 (10,10)、(10,50)、(90,10)、(90,50)，并检查到最近两条边的距离 |
 | 必要标注 | 通过 | 从定义点重新测量得到线性 100、60、10、10、80、40 和直径 8 |
 | 独立验证器检查实际几何 | 通过 | 17 项需求全部通过，报告给出 expected/actual/deviation/tolerance |
-| 导出后重读一致 | 通过 | 导出 R2000、R2018 后，逐实体序列化结果与原图完全相同；R12 导出时 LWPOLYLINE 转成 POLYLINE，4 个 CIRCLE 保留 |
+| 导出后重读一致 | 通过 | 导出 R2000、R2018 后，逐实体序列化结果与原图完全相同；R12 导出时 LWPOLYLINE 转成 POLYLINE，4 个 CIRCLE 保留，AutoCAD AUDIT 0 个错误（需先清理 ezdxf 的表项，见上文） |
 | 单位不明时拒绝 | 通过 | 规格缺少 `units` 时返回 `spec/UNITS_UNDEFINED`，不写任何文件 |
 
 ## 测试 B：修改图纸并保留约束
@@ -105,7 +119,7 @@
 
 ## 测试 H：常用功能覆盖
 
-`tests/test_h_operations.py`（24 项）加上其它测试文件：**全部 40 个操作都至少被一个测试调用**（[op_test_matrix.md](op_test_matrix.md)，由脚本根据测试源码生成）。每个操作的测试都包含：成功执行、**从磁盘重读后**的几何断言，以及至少一个失败用例的错误码断言。功能状态分类见 [coverage.md](coverage.md)。
+`tests/test_h_operations.py`（24 项）加上 AutoCAD 差分测试（27 项，见上文）以及其它测试文件：**全部 40 个操作都至少被一个测试调用**（[op_test_matrix.md](op_test_matrix.md)，由脚本根据测试源码生成）。每个操作的测试都包含：成功执行、**从磁盘重读后**的几何断言，以及至少一个失败用例的错误码断言。功能状态分类见 [coverage.md](coverage.md)。
 
 ## 性能与 Agent 使用成本
 
@@ -124,4 +138,4 @@
 
 - **发现并修复的问题**：ezdxf 不维护 `$EXTMIN/$EXTMAX`（保留 1e20 哨兵值），LibreOffice 按头部范围适配页面，整张图因此缩成一个点。做过 A/B 对照：同一图形无范围时渲染为空白，写入真实范围后正常。现在每次保存和导出都写入真实范围。
 - 修复后 LibreOffice 能正确导入 A/B/C 图纸和 R12 导出：图框、标题栏、板、孔、中心线、标注线都能显示（`examples/lo_render/*.png`）。
-- **观察到的第三方差异**：LibreOffice 导出的 PDF 文字中没有标注数字，也没有材料注释（两者在 DXF 中都是 MTEXT）；标题栏的 ATTRIB/TEXT 则正常出现。由此推断其 DXF 导入不支持 MTEXT，但没有进一步核实。ezdxf 重读和本项目验证器都能正确读出这些实体。由于没有 AutoCAD，无法在 AutoCAD 中做打开验证（已记录为阻塞项）。
+- **观察到的第三方差异**：LibreOffice 导出的 PDF 文字中没有标注数字，也没有材料注释（两者在 DXF 中都是 MTEXT）；标题栏的 ATTRIB/TEXT 则正常出现。由此推断其 DXF 导入不支持 MTEXT，但没有进一步核实。ezdxf 重读、本项目验证器以及 AutoCAD 2027 都能正确读出这些实体（AutoCAD 读到的标注值与设计一致）。

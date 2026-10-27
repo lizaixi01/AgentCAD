@@ -30,7 +30,7 @@ ezdxf (DXF 内核)
 | 选择器 | handle、`tag:x`、`$i`、它们组成的列表、过滤对象 `{type, layer, tag, tag_prefix}`、`{"all": true}`。空对象 `{}` 会被拒绝，避免误选全部 |
 | 零件规格 | rootdict → `AGENTCAD` 字典 → XRECORD `part_spec`（JSON 分块存在 group 1 中），另有 `plan_tags`。随 DXF 文件一起移动 |
 | 标注 | 真实 DIMENSION 实体 + 渲染块 `*D<n>`；Runtime 写入 group 42（实测值）；验证器从定义点重新测量，不信任文字或 group 42 |
-| 角度 | 度、逆时针、WCS。镜像后把 OCS (0,0,-1) 归一化回 (0,0,1)；多段线 bulge = tan(θ/4)，正值为逆时针 |
+| 角度 | 度、逆时针、WCS。外来文件中 extrusion (0,0,-1) 的圆/弧/多段线按 WCS 读取（AutoCAD 会原样保留这种实体）；被编辑时先归一化为 (0,0,1)。多段线 bulge = tan(θ/4)，正值为逆时针。角度标注的 group 42 按 AutoCAD 约定存弧度，API 中仍用度 |
 | 单位输入 | 数字 = 图纸单位；`"8mm"`、`"0.5in"` 这类字符串会被显式换算；未知单位、或图纸没有单位时报错 |
 
 ## 状态目录（每张图纸一份）
@@ -82,7 +82,7 @@ ezdxf (DXF 内核)
            "hint": "…", "partial_changes": false, "details": {"tangent_length": 57.7}}}
 ```
 
-错误类别：`input`（调用参数）、`spec`（规格缺失或矛盾）、`geometry`（几何上不可行）、`file`（读不到或不是 DXF）、`policy`（沙箱、只读、预算、锁）、`validation`、`dependency`（可选组件未安装）、`internal`。CLI 退出码按类别映射。
+错误类别：`input`（调用参数）、`spec`（规格缺失或矛盾）、`geometry`（几何上不可行）、`file`（读不到或不是 DXF）、`policy`（沙箱、只读、预算、锁）、`validation`、`dependency`（可选组件未安装）、`internal`。CLI 退出码按类别映射（`dependency` 为 6）。
 
 ## 验证器
 
@@ -109,5 +109,5 @@ ezdxf (DXF 内核)
 - 覆盖需要 `overwrite=true`，被覆盖的文件会先建检查点；导出目标不能是源文件。
 - 只读模式；操作白名单；批次操作数、实体总数、单批新增实体数都有预算；删除超过 50 个实体需要 `confirm_large`。
 - 每张图纸有写锁，返回 `retryable` 错误。
-- 代码中没有 `subprocess`、`os.system`、`eval`、`exec`（有测试扫描），Agent 的输入只能落到封闭的操作注册表上。
+- 代码中没有 `os.system`、`eval`、`exec`。`subprocess` 只出现在可选的 `backends/autocad.py` 中：可执行文件来自配置或自动发现，不经 shell（`shell=False`），有超时；作业脚本只包含固定文件名，不含调用方字符串；不修改宿主 AutoCAD 的持久设置。这些约束都有测试扫描。Agent 的输入只能落到封闭的操作注册表上。
 - HTTP 默认只绑定 127.0.0.1，请求体限制 8 MB。

@@ -32,20 +32,29 @@
    "dim.width"
   ]
  },
+ "autocad": {
+  "A_mounting_plate_100x60.dxf": true,
+  "B_mounting_plate.dxf": true,
+  "C_bracket_from_pdf.dxf": true,
+  "C_plate_from_zh_md.dxf": true,
+  "A_mounting_plate_100x60_R12.dxf": true,
+  "A_mounting_plate_100x60.dwg": true,
+  "B_mounting_plate.dwg": true
+ },
  "metrics": {
   "ok": true,
   "tool": "get_metrics",
-  "tool_calls": 14,
+  "tool_calls": 21,
   "failures": 1,
-  "total_duration_ms": 2404.96,
-  "input_bytes": 1339,
-  "output_bytes": 61100,
+  "total_duration_ms": 33456.85,
+  "input_bytes": 1647,
+  "output_bytes": 63935,
   "model_calls": 0,
   "model_cost_usd": 0.0,
   "metrics": {
-   "duration_ms": 0.03,
+   "duration_ms": 0.05,
    "input_bytes": 8,
-   "output_bytes": 1657
+   "output_bytes": 2384
   }
  }
 }

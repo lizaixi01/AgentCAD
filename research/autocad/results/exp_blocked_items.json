@@ -1,0 +1,267 @@
+{
+ "sysvars_fresh_drawing_acadiso_dwt": {
+  "MIRRTEXT": "0",
+  "FILLETRAD": "0.0",
+  "TRIMMODE": "1",
+  "TRIMEXTENDMODE": "0",
+  "ARRAYASSOCIATIVITY": "1",
+  "OFFSETGAPTYPE": "0",
+  "CHAMFERA": "0.0",
+  "CHAMFERB": "0.0",
+  "CHAMMODE": "0",
+  "INSUNITS": "4",
+  "MEASUREMENT": "1",
+  "DIMASSOC": "2",
+  "ANGBASE": "0.0",
+  "ANGDIR": "0",
+  "LUNITS": "2",
+  "OSMODE": "4133",
+  "SECURELOAD": "1",
+  "ACADVER": "26.0",
+  "DWGNAME": "Drawing1.dwg"
+ },
+ "cases": {
+  "dims_no42_and_stale": {
+   "autocad_entities": [
+    "DIMENSION|10:0,-30,0|11:50,-29.775,0|42:-1|51:0|210:0,0,1|13:0,0,0|14:150,0,0|40:0|50:0",
+    "DIMENSION|10:0,50,0|11:7.548364889166,57.8665629407,0|42:-1|51:0|210:0,0,1|13:0,0,0|14:0,0,0|40:0|50:0",
+    "DIMENSION|10:0,-10,0|11:50,-9.775,0|42:-1|51:0|210:0,0,1|13:0,0,0|14:100,0,0|40:0|50:0"
+   ],
+   "nent": "3",
+   "import_messages": [
+    "共发现 0 个错误，已修复 0 个"
+   ],
+   "audit": [
+    "共发现 0 个错误，已修复 0 个"
+   ],
+   "dxfout_reread": {
+    "entities": [
+     [
+      "DIMENSION",
+      {
+       "actual_measurement": "-1.0"
+      },
+      []
+     ],
+     [
+      "DIMENSION",
+      {
+       "actual_measurement": "-1.0"
+      },
+      []
+     ],
+     [
+      "DIMENSION",
+      {
+       "actual_measurement": "-1.0"
+      },
+      []
+     ]
+    ],
+    "appids": [
+     "ACAD",
+     "HATCHBACKGROUNDCOLOR",
+     "EZDXF",
+     "ACAD_NAV_VCDISPLAY"
+    ],
+    "dimension_block_line_ends_x": [
+     [
+      0.0,
+      100.0
+     ],
+     [
+      7.071068,
+      8.025662
+     ],
+     [
+      0.0,
+      100.0
+     ]
+    ]
+   },
+   "seconds": 3.13
+  },
+  "negative_radius": {
+   "autocad_entities": [
+    "LINE|10:0,0,0|11:10,0,0|210:0,0,1",
+    "CIRCLE|10:0,0,0|40:1|210:0,0,1"
+   ],
+   "nent": "2",
+   "import_messages": [
+    "共发现 0 个错误，已修复 0 个"
+   ],
+   "audit": [
+    "共发现 0 个错误，已修复 0 个"
+   ],
+   "dxfout_reread": {
+    "entities": [
+     [
+      "CIRCLE",
+      {
+       "center": "(0.0, 0.0, 0.0)",
+       "radius": "1.0"
+      },
+      []
+     ],
+     [
+      "LINE",
+      {
+       "start": "(0.0, 0.0, 0.0)",
+       "end": "(10.0, 0.0, 0.0)"
+      },
+      []
+     ]
+    ],
+    "appids": [
+     "ACAD",
+     "HATCHBACKGROUNDCOLOR",
+     "EZDXF",
+     "ACAD_NAV_VCDISPLAY"
+    ]
+   },
+   "seconds": 3.17
+  },
+  "nan_coordinate": {
+   "autocad_entities": [],
+   "nent": "0",
+   "import_messages": [
+    "DXF 读取错误 第 5230 行。",
+    "DXF 输入无效或不完整 -- 图形被放弃。"
+   ],
+   "audit": [
+    "共发现 0 个错误，已修复 0 个"
+   ],
+   "dxfout_reread": {
+    "entities": [],
+    "appids": [
+     "ACAD",
+     "ACAD_PSEXT",
+     "AcadAnnoPO",
+     "AcadAnnotative",
+     "ACAD_DSTYLE_DIMJAG",
+     "ACAD_DSTYLE_DIMTALN",
+     "ACAD_MLEADERVER",
+     "ACAD_NAV_VCDISPLAY"
+    ]
+   },
+   "seconds": 3.24
+  },
+  "arc_extrusion_negz": {
+   "autocad_entities": [
+    "ARC|10:10,0,0|40:5|210:0,0,-1|50:0|51:1.570796326795"
+   ],
+   "nent": "1",
+   "import_messages": [
+    "共发现 0 个错误，已修复 0 个"
+   ],
+   "audit": [
+    "共发现 0 个错误，已修复 0 个"
+   ],
+   "dxfout_reread": {
+    "entities": [
+     [
+      "ARC",
+      {
+       "center": "(10.0, 0.0, 0.0)",
+       "radius": "5.0",
+       "extrusion": "(0.0, 0.0, -1.0)",
+       "start_angle": "0.0",
+       "end_angle": "90.0"
+      },
+      []
+     ]
+    ],
+    "appids": [
+     "ACAD",
+     "HATCHBACKGROUNDCOLOR",
+     "EZDXF",
+     "ACAD_NAV_VCDISPLAY"
+    ]
+   },
+   "seconds": 3.34
+  },
+  "xdata_unregistered_appid": {
+   "autocad_entities": [],
+   "nent": "0",
+   "import_messages": [
+    "读取 LINE (从行 5226 开始) 时遇到下列错误:",
+    "DXF 输入无效或不完整 -- 图形被放弃。"
+   ],
+   "audit": [
+    "共发现 0 个错误，已修复 0 个"
+   ],
+   "dxfout_reread": {
+    "entities": [],
+    "appids": [
+     "ACAD",
+     "ACAD_PSEXT",
+     "AcadAnnoPO",
+     "AcadAnnotative",
+     "ACAD_DSTYLE_DIMJAG",
+     "ACAD_DSTYLE_DIMTALN",
+     "ACAD_MLEADERVER",
+     "ACAD_NAV_VCDISPLAY"
+    ]
+   },
+   "seconds": 3.34
+  },
+  "xdata_over_16kb": {
+   "autocad_entities": [],
+   "nent": "0",
+   "import_messages": [
+    "读取 LINE (从行 5226 开始) 时遇到下列错误:",
+    "DXF 输入无效或不完整 -- 图形被放弃。"
+   ],
+   "audit": [
+    "共发现 0 个错误，已修复 0 个"
+   ],
+   "dxfout_reread": {
+    "entities": [],
+    "appids": [
+     "ACAD",
+     "ACAD_PSEXT",
+     "AcadAnnoPO",
+     "AcadAnnotative",
+     "ACAD_DSTYLE_DIMJAG",
+     "ACAD_DSTYLE_DIMTALN",
+     "ACAD_MLEADERVER",
+     "ACAD_NAV_VCDISPLAY"
+    ]
+   },
+   "seconds": 3.57
+  },
+  "arc_angles_-90_450": {
+   "autocad_entities": [
+    "ARC|10:0,0,0|40:10|210:0,0,1|50:-1.570796326795|51:7.853981633974"
+   ],
+   "nent": "1",
+   "import_messages": [
+    "共发现 2 个错误，已修复 0 个"
+   ],
+   "audit": [
+    "共发现 2 个错误，已修复 0 个"
+   ],
+   "dxfout_reread": {
+    "entities": [
+     [
+      "ARC",
+      {
+       "center": "(0.0, 0.0, 0.0)",
+       "radius": "10.0",
+       "start_angle": "-90.0",
+       "end_angle": "450.0"
+      },
+      []
+     ]
+    ],
+    "appids": [
+     "ACAD",
+     "HATCHBACKGROUNDCOLOR",
+     "EZDXF",
+     "ACAD_NAV_VCDISPLAY"
+    ]
+   },
+   "seconds": 3.2
+  }
+ }
+}

@@ -2,9 +2,10 @@
 
 面向 AI Agent 的无 GUI 二维 CAD 执行环境。外部 Agent（Claude Code、Codex 等）通过 **CLI / MCP / HTTP / Python API** 直接创建、读取、修改和验证 DXF 工程图；Runtime 负责确定性的 CAD 操作、事务与回滚、操作记录，以及**独立于生成过程的几何验证**。自然语言理解和规划由外部 Agent 负责，Runtime 本身不调用任何模型（`model_calls = 0`）。
 
-- 不依赖 AutoCAD 或任何商业软件；底层使用 [ezdxf](https://ezdxf.mozman.de/)（MIT）
+- 核心不依赖 AutoCAD 或任何商业软件；底层使用 [ezdxf](https://ezdxf.mozman.de/)（MIT）。**装有 AutoCAD 时**，可选后端会通过无头的 accoreconsole 提供 DWG 导入/导出和 AutoCAD AUDIT
 - 四种接口共用同一个 `Runtime` 服务层，适配层里没有 CAD 逻辑（有测试保证）
-- 74 个自动化测试全部通过（[docs/test-results.txt](docs/test-results.txt)），覆盖验收测试 A–H 和安全策略
+- 112 个自动化测试全部通过（[docs/test-results.txt](docs/test-results.txt)），覆盖验收测试 A–H、安全策略，以及与 AutoCAD 2027 实际行为逐项比对的 27 个差分用例
+- AutoCAD 2027 实机验证：所有交付 DXF AUDIT 0 个错误；DWG 往返后规格与标签完整保留（[docs/research/autocad-observations.md](docs/research/autocad-observations.md)）
 - 真实外部 Agent 验证：Codex CLI 只通过 MCP 完成了绘图、校验、按错误修正、修改和 diff（[docs/acceptance-report.md](docs/acceptance-report.md#测试-g外部-agent-接入)）
 
 ## 安装
@@ -36,7 +37,7 @@ agentcad --root ./work revise plate.dxf --spec examples/specs/change_width_120.j
 agentcad --root ./work diff plate.dxf
 ```
 
-其他命令：`create`、`inspect`、`entities`、`apply`（批量操作）、`constraints`、`extract` / `from-doc`（技术文档）、`rollback`、`checkpoints`、`history`、`recover`、`export`（dxf/R12/svg/json）、`ops`（操作目录）、`mcp`、`serve`。`agentcad <cmd> --help` 查看参数。
+其他命令：`create`、`inspect`、`entities`、`apply`（批量操作）、`constraints`、`extract` / `from-doc`（技术文档）、`rollback`、`checkpoints`、`history`、`recover`、`export`（dxf/R12/svg/json，装有 AutoCAD 时还支持 dwg）、`import`（DWG → DXF，需要 AutoCAD）、`acad-audit`（需要 AutoCAD）、`ops`（操作目录）、`mcp`、`serve`。退出码 6 表示可选依赖缺失。`agentcad <cmd> --help` 查看参数。
 
 批量操作示例（一次调用、原子执行，可用 `"$0"` 引用本批第 0 步创建的实体，用 `"tag:<name>"` 引用带标签的实体）：
 
@@ -70,7 +71,21 @@ env = { AGENTCAD_ROOT = "D:/Projects/AgentCAD/work" }
 default_tools_approval_mode = "approve"   # 否则在 approval_policy="never" 下所有工具调用都会被拒绝（实测）
 ```
 
-MCP 工具：`create_drawing`、`read_drawing`、`inspect_entities`、`apply_operations`、`apply_constraints`、`validate_drawing`、`revise_from_document`、`get_diff`、`rollback`、`export_drawing`，另有 `list_operations`、`draw_from_spec`、`revise_drawing`、`extract_requirements`、`list_checkpoints`、`history`、`recover`、`get_metrics`。
+MCP 工具：`create_drawing`、`read_drawing`、`inspect_entities`、`apply_operations`、`apply_constraints`、`validate_drawing`、`revise_from_document`、`get_diff`、`rollback`、`export_drawing`，另有 `list_operations`、`draw_from_spec`、`revise_drawing`、`extract_requirements`、`list_checkpoints`、`history`、`recover`、`get_metrics`，以及需要 AutoCAD 的 `import_drawing`、`autocad_audit`。
+
+## AutoCAD 后端（可选）
+
+装有 AutoCAD 时，后端会从注册表或 `C:\Program Files\Autodesk` 自动发现 accoreconsole；也可以设置 `AGENTCAD_ACCORECONSOLE`。
+
+```bash
+agentcad --root ./work export plate.dxf plate.dwg
+```
+
+```bash
+agentcad --root ./work acad-audit plate.dxf
+```
+
+导出 DWG 后，后端会让 AutoCAD 把它读回，再交给独立验证器检查。后端只在 ASCII 作业目录中运行固定内容的脚本，不修改 AutoCAD 的任何持久设置，也不执行调用方提供的命令。
 
 ## Python API / HTTP
 
@@ -100,6 +115,7 @@ python examples/run_demo.py
 |---|---|
 | [docs/audit/existing-projects.md](docs/audit/existing-projects.md) | 现有项目审计（实际安装运行、commit、许可证） |
 | [docs/research/autocad-dxf-research.md](docs/research/autocad-dxf-research.md) | AutoCAD API / 命令 / DXF·DWG 研究与 ezdxf 实验 |
+| [docs/research/autocad-observations.md](docs/research/autocad-observations.md) | AutoCAD 2027 实机研究：无头自动化的坑、互操作、被阻塞项的实测、27 个命令差分 |
 | [docs/decision-record.md](docs/decision-record.md) | 技术路线决策记录 |
 | [docs/architecture.md](docs/architecture.md) | 架构、数据模型、事务、错误结构、API 信封 |
 | [docs/operations.md](docs/operations.md) | 40 个操作的参数参考（从代码生成） |
@@ -120,8 +136,10 @@ src/agentcad/
   docspec.py        技术文档（PDF/TXT/MD）→ 带来源的结构化规格；缺失/矛盾检测；Agent 引文校验
   store.py          安全读写、检查点、journal、提交副本、崩溃恢复
   policy.py         沙箱路径、只读、操作白名单、预算
+  backends/autocad.py  可选 AutoCAD 后端（accoreconsole）：DWG 导入/导出、AUDIT；唯一会启动外部进程的模块
   cli.py  mcp_server.py  http_api.py   适配层
-tests/              验收测试 A–H、约束、安全
+tests/              验收测试 A–H、约束、安全、AutoCAD 差分（golden）与实机测试
+research/autocad/   AutoCAD 研究脚本：无头驱动、打开/往返、R12 二分定位、被阻塞项、命令 oracle
 examples/           演示脚本与输出、Codex 实测记录
 scripts/gen_docs.py 从代码生成操作文档和操作×测试矩阵
 ```

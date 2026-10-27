@@ -21,19 +21,19 @@ $INSBASE
   9
 $EXTMIN
  10
-0.0
+1e+20
  20
--2.8516916780354684
+1e+20
  30
-0.0
+1e+20
   9
 $EXTMAX
  10
-297.0
+-1e+20
  20
-210.0
+-1e+20
  30
-0.0
+-1e+20
   9
 $LIMMIN
  10
@@ -325,11 +325,11 @@ $SKPOLY
   9
 $TDCREATE
  40
-2461340.931053241
+2461341.830925926
   9
 $TDUPDATE
  40
-2461340.931041667
+2461341.830925926
   9
 $TDINDWG
  40
@@ -649,35 +649,7 @@ TABLE
   2
 LTYPE
  70
-21
-  0
-LTYPE
-  2
-BYBLOCK
- 70
-0
-  3
-
- 72
-65
- 73
-0
- 40
-0.0
-  0
-LTYPE
-  2
-BYLAYER
- 70
-0
-  3
-
- 72
-65
- 73
-0
- 40
-0.0
+19
   0
 LTYPE
   2
@@ -1183,7 +1155,7 @@ TABLE
   2
 STYLE
  70
-27
+2
   0
 STYLE
   2
@@ -1202,506 +1174,6 @@ STANDARD
 2.5
   3
 txt
-  4
-
-  0
-STYLE
-  2
-OPENSANS-LIGHT
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSans-Light.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANS-LIGHT-ITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSans-LightItalic.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANS
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSans-Regular.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANS-ITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSans-Italic.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANS-SEMIBOLD
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSans-SemiBold.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANS-SEMIBOLDITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSans-SemiBoldItalic.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANS-BOLD
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSans-Bold.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANS-BOLDITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSans-BoldItalic.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANS-EXTRABOLD
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSans-ExtraBold.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANS-EXTRABOLDITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSans-ExtraBoldItalic.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANSCONDENSED-BOLD
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSansCondensed-Bold.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANSCONDENSED-LIGHT
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSansCondensed-Light.ttf
-  4
-
-  0
-STYLE
-  2
-OPENSANSCONDENSED-ITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-OpenSansCondensed-LightItalic.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONSANS
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationSans-Regular.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONSANS-BOLD
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationSans-Bold.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONSANS-BOLDITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationSans-BoldItalic.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONSANS-ITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationSans-Italic.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONSERIF
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationSerif-Regular.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONSERIF-BOLD
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationSerif-Bold.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONSERIF-BOLDITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationSerif-BoldItalic.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONSERIF-ITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationSerif-Italic.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONMONO
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationMono-Regular.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONMONO-BOLD
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationMono-Bold.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONMONO-BOLDITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationMono-BoldItalic.ttf
-  4
-
-  0
-STYLE
-  2
-LIBERATIONMONO-ITALIC
- 70
-0
- 40
-0.0
- 41
-1.0
- 50
-0.0
- 71
-0
- 42
-2.5
-  3
-LiberationMono-Italic.ttf
   4
 
   0
@@ -2885,7 +2357,7 @@ BLOCK
   8
 0
   2
-$MODEL_SPACE
+$Model_Space
  70
 0
  10
@@ -2898,6 +2370,12 @@ $MODEL_SPACE
 $Model_Space
   1
 
+1001
+EZDXF
+1000
+WRITTEN_BY_EZDXF
+1000
+1.4.5 @ 2026-10-27T11:56:32.039668+00:00
   0
 ENDBLK
   8
@@ -2907,7 +2385,7 @@ BLOCK
   8
 0
   2
-$PAPER_SPACE
+$Paper_Space
  70
 0
  10
@@ -5910,5 +5388,5 @@ MTXPL_ARIAL
 0.0
   0
 ENDSEC
-0
+  0
 EOF
