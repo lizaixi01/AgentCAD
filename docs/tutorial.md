@@ -411,7 +411,7 @@ default_tools_approval_mode = "approve"
 
 > 按 docs/spec.pdf 出图，有缺失或矛盾的地方先列出来问我。
 
-Agent 会调用 `draw_from_spec`、`apply_operations`、`validate_drawing`、`get_diff`、`rollback` 等 20 个工具，与 CLI 一一对应。可用环境变量限制 Agent 的权限：`AGENTCAD_READ_ONLY=1` 设为只读，`AGENTCAD_ALLOWED_OPS=add_line,add_circle,...` 设置操作白名单。
+Agent 会调用 `draw_from_spec`、`apply_operations`、`validate_drawing`、`get_diff`、`rollback` 等 21 个工具，与 CLI 一一对应。可用环境变量限制 Agent 的权限：`AGENTCAD_READ_ONLY=1` 设为只读，`AGENTCAD_ALLOWED_OPS=add_line,add_circle,...` 设置操作白名单。
 
 ### Python
 
@@ -455,5 +455,7 @@ curl -X POST localhost:8765/v1/validate_drawing -H "Content-Type: application/js
 | 建筑平面等大尺寸图纸出图后箭头看不见、点画线像实线 | 用 `create --annotation-scale 50`（1:50 出图）新建图纸，或对已有图纸执行操作 `{"op": "set_annotation_scale", "scale": 50}`。验证器会用 `ANNOTATION_TOO_SMALL` 提醒。 |
 | 直径标注显示成 "ØØ12" | 标注文字里的 `<>` 已经带 Ø / R 前缀，写 `4X <>` 即可，不要写 `Ø<>`。验证器会报 `DIMENSION_DOUBLE_PREFIX`。 |
 | 想看图纸实际出图效果 | 装有 AutoCAD 时：`python examples/trials/render_png.py 输出目录 图纸.dxf`（在 PowerShell 中运行），用 AutoCAD 打印成 PNG。 |
+| 真实图纸改完后，打印出来的图纸还是旧的 | 很多真实图纸有打印用的图纸空间布局，里面有零件的缩放副本。`read_drawing` 的 `layouts` 会列出它们，`validate` 会用 `LAYOUT_NOT_VALIDATED` 提醒。操作加 `"layout": "布局名"` 即可在布局里编辑，`validate --layout 布局名` 检查它。 |
+| 操作目录里没有我要的编辑 | 用 `agentcad --allow-scripts --root work script 图纸.dxf --file 脚本.py`（MCP 工具 `run_script`，需 `AGENTCAD_ALLOW_SCRIPTS=1`）。脚本里图纸叫 `doc`，原地修改即可；它和批量操作一样有检查点、diff、校验，可以 `rollback`。默认关闭，只对你信任的 Agent 开启。 |
 | 想看某个操作有哪些参数 | `agentcad ops`，或查看 [operations.md](operations.md)。参数写错时错误信息的 `hint` 里也会列出。 |
 | 想看完整演示 | `python examples/run_demo.py`，输出在 `examples/output/`。 |

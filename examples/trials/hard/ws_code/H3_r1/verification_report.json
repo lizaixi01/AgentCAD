@@ -1,0 +1,352 @@
+{
+  "units": "mm",
+  "ezdxf_version": "1.4.5",
+  "generated_count": 10,
+  "skipped_count": 2,
+  "generated": [
+    {
+      "id": "FL-101",
+      "D": 150.0,
+      "B": 60.0,
+      "P": 110.0,
+      "n": 6,
+      "d": 12.0,
+      "material": "Q235",
+      "file": "FL-101.dxf",
+      "status": "PASS",
+      "diameters_mm": [
+        150.0,
+        59.99999999999999,
+        110.0
+      ],
+      "circle_count": 9,
+      "bolt_hole_count": 6,
+      "first_hole_center_mm": [
+        0.0,
+        55.0,
+        0.0
+      ],
+      "minimum_outer_edge_mm": 13.999999999999993,
+      "minimum_center_hole_gap_mm": 19.0,
+      "minimum_bolt_hole_gap_mm": 42.99999999999998,
+      "diameter_dimension_count": 3,
+      "centerline_count": 2,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "bytes": 76441
+    },
+    {
+      "id": "FL-102",
+      "D": 180.0,
+      "B": 75.0,
+      "P": 135.0,
+      "n": 8,
+      "d": 14.0,
+      "material": "Q235",
+      "file": "FL-102.dxf",
+      "status": "PASS",
+      "diameters_mm": [
+        179.99999999999997,
+        75.0,
+        135.0
+      ],
+      "circle_count": 11,
+      "bolt_hole_count": 8,
+      "first_hole_center_mm": [
+        0.0,
+        67.5,
+        0.0
+      ],
+      "minimum_outer_edge_mm": 15.5,
+      "minimum_center_hole_gap_mm": 23.0,
+      "minimum_bolt_hole_gap_mm": 37.6622633692871,
+      "diameter_dimension_count": 3,
+      "centerline_count": 2,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "bytes": 76829
+    },
+    {
+      "id": "FL-103",
+      "D": 120.0,
+      "B": 40.0,
+      "P": 90.0,
+      "n": 4,
+      "d": 11.0,
+      "material": "45钢",
+      "file": "FL-103.dxf",
+      "status": "PASS",
+      "diameters_mm": [
+        120.00000000000001,
+        40.0,
+        89.99999999999999
+      ],
+      "circle_count": 7,
+      "bolt_hole_count": 4,
+      "first_hole_center_mm": [
+        0.0,
+        45.0,
+        0.0
+      ],
+      "minimum_outer_edge_mm": 9.5,
+      "minimum_center_hole_gap_mm": 19.5,
+      "minimum_bolt_hole_gap_mm": 52.63961030678928,
+      "diameter_dimension_count": 3,
+      "centerline_count": 2,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "bytes": 76138
+    },
+    {
+      "id": "FL-104",
+      "D": 200.0,
+      "B": 90.0,
+      "P": 160.0,
+      "n": 8,
+      "d": 18.0,
+      "material": "Q345",
+      "file": "FL-104.dxf",
+      "status": "PASS",
+      "diameters_mm": [
+        200.0,
+        90.0,
+        160.0
+      ],
+      "circle_count": 11,
+      "bolt_hole_count": 8,
+      "first_hole_center_mm": [
+        0.0,
+        80.0,
+        0.0
+      ],
+      "minimum_outer_edge_mm": 10.999999999999986,
+      "minimum_center_hole_gap_mm": 26.0,
+      "minimum_bolt_hole_gap_mm": 43.229349178414346,
+      "diameter_dimension_count": 3,
+      "centerline_count": 2,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "bytes": 76815
+    },
+    {
+      "id": "FL-105",
+      "D": 160.0,
+      "B": 60.0,
+      "P": 120.0,
+      "n": 6,
+      "d": 14.0,
+      "material": "Q235",
+      "file": "FL-105.dxf",
+      "status": "PASS",
+      "diameters_mm": [
+        160.00000000000003,
+        60.0,
+        120.0
+      ],
+      "circle_count": 9,
+      "bolt_hole_count": 6,
+      "first_hole_center_mm": [
+        0.0,
+        60.0,
+        0.0
+      ],
+      "minimum_outer_edge_mm": 12.999999999999993,
+      "minimum_center_hole_gap_mm": 22.999999999999993,
+      "minimum_bolt_hole_gap_mm": 45.99999999999997,
+      "diameter_dimension_count": 3,
+      "centerline_count": 2,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "bytes": 76519
+    },
+    {
+      "id": "FL-106",
+      "D": 100.0,
+      "B": 30.0,
+      "P": 70.0,
+      "n": 4,
+      "d": 9.0,
+      "material": "304不锈钢",
+      "file": "FL-106.dxf",
+      "status": "PASS",
+      "diameters_mm": [
+        100.00000000000001,
+        29.999999999999996,
+        70.0
+      ],
+      "circle_count": 7,
+      "bolt_hole_count": 4,
+      "first_hole_center_mm": [
+        0.0,
+        35.0,
+        0.0
+      ],
+      "minimum_outer_edge_mm": 10.5,
+      "minimum_center_hole_gap_mm": 15.5,
+      "minimum_bolt_hole_gap_mm": 40.49747468305833,
+      "diameter_dimension_count": 3,
+      "centerline_count": 2,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "bytes": 76214
+    },
+    {
+      "id": "FL-107",
+      "D": 220.0,
+      "B": 110.0,
+      "P": 180.0,
+      "n": 12,
+      "d": 14.0,
+      "material": "Q235",
+      "file": "FL-107.dxf",
+      "status": "PASS",
+      "diameters_mm": [
+        220.00000000000003,
+        110.00000000000001,
+        179.99999999999997
+      ],
+      "circle_count": 15,
+      "bolt_hole_count": 12,
+      "first_hole_center_mm": [
+        0.0,
+        90.0,
+        0.0
+      ],
+      "minimum_outer_edge_mm": 12.999999999999986,
+      "minimum_center_hole_gap_mm": 27.999999999999986,
+      "minimum_bolt_hole_gap_mm": 32.58742811845369,
+      "diameter_dimension_count": 3,
+      "centerline_count": 2,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "bytes": 77428
+    },
+    {
+      "id": "FL-108",
+      "D": 140.0,
+      "B": 50.0,
+      "P": 105.0,
+      "n": 6,
+      "d": 11.0,
+      "material": "45钢",
+      "file": "FL-108.dxf",
+      "status": "PASS",
+      "diameters_mm": [
+        140.0,
+        50.00000000000001,
+        104.99999999999999
+      ],
+      "circle_count": 9,
+      "bolt_hole_count": 6,
+      "first_hole_center_mm": [
+        0.0,
+        52.5,
+        0.0
+      ],
+      "minimum_outer_edge_mm": 11.999999999999993,
+      "minimum_center_hole_gap_mm": 21.999999999999993,
+      "minimum_bolt_hole_gap_mm": 41.499999999999986,
+      "diameter_dimension_count": 3,
+      "centerline_count": 2,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "bytes": 76438
+    },
+    {
+      "id": "FL-110",
+      "D": 250.0,
+      "B": 120.0,
+      "P": 200.0,
+      "n": 16,
+      "d": 18.0,
+      "material": "Q345",
+      "file": "FL-110.dxf",
+      "status": "PASS",
+      "diameters_mm": [
+        250.0,
+        120.0,
+        200.00000000000003
+      ],
+      "circle_count": 19,
+      "bolt_hole_count": 16,
+      "first_hole_center_mm": [
+        0.0,
+        100.0,
+        0.0
+      ],
+      "minimum_outer_edge_mm": 15.999999999999986,
+      "minimum_center_hole_gap_mm": 30.999999999999986,
+      "minimum_bolt_hole_gap_mm": 21.01806440322561,
+      "diameter_dimension_count": 3,
+      "centerline_count": 2,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "bytes": 77910
+    },
+    {
+      "id": "FL-112",
+      "D": 170.0,
+      "B": 80.0,
+      "P": 130.0,
+      "n": 8,
+      "d": 13.0,
+      "material": "304不锈钢",
+      "file": "FL-112.dxf",
+      "status": "PASS",
+      "diameters_mm": [
+        170.00000000000003,
+        80.0,
+        130.0
+      ],
+      "circle_count": 11,
+      "bolt_hole_count": 8,
+      "first_hole_center_mm": [
+        0.0,
+        65.0,
+        0.0
+      ],
+      "minimum_outer_edge_mm": 13.5,
+      "minimum_center_hole_gap_mm": 18.5,
+      "minimum_bolt_hole_gap_mm": 36.74884620746165,
+      "diameter_dimension_count": 3,
+      "centerline_count": 2,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "bytes": 76894
+    }
+  ],
+  "skipped": [
+    {
+      "id": "FL-109",
+      "D": 130.0,
+      "B": 60.0,
+      "P": 118.0,
+      "n": 6,
+      "d": 14.0,
+      "material": "Q235",
+      "outer_edge_mm": -1.0,
+      "center_hole_mm": 22.0,
+      "adjacent_center_distance_mm": 58.99999999999999,
+      "adjacent_hole_gap_mm": 44.99999999999999,
+      "reasons": [
+        "螺栓孔超出或接触外圆，边缘净距 -1.000000 mm"
+      ]
+    },
+    {
+      "id": "FL-111",
+      "D": 90.0,
+      "B": 40.0,
+      "P": 66.0,
+      "n": 16,
+      "d": 14.0,
+      "material": "Q235",
+      "outer_edge_mm": 5.0,
+      "center_hole_mm": 6.0,
+      "adjacent_center_distance_mm": 12.875961253064464,
+      "adjacent_hole_gap_mm": -1.1240387469355362,
+      "reasons": [
+        "相邻螺栓孔重叠或接触，中心距 12.875961 mm < 孔径 14 mm，净距 -1.124039 mm"
+      ]
+    }
+  ]
+}

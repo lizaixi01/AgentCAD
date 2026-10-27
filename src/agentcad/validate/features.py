@@ -125,9 +125,11 @@ def dimension_anchor_points(e) -> list[G.Vec]:
     return []
 
 
-def extract(doc: Drawing) -> Features:
+def extract(doc: Drawing, layout: str | None = None) -> Features:
+    """Features of model space, or of one paper-space layout (a printed sheet) when ``layout`` names it."""
+    from ..model import layout_spaces
     f = Features()
-    msp = doc.modelspace()
+    msp = layout_spaces(doc, layout)[0]
     loose: list[tuple[str, str, G.Vec, G.Vec, Any]] = []  # handle, layer, start, end, entity
     for e in msp:
         t = e.dxftype()
@@ -163,7 +165,12 @@ def extract(doc: Drawing) -> Features:
                 f.points.append((G.polar(c, r, a), h))
         elif t == "DIMENSION":
             kind, m = measure_dimension(e)
+            try:  # DIMLFAC scales the displayed value, e.g. 1/0.325 on a sheet that shows the part at 0.325
+                lfac = float(e.override().get("dimlfac") or 1.0)
+            except Exception:
+                lfac = 1.0
             f.dimensions.append({"id": h, "kind": kind, "measurement": m, "layer": e.dxf.layer,
+                                 "displayed": None if m is None else m * lfac,
                                  "text": e.dxf.get("text", ""), "anchors": dimension_anchor_points(e),
                                  "direction": dimension_direction(e),
                                  "stored": e.dxf.get("actual_measurement"), "tag": get_tag(e)})

@@ -1,0 +1,63 @@
+{
+  "file": "room.dxf",
+  "units": "mm",
+  "axis_rectangle": {
+    "lower_left": [
+      0,
+      0
+    ],
+    "width": 6000,
+    "height": 4000
+  },
+  "wall_thickness": 240,
+  "axis_to_wall_face": 120,
+  "outer_bounds": [
+    -120,
+    -120,
+    6120,
+    4120
+  ],
+  "inner_bounds": [
+    120,
+    120,
+    5880,
+    3880
+  ],
+  "door": {
+    "x_range": [
+      2550,
+      3450
+    ],
+    "width": 900,
+    "center_x": 3000
+  },
+  "window": {
+    "x_range": [
+      2250,
+      3750
+    ],
+    "width": 1500,
+    "center_x": 3000,
+    "line_y_values": [
+      3880,
+      3960,
+      4040,
+      4120
+    ]
+  },
+  "entity_counts": {
+    "WALL": 16,
+    "WINDOW": 4,
+    "AXIS": 4,
+    "DIMENSION": 4
+  },
+  "rendered_dimension_labels": [
+    900,
+    1500,
+    4000,
+    6000
+  ],
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "all_checks_passed": true
+}

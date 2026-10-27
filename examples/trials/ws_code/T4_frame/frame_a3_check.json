@@ -1,0 +1,82 @@
+{
+  "file": "frame_a3.dxf",
+  "units": "mm",
+  "outer_frame": {
+    "lower_left": [
+      0,
+      0
+    ],
+    "width": 420,
+    "height": 297
+  },
+  "inner_frame": {
+    "lower_left": [
+      25,
+      10
+    ],
+    "upper_right": [
+      410,
+      287
+    ],
+    "width": 385,
+    "height": 277
+  },
+  "margins": {
+    "left": 25,
+    "right": 10,
+    "top": 10,
+    "bottom": 10
+  },
+  "title_block": {
+    "lower_left": [
+      230,
+      10
+    ],
+    "width": 180,
+    "height": 32
+  },
+  "bom": {
+    "lower_left": [
+      230,
+      42
+    ],
+    "width": 180,
+    "height": 36,
+    "row_height": 12,
+    "column_widths": [
+      18,
+      92,
+      22,
+      48
+    ]
+  },
+  "text_count": 22,
+  "bom_rows": [
+    [
+      "序号",
+      "名称",
+      "数量",
+      "材料"
+    ],
+    [
+      "1",
+      "法兰盘",
+      "1",
+      "Q235"
+    ],
+    [
+      "2",
+      "螺栓 M10×40",
+      "6",
+      "8.8级"
+    ]
+  ],
+  "paper": {
+    "width": 420,
+    "height": 297,
+    "viewport_scale": "1:1"
+  },
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "verified": true
+}

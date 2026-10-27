@@ -1,0 +1,61 @@
+{
+  "round": 1,
+  "deliverable": "part.dxf",
+  "original_backup": "part.round1.before.dxf",
+  "units": "mm",
+  "plate_width": 150,
+  "plate_height": 80,
+  "corner_radius": 5,
+  "hole_diameter": 10,
+  "hole_centers": [
+    [
+      12,
+      12
+    ],
+    [
+      138,
+      12
+    ],
+    [
+      12,
+      68
+    ],
+    [
+      138,
+      68
+    ]
+  ],
+  "right_hole_center_to_right_edge": [
+    12,
+    12
+  ],
+  "width_dimension_measurement_and_display": 150,
+  "diameter_callout_moved_with_upper_right_hole": true,
+  "changed_entity_handles": [
+    "91",
+    "93",
+    "95",
+    "96",
+    "9B",
+    "9E",
+    "A0",
+    "A1",
+    "A4",
+    "D2",
+    "D6",
+    "D8",
+    "DA",
+    "DB",
+    "DC",
+    "DD",
+    "DE",
+    "DF"
+  ],
+  "unchanged_entity_count": 225,
+  "modelspace_entity_count": 15,
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "unrelated_content_preserved": "All other entity DXF tags, including title attributes, technical notes, logo, layers and other dimensions, compare equal to the backup.",
+  "layout_limitation": "The widened plate overlaps the original customer logo region x=135..155, y=60..75. Logo intentionally remains in its original position as requested.",
+  "part_sha256": "715da307d2d58353db8fb3c36779b6721d18a6b043e1dcf49ae891794d04d28a"
+}

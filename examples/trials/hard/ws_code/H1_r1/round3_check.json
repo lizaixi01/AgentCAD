@@ -1,0 +1,51 @@
+{
+  "drawing": "part.dxf",
+  "backup": "part.round3.before.dxf",
+  "units": "mm",
+  "plate_size_mm": [
+    150,
+    80
+  ],
+  "new_hole_center_mm": [
+    75.0,
+    40.0,
+    0.0
+  ],
+  "new_hole_diameter_mm": 30,
+  "diameter_dimension_measurement_mm": 30,
+  "diameter_dimension_display": "%%c30",
+  "new_hole_handle": "FF",
+  "new_dimension_handle": "100",
+  "new_dimension_graphics_block": "*D6",
+  "new_annotation_bounds_mm": [
+    [
+      75.0,
+      40.0,
+      0.0
+    ],
+    [
+      114.5,
+      64.61084583901774,
+      0.0
+    ]
+  ],
+  "existing_four_holes_diameter_mm": 12,
+  "existing_entity_records_byte_identical": true,
+  "all_other_original_records_byte_identical_except": [
+    "$HANDSEED",
+    "BLOCK_RECORD count"
+  ],
+  "added_modelspace_entities": 2,
+  "modelspace_entity_count": 17,
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "errors_encountered": [
+    {
+      "error": "Initial HANDSEED check included reader-generated in-memory SEQENDs.",
+      "resolution": "Check HANDSEED against persisted DXF record handles instead."
+    }
+  ],
+  "before_sha256": "52b7d38c2f62d98edb5cbf16d0145d582cb93fa3dedc98995f466e829654d9aa",
+  "after_sha256": "ea64c2aa5dc22fabad24232f2c754691ebc703e4664444ff98c80bdaaf394c23",
+  "layout_note": "Existing customer logo overlap from earlier rounds is unchanged."
+}

@@ -290,13 +290,14 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
         if txt and "<>" not in txt:
             plain = dimension_plain_text(txt)
             nums = text_values(plain)
-            if nums and not any(abs(n - d["measurement"]) <= max(tolerance, 0.005 * max(1, abs(n))) for n in nums):
+            shown = d.get("displayed", d["measurement"])
+            if nums and not any(abs(n - shown) <= max(tolerance, 0.005 * max(1, abs(n))) for n in nums):
                 # a bare value ("2700", "Ø12") that disagrees is an error; a note with several numbers or words
                 # ("10R @ 7.09\"", "8×Ø12 EQ SP") cannot be checked reliably, so it is only a warning
                 simple = len(nums) == 1 and not WORD_RE.search(plain)
                 out.append(issue("DIMENSION_TEXT_MISMATCH", "error" if simple else "warning",
-                                 f"Dimension text {txt!r} disagrees with measured value {d['measurement']:.6g}",
-                                 [d["id"]], expected=d["measurement"], actual_text=txt))
+                                 f"Dimension text {txt!r} disagrees with measured value {shown:.6g}",
+                                 [d["id"]], expected=shown, actual_text=txt))
         # '<>' of a diameter/radius dimension already carries the Ø / R prefix (seen in AutoCAD 2027 plots)
         before = txt.upper().split("<>")[0].rstrip() if "<>" in txt else ""
         doubled = (d["kind"] == "diameter" and before.endswith(("%%C", "Ø", "⌀"))) or \

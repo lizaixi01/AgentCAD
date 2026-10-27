@@ -1,0 +1,70 @@
+{
+  "file": "part.dxf",
+  "ezdxf_version": "1.4.5",
+  "units": "mm",
+  "plate_width": 150.0,
+  "plate_height": 80.0,
+  "corner_radii": [
+    5.000000000026418,
+    5.000000000026418,
+    5.000000000026418,
+    5.000000000026418
+  ],
+  "hole_centers": [
+    [
+      12.0,
+      12.0,
+      0.0
+    ],
+    [
+      138.0,
+      12.0,
+      0.0
+    ],
+    [
+      12.0,
+      68.0,
+      0.0
+    ],
+    [
+      138.0,
+      68.0,
+      0.0
+    ]
+  ],
+  "hole_diameter": 10,
+  "right_hole_center_to_right_edge": [
+    12,
+    12
+  ],
+  "width_dimension_measured": 150.0,
+  "width_dimension_displayed": "150",
+  "hole_diameter_dimension_measured": 10.0,
+  "modified_entity_handles": [
+    "91",
+    "93",
+    "95",
+    "96",
+    "9B",
+    "9E",
+    "A0",
+    "A1",
+    "A4",
+    "D2",
+    "D6",
+    "D8",
+    "DA",
+    "DB",
+    "DC",
+    "DD",
+    "DE",
+    "DF"
+  ],
+  "modified_tag_values": 29,
+  "all_other_bytes_unchanged": true,
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "source_sha256": "063d11975339fb9f9b3402cb71501ba6cf19957ef559e04c5f3209901e4cc6b9",
+  "result_sha256": "039e7995718e0e397c635a6ef5a99f95ea68a537d053dfe79af9cec0f634ca1c",
+  "limitation": "Existing customer logo remains at its original coordinates and overlaps the widened plate/right upper hole; not moved as requested."
+}

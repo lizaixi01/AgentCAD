@@ -1,0 +1,81 @@
+{
+  "file": "part.dxf",
+  "ezdxf_version": "1.4.5",
+  "units": "mm",
+  "mounting_hole_centers": [
+    [
+      12,
+      12,
+      0
+    ],
+    [
+      138,
+      12,
+      0
+    ],
+    [
+      12,
+      68,
+      0
+    ],
+    [
+      138,
+      68,
+      0
+    ]
+  ],
+  "mounting_hole_diameters": [
+    10,
+    10,
+    10,
+    10
+  ],
+  "diameter_dimension_measurement": 10.0,
+  "diameter_dimension_display": "4X %%c10",
+  "restored_records_exactly_match_round2_before": true,
+  "diameter_endpoints_and_arrows_on_circle": true,
+  "plate_size": [
+    150.0,
+    80.0
+  ],
+  "corner_radii": [
+    5.000000000026418,
+    5.000000000026418,
+    5.000000000026418,
+    5.000000000026418
+  ],
+  "width_dimension": 150.0,
+  "center_hole_center": [
+    75.0,
+    40.0,
+    0.0
+  ],
+  "center_hole_diameter": 30,
+  "center_dimension_raw_text": "%%c30",
+  "center_dimension_display": "Ø30",
+  "round1_and_round3_preserved": true,
+  "modified_entity_handles": [
+    "92",
+    "93",
+    "94",
+    "95",
+    "D2",
+    "D6",
+    "D8",
+    "DA",
+    "DB",
+    "DD",
+    "DF"
+  ],
+  "modified_tag_values": 21,
+  "all_other_bytes_unchanged": true,
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "source_sha256": "785def4a6cafbe56d91933b37f984502d4861c7abfd30ce0bfc0234dafe2adb3",
+  "result_sha256": "48e4a8b5558c708782ce0a2cc29cc09c5ae2c044d5090a159f3828daf1e97db5",
+  "errors_and_resolution": [
+    "PowerShell displayed old UTF-8 records incorrectly; explicit UTF-8 reading resolved it. No drawing data was affected.",
+    "Candidate verification expected literal Ø30 but the preserved DXF text is %%c30. Corrected the assertion and reverified before replacing part.dxf."
+  ],
+  "limitation": "Existing overlap with customer logo remains unchanged."
+}

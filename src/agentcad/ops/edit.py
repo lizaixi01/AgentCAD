@@ -137,13 +137,13 @@ def reflection(p1: G.Vec, p2: G.Vec) -> Matrix44:
     return _about(p1, refl)
 
 
-def _copy_into_msp(ctx: Ctx, e):
+def _copy_into_msp(ctx: Ctx, e):  # into the source entity's own layout
     try:
         c = e.copy()
     except Exception as exc:
         raise input_error("UNSUPPORTED_ENTITY", f"Cannot copy {e.dxftype()} {e.dxf.handle}: {exc}",
                           entities=[e.dxf.handle])
-    ctx.msp.add_entity(c)
+    ctx.space_of(e).add_entity(c)
     tag = get_tag(e)
     if tag is not None:  # copies must not share a tag with the original
         set_tag(ctx.doc, c, None)
@@ -330,9 +330,35 @@ GEOM_FIELDS = {
 }
 
 
-@op("modify", "edit", "Set geometric fields of ONE entity, e.g. {target, set: {radius: 5}} for a circle, "
+DIM_FIELDS = {"text": "text", "text_height": "dimtxt", "length_factor": "dimlfac"}
+
+
+def _modify_dimension(ctx: Ctx, e, fields: dict[str, Any]) -> dict[str, Any]:
+    """Text override and style overrides of a dimension; the geometry block is re-rendered and group 42 rewritten.
+    (Moving a dimension's points is done with move/stretch, which keep its definition points consistent.)"""
+    from ..units import parse_length
+    bad = [k for k in fields if k not in DIM_FIELDS]
+    if bad:
+        raise input_error("UNKNOWN_FIELD", f"DIMENSION has no editable field(s) {bad}",
+                          hint=f"Editable: {sorted(DIM_FIELDS)}", entities=[e.dxf.handle])
+    ov = e.override()
+    for k, v in fields.items():
+        if k == "text":
+            e.dxf.text = "" if v is None else str(v)
+            continue
+        val = parse_length(v, ctx.unit, k) if k == "text_height" else float(v)
+        if val <= 0:
+            raise input_error("OUT_OF_RANGE", f"{k} must be > 0", entities=[e.dxf.handle])
+        ov[DIM_FIELDS[k]] = val
+    ov.commit()
+    rerender_dimension(ctx, e)
+    ctx.touched(e)
+    return {"modified": [e.dxf.handle]}
+
+
+@op("modify", "edit", "Set fields of ONE entity, e.g. {target, set: {radius: 5}} for a circle, "
     "{set: {start: [0,0], end: [10,0]}} for a line, {set: {points: [...], closed: true}} for a polyline, "
-    "{set: {text: 'A'}} for text.",
+    "{set: {text: 'A'}} for text, {set: {text: '4X <>', text_height: 3.5, length_factor: 2}} for a dimension.",
     {"target": TARGET, "set": P("object", True, description="Field -> new value")})
 def modify(ctx: Ctx, target, set):  # noqa: A002 - matches the public parameter name
     from .registry import _point
@@ -344,6 +370,8 @@ def modify(ctx: Ctx, target, set):  # noqa: A002 - matches the public parameter 
     e = ents[0]
     t = e.dxftype()
     normalize_extrusion(e)
+    if t == "DIMENSION":
+        return _modify_dimension(ctx, e, set)
     allowed = GEOM_FIELDS.get(t)
     if not allowed:
         raise input_error("UNSUPPORTED_ENTITY", f"modify does not support {t}", entities=[e.dxf.handle])
@@ -470,7 +498,7 @@ def offset(ctx: Ctx, target, distance, side_point, **p):
                 sign = 1.0 if G.cross(G.sub(b, a), G.sub(side_point, a)) > 0 else -1.0
             u = G.unit(G.sub(b, a))
             n = (-u[1] * d * sign, u[0] * d * sign)
-            c = ctx.msp.add_line(G.add(a, n), G.add(b, n), dxfattribs=attrs)
+            c = ctx.space_of(e).add_line(G.add(a, n), G.add(b, n), dxfattribs=attrs)
         elif t in ("CIRCLE", "ARC"):
             cen = _vec(e.dxf.center)
             if side_point is not None:
@@ -479,9 +507,9 @@ def offset(ctx: Ctx, target, distance, side_point, **p):
             if nr <= 1e-9:
                 raise geometry_error("OFFSET_COLLAPSES", f"Offset radius {nr:.6g} <= 0", entities=[e.dxf.handle])
             if t == "CIRCLE":
-                c = ctx.msp.add_circle(cen, nr, dxfattribs=attrs)
+                c = ctx.space_of(e).add_circle(cen, nr, dxfattribs=attrs)
             else:
-                c = ctx.msp.add_arc(cen, nr, e.dxf.start_angle, e.dxf.end_angle, dxfattribs=attrs)
+                c = ctx.space_of(e).add_arc(cen, nr, e.dxf.start_angle, e.dxf.end_angle, dxfattribs=attrs)
         elif t == "LWPOLYLINE":
             raw = list(e.get_points("xyb"))
             if any(abs(q[2]) > 1e-12 for q in raw):
@@ -502,7 +530,7 @@ def offset(ctx: Ctx, target, distance, side_point, **p):
                     best = min(range(len(pts) - 1), key=lambda i: _seg_dist(side_point, pts[i], pts[i + 1]))
                     left = d if G.cross(G.sub(pts[best + 1], pts[best]), G.sub(side_point, pts[best])) > 0 else -d
             new = G.offset_polyline(pts, left, closed)
-            c = ctx.msp.add_lwpolyline(new, format="xy", close=closed, dxfattribs=attrs)
+            c = ctx.space_of(e).add_lwpolyline(new, format="xy", close=closed, dxfattribs=attrs)
         else:
             raise input_error("UNSUPPORTED_ENTITY", f"offset does not support {t}", entities=[e.dxf.handle])
         if p.get("tag"):
@@ -571,7 +599,7 @@ def trim(ctx: Ctx, target, edges, pick):
                                  entities=[e.dxf.handle], hint="Check the edge selection or use extend")
         created = []
         if lo is not None and hi is not None:
-            c = ctx.msp.add_line(seg.at(hi), seg.q, dxfattribs={"layer": e.dxf.layer, "color": e.dxf.get("color", 256)})
+            c = ctx.space_of(e).add_line(seg.at(hi), seg.q, dxfattribs={"layer": e.dxf.layer, "color": e.dxf.get("color", 256)})
             created.append(ctx.created(c))
             e.dxf.end = seg.at(lo)
         elif lo is not None:
@@ -595,7 +623,7 @@ def trim(ctx: Ctx, target, edges, pick):
             after = rel[0][1]
             before = rel[-1][1]
             attrs = {"layer": e.dxf.layer}
-            arc = ctx.msp.add_arc(c.c, c.r, after, before, dxfattribs=attrs)
+            arc = ctx.space_of(e).add_arc(c.c, c.r, after, before, dxfattribs=attrs)
             tag = get_tag(e)
             h = e.dxf.handle
             ctx.removed(e)
@@ -613,7 +641,7 @@ def trim(ctx: Ctx, target, edges, pick):
             raise geometry_error("NO_INTERSECTION", "Arc does not intersect the cutting edges", entities=[e.dxf.handle])
         created = []
         if lo is not None and hi is not None:
-            c2 = ctx.msp.add_arc(c.c, c.r, (start + hi) % 360, end, dxfattribs={"layer": e.dxf.layer})
+            c2 = ctx.space_of(e).add_arc(c.c, c.r, (start + hi) % 360, end, dxfattribs={"layer": e.dxf.layer})
             created.append(ctx.created(c2))
             e.dxf.end_angle = (start + lo) % 360
         elif lo is not None:
@@ -697,7 +725,7 @@ def fillet(ctx: Ctx, line1, line2, radius, **p):
         if G.ccw_span(a1, a2) > 180:
             a1, a2 = a2, a1
         attrs = {"layer": e1.dxf.layer, **ctx.attribs(p)}
-        arc = ctx.msp.add_arc(c, radius, a1, a2, dxfattribs=attrs)
+        arc = ctx.space_of(e1).add_arc(c, radius, a1, a2, dxfattribs=attrs)
         if p.get("tag"):
             set_tag(ctx.doc, arc, p["tag"])
         created.append(ctx.created(arc))
@@ -719,7 +747,7 @@ def chamfer(ctx: Ctx, line1, line2, d1, d2, **p):
     ctx.touched(e1)
     ctx.touched(e2)
     attrs = {"layer": e1.dxf.layer, **ctx.attribs(p)}
-    ln = ctx.msp.add_line(t1, t2, dxfattribs=attrs)
+    ln = ctx.space_of(e1).add_line(t1, t2, dxfattribs=attrs)
     if p.get("tag"):
         set_tag(ctx.doc, ln, p["tag"])
     return {"modified": [e1.dxf.handle, e2.dxf.handle], "created": [ctx.created(ln)]}

@@ -26,15 +26,16 @@
 11. **字节级可复现**：几何和 handle 是确定的，但 DXF 头部的时间戳和 GUID 每次保存都会变（研究中 E 实验已确认），所以要用几何等价性来比较。
 12. **AutoCAD 后端的运行条件**：工作目录必须能映射到纯 ASCII 路径（后端会自动退回系统临时目录）；只能从 Python 进程启动（在 Git Bash 中直接启动会挂起，原因未知）；后端不会修改 AutoCAD 的任何持久设置。
 
-13. **只处理模型空间**：图纸空间布局、视口和外部参照的内容不读取。AutoCAD 样例中有 10/96 张模型空间为空（[trials-report.md](trials-report.md)）。
+13. **图纸空间布局**：已能读取、编辑和校验（`layout` 参数，2026-10-28）。仍未处理：视口对模型的投影关系（不会自动判断图纸上的副本与模型是否一致，只会提醒去检查），以及外部参照的内容。
 14. **动态块**：ezdxf 保存时丢弃 `ACDB_BLOCKREPRESENTATION_DATA`，动态块的参数化行为可能失效（AutoCAD 审核结果不变）。
-15. **`modify` 不支持 DIMENSION**：改标注只能删除后重建。
+15. **`modify` 不支持 DIMENSION**：改标注只能删除后重建（或用 `run_script`）。
+18. **`run_script`**：默认关闭。静态检查加独立进程只防误操作，不是安全沙箱；开启后 Agent 等于能以当前用户身份运行受限的 Python。
 16. **版面与制图规范不检查**：标注互相重叠、文字压线、轴类的台阶/倒角轮廓线等，验证器发现不了，需要出图目视检查（`examples/trials/render_png.py`）。
 17. **字体**：新图默认 `gbenor.shx` + `gbcbig.shx`。没有安装这两个字体的 CAD 软件会做字体替换。
 
 ## 路线图
 
-- **实测暴露的问题**（[trials-report.md](trials-report.md)）：读取图纸空间布局；`modify` 支持标注；标注重叠检测；保留动态块数据。
+- **实测暴露的问题**（[trials-report.md](trials-report.md)、[comparison-hard-tasks.md](comparison-hard-tasks.md)）：~~读取图纸空间布局~~（已完成）；~~脚本出口~~（已完成，`run_script`）；判断图纸副本与模型是否一致；`modify` 支持标注；标注重叠检测；保留动态块数据。
 - **P1 收尾**：两线角度标注创建、HATCH、MLEADER、坐标标注；为 `mirror` 作用于标注/块、开口多段线偏移补测试。
 - **P2**：更多零件族（法兰、L 形支架、长圆孔、孔阵列图案）；ISO/ANSI 标注样式与图层标准模板；块属性模板库；批量处理多图纸的工具；增量读取（按 handle 范围或修改时间）；规格修订时检测"手工修改过的标签实体"并要求确认。
 - **P3**：不依赖 AutoCAD 的 DWG 方案（ODA File Converter，许可证由用户自行确认）；为 mirror 作用于标注/椭圆、HATCH 等补充 AutoCAD 差分用例；联立约束求解（可评估 SolveSpace 求解库，GPL，需要隔离）；3D 与参数化建模。

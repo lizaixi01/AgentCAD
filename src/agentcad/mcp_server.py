@@ -17,7 +17,9 @@ call; ops can reference entities created earlier in the batch as "$<index>", tag
 validate_drawing (independent re-read of the file) -> get_diff / rollback as needed.
 Coordinates are [x, y] in drawing units; lengths may be strings with units ("8mm"). Angles are degrees CCW.
 Every result has ok + structured error {code, category, message, entities, retryable, hint, partial_changes}.
-A failed batch never modifies the file (partial_changes=false)."""
+A failed batch never modifies the file (partial_changes=false).
+Real drawings often have paper-space layouts (printed sheets, read_drawing.layouts) with their own copy of the part:
+edit and validate them too, using the 'layout' parameter. run_script (if enabled) covers edits no op can express."""
 
 Path_ = Annotated[str, Field(description="Drawing path (.dxf), relative to the workspace root")]
 
@@ -45,17 +47,21 @@ def build_server(policy: Policy | None = None) -> FastMCP:
     @mcp.tool()
     def read_drawing(path: Path_) -> dict:
         """Drawing summary: units, extents, layers (with entity counts), entity type counts, blocks, tags, stored spec,
-        integrity status and checkpoints."""
+        integrity status and checkpoints. Counts and extents are for model space; 'layouts' lists the paper-space
+        sheets and what they contain. A sheet holding geometry is usually the printed drawing (often a scaled copy of
+        the part): edits to the part may have to be made there too (use the 'layout' parameter of ops)."""
         return rt.read_drawing(path)
 
     @mcp.tool()
     def inspect_entities(path: Path_,
-                         filter: Annotated[dict | None, Field(description="{type, layer, tag, tag_prefix}")] = None,  # noqa: A002
+                         filter: Annotated[dict | None, Field(description="{type, layer, tag, tag_prefix, layout}")] = None,  # noqa: A002
                          ids: Annotated[list[str] | None, Field(description="Entity handles or 'tag:<name>'")] = None,
                          window: Annotated[list[list[float]] | None, Field(description="[[x0,y0],[x1,y1]] crossing window")] = None,
-                         limit: Annotated[int, Field(ge=1, le=5000)] = 200, offset: int = 0, detail: bool = True) -> dict:
-        """List entities with geometry (paginated, filterable)."""
-        return rt.inspect_entities(path, filter, ids, limit, offset, detail, window)
+                         limit: Annotated[int, Field(ge=1, le=5000)] = 200, offset: int = 0, detail: bool = True,
+                         layout: Annotated[str | None, Field(description="'Model' (default), a paper layout name "
+                                                                "from read_drawing.layouts, or '*' for all")] = None) -> dict:
+        """List entities with geometry (paginated, filterable). Paper-space entities carry a 'layout' field."""
+        return rt.inspect_entities(path, filter, ids, limit, offset, detail, window, layout)
 
     @mcp.tool()
     def apply_operations(path: Path_,
@@ -69,6 +75,22 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         """Execute an operation batch as one transaction: all params are checked first, any failure aborts with the
         file untouched; success checkpoints the old file, saves atomically, journals, and validates the result."""
         return rt.apply_operations(path, operations, dry_run, requirements, strict, label)
+
+    @mcp.tool()
+    def run_script(path: Path_,
+                   code: Annotated[str, Field(description="Python using ezdxf. The drawing is given as `doc` (model "
+                                                          "space as `msp`); edit it in place, do not open or save "
+                                                          "files. Paper layouts: doc.layouts.get(name). Optionally "
+                                                          "set `result` to a JSON value to return it.")],
+                   dry_run: Annotated[bool, Field(description="Return the diff without saving")] = False,
+                   requirements: Annotated[list[dict] | None, Field(description="Optional requirements to validate after")] = None,
+                   strict: Annotated[bool, Field(description="Do not save if post-validation fails")] = False,
+                   label: str | None = None) -> dict:
+        """For edits the operation catalogue cannot express. Runs the script on a copy of the drawing in a separate
+        process (time-limited; imports limited to ezdxf/math/standard data modules), then commits it like a batch:
+        checkpoint, diff, validation, journal with the full script; rollback works as usual. Disabled unless the
+        server runs with AGENTCAD_ALLOW_SCRIPTS=1. Prefer apply_operations when an operation exists."""
+        return rt.run_script(path, code, label, dry_run, requirements, strict)
 
     @mcp.tool()
     def apply_constraints(path: Path_,
@@ -85,10 +107,13 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                          "outline/hole/hole_count/dimension/entity_count/text/within_bounds requirements; default: "
                          "re-derived from the drawing's stored part spec")] = None,
                          bounds: Annotated[list[list[float]] | None, Field(description="[[x0,y0],[x1,y1]]")] = None,
-                         tolerance: float = 1e-6) -> dict:
+                         tolerance: float = 1e-6,
+                         layout: Annotated[str | None, Field(description="Check this paper-space sheet instead of "
+                                                                "model space")] = None) -> dict:
         """Independent validator: re-reads the DXF from disk and checks integrity (duplicates, degenerate geometry,
-        dimension consistency, bounds) and requirements (expected / actual / deviation / tolerance)."""
-        return rt.validate_drawing(path, requirements, True, bounds, tolerance)
+        dimension consistency, bounds) and requirements (expected / actual / deviation / tolerance). It reports
+        layouts it did not check (LAYOUT_NOT_VALIDATED, 'coverage'); dimension values are compared as displayed."""
+        return rt.validate_drawing(path, requirements, True, bounds, tolerance, None, layout)
 
     @mcp.tool()
     def draw_from_spec(spec: Annotated[dict[str, Any], Field(description="{kind:'plate', units, width, height, holes:"

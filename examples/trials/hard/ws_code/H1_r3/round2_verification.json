@@ -1,0 +1,58 @@
+{
+  "round": 2,
+  "deliverable": "part.dxf",
+  "backup": "part.round2.before.dxf",
+  "units": "mm",
+  "hole_count": 4,
+  "hole_diameters": [
+    12.0,
+    12.0,
+    12.0,
+    12.0
+  ],
+  "hole_centers": [
+    [
+      12.0,
+      12.0,
+      0.0
+    ],
+    [
+      138.0,
+      12.0,
+      0.0
+    ],
+    [
+      12.0,
+      68.0,
+      0.0
+    ],
+    [
+      138.0,
+      68.0,
+      0.0
+    ]
+  ],
+  "diameter_dimension_measurement": 12.000000000000012,
+  "diameter_display": "4X Ø12",
+  "changed_entity_handles": [
+    "92",
+    "93",
+    "94",
+    "95",
+    "D2",
+    "D6",
+    "D8",
+    "DA",
+    "DB",
+    "DD",
+    "DF"
+  ],
+  "unchanged_entity_count": 232,
+  "all_other_entity_tags_and_header_values_unchanged": true,
+  "modelspace_entity_count": 15,
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "existing_limitation": "The prior-round customer logo overlap is preserved; no unrelated layout edits were made.",
+  "inspection_error_resolved": "Initial get_acad_dstyle({}) inspection passed an invalid dict; replaced with the public override() accessor. No drawing was changed by that failed read-only inspection.",
+  "part_sha256": "f67f0f921caeb6baa76a4a8451c4f7459b6b5031744dc8589e0c661fe6573ca6"
+}

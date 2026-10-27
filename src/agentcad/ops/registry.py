@@ -85,9 +85,15 @@ class OpDef:
 
     def all_params(self) -> dict[str, Param]:
         if not self.common_draw:
-            return self.params
-        return {**self.params, **COMMON_DRAW}
+            return {**self.params, **COMMON_ALL}
+        return {**self.params, **COMMON_DRAW, **COMMON_ALL}
 
+
+COMMON_ALL: dict[str, Param] = {
+    "layout": Param("string", description="Layout to work in: 'Model' (default) or a paper-space layout name "
+                    "from read_drawing. New entities go there and filter selectors search it; edits that derive "
+                    "entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout"),
+}
 
 COMMON_DRAW: dict[str, Param] = {
     "layer": Param("string", description="Layer name (created on the fly if missing)"),
@@ -114,7 +120,10 @@ def op(name: str, category: str, description: str, params: dict[str, Param], *, 
 class Ctx:
     def __init__(self, doc: Drawing, unit: str | None, policy: Any) -> None:
         self.doc = doc
-        self.msp = doc.modelspace()
+        self.model = doc.modelspace()
+        # The active layout of the current op ('layout' parameter, default model space). Ops add new
+        # entities here; ops that derive entities from an existing one use space_of() instead.
+        self.msp = self.model
         self.layout = self.msp
         self.unit = unit
         self.policy = policy
@@ -125,11 +134,25 @@ class Ctx:
         self.op_index = 0
         self._tags: dict[str, list[DXFGraphic]] | None = None
 
+    def use_layout(self, name: str | None) -> None:
+        if not name or name.lower() == "model":
+            self.msp = self.layout = self.model
+            return
+        try:
+            self.msp = self.layout = self.doc.layouts.get(name)
+        except Exception:
+            raise input_error("LAYOUT_NOT_FOUND", f"No layout named {name!r}",
+                              hint=f"Layouts: {self.doc.layouts.names_in_taborder()}")
+
+    def space_of(self, e: DXFGraphic):
+        """The layout (model or paper space) that owns ``e``."""
+        lay = self.doc.layouts.get_layout_for_entity(e)
+        return lay if lay is not None else self.msp
+
     # change tracking -------------------------------------------------------
     def created(self, e: DXFGraphic) -> str:
         h = e.dxf.handle
-        if self.layout is self.msp:
-            self.added.append(h)
+        self.added.append(h)
         return h
 
     def touched(self, e: DXFGraphic) -> None:
@@ -147,7 +170,7 @@ class Ctx:
             self.deleted.append(h)
         self._tags = None
         blk = e.dxf.get("geometry") if e.dxftype() == "DIMENSION" else None
-        self.msp.delete_entity(e)
+        self.space_of(e).delete_entity(e)
         if blk and blk in self.doc.blocks:  # drop the orphaned *D anonymous block
             self.doc.blocks.delete_block(blk, safe=False)
 
@@ -187,7 +210,7 @@ class Ctx:
 def check_tag(ctx: Ctx, p: dict[str, Any]) -> list[str] | None:
     """Apply ``if_tag_exists``. Returns existing handles if the op must be skipped."""
     tag = p.get("tag")
-    if not tag or ctx.layout is not ctx.msp:
+    if not tag:
         return None
     existing = ctx.tags().get(tag)
     if not existing:

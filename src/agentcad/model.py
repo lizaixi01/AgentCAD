@@ -6,6 +6,7 @@ refer to entities by tag, which survives regeneration of geometry.
 """
 from __future__ import annotations
 
+import contextvars
 import math
 from typing import Any, Iterable
 
@@ -59,9 +60,40 @@ def set_tag(doc: Drawing, e: DXFGraphic, tag: str | None) -> None:
     e.set_xdata(APPID, [(1000, f"tag={tag}")])
 
 
+# --- layouts -----------------------------------------------------------------
+# Name of the layout the current op works in (its 'layout' parameter); None = model space. Set by the engine
+# around each op so that filter selectors default to that layout.
+ACTIVE_LAYOUT: contextvars.ContextVar[str | None] = contextvars.ContextVar("agentcad_active_layout", default=None)
+
+
+def is_model(name: str | None) -> bool:
+    return not name or name.lower() == "model"
+
+
+def layout_spaces(doc: Drawing, name: str | None) -> list:
+    """Entity spaces for a layout name: None/'Model' = model space, '*' = model space and every paper layout."""
+    if is_model(name):
+        return [doc.modelspace()]
+    if name == "*":
+        return [doc.layouts.get(n) for n in doc.layouts.names_in_taborder()]
+    if name not in doc.layouts:
+        raise input_error("LAYOUT_NOT_FOUND", f"No layout named {name!r}",
+                          hint=f"Layouts: {doc.layouts.names_in_taborder()}")
+    return [doc.layouts.get(name)]
+
+
+def layout_of(e: DXFGraphic) -> str | None:
+    """Name of the paper layout that owns ``e``; None for model space (or not in any layout)."""
+    doc = e.doc
+    if doc is None or e.dxf.owner == doc.modelspace().layout_key:
+        return None
+    lay = doc.layouts.get_layout_for_entity(e)
+    return lay.name if lay is not None else None
+
+
 def tag_index(doc: Drawing) -> dict[str, list[DXFGraphic]]:
     idx: dict[str, list[DXFGraphic]] = {}
-    for e in doc.modelspace():
+    for e in (x for sp in layout_spaces(doc, "*") for x in sp):
         t = get_tag(e)
         if t is not None:
             idx.setdefault(t, []).append(e)
@@ -73,6 +105,9 @@ def tag_index(doc: Drawing) -> dict[str, list[DXFGraphic]]:
 def entity_to_dict(e: DXFGraphic, *, detail: bool = True) -> dict[str, Any]:
     t = e.dxftype()
     d: dict[str, Any] = {"id": e.dxf.handle, "type": t, "layer": e.dxf.layer}
+    lay = layout_of(e)
+    if lay is not None:
+        d["layout"] = lay
     tag = get_tag(e)
     if tag is not None:
         d["tag"] = tag
@@ -237,14 +272,15 @@ def _match(e: DXFGraphic, flt: dict[str, Any]) -> bool:
 
 def select(doc: Drawing, sel: Any, refs: dict[int, list[str]] | None = None, *,
            field: str = "target", allow_empty: bool = False) -> list[DXFGraphic]:
-    """Resolve a selector to modelspace entities.
+    """Resolve a selector to entities of model space or a paper layout.
 
-    Accepted forms: ``"1F"`` (handle), ``"tag:hole.1"``, ``"$2"`` (entities
+    Accepted forms: ``"1F"`` (handle, any layout), ``"tag:hole.1"`` (any layout), ``"$2"`` (entities
     created by op #2 of the current batch), a list of those, or a filter dict
-    ``{"type": "CIRCLE", "layer": "HOLES", "tag_prefix": "hole."}``.
+    ``{"type": "CIRCLE", "layer": "HOLES", "tag_prefix": "hole.", "layout": "Sheet1"}``. A filter searches the
+    op's active layout unless it names one ('*' = all layouts).
     """
-    msp = doc.modelspace()
     out: list[DXFGraphic] = []
+    keys = {sp.layout_key for sp in layout_spaces(doc, "*")}
     if isinstance(sel, list):
         for s in sel:
             out.extend(select(doc, s, refs, field=field))
@@ -252,10 +288,11 @@ def select(doc: Drawing, sel: Any, refs: dict[int, list[str]] | None = None, *,
         if not sel:
             raise input_error("EMPTY_SELECTOR", f"{field}: empty filter would select everything",
                               hint='Use {"all": true} to explicitly select all entities')
+        spaces = layout_spaces(doc, sel.get("layout", ACTIVE_LAYOUT.get()))
         if sel.get("all") is True:
-            out = list(msp)
+            out = [e for sp in spaces for e in sp]
         else:
-            out = [e for e in msp if _match(e, sel)]
+            out = [e for sp in spaces for e in sp if _match(e, sel)]
     elif isinstance(sel, str):
         s = sel.strip()
         if s.startswith("$"):
@@ -268,11 +305,11 @@ def select(doc: Drawing, sel: Any, refs: dict[int, list[str]] | None = None, *,
                                   hint="Batch references must point to an earlier op in the same batch")
             out = [doc.entitydb[h] for h in refs[i] if h in doc.entitydb]
         elif s.startswith("tag:"):
-            out = [e for e in msp if get_tag(e) == s[4:]]
+            out = [e for sp in layout_spaces(doc, "*") for e in sp if get_tag(e) == s[4:]]
         else:
             e = doc.entitydb.get(s.upper())
-            if e is None or not e.is_alive or e.dxf.owner != msp.layout_key:
-                raise input_error("ENTITY_NOT_FOUND", f"{field}: no modelspace entity with handle {sel!r}",
+            if e is None or not e.is_alive or e.dxf.owner not in keys:
+                raise input_error("ENTITY_NOT_FOUND", f"{field}: no model or layout entity with handle {sel!r}",
                                   entities=[s], hint="Use inspect_entities to list valid ids")
             out = [e]
     else:

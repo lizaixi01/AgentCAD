@@ -1,0 +1,61 @@
+{
+  "file": "part.dxf",
+  "units": "mm",
+  "ezdxf_version": "1.4.5",
+  "plate_size": [
+    150.0,
+    80.0
+  ],
+  "new_hole_center": [
+    75.0,
+    40.0,
+    0.0
+  ],
+  "new_hole_diameter": 30.0,
+  "new_hole_handle": "FF",
+  "new_dimension_handle": "100",
+  "dimension_block": "*D6",
+  "dimension_measurement": 30.000000000000004,
+  "dimension_display": "Ø30",
+  "dimension_endpoints_and_arrows_on_circle": true,
+  "dimension_bounds": [
+    [
+      50.35786437626905,
+      25.857864376269053,
+      0.0
+    ],
+    [
+      85.60660171779821,
+      50.60660171779821,
+      0.0
+    ]
+  ],
+  "new_annotation_overlaps_existing_content": false,
+  "mounting_holes_unchanged": true,
+  "total_holes": 5,
+  "added_raw_records": 13,
+  "added_record_handles": [
+    "100",
+    "101",
+    "102",
+    "103",
+    "104",
+    "106",
+    "108",
+    "109",
+    "10A",
+    "10B",
+    "10C",
+    "10D",
+    "FF"
+  ],
+  "original_bytes_preserved_except_handseed_and_block_table_count": true,
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "source_sha256": "7135225396e79ebc394dc0dbbb48fdd02f9105b644efbb1a518b1ea38b215d62",
+  "result_sha256": "785def4a6cafbe56d91933b37f984502d4861c7abfd30ce0bfc0234dafe2adb3",
+  "errors_and_resolution": [
+    "A diagnostic text read used the Windows default GBK encoding; explicit UTF-8 fixed it. The DXF was unaffected."
+  ],
+  "limitation": "Existing overlap with the client logo remains unchanged."
+}

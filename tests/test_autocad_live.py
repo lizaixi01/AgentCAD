@@ -37,6 +37,13 @@ def test_dwg_round_trip_keeps_spec_and_revises(rt, ws, plate):
     assert holes == [(10, 10), (10, 50), (110, 10), (110, 50)]
 
 
+def test_autocad_audit_accepts_dwg(rt, ws, plate):
+    """Agents audited the DWG they had just exported (hard-task trials); the runtime converts it first."""
+    ok(rt.export_drawing(plate, "audit.dwg", "dwg"))
+    a = ok(rt.autocad_audit("audit.dwg"))
+    assert a["passed"] and a["entities_seen_by_autocad"] > 0
+
+
 def test_autocad_audit_detects_defects(rt, ws, plate):
     """The audit is not a rubber stamp: ezdxf's raw R12 export (before clean_r12)
     defines BYBLOCK/BYLAYER linetypes and unused styles, which AutoCAD rejects."""

@@ -10,3 +10,6 @@ ErrorReports/
 examples/trials/ws/real_dwg/
 examples/trials/ws/T7_real_dwg/
 examples/trials/round1/ws/T7_real_dwg/
+examples/trials/hard/ws/A/H2_*/
+examples/trials/hard/snapshots/B/H2_*/
+examples/trials/hard/v1/ws/

@@ -37,8 +37,11 @@ def _dimstyle(ctx: Ctx) -> str:
     return DIMSTYLE if DIMSTYLE in ctx.doc.dimstyles else "Standard"
 
 
-def _override(text_height) -> dict[str, Any]:
-    return {"dimtxt": text_height} if text_height else {}
+def _override(text_height, length_factor=None) -> dict[str, Any]:
+    ov: dict[str, Any] = {"dimtxt": text_height} if text_height else {}
+    if length_factor:
+        ov["dimlfac"] = float(length_factor)
+    return ov
 
 
 def _finish_dim(ctx: Ctx, dimov, p: dict[str, Any], text: str | None) -> dict[str, Any]:
@@ -62,7 +65,9 @@ def store_measurement(dim) -> None:
 
 
 DIM_COMMON = {"text": P("string", description="Text override; '<>' stands for the measured value"),
-              "text_height": P("length", gt=0, description="Override text height")}
+              "text_height": P("length", gt=0, description="Override text height"),
+              "length_factor": P("number", gt=0, description="DIMLFAC: displayed value = measured length x factor, "
+                                 "e.g. 1/0.325 on a sheet that shows the part at scale 0.325")}
 
 
 @op("add_linear_dim", "annotate", "Linear dimension between two points. orientation: horizontal | vertical | "
@@ -73,13 +78,13 @@ DIM_COMMON = {"text": P("string", description="Text override; '<>' stands for th
      "angle": P("angle", default=0.0, description="Measurement direction for orientation=rotated"),
      "offset": P("length", default=10.0, description="Distance of the dimension line from the points (sign = side)"),
      "base": P("point", description="Explicit location of the dimension line"), **DIM_COMMON}, common_draw=True)
-def add_linear_dim(ctx: Ctx, p1, p2, orientation, angle, offset, base, text, text_height, **p):
+def add_linear_dim(ctx: Ctx, p1, p2, orientation, angle, offset, base, text, text_height, length_factor, **p):
     if (s := check_tag(ctx, p)) is not None:
         return {"created": [], "skipped": True, "existing": s}
     if G.dist(p1, p2) < 1e-9:
         raise input_error("DEGENERATE_GEOMETRY", "Dimension points coincide")
     attrs = ctx.attribs(p)
-    ov = _override(text_height)
+    ov = _override(text_height, length_factor)
     if orientation == "aligned":
         dist = offset if base is None else _signed_dist(p1, p2, base)
         d = ctx.msp.add_aligned_dim(p1, p2, distance=dist, dimstyle=_dimstyle(ctx), override=ov, dxfattribs=attrs)
@@ -121,22 +126,22 @@ RAD_PARAMS = {"target": P("selector", description="CIRCLE or ARC to dimension"),
 
 
 @op("add_radius_dim", "annotate", "Radius dimension of a circle/arc.", RAD_PARAMS, common_draw=True)
-def add_radius_dim(ctx: Ctx, target, center, radius, angle, text, text_height, **p):
+def add_radius_dim(ctx: Ctx, target, center, radius, angle, text, text_height, length_factor, **p):
     if (s := check_tag(ctx, p)) is not None:
         return {"created": [], "skipped": True, "existing": s}
     c, r = _circle_of(ctx, target, center, radius)
     d = ctx.msp.add_radius_dim(center=c, radius=r, angle=angle, dimstyle=_dimstyle(ctx),
-                               override=_override(text_height), dxfattribs=ctx.attribs(p))
+                               override=_override(text_height, length_factor), dxfattribs=ctx.attribs(p))
     return _finish_dim(ctx, d, p, text)
 
 
 @op("add_diameter_dim", "annotate", "Diameter dimension of a circle/arc.", RAD_PARAMS, common_draw=True)
-def add_diameter_dim(ctx: Ctx, target, center, radius, angle, text, text_height, **p):
+def add_diameter_dim(ctx: Ctx, target, center, radius, angle, text, text_height, length_factor, **p):
     if (s := check_tag(ctx, p)) is not None:
         return {"created": [], "skipped": True, "existing": s}
     c, r = _circle_of(ctx, target, center, radius)
     d = ctx.msp.add_diameter_dim(center=c, radius=r, angle=angle, dimstyle=_dimstyle(ctx),
-                                 override=_override(text_height), dxfattribs=ctx.attribs(p))
+                                 override=_override(text_height, length_factor), dxfattribs=ctx.attribs(p))
     return _finish_dim(ctx, d, p, text)
 
 
@@ -145,7 +150,7 @@ def add_diameter_dim(ctx: Ctx, target, center, radius, angle, text, text_height,
     {"center": P("point", True), "p1": P("point", True), "p2": P("point", True),
      "radius": P("length", gt=0, description="Radius of the dimension arc (default: 0.6 x shorter ray)"), **DIM_COMMON},
     common_draw=True)
-def add_angular_dim(ctx: Ctx, center, p1, p2, radius, text, text_height, **p):
+def add_angular_dim(ctx: Ctx, center, p1, p2, radius, text, text_height, length_factor, **p):
     if (s := check_tag(ctx, p)) is not None:
         return {"created": [], "skipped": True, "existing": s}
     a1 = G.angle_of(G.sub(p1, center))
@@ -154,7 +159,7 @@ def add_angular_dim(ctx: Ctx, center, p1, p2, radius, text, text_height, **p):
     mid = a1 + G.ccw_span(a1, a2) / 2
     base = G.polar(center, rr, mid)
     d = ctx.msp.add_angular_dim_3p(base=base, center=center, p1=p1, p2=p2, dimstyle=_dimstyle(ctx),
-                                   override=_override(text_height), dxfattribs=ctx.attribs(p))
+                                   override=_override(text_height, length_factor), dxfattribs=ctx.attribs(p))
     return _finish_dim(ctx, d, p, text)
 
 

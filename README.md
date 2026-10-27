@@ -4,7 +4,7 @@
 
 - 核心不依赖 AutoCAD 或任何商业软件；底层使用 [ezdxf](https://ezdxf.mozman.de/)（MIT）。**装有 AutoCAD 时**，可选后端会通过无头的 accoreconsole 提供 DWG 导入/导出和 AutoCAD AUDIT
 - 四种接口共用同一个 `Runtime` 服务层，适配层里没有 CAD 逻辑（有测试保证）
-- 116 个自动化测试全部通过（[docs/test-results.txt](docs/test-results.txt)），覆盖验收测试 A–H、安全策略，以及与 AutoCAD 2027 实际行为逐项比对的 27 个差分用例
+- 130 个自动化测试全部通过（[docs/test-results.txt](docs/test-results.txt)），覆盖验收测试 A–H、安全策略，以及与 AutoCAD 2027 实际行为逐项比对的 27 个差分用例
 - AutoCAD 2027 实机验证：所有交付 DXF AUDIT 0 个错误；DWG 往返后规格与标签完整保留（[docs/research/autocad-observations.md](docs/research/autocad-observations.md)）
 - 经典任务实测：法兰、长圆孔板、阶梯轴、A3 图框、建筑平面、改图、真实 DWG 共 7 个任务由 Codex 只通过 MCP 完成，并用 AutoCAD 出图目视复核；96 张 AutoCAD 样例图纸全部可导入和编辑（[docs/trials-report.md](docs/trials-report.md)）
 - 真实外部 Agent 验证：Codex CLI 只通过 MCP 完成了绘图、校验、按错误修正、修改和 diff（[docs/acceptance-report.md](docs/acceptance-report.md#测试-g外部-agent-接入)）
@@ -74,7 +74,7 @@ env = { AGENTCAD_ROOT = "D:/Projects/AgentCAD/work" }
 default_tools_approval_mode = "approve"   # 否则在 approval_policy="never" 下所有工具调用都会被拒绝（实测）
 ```
 
-MCP 工具：`create_drawing`、`read_drawing`、`inspect_entities`、`apply_operations`、`apply_constraints`、`validate_drawing`、`revise_from_document`、`get_diff`、`rollback`、`export_drawing`，另有 `list_operations`、`draw_from_spec`、`revise_drawing`、`extract_requirements`、`list_checkpoints`、`history`、`recover`、`get_metrics`，以及需要 AutoCAD 的 `import_drawing`、`autocad_audit`。
+MCP 工具：`create_drawing`、`read_drawing`、`inspect_entities`、`apply_operations`、`apply_constraints`、`validate_drawing`、`revise_from_document`、`get_diff`、`rollback`、`export_drawing`，另有 `list_operations`、`draw_from_spec`、`revise_drawing`、`extract_requirements`、`list_checkpoints`、`history`、`recover`、`get_metrics`，以及需要 AutoCAD 的 `import_drawing`、`autocad_audit`，和默认关闭的 `run_script`（对操作目录覆盖不到的编辑，提交一段 ezdxf 脚本，在独立进程中运行并按事务提交；用 `AGENTCAD_ALLOW_SCRIPTS=1` 开启）。所有操作都能用 `layout` 参数作用于打印用的图纸空间布局。
 
 ## AutoCAD 后端（可选）
 
@@ -123,6 +123,7 @@ python examples/run_demo.py
 | [docs/decision-record.md](docs/decision-record.md) | 技术路线决策记录 |
 | [docs/architecture.md](docs/architecture.md) | 架构、数据模型、事务、错误结构、API 信封 |
 | [docs/operations.md](docs/operations.md) | 41 个操作的参数参考（从代码生成） |
+| [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md)、[docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md) | 对比实验：Agent 用 AgentCAD 与 Agent 直接写代码 |
 | [docs/trials-report.md](docs/trials-report.md) | 经典任务实测：Agent 实际绘图、AutoCAD 出图复核、96 张真实图纸，以及据此修复的问题 |
 | [docs/acceptance-report.md](docs/acceptance-report.md) | 验收测试 A–H 结果与证据、性能指标、兼容性观察 |
 | [docs/coverage.md](docs/coverage.md) | 功能覆盖清单（四类状态） |

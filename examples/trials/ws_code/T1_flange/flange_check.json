@@ -1,0 +1,69 @@
+{
+  "file": "flange.dxf",
+  "units": "mm",
+  "dxf_version": "AC1024",
+  "outer_diameter": 150,
+  "bore_diameter": 60,
+  "bolt_count": 6,
+  "bolt_diameter": 12,
+  "pcd": 110,
+  "bolt_centers_clockwise_from_top": [
+    [
+      0.0,
+      55.0
+    ],
+    [
+      47.63139720814413,
+      27.499999999999996
+    ],
+    [
+      47.63139720814413,
+      -27.499999999999996
+    ],
+    [
+      0.0,
+      -55.0
+    ],
+    [
+      -47.63139720814413,
+      -27.499999999999996
+    ],
+    [
+      -47.63139720814412,
+      27.500000000000007
+    ]
+  ],
+  "angular_gaps_degrees": [
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0,
+    60.0
+  ],
+  "centerline_extents": [
+    -85,
+    85
+  ],
+  "center_linetype_pattern": [
+    12.0,
+    3.0,
+    2.0,
+    3.0
+  ],
+  "diameter_measurements": [
+    12.000000000000005,
+    60.00000000000001,
+    110.0,
+    150.0
+  ],
+  "rendered_dimension_text": [
+    "Ø150",
+    "Ø60",
+    "6×Ø12",
+    "Ø110 PCD"
+  ],
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "result": "PASS"
+}

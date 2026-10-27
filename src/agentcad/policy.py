@@ -22,6 +22,9 @@ class Policy:
     delete_confirm_threshold: int = 50
     max_file_bytes: int = 256 * 1024 * 1024
     max_document_bytes: int = 32 * 1024 * 1024
+    # run_script (agent-written ezdxf scripts, see scripting.py) is off unless explicitly enabled
+    allow_scripts: bool = field(default_factory=lambda: os.environ.get("AGENTCAD_ALLOW_SCRIPTS", "") in {"1", "true", "yes"})
+    script_timeout: float = field(default_factory=lambda: float(os.environ.get("AGENTCAD_SCRIPT_TIMEOUT", "60")))
 
     def __post_init__(self) -> None:
         self.root = Path(self.root).resolve()
@@ -51,6 +54,12 @@ class Policy:
     def check_write(self) -> None:
         if self.read_only:
             raise policy_error("READ_ONLY", "Runtime is in read-only mode; modifications are disabled")
+
+    def check_scripts_allowed(self) -> None:
+        if not self.allow_scripts:
+            raise policy_error("SCRIPTS_DISABLED", "run_script is disabled for this workspace",
+                               hint="Use apply_operations, or start the runtime with AGENTCAD_ALLOW_SCRIPTS=1 "
+                                    "(only for agents you would let run Python as your user)")
 
     def check_op_allowed(self, op: str, index: int) -> None:
         if self.allowed_ops is not None and op not in self.allowed_ops:

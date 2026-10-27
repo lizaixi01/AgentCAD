@@ -1,0 +1,268 @@
+{
+  "units": "mm",
+  "ezdxf_version": "1.4.5",
+  "generated": [
+    {
+      "file": "FL-101.dxf",
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "circle_count": 9,
+      "bolt_count": 6,
+      "dimension_count": 4,
+      "dimension_texts": [
+        "Ø150",
+        "Ø60",
+        "PCD Ø110",
+        "6×Ø12"
+      ],
+      "first_bolt_center_mm": [
+        0.0,
+        55.0
+      ],
+      "minimum_pair_clearance_mm": 42.999999999999986,
+      "outer_clearance_mm": 14.0,
+      "bore_clearance_mm": 19.0,
+      "adjacent_center_distance_mm": 54.99999999999999,
+      "adjacent_clearance_mm": 42.99999999999999,
+      "preview": "FL-101.svg"
+    },
+    {
+      "file": "FL-102.dxf",
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "circle_count": 11,
+      "bolt_count": 8,
+      "dimension_count": 4,
+      "dimension_texts": [
+        "Ø180",
+        "Ø75",
+        "PCD Ø135",
+        "8×Ø14"
+      ],
+      "first_bolt_center_mm": [
+        0.0,
+        67.5
+      ],
+      "minimum_pair_clearance_mm": 37.66226336928711,
+      "outer_clearance_mm": 15.5,
+      "bore_clearance_mm": 23.0,
+      "adjacent_center_distance_mm": 51.66226336928712,
+      "adjacent_clearance_mm": 37.66226336928712,
+      "preview": "FL-102.svg"
+    },
+    {
+      "file": "FL-103.dxf",
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "circle_count": 7,
+      "bolt_count": 4,
+      "dimension_count": 4,
+      "dimension_texts": [
+        "Ø120",
+        "Ø40",
+        "PCD Ø90",
+        "4×Ø11"
+      ],
+      "first_bolt_center_mm": [
+        0.0,
+        45.0
+      ],
+      "minimum_pair_clearance_mm": 52.63961030678927,
+      "outer_clearance_mm": 9.5,
+      "bore_clearance_mm": 19.5,
+      "adjacent_center_distance_mm": 63.63961030678928,
+      "adjacent_clearance_mm": 52.63961030678928,
+      "preview": "FL-103.svg"
+    },
+    {
+      "file": "FL-104.dxf",
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "circle_count": 11,
+      "bolt_count": 8,
+      "dimension_count": 4,
+      "dimension_texts": [
+        "Ø200",
+        "Ø90",
+        "PCD Ø160",
+        "8×Ø18"
+      ],
+      "first_bolt_center_mm": [
+        0.0,
+        80.0
+      ],
+      "minimum_pair_clearance_mm": 43.22934917841436,
+      "outer_clearance_mm": 11.0,
+      "bore_clearance_mm": 26.0,
+      "adjacent_center_distance_mm": 61.22934917841437,
+      "adjacent_clearance_mm": 43.22934917841437,
+      "preview": "FL-104.svg"
+    },
+    {
+      "file": "FL-105.dxf",
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "circle_count": 9,
+      "bolt_count": 6,
+      "dimension_count": 4,
+      "dimension_texts": [
+        "Ø160",
+        "Ø60",
+        "PCD Ø120",
+        "6×Ø14"
+      ],
+      "first_bolt_center_mm": [
+        0.0,
+        60.0
+      ],
+      "minimum_pair_clearance_mm": 45.999999999999986,
+      "outer_clearance_mm": 13.0,
+      "bore_clearance_mm": 23.0,
+      "adjacent_center_distance_mm": 59.99999999999999,
+      "adjacent_clearance_mm": 45.99999999999999,
+      "preview": "FL-105.svg"
+    },
+    {
+      "file": "FL-106.dxf",
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "circle_count": 7,
+      "bolt_count": 4,
+      "dimension_count": 4,
+      "dimension_texts": [
+        "Ø100",
+        "Ø30",
+        "PCD Ø70",
+        "4×Ø9"
+      ],
+      "first_bolt_center_mm": [
+        0.0,
+        35.0
+      ],
+      "minimum_pair_clearance_mm": 40.49747468305832,
+      "outer_clearance_mm": 10.5,
+      "bore_clearance_mm": 15.5,
+      "adjacent_center_distance_mm": 49.49747468305833,
+      "adjacent_clearance_mm": 40.49747468305833,
+      "preview": "FL-106.svg"
+    },
+    {
+      "file": "FL-107.dxf",
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "circle_count": 15,
+      "bolt_count": 12,
+      "dimension_count": 4,
+      "dimension_texts": [
+        "Ø220",
+        "Ø110",
+        "PCD Ø180",
+        "12×Ø14"
+      ],
+      "first_bolt_center_mm": [
+        0.0,
+        90.0
+      ],
+      "minimum_pair_clearance_mm": 32.587428118453694,
+      "outer_clearance_mm": 13.0,
+      "bore_clearance_mm": 28.0,
+      "adjacent_center_distance_mm": 46.58742811845373,
+      "adjacent_clearance_mm": 32.58742811845373,
+      "preview": "FL-107.svg"
+    },
+    {
+      "file": "FL-108.dxf",
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "circle_count": 9,
+      "bolt_count": 6,
+      "dimension_count": 4,
+      "dimension_texts": [
+        "Ø140",
+        "Ø50",
+        "PCD Ø105",
+        "6×Ø11"
+      ],
+      "first_bolt_center_mm": [
+        0.0,
+        52.5
+      ],
+      "minimum_pair_clearance_mm": 41.499999999999986,
+      "outer_clearance_mm": 12.0,
+      "bore_clearance_mm": 22.0,
+      "adjacent_center_distance_mm": 52.49999999999999,
+      "adjacent_clearance_mm": 41.49999999999999,
+      "preview": "FL-108.svg"
+    },
+    {
+      "file": "FL-110.dxf",
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "circle_count": 19,
+      "bolt_count": 16,
+      "dimension_count": 4,
+      "dimension_texts": [
+        "Ø250",
+        "Ø120",
+        "PCD Ø200",
+        "16×Ø18"
+      ],
+      "first_bolt_center_mm": [
+        0.0,
+        100.0
+      ],
+      "minimum_pair_clearance_mm": 21.0180644032256,
+      "outer_clearance_mm": 16.0,
+      "bore_clearance_mm": 31.0,
+      "adjacent_center_distance_mm": 39.01806440322565,
+      "adjacent_clearance_mm": 21.01806440322565,
+      "preview": "FL-110.svg"
+    },
+    {
+      "file": "FL-112.dxf",
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "circle_count": 11,
+      "bolt_count": 8,
+      "dimension_count": 4,
+      "dimension_texts": [
+        "Ø170",
+        "Ø80",
+        "PCD Ø130",
+        "8×Ø13"
+      ],
+      "first_bolt_center_mm": [
+        0.0,
+        65.0
+      ],
+      "minimum_pair_clearance_mm": 36.74884620746167,
+      "outer_clearance_mm": 13.5,
+      "bore_clearance_mm": 18.5,
+      "adjacent_center_distance_mm": 49.748846207461675,
+      "adjacent_clearance_mm": 36.748846207461675,
+      "preview": "FL-112.svg"
+    }
+  ],
+  "rejected": [
+    {
+      "part": "FL-109",
+      "reasons": [
+        "螺栓孔超出外圆 1 mm"
+      ],
+      "outer_clearance_mm": -1.0,
+      "bore_clearance_mm": 22.0,
+      "adjacent_center_distance_mm": 58.99999999999999,
+      "adjacent_clearance_mm": 44.99999999999999
+    },
+    {
+      "part": "FL-111",
+      "reasons": [
+        "相邻螺栓孔中心距 12.875961 mm，孔径 14 mm，重叠 1.124039 mm"
+      ],
+      "outer_clearance_mm": 5.0,
+      "bore_clearance_mm": 6.0,
+      "adjacent_center_distance_mm": 12.875961253064464,
+      "adjacent_clearance_mm": -1.1240387469355362
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+[
+ {
+  "arm": "B",
+  "task": "H2",
+  "rep": 1,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 501.5
+   }
+  ],
+  "converted_back": true,
+  "seconds": 501.5
+ },
+ {
+  "arm": "B",
+  "task": "H2",
+  "rep": 2,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 743.5
+   }
+  ],
+  "converted_back": true,
+  "seconds": 743.5
+ },
+ {
+  "arm": "B",
+  "task": "H2",
+  "rep": 3,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 499.6
+   }
+  ],
+  "converted_back": true,
+  "seconds": 499.6
+ }
+]

@@ -1,0 +1,110 @@
+{
+ "A/T1_flange": {
+  "import_rejected": false,
+  "audit_errors": 0,
+  "messages": [],
+  "entities_seen_by_autocad": 16,
+  "insunits": 4,
+  "passed": true,
+  "png": true
+ },
+ "A/T2_slot_plate": {
+  "import_rejected": false,
+  "audit_errors": 0,
+  "messages": [],
+  "entities_seen_by_autocad": 16,
+  "insunits": 4,
+  "passed": true,
+  "png": true
+ },
+ "A/T3_shaft": {
+  "import_rejected": false,
+  "audit_errors": 0,
+  "messages": [],
+  "entities_seen_by_autocad": 17,
+  "insunits": 4,
+  "passed": true,
+  "png": true
+ },
+ "A/T4_frame": {
+  "import_rejected": false,
+  "audit_errors": 0,
+  "messages": [],
+  "entities_seen_by_autocad": 24,
+  "insunits": 4,
+  "passed": true,
+  "png": true
+ },
+ "A/T5_room": {
+  "import_rejected": false,
+  "audit_errors": 0,
+  "messages": [],
+  "entities_seen_by_autocad": 28,
+  "insunits": 4,
+  "passed": true,
+  "png": true
+ },
+ "A/T6_flange_revise": {
+  "import_rejected": false,
+  "audit_errors": 0,
+  "messages": [],
+  "entities_seen_by_autocad": 17,
+  "insunits": 4,
+  "passed": true,
+  "png": true
+ },
+ "B/T1_flange": {
+  "import_rejected": false,
+  "audit_errors": 0,
+  "messages": [],
+  "entities_seen_by_autocad": 15,
+  "insunits": 4,
+  "passed": true,
+  "png": true
+ },
+ "B/T2_slot_plate": {
+  "import_rejected": false,
+  "audit_errors": 0,
+  "messages": [],
+  "entities_seen_by_autocad": 17,
+  "insunits": 4,
+  "passed": true,
+  "png": true
+ },
+ "B/T3_shaft": {
+  "import_rejected": false,
+  "audit_errors": 0,
+  "messages": [],
+  "entities_seen_by_autocad": 13,
+  "insunits": 4,
+  "passed": true,
+  "png": true
+ },
+ "B/T4_frame": {
+  "import_rejected": false,
+  "audit_errors": 2,
+  "messages": [],
+  "entities_seen_by_autocad": 43,
+  "insunits": 4,
+  "passed": false,
+  "png": true
+ },
+ "B/T5_room": {
+  "import_rejected": false,
+  "audit_errors": 0,
+  "messages": [],
+  "entities_seen_by_autocad": 28,
+  "insunits": 4,
+  "passed": true,
+  "png": true
+ },
+ "B/T6_flange_revise": {
+  "import_rejected": false,
+  "audit_errors": 0,
+  "messages": [],
+  "entities_seen_by_autocad": 17,
+  "insunits": 4,
+  "passed": true,
+  "png": true
+ }
+}

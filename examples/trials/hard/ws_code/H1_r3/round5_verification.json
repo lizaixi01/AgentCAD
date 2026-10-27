@@ -1,0 +1,71 @@
+{
+  "round": 5,
+  "deliverable": "part.dxf",
+  "backup": "part.round5.before.dxf",
+  "units": "mm",
+  "title_block": "TB",
+  "revision_before": "A",
+  "revision_after": "C",
+  "revision_note": "REV C: 宽度 150，增加中心孔 Ø30",
+  "revision_note_insert_mm": [
+    0,
+    -24,
+    0
+  ],
+  "revision_note_height_mm": 3,
+  "plate_size_mm": [
+    150,
+    80
+  ],
+  "central_hole_diameter_mm": 30,
+  "central_hole_center_mm": [
+    75,
+    40,
+    0
+  ],
+  "mounting_hole_diameters_mm": [
+    10,
+    10,
+    10,
+    10
+  ],
+  "changed_existing_entity_handles": [
+    "F0"
+  ],
+  "added_entity_handles": [
+    "119"
+  ],
+  "unchanged_persisted_entity_count": 243,
+  "other_existing_entities_unchanged": true,
+  "header_changes": [
+    "$HANDSEED"
+  ],
+  "revision_note_bounds_mm": [
+    [
+      0.0,
+      -24.83287858117326,
+      0.0
+    ],
+    [
+      57.52592087312414,
+      -21.0,
+      0.0
+    ]
+  ],
+  "revision_note_no_overlap": true,
+  "modelspace_entity_count_before_after": [
+    17,
+    18
+  ],
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "errors_encountered": [
+    "Initial verification double-counted the REV change inside INSERT export; fixed snapshot logic to verify INSERT and its attributes separately.",
+    "ezdxf 1.4.5 resets TDCREATE on read; restored the serialized original header and verified its values. Original DXF was not overwritten until checks passed."
+  ],
+  "limitations": [
+    "Existing customer-logo overlap is preserved as required.",
+    "Chinese glyph appearance depends on the CAD viewer's existing Standard style fonts (gbenor.shx/gbcbig.shx)."
+  ],
+  "part_sha256": "e74fd758e17d70a0fcd79867220770417063627c1ac0bbd4def167724df14f45"
+}

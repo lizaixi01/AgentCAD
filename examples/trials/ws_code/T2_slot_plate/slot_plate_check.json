@@ -1,0 +1,99 @@
+{
+  "file": "slot_plate.dxf",
+  "units": "mm",
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "outline_bounds": [
+    [
+      0,
+      0
+    ],
+    [
+      160,
+      100
+    ]
+  ],
+  "corner_radii": [
+    8,
+    8,
+    8,
+    8
+  ],
+  "slots": [
+    {
+      "center": [
+        40,
+        50
+      ],
+      "length": 30,
+      "width": 10
+    },
+    {
+      "center": [
+        120,
+        50
+      ],
+      "length": 30,
+      "width": 10
+    }
+  ],
+  "slot_center_distance": 80,
+  "center_hole": {
+    "center": [
+      80,
+      50
+    ],
+    "diameter": 20
+  },
+  "dimensions": [
+    {
+      "type": 0,
+      "value": 160.0,
+      "rendered_text": [
+        "160"
+      ]
+    },
+    {
+      "type": 0,
+      "value": 100.0,
+      "rendered_text": [
+        "100"
+      ]
+    },
+    {
+      "type": 0,
+      "value": 30.0,
+      "rendered_text": [
+        "30"
+      ]
+    },
+    {
+      "type": 0,
+      "value": 10.0,
+      "rendered_text": [
+        "10"
+      ]
+    },
+    {
+      "type": 0,
+      "value": 80.0,
+      "rendered_text": [
+        "80"
+      ]
+    },
+    {
+      "type": 4,
+      "value": 8.000000000000002,
+      "rendered_text": [
+        "R8"
+      ]
+    },
+    {
+      "type": 3,
+      "value": 20.000000000000004,
+      "rendered_text": [
+        "%%c20"
+      ]
+    }
+  ]
+}

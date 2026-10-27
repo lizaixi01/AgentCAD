@@ -1,0 +1,82 @@
+{
+  "drawing": "part.dxf",
+  "backup": "part.round4.before.dxf",
+  "units": "mm",
+  "restored_from": "part.round2.before.dxf",
+  "holes": [
+    {
+      "handle": "92",
+      "center_mm": [
+        12.0,
+        12.0,
+        0.0
+      ],
+      "diameter_mm": 10.0
+    },
+    {
+      "handle": "93",
+      "center_mm": [
+        138.0,
+        12.0,
+        0.0
+      ],
+      "diameter_mm": 10.0
+    },
+    {
+      "handle": "94",
+      "center_mm": [
+        12.0,
+        68.0,
+        0.0
+      ],
+      "diameter_mm": 10.0
+    },
+    {
+      "handle": "95",
+      "center_mm": [
+        138.0,
+        68.0,
+        0.0
+      ],
+      "diameter_mm": 10.0
+    }
+  ],
+  "diameter_dimension_measurement_mm": 10.0,
+  "diameter_dimension_display": "4X %%c10",
+  "round1_plate_size_mm": [
+    150,
+    80
+  ],
+  "round1_plate_and_width_dimension_unchanged": true,
+  "round3_center_hole_mm": {
+    "center": [
+      75,
+      40,
+      0
+    ],
+    "diameter": 30
+  },
+  "round3_hole_and_dimension_records_byte_identical": true,
+  "restored_records_exactly_match_pre_round2": true,
+  "changed_entity_handles": [
+    "D6",
+    "D8",
+    "DA",
+    "DB",
+    "DD",
+    "DF",
+    "92",
+    "93",
+    "94",
+    "95",
+    "D2"
+  ],
+  "all_other_dxf_records_byte_identical": true,
+  "modelspace_entity_count": 17,
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "errors_encountered": [],
+  "before_sha256": "ea64c2aa5dc22fabad24232f2c754691ebc703e4664444ff98c80bdaaf394c23",
+  "after_sha256": "e8ef9945fdc2abf05a5b4fd6b8c6e886c6ad5a4d9fac8fe12827544bce1c5ca4",
+  "layout_note": "Existing customer logo overlap is preserved; no layout changes were authorized."
+}

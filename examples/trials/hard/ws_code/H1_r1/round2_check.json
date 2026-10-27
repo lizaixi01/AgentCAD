@@ -1,0 +1,70 @@
+{
+  "drawing": "part.dxf",
+  "backup": "part.round2.before.dxf",
+  "units": "mm",
+  "holes": [
+    {
+      "handle": "92",
+      "center_mm": [
+        12,
+        12,
+        0
+      ],
+      "diameter_mm": 12
+    },
+    {
+      "handle": "93",
+      "center_mm": [
+        138,
+        12,
+        0
+      ],
+      "diameter_mm": 12
+    },
+    {
+      "handle": "94",
+      "center_mm": [
+        12,
+        68,
+        0
+      ],
+      "diameter_mm": 12
+    },
+    {
+      "handle": "95",
+      "center_mm": [
+        138,
+        68,
+        0
+      ],
+      "diameter_mm": 12
+    }
+  ],
+  "diameter_dimension_measurement_mm": 12.000000000000012,
+  "diameter_dimension_display": "4X %%c12",
+  "hole_centers_unchanged": true,
+  "plate_size_mm": [
+    150,
+    80
+  ],
+  "changed_entity_handles": [
+    "D6",
+    "D8",
+    "DA",
+    "DB",
+    "DD",
+    "DF",
+    "92",
+    "93",
+    "94",
+    "95",
+    "D2"
+  ],
+  "all_other_dxf_records_byte_identical": true,
+  "entity_count_unchanged": true,
+  "modelspace_entity_count": 15,
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "errors_encountered": [],
+  "layout_note": "第一轮已记录的客户标识与板区域重叠保持原样；本轮仅修改孔径及对应标注。"
+}

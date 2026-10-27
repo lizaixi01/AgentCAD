@@ -1,0 +1,68 @@
+{
+  "drawing": "part.dxf",
+  "backup": "part.round5.before.dxf",
+  "units": "mm",
+  "title_block": "TB",
+  "attribute_tag": "REV",
+  "old_revision": "A",
+  "new_revision": "C",
+  "changed_existing_entity_handles": [
+    "F0"
+  ],
+  "added_entity_handle": "118",
+  "added_text": "REV C: 宽度 150，增加中心孔 Ø30",
+  "text_insertion_mm": [
+    0,
+    -22,
+    0
+  ],
+  "text_height_mm": 3,
+  "text_font": "Microsoft YaHei",
+  "text_estimated_bounds_mm": [
+    [
+      0.0,
+      -25.83287858117326,
+      0.0
+    ],
+    [
+      120.0,
+      -22.0,
+      0.0
+    ]
+  ],
+  "single_line_and_clear_of_existing_content": true,
+  "plate_size_mm": [
+    150,
+    80
+  ],
+  "center_hole_diameter_mm": 30,
+  "center_hole_center_mm": [
+    75,
+    40,
+    0
+  ],
+  "mounting_hole_diameters_mm": [
+    10,
+    10,
+    10,
+    10
+  ],
+  "all_other_existing_entity_records_byte_identical": true,
+  "other_header_change": {
+    "$HANDSEED": [
+      "10C",
+      "119"
+    ]
+  },
+  "all_remaining_records_byte_identical": true,
+  "modelspace_entity_count": 18,
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "errors_encountered": [
+    "Initial preflight caught ezdxf normalizing the ATTRIB owner from 17 to ED. Resolved by transferring only group 1 text into the original record; the original drawing was not written during the failed preflight.",
+    "Diameter dimension uses floating-point coordinates; replaced exact equality with a 1e-9 mm tolerance in verification."
+  ],
+  "before_sha256": "e8ef9945fdc2abf05a5b4fd6b8c6e886c6ad5a4d9fac8fe12827544bce1c5ca4",
+  "after_sha256": "af70ae5b3923f100417ebd2631ed9a588ee819b44523ca920978aaf709b2e607",
+  "limitations": "Text bounds use font metrics; final CAD rendering depends on font availability. Existing customer logo overlap is preserved."
+}

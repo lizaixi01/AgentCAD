@@ -1,0 +1,51 @@
+{
+  "file": "shaft.dxf",
+  "units": "mm",
+  "audit_errors": 0,
+  "audit_repairs": 0,
+  "closed_outline": true,
+  "left_end_face_center": [
+    0,
+    0
+  ],
+  "diameters": [
+    30.0,
+    40.0,
+    30.0
+  ],
+  "segment_lengths": [
+    50.0,
+    80.0,
+    70.0
+  ],
+  "total_length": 200,
+  "shoulder_positions": [
+    50.0,
+    130.0
+  ],
+  "chamfer_edges": 4,
+  "chamfer_axial_and_radial_size": 2,
+  "chamfer_angle_degrees": 45,
+  "centerline": {
+    "linetype": "CENTER",
+    "start": [
+      -8,
+      0
+    ],
+    "end": [
+      208,
+      0
+    ]
+  },
+  "dimension_entities": 7,
+  "rendered_dimension_blocks": true,
+  "rendered_dimension_labels": [
+    "50",
+    "80",
+    "70",
+    "200",
+    "%%c30",
+    "%%c40",
+    "%%c30"
+  ]
+}

@@ -68,18 +68,25 @@ def test_concurrent_writer_lock(rt, ws, blank):
 
 
 def test_no_shell_or_arbitrary_execution_surface():
-    """Operations are a closed registry; nothing maps agent input to system commands."""
+    """Operations are a closed registry; nothing maps agent input to system commands. The one exception is the
+    opt-in run_script tool: off by default, statically checked, run in a separate process without a shell."""
     from agentcad.ops import REGISTRY
-    import inspect
     import agentcad
     from pathlib import Path
     pkg = Path(agentcad.__file__).parent
+    launchers = {pkg / "backends" / "autocad.py", pkg / "scripting.py"}
     for f in pkg.rglob("*.py"):
         text = f.read_text("utf-8")
-        assert "os.system" not in text and "eval(" not in text and "exec(" not in text, f
-        if f != pkg / "backends" / "autocad.py":
+        assert "os.system" not in text and "eval(" not in text, f
+        if f != pkg / "_script_runner.py":
+            assert "exec(" not in text, f
+        if f not in launchers:
             assert "subprocess" not in text, f
-    # the optional AutoCAD backend is the single process launcher: fixed executable, no shell
+    # process launchers: fixed executables, no shell
     backend = (pkg / "backends" / "autocad.py").read_text("utf-8")
     assert "shell=False" in backend and "shell=True" not in backend and "Popen(args" in backend
+    scripting = (pkg / "scripting.py").read_text("utf-8")
+    assert "shell=False" in scripting and "shell=True" not in scripting and "timeout=timeout" in scripting
+    assert "check_script(code)" in (pkg / "service.py").read_text("utf-8")
+    assert Policy(root=Path.cwd()).allow_scripts in (False,) or __import__("os").environ.get("AGENTCAD_ALLOW_SCRIPTS")
     assert all(callable(d.fn) for d in REGISTRY.values())

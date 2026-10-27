@@ -1,0 +1,252 @@
+{
+  "units": "mm",
+  "ezdxf_version": "1.4.5",
+  "input_count": 12,
+  "generated_count": 10,
+  "skipped_count": 2,
+  "verification": "All generated DXFs re-read and verified; all hole pairs checked.",
+  "valid": [
+    {
+      "part": "FL-101",
+      "file": "FL-101.dxf",
+      "status": "PASS",
+      "outer_mm": 150.0,
+      "bore_mm": 60.0,
+      "pitch_mm": 110.0,
+      "hole_count": 6,
+      "hole_diameter_mm": 12.0,
+      "angular_spacing_deg": 60.0,
+      "first_hole_center_mm": [
+        0,
+        55.0
+      ],
+      "native_diameter_dimensions": 4,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "outer_edge_clearance_mm": 14.0,
+      "bore_edge_clearance_mm": 19.0,
+      "adjacent_center_distance_mm": 54.99999999999999,
+      "adjacent_edge_clearance_mm": 42.99999999999999
+    },
+    {
+      "part": "FL-102",
+      "file": "FL-102.dxf",
+      "status": "PASS",
+      "outer_mm": 180.0,
+      "bore_mm": 75.0,
+      "pitch_mm": 135.0,
+      "hole_count": 8,
+      "hole_diameter_mm": 14.0,
+      "angular_spacing_deg": 45.0,
+      "first_hole_center_mm": [
+        0,
+        67.5
+      ],
+      "native_diameter_dimensions": 4,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "outer_edge_clearance_mm": 15.5,
+      "bore_edge_clearance_mm": 23.0,
+      "adjacent_center_distance_mm": 51.66226336928712,
+      "adjacent_edge_clearance_mm": 37.66226336928712
+    },
+    {
+      "part": "FL-103",
+      "file": "FL-103.dxf",
+      "status": "PASS",
+      "outer_mm": 120.0,
+      "bore_mm": 40.0,
+      "pitch_mm": 90.0,
+      "hole_count": 4,
+      "hole_diameter_mm": 11.0,
+      "angular_spacing_deg": 90.0,
+      "first_hole_center_mm": [
+        0,
+        45.0
+      ],
+      "native_diameter_dimensions": 4,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "outer_edge_clearance_mm": 9.5,
+      "bore_edge_clearance_mm": 19.5,
+      "adjacent_center_distance_mm": 63.63961030678928,
+      "adjacent_edge_clearance_mm": 52.63961030678928
+    },
+    {
+      "part": "FL-104",
+      "file": "FL-104.dxf",
+      "status": "PASS",
+      "outer_mm": 200.0,
+      "bore_mm": 90.0,
+      "pitch_mm": 160.0,
+      "hole_count": 8,
+      "hole_diameter_mm": 18.0,
+      "angular_spacing_deg": 45.0,
+      "first_hole_center_mm": [
+        0,
+        80.0
+      ],
+      "native_diameter_dimensions": 4,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "outer_edge_clearance_mm": 11.0,
+      "bore_edge_clearance_mm": 26.0,
+      "adjacent_center_distance_mm": 61.22934917841437,
+      "adjacent_edge_clearance_mm": 43.22934917841437
+    },
+    {
+      "part": "FL-105",
+      "file": "FL-105.dxf",
+      "status": "PASS",
+      "outer_mm": 160.0,
+      "bore_mm": 60.0,
+      "pitch_mm": 120.0,
+      "hole_count": 6,
+      "hole_diameter_mm": 14.0,
+      "angular_spacing_deg": 60.0,
+      "first_hole_center_mm": [
+        0,
+        60.0
+      ],
+      "native_diameter_dimensions": 4,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "outer_edge_clearance_mm": 13.0,
+      "bore_edge_clearance_mm": 23.0,
+      "adjacent_center_distance_mm": 59.99999999999999,
+      "adjacent_edge_clearance_mm": 45.99999999999999
+    },
+    {
+      "part": "FL-106",
+      "file": "FL-106.dxf",
+      "status": "PASS",
+      "outer_mm": 100.0,
+      "bore_mm": 30.0,
+      "pitch_mm": 70.0,
+      "hole_count": 4,
+      "hole_diameter_mm": 9.0,
+      "angular_spacing_deg": 90.0,
+      "first_hole_center_mm": [
+        0,
+        35.0
+      ],
+      "native_diameter_dimensions": 4,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "outer_edge_clearance_mm": 10.5,
+      "bore_edge_clearance_mm": 15.5,
+      "adjacent_center_distance_mm": 49.49747468305833,
+      "adjacent_edge_clearance_mm": 40.49747468305833
+    },
+    {
+      "part": "FL-107",
+      "file": "FL-107.dxf",
+      "status": "PASS",
+      "outer_mm": 220.0,
+      "bore_mm": 110.0,
+      "pitch_mm": 180.0,
+      "hole_count": 12,
+      "hole_diameter_mm": 14.0,
+      "angular_spacing_deg": 30.0,
+      "first_hole_center_mm": [
+        0,
+        90.0
+      ],
+      "native_diameter_dimensions": 4,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "outer_edge_clearance_mm": 13.0,
+      "bore_edge_clearance_mm": 28.0,
+      "adjacent_center_distance_mm": 46.58742811845373,
+      "adjacent_edge_clearance_mm": 32.58742811845373
+    },
+    {
+      "part": "FL-108",
+      "file": "FL-108.dxf",
+      "status": "PASS",
+      "outer_mm": 140.0,
+      "bore_mm": 50.0,
+      "pitch_mm": 105.0,
+      "hole_count": 6,
+      "hole_diameter_mm": 11.0,
+      "angular_spacing_deg": 60.0,
+      "first_hole_center_mm": [
+        0,
+        52.5
+      ],
+      "native_diameter_dimensions": 4,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "outer_edge_clearance_mm": 12.0,
+      "bore_edge_clearance_mm": 22.0,
+      "adjacent_center_distance_mm": 52.49999999999999,
+      "adjacent_edge_clearance_mm": 41.49999999999999
+    },
+    {
+      "part": "FL-110",
+      "file": "FL-110.dxf",
+      "status": "PASS",
+      "outer_mm": 250.0,
+      "bore_mm": 120.0,
+      "pitch_mm": 200.0,
+      "hole_count": 16,
+      "hole_diameter_mm": 18.0,
+      "angular_spacing_deg": 22.5,
+      "first_hole_center_mm": [
+        0,
+        100.0
+      ],
+      "native_diameter_dimensions": 4,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "outer_edge_clearance_mm": 16.0,
+      "bore_edge_clearance_mm": 31.0,
+      "adjacent_center_distance_mm": 39.01806440322565,
+      "adjacent_edge_clearance_mm": 21.01806440322565
+    },
+    {
+      "part": "FL-112",
+      "file": "FL-112.dxf",
+      "status": "PASS",
+      "outer_mm": 170.0,
+      "bore_mm": 80.0,
+      "pitch_mm": 130.0,
+      "hole_count": 8,
+      "hole_diameter_mm": 13.0,
+      "angular_spacing_deg": 45.0,
+      "first_hole_center_mm": [
+        0,
+        65.0
+      ],
+      "native_diameter_dimensions": 4,
+      "audit_errors": 0,
+      "audit_fixes": 0,
+      "outer_edge_clearance_mm": 13.5,
+      "bore_edge_clearance_mm": 18.5,
+      "adjacent_center_distance_mm": 49.748846207461675,
+      "adjacent_edge_clearance_mm": 36.748846207461675
+    }
+  ],
+  "skipped": [
+    {
+      "part": "FL-109",
+      "reasons": [
+        "螺栓孔超出或接触外圆，外缘余量 -1.000000 mm"
+      ],
+      "outer_edge_clearance_mm": -1.0,
+      "bore_edge_clearance_mm": 22.0,
+      "adjacent_center_distance_mm": 58.99999999999999,
+      "adjacent_edge_clearance_mm": 44.99999999999999
+    },
+    {
+      "part": "FL-111",
+      "reasons": [
+        "相邻螺栓孔重叠或相切，中心距 12.875961 mm，孔径 14 mm"
+      ],
+      "outer_edge_clearance_mm": 5.0,
+      "bore_edge_clearance_mm": 6.0,
+      "adjacent_center_distance_mm": 12.875961253064464,
+      "adjacent_edge_clearance_mm": -1.1240387469355362
+    }
+  ]
+}

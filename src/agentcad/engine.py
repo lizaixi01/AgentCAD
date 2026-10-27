@@ -22,7 +22,7 @@ from typing import Any
 from ezdxf.document import Drawing
 
 from .errors import AgentCADError, input_error, policy_error
-from .model import entity_to_dict, get_tag, set_tag
+from .model import ACTIVE_LAYOUT, entity_to_dict, get_tag, is_model, set_tag
 from .ops import REGISTRY, Ctx, coerce
 from .policy import Policy
 
@@ -57,7 +57,12 @@ def execute(doc: Drawing, ops: list[dict[str, Any]], unit: str | None, policy: P
         name = raw["op"]
         opdef = REGISTRY[name]
         ctx.op_index = i
+        params = dict(params)
+        layout = params.pop("layout", None)
+        token = None
         try:
+            ctx.use_layout(layout)
+            token = ACTIVE_LAYOUT.set(None if is_model(layout) else layout)
             tag = params.get("tag") if opdef.common_draw else None
             if reconcile and tag and ctx.tags().get(tag):
                 res = _reconcile_op(ctx, opdef, params, tag, unchanged)
@@ -73,6 +78,10 @@ def execute(doc: Drawing, ops: list[dict[str, Any]], unit: str | None, policy: P
         except Exception as exc:  # library failure: report as internal, keep traceback for the journal
             raise AgentCADError("INTERNAL_ERROR", f"{name} failed: {type(exc).__name__}: {exc}", category="internal",
                                 op=name, op_index=i, details={"traceback": traceback.format_exc(limit=6)})
+        finally:
+            if token is not None:
+                ACTIVE_LAYOUT.reset(token)
+            ctx.use_layout(None)
         ctx.refs[i] = list(res.get("created") or res.get("modified") or res.get("existing") or [])
         results.append({"index": i, "op": name, **res})
     if reconcile and previous_tags:

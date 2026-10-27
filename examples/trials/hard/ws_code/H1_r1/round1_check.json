@@ -1,0 +1,77 @@
+{
+  "drawing": "part.dxf",
+  "backup": "part.round1.before.dxf",
+  "units": "mm",
+  "plate_size_mm": [
+    150,
+    80
+  ],
+  "corner_radius_mm": 5,
+  "holes": [
+    {
+      "handle": "92",
+      "center": [
+        12.0,
+        12.0,
+        0.0
+      ],
+      "diameter_mm": 10
+    },
+    {
+      "handle": "93",
+      "center": [
+        138.0,
+        12.0,
+        0.0
+      ],
+      "diameter_mm": 10
+    },
+    {
+      "handle": "94",
+      "center": [
+        12.0,
+        68.0,
+        0.0
+      ],
+      "diameter_mm": 10
+    },
+    {
+      "handle": "95",
+      "center": [
+        138.0,
+        68.0,
+        0.0
+      ],
+      "diameter_mm": 10
+    }
+  ],
+  "right_hole_edge_distance_mm": 12,
+  "width_dimension_measurement_mm": 150,
+  "width_dimension_display": "150",
+  "diameter_dimension_mm": 10.0,
+  "modelspace_entity_count": 15,
+  "changed_entity_handles": [
+    "9B",
+    "9E",
+    "A0",
+    "A1",
+    "A4",
+    "D6",
+    "D8",
+    "DA",
+    "DB",
+    "DC",
+    "DD",
+    "DE",
+    "DF",
+    "91",
+    "93",
+    "95",
+    "96",
+    "D2"
+  ],
+  "all_other_dxf_records_byte_identical": true,
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "layout_note": "加宽后的板区域与原客户标识区域重叠；客户标识按要求保持不变。"
+}

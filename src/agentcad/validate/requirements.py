@@ -117,9 +117,10 @@ def check_requirements(feats: Features, reqs: list[dict[str, Any]],
                     out.append(_res(req, False, expected=req["value"], actual=None, deviation=None, tol=tol,
                                     message=f"No {req.get('kind', 'linear')} dimension in the drawing"))
                     continue
-                best = min(cands, key=lambda d: abs(d["measurement"] - req["value"]))
-                dev = abs(best["measurement"] - req["value"])
-                out.append(_res(req, dev <= tol, expected=req["value"], actual=round(best["measurement"], 9),
+                shown = lambda d: d.get("displayed", d["measurement"])  # noqa: E731  value as printed (DIMLFAC)
+                best = min(cands, key=lambda d: abs(shown(d) - req["value"]))
+                dev = abs(shown(best) - req["value"])
+                out.append(_res(req, dev <= tol, expected=req["value"], actual=round(shown(best), 9),
                                 deviation=dev, tol=tol, entities=[best["id"]],
                                 message="" if dev <= tol else f"No {req.get('kind', 'linear')} dimension measures {req['value']}"))
             elif t == "entity_count":

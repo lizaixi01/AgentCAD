@@ -27,7 +27,8 @@ ezdxf (DXF 内核)
 | 实体 ID | DXF handle（十六进制字符串）。保存/重载后不变，删除后不复用 |
 | 语义标签 | XDATA `AGENTCAD` → `(1000, "tag=<name>")`，可用 `"tag:<name>"` 引用；复制产生的新实体不继承标签 |
 | 批内引用 | `"$<i>"` = 本批第 i 步创建（或修改）的实体 |
-| 选择器 | handle、`tag:x`、`$i`、它们组成的列表、过滤对象 `{type, layer, tag, tag_prefix}`、`{"all": true}`。空对象 `{}` 会被拒绝，避免误选全部 |
+| 选择器 | handle、`tag:x`、`$i`、它们组成的列表、过滤对象 `{type, layer, tag, tag_prefix, layout}`、`{"all": true}`。空对象 `{}` 会被拒绝，避免误选全部。handle 和 `tag:` 在所有布局中查找；过滤对象默认只在当前操作的布局中查找（`layout: "*"` 表示全部布局） |
+| 布局 | 模型空间和图纸空间布局（打印用的图纸）。`read_drawing.layouts` 列出每个布局的内容；每个操作都可带 `layout` 参数，新实体加在该布局；从已有实体派生的编辑（copy、offset、trim、fillet、chamfer）留在原实体所在的布局。图纸空间的实体在结果和 diff 中带 `layout` 字段 |
 | 零件规格 | rootdict → `AGENTCAD` 字典 → XRECORD `part_spec`（JSON 分块存在 group 1 中），另有 `plan_tags`。随 DXF 文件一起移动 |
 | 标注 | 真实 DIMENSION 实体 + 渲染块 `*D<n>`；Runtime 写入 group 42（实测值）；验证器从定义点重新测量，不信任文字或 group 42 |
 | 角度 | 度、逆时针、WCS。外来文件中 extrusion (0,0,-1) 的圆/弧/多段线按 WCS 读取（AutoCAD 会原样保留这种实体）；被编辑时先归一化为 (0,0,1)。多段线 bulge = tan(θ/4)，正值为逆时针。角度标注的 group 42 按 AutoCAD 约定存弧度，API 中仍用度 |
@@ -54,6 +55,8 @@ ezdxf (DXF 内核)
 4. 可选 `strict`：先把候选文档写到临时文件，交给独立验证器检查；不通过就不保存，失败现场写入 `failed/`。
 5. 提交：为旧文件建检查点 → 在 head 中写入 `pending` → 临时文件 fsync 后 `os.replace` → 写提交副本 → 清除 `pending` → 写 journal。
 6. 从磁盘重新读取，运行验证器，把报告随结果一起返回。
+
+`run_script`（可选，默认关闭）：对操作目录覆盖不到的编辑，Agent 提交一段 ezdxf 脚本。脚本先做静态检查（只允许导入 ezdxf 和标准数学/数据模块；禁止打开或保存文件、eval/exec、getattr、双下划线访问），然后在独立的 Python 进程中（`-I`、不经 shell、有超时）对图纸副本运行。运行结果由 Runtime 严格重读、检查预算、计算 diff，然后按上面第 4–6 步提交：检查点、journal（记录完整脚本和哈希）、校验、`strict`。失败时文件不变，可以 `rollback`。
 
 `recover`：文件不可读、存在 `pending`，或文件丢失时，优先恢复 `committed.dxf`（必须与 head 中的哈希一致），否则回退到最近一个可读的检查点。损坏文件会保留到 `failed/`。
 
@@ -91,6 +94,7 @@ ezdxf (DXF 内核)
 
 - **通用检查**：`$INSUNITS` 是否明确；零长度、零半径、非有限坐标、少于 2 个顶点；引用了未定义的块或图层；重复实体（几何规范化后比较，线段方向无关，标注考虑方向）；标注文字与重新测量值矛盾；group 42 与定义点不一致（`DIMENSION_STALE`）；标注锚点没有落在任何几何上（`DIMENSION_NOT_ATTACHED`）；指定图层上存在开口轮廓；超出给定边界；ezdxf audit 错误。出图可读性（来自 AutoCAD 出图复核，见 [trials-report.md](trials-report.md)）：标注文字重复 Ø/R 前缀（`DIMENSION_DOUBLE_PREFIX`）、中文用了无大字体的 SHX 字体（`TEXT_GLYPHS_MISSING`）、箭头相对标注长度过小（`ANNOTATION_TOO_SMALL`）。标注附着检查接受顶点、圆/弧、与测量方向相交的边，以及块参照内的几何；含外部参照的图纸不做附着检查。
 - **特征识别**：闭合多段线，以及 LINE/ARC 首尾相接形成的环 → 轮廓；轮廓内的圆 → 孔；标注 → 类型和实测值。
+- **布局**：默认检查模型空间；`layout` 参数可以改为检查某个图纸布局。没有检查到的布局如果含有图形，会以 `LAYOUT_NOT_VALIDATED` 警告报告，并在 `coverage` 中列出（真实图纸的打印布局常常有一份零件的缩放副本，只改模型空间会交付自相矛盾的图纸）。标注值按显示值（乘以 DIMLFAC）比较。
 - **需求检查**：`outline`、`hole`（位置相对轮廓左下角）、`hole_count`（可按直径分组）、`dimension`（可用 `tag` 指定实体）、`entity_count`、`text`、`within_bounds`。每项给出 expected、actual、deviation、tolerance 和相关实体；需求来自文档时还附带文档来源。需求里的未知字段不会被静默忽略，而是返回 `warnings`。
 
 ## 约束
@@ -110,5 +114,5 @@ ezdxf (DXF 内核)
 - 覆盖需要 `overwrite=true`，被覆盖的文件会先建检查点；导出目标不能是源文件。
 - 只读模式；操作白名单；批次操作数、实体总数、单批新增实体数都有预算；删除超过 50 个实体需要 `confirm_large`。
 - 每张图纸有写锁，返回 `retryable` 错误。
-- 代码中没有 `os.system`、`eval`、`exec`。`subprocess` 只出现在可选的 `backends/autocad.py` 中：可执行文件来自配置或自动发现，不经 shell（`shell=False`），有超时；作业脚本只包含固定文件名，不含调用方字符串；不修改宿主 AutoCAD 的持久设置。这些约束都有测试扫描。Agent 的输入只能落到封闭的操作注册表上。
+- 代码中没有 `os.system`、`eval`。`exec` 只出现在可选脚本工具的子进程入口 `_script_runner.py` 中；`run_script` 默认关闭（`AGENTCAD_ALLOW_SCRIPTS=1` 或 CLI `--allow-scripts` 才开启），脚本先过静态检查，再在独立进程中运行。这些检查用来防止误操作，不是安全沙箱：只对你愿意让它以你的身份运行 Python 的 Agent 开启。`subprocess` 只出现在 `scripting.py`（启动脚本子进程）和可选的 `backends/autocad.py` 中：可执行文件来自配置或自动发现，不经 shell（`shell=False`），有超时；作业脚本只包含固定文件名，不含调用方字符串；不修改宿主 AutoCAD 的持久设置。这些约束都有测试扫描。Agent 的输入只能落到封闭的操作注册表上。
 - HTTP 默认只绑定 127.0.0.1，请求体限制 8 MB。

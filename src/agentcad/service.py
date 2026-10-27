@@ -5,8 +5,10 @@
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import shutil
 import time
 import traceback
 from contextlib import contextmanager
@@ -21,7 +23,7 @@ from . import engine, spec as specmod
 from .constraints import ENFORCE_TYPES, CHECK_TYPES, check_constraints, enforce_one
 from .errors import AgentCADError, input_error, policy_error
 from .metadata import all_meta, get_meta, set_meta
-from .model import entity_to_dict, get_tag, select
+from .model import entity_to_dict, get_tag, is_model, layout_spaces, select
 from .ops import catalog
 from .ops.annotate import DIMSTYLE, apply_annotation_scale, setup_text_style
 from .policy import Policy
@@ -60,6 +62,26 @@ def tool(fn):
     TOOLS[name] = fn
     wrapper.__agentcad_tool__ = True  # type: ignore[attr-defined]
     return wrapper
+
+
+def _paper_layouts(doc) -> list[dict[str, Any]]:
+    """Paper-space layouts with their content. A layout holding geometry (not just viewports) is often the
+    printed sheet: a scaled copy of the part, title block and notes that must be edited along with the model."""
+    out = []
+    for name in doc.layouts.names_in_taborder():
+        if is_model(name):
+            continue
+        lay = doc.layouts.get(name)
+        types: dict[str, int] = {}
+        for e in lay:
+            types[e.dxftype()] = types.get(e.dxftype(), 0) + 1
+        content = sum(n for t, n in types.items() if t != "VIEWPORT")
+        ext = bbox.extents((e for e in lay if e.dxftype() != "VIEWPORT"), fast=True)
+        out.append({"name": name, "entity_count": content, "entity_types": types,
+                    "viewports": max(0, types.get("VIEWPORT", 0) - 1),
+                    "extents": None if not ext.has_data else [[round(ext.extmin.x, 6), round(ext.extmin.y, 6)],
+                                                              [round(ext.extmax.x, 6), round(ext.extmax.y, 6)]]})
+    return out
 
 
 def _units_of(doc) -> str | None:
@@ -193,21 +215,22 @@ class Runtime:
                 "entity_count": len(msp), "entity_types": counts, "layers": layers,
                 "blocks": [b.name for b in doc.blocks if not b.name.startswith("*")
                            and not b.name.lower().startswith(("*model_space", "*paper_space"))],
+                "layouts": _paper_layouts(doc),
                 "tags": tags, "metadata": meta, "status": store.status(),
                 "checkpoints": [c["id"] for c in store.list_checkpoints()]}
 
     @tool
     def inspect_entities(self, path: str, filter: dict | None = None, ids: list[str] | None = None,  # noqa: A002
                          limit: int = 200, offset: int = 0, detail: bool = True,
-                         window: list | None = None) -> dict[str, Any]:
+                         window: list | None = None, layout: str | None = None) -> dict[str, Any]:
         p, store = self._drawing(path)
         doc = store.load()
         if ids:
             ents = select(doc, ids)
         elif filter:
-            ents = select(doc, filter, allow_empty=True)
+            ents = select(doc, {"layout": layout, **filter} if layout else filter, allow_empty=True)
         else:
-            ents = list(doc.modelspace())
+            ents = [e for sp in layout_spaces(doc, layout) for e in sp]
         if window:
             (x0, y0), (x1, y1) = window
             lo, hi = (min(x0, x1), min(y0, y1)), (max(x0, x1), max(y0, y1))
@@ -258,6 +281,60 @@ class Runtime:
         return {"drawing": self._rel(p), "changes": _changes(res), "results": res["results"],
                 "validation": _brief(report), "journal_seq": seq, **info}
 
+    @tool
+    def run_script(self, path: str, code: str, label: str | None = None, dry_run: bool = False,
+                   requirements: list[dict] | None = None, strict: bool = False) -> dict[str, Any]:
+        """Run an ezdxf script on the drawing as one transaction (opt-in; see scripting.py). The script edits the
+        document given as ``doc`` in place; it may set ``result`` to return a JSON value. Its output is re-read
+        strictly, diffed, validated and committed with a checkpoint; the journal keeps the full script."""
+        from . import scripting
+        self.policy.check_scripts_allowed()
+        if not dry_run:
+            self.policy.check_write()
+        scripting.check_script(code)
+        p, store = self._drawing(path)
+        with self._lock(store):
+            before = store.load()
+            job = store.dir / "scripts" / f"job-{int(time.time() * 1000)}"
+            try:
+                res = scripting.run(p, code, job, self.policy.script_timeout)
+                if not res["ok"]:
+                    raise AgentCADError("SCRIPT_FAILED", f"The script raised {res['error']}", category="input",
+                                        details={k: res.get(k) for k in ("script_lines", "stdout", "traceback")},
+                                        hint="Nothing was saved; fix the script and run it again")
+                doc = read_dxf(job / "out.dxf", self.policy)
+            except AgentCADError as exc:
+                store.journal({"tool": "run_script", "ok": False, "label": label, "code": code,
+                               "error": exc.to_dict(), "file_unchanged": True})
+                raise
+            finally:
+                shutil.rmtree(job, ignore_errors=True)
+            n = sum(len(sp) for sp in layout_spaces(doc, "*"))
+            if n > self.policy.max_entities:
+                raise policy_error("BUDGET_EXCEEDED", f"Drawing would contain {n} entities "
+                                                      f"(limit {self.policy.max_entities})")
+            diff = diff_docs(before, doc)
+            changes = {"added": [e["id"] for e in diff["added"]], "modified": [m["id"] for m in diff["modified"]],
+                       "deleted": [e["id"] for e in diff["deleted"]]}
+            out = {"drawing": self._rel(p), "changes": changes, "diff_summary": diff["summary"],
+                   "result": res.get("result"), "stdout": res.get("stdout"), "script_seconds": res.get("seconds")}
+            if dry_run:
+                return {**out, "dry_run": True, "diff": {k: diff[k] for k in ("added", "deleted", "modified")}}
+            tmp_report = self._validate_doc(doc, requirements)
+            if strict and not tmp_report["passed"]:
+                fail = self._save_failure(store, doc, "strict-validation")
+                store.journal({"tool": "run_script", "ok": False, "label": label, "code": code,
+                               "error": {"code": "VALIDATION_FAILED"}, "failure_snapshot": fail})
+                raise AgentCADError("VALIDATION_FAILED", "Validation of the script's result failed; nothing was saved",
+                                    category="validation", details={"validation": tmp_report, "failure_snapshot": fail},
+                                    hint="Inspect validation.issues; fix the script and retry")
+            info = store.commit(doc, label=label or "run_script")
+            seq = store.journal({"tool": "run_script", "ok": True, "label": label, "code": code,
+                                 "code_sha256": hashlib.sha256(code.encode("utf-8")).hexdigest(),
+                                 "changes": changes, "stdout": res.get("stdout"), **info})
+        report = validate_file(p, requirements=requirements)
+        return {**out, "validation": _brief(report), "journal_seq": seq, **info}
+
     def _validate_doc(self, doc, requirements):
         import tempfile
         with tempfile.TemporaryDirectory() as td:
@@ -268,13 +345,14 @@ class Runtime:
     @tool
     def validate_drawing(self, path: str, requirements: list[dict] | None = None, use_stored_spec: bool = True,
                          bounds: list | None = None, tolerance: float = 1e-6,
-                         contour_layers: list[str] | None = None) -> dict[str, Any]:
+                         contour_layers: list[str] | None = None, layout: str | None = None) -> dict[str, Any]:
         """Independent validation: re-reads the file from disk. If the drawing carries a part spec and no
-        explicit requirements are given, requirements are re-derived from that spec (not from the plan)."""
+        explicit requirements are given, requirements are re-derived from that spec (not from the plan).
+        ``layout``: check a paper-space sheet instead of model space (the stored spec describes model space)."""
         p, store = self._drawing(path)
         reqs = requirements
         source = "explicit" if requirements else None
-        if reqs is None and use_stored_spec:
+        if reqs is None and use_stored_spec and is_model(layout):
             try:
                 doc = read_dxf(p, self.policy)
                 stored = get_meta(doc, "part_spec")
@@ -284,7 +362,8 @@ class Runtime:
                     contour_layers = contour_layers or ["OUTLINE"]
             except AgentCADError:
                 pass  # unreadable: validate_file reports it
-        report = validate_file(p, requirements=reqs, bounds=bounds, tolerance=tolerance, contour_layers=contour_layers)
+        report = validate_file(p, requirements=reqs, bounds=bounds, tolerance=tolerance, contour_layers=contour_layers,
+                               layout=layout)
         report["file"] = self._rel(p)
         report["requirements_source"] = source
         return {"drawing": self._rel(p), "validation": report}
@@ -614,11 +693,20 @@ class Runtime:
 
     @tool
     def autocad_audit(self, path: str) -> dict[str, Any]:
-        """Open the DXF in AutoCAD (headless, optional backend) and run AUDIT without fixing: a second,
-        independent opinion on file validity from the reference implementation."""
+        """Open the DXF or DWG in AutoCAD (headless, optional backend) and run AUDIT without fixing: a second,
+        independent opinion on file validity from the reference implementation. A DWG is first converted to DXF
+        by AutoCAD itself (agents asked to audit the DWG they had just exported)."""
+        import tempfile
         from .backends import autocad
-        p, _ = self._drawing(path)
-        res = autocad.audit_dxf(p, self.policy.state_dir() / "acad")
+        p = self.policy.resolve(path, must_exist=True, suffixes=(".dxf", ".dwg"))
+        jobs = self.policy.state_dir() / "acad"
+        if p.suffix.lower() == ".dwg":
+            with tempfile.TemporaryDirectory() as td:
+                conv = Path(td) / "converted.dxf"
+                autocad.dwg_to_dxf(p, conv, jobs, "2018")
+                res = autocad.audit_dxf(conv, jobs)
+        else:
+            res = autocad.audit_dxf(p, jobs)
         res["passed"] = not res["import_rejected"] and res["audit_errors"] == 0
         return {"drawing": self._rel(p), "backend": "autocad", **res}
 
@@ -668,15 +756,18 @@ def _brief(report: dict[str, Any]) -> dict[str, Any]:
 
 
 def diff_docs(old, new) -> dict[str, Any]:
-    a = {e.dxf.handle: entity_to_dict(e) for e in old.modelspace()}
-    b = {e.dxf.handle: entity_to_dict(e) for e in new.modelspace()}
+    a = {e.dxf.handle: entity_to_dict(e) for sp in layout_spaces(old, "*") for e in sp}
+    b = {e.dxf.handle: entity_to_dict(e) for sp in layout_spaces(new, "*") for e in sp}
     added = [b[h] for h in b if h not in a]
     deleted = [a[h] for h in a if h not in b]
     modified = []
     for h in a.keys() & b.keys():
         if a[h] != b[h]:
             fields = {k: {"old": a[h].get(k), "new": b[h].get(k)} for k in set(a[h]) | set(b[h]) if a[h].get(k) != b[h].get(k)}
-            modified.append({"id": h, "type": b[h]["type"], "tag": b[h].get("tag"), "changes": fields})
+            m = {"id": h, "type": b[h]["type"], "tag": b[h].get("tag"), "changes": fields}
+            if b[h].get("layout"):
+                m["layout"] = b[h]["layout"]
+            modified.append(m)
     modified.sort(key=lambda m: m["id"])
     unchanged = len([h for h in a.keys() & b.keys() if a[h] == b[h]])
     layers_old = {l.dxf.name for l in old.layers}

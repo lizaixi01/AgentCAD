@@ -1,0 +1,60 @@
+{
+  "file": "part.dxf",
+  "ezdxf_version": "1.4.5",
+  "units": "mm",
+  "hole_centers": [
+    [
+      12.0,
+      12.0,
+      0.0
+    ],
+    [
+      138.0,
+      12.0,
+      0.0
+    ],
+    [
+      12.0,
+      68.0,
+      0.0
+    ],
+    [
+      138.0,
+      68.0,
+      0.0
+    ]
+  ],
+  "hole_diameters": [
+    12.0,
+    12.0,
+    12.0,
+    12.0
+  ],
+  "diameter_dimension_measurement": 12.000000000000012,
+  "diameter_dimension_display": "4X %%c12",
+  "diameter_dimension_points_and_arrows_on_circle": true,
+  "diameter_text_position_unchanged": true,
+  "plate_width": 150.0,
+  "plate_height": 80.0,
+  "width_dimension_measurement": 150.0,
+  "modified_entity_handles": [
+    "92",
+    "93",
+    "94",
+    "95",
+    "D2",
+    "D6",
+    "D8",
+    "DA",
+    "DB",
+    "DD",
+    "DF"
+  ],
+  "modified_tag_values": 21,
+  "all_other_bytes_unchanged": true,
+  "audit_errors": 0,
+  "audit_fixes": 0,
+  "source_sha256": "039e7995718e0e397c635a6ef5a99f95ea68a537d053dfe79af9cec0f634ca1c",
+  "result_sha256": "7135225396e79ebc394dc0dbbb48fdd02f9105b644efbb1a518b1ea38b215d62",
+  "limitation": "Existing overlap with client logo remains unchanged."
+}

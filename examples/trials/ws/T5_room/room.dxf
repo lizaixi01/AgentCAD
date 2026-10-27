@@ -29,7 +29,7 @@ $INSBASE
   9
 $EXTMIN
  10
--1080.5422919508867
+-1030.5422919508867
  20
 -1062.5
  30
@@ -37,9 +37,9 @@ $EXTMIN
   9
 $EXTMAX
  10
-6350.0
+6400.0
  20
-4780.5422919508865
+4830.5422919508865
  30
 0.0
   9
@@ -489,7 +489,7 @@ $SKPOLY
   9
 $TDCREATE
  40
-2461341.9040856482
+2461341.936886574
   9
 $TDUCREATE
  40
@@ -497,7 +497,7 @@ $TDUCREATE
   9
 $TDUPDATE
  40
-2461341.9040856482
+2461341.936886574
   9
 $TDUUPDATE
  40
@@ -549,7 +549,7 @@ $SPLINESEGS
   9
 $HANDSEED
   5
-F5
+E9
   9
 $SURFTAB1
  70
@@ -929,11 +929,11 @@ $PSTYLEMODE
   9
 $FINGERPRINTGUID
   2
-{16139535-6E0F-4D58-82C4-8CA121CBB75A}
+{FCD8B558-1F35-45DA-BF95-51CFD4EBC9C1}
   9
 $VERSIONGUID
   2
-{842E9801-945C-49A1-9DB0-573706B54F14}
+{7015E984-693B-458A-82A4-534DB1AD07BF}
   9
 $EXTNAMES
 290
@@ -1323,9 +1323,9 @@ ISM
   0
 CLASS
   1
-LAYOUT
+ACDBPLACEHOLDER
   2
-AcDbLayout
+AcDbPlaceHolder
   3
 ObjectDBX Classes
  90
@@ -1339,9 +1339,9 @@ ObjectDBX Classes
   0
 CLASS
   1
-ACDBPLACEHOLDER
+LAYOUT
   2
-AcDbPlaceHolder
+AcDbLayout
   3
 ObjectDBX Classes
  90
@@ -5821,13 +5821,13 @@ AcDbEntity
 100
 AcDbLine
  10
--31.249999999999996
+-31.25
  20
 0.0
  30
 0.0
  11
--912.5
+-862.5
  21
 0.0
  31
@@ -5847,13 +5847,13 @@ AcDbEntity
 100
 AcDbLine
  10
--31.249999999999996
+-31.25
  20
 4000.0
  30
 0.0
  11
--912.5
+-862.5
  21
 4000.0
  31
@@ -5875,7 +5875,7 @@ AcDbBlockReference
   2
 _CLOSEDFILLED
  10
--850.0
+-800.0
  20
 0.0
  30
@@ -5903,7 +5903,7 @@ AcDbBlockReference
   2
 _CLOSEDFILLED
  10
--850.0
+-800.0
  20
 4000.0
  30
@@ -5929,13 +5929,13 @@ AcDbEntity
 100
 AcDbLine
  10
--850.0
+-800.0
  20
 125.0
  30
 0.0
  11
--850.0
+-800.0
  21
 3875.0
  31
@@ -5955,7 +5955,7 @@ DIM
 100
 AcDbMText
  10
--968.75
+-918.75
  20
 2000.0
  30
@@ -5981,7 +5981,7 @@ Defpoints
 100
 AcDbPoint
  10
--850.0
+-800.0
  20
 0.0
  30
@@ -6333,7 +6333,7 @@ AcDbLine
  11
 2250.0
  21
-4612.5
+4662.5
  31
 0.0
   0
@@ -6359,7 +6359,7 @@ AcDbLine
  11
 3750.0
  21
-4612.5
+4662.5
  31
 0.0
   0
@@ -6381,7 +6381,7 @@ _CLOSEDFILLED
  10
 2250.0
  20
-4550.0
+4600.0
  30
 0.0
  41
@@ -6409,7 +6409,7 @@ _CLOSEDFILLED
  10
 3750.0
  20
-4550.0
+4600.0
  30
 0.0
  41
@@ -6433,13 +6433,13 @@ AcDbLine
  10
 2375.0
  20
-4550.0
+4600.0
  30
 0.0
  11
 3625.0
  21
-4550.0
+4600.0
  31
 0.0
   0
@@ -6459,7 +6459,7 @@ AcDbMText
  10
 3000.0
  20
-4668.75
+4718.75
  30
 0.0
  40
@@ -6483,7 +6483,7 @@ AcDbPoint
  10
 2250.0
  20
-4550.0
+4600.0
  30
 0.0
   0
@@ -6543,7 +6543,7 @@ ENTITIES
   0
 LINE
   5
-99
+94
 330
 17
 100
@@ -6567,11 +6567,11 @@ AcDbLine
 1001
 AGENTCAD
 1000
-tag=wall.south.outer.left
+tag=wall_s_outer_left
   0
 LINE
   5
-9A
+96
 330
 17
 100
@@ -6595,7 +6595,119 @@ AcDbLine
 1001
 AGENTCAD
 1000
-tag=wall.south.outer.right
+tag=wall_s_outer_right
+  0
+LINE
+  5
+97
+330
+17
+100
+AcDbEntity
+  8
+WALL
+100
+AcDbLine
+ 10
+120.0
+ 20
+120.0
+ 30
+0.0
+ 11
+2550.0
+ 21
+120.0
+ 31
+0.0
+1001
+AGENTCAD
+1000
+tag=wall_s_inner_left
+  0
+LINE
+  5
+98
+330
+17
+100
+AcDbEntity
+  8
+WALL
+100
+AcDbLine
+ 10
+3450.0
+ 20
+120.0
+ 30
+0.0
+ 11
+5880.0
+ 21
+120.0
+ 31
+0.0
+1001
+AGENTCAD
+1000
+tag=wall_s_inner_right
+  0
+LINE
+  5
+99
+330
+17
+100
+AcDbEntity
+  8
+WALL
+100
+AcDbLine
+ 10
+-120.0
+ 20
+4120.0
+ 30
+0.0
+ 11
+2250.0
+ 21
+4120.0
+ 31
+0.0
+1001
+AGENTCAD
+1000
+tag=wall_n_outer_left
+  0
+LINE
+  5
+9A
+330
+17
+100
+AcDbEntity
+  8
+WALL
+100
+AcDbLine
+ 10
+3750.0
+ 20
+4120.0
+ 30
+0.0
+ 11
+6120.0
+ 21
+4120.0
+ 31
+0.0
+1001
+AGENTCAD
+1000
+tag=wall_n_outer_right
   0
 LINE
   5
@@ -6611,19 +6723,19 @@ AcDbLine
  10
 120.0
  20
-120.0
+3880.0
  30
 0.0
  11
-2550.0
+2250.0
  21
-120.0
+3880.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=wall.south.inner.left
+tag=wall_n_inner_left
   0
 LINE
   5
@@ -6637,21 +6749,21 @@ WALL
 100
 AcDbLine
  10
-3450.0
+3750.0
  20
-120.0
+3880.0
  30
 0.0
  11
 5880.0
  21
-120.0
+3880.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=wall.south.inner.right
+tag=wall_n_inner_right
   0
 LINE
   5
@@ -6667,11 +6779,11 @@ AcDbLine
  10
 -120.0
  20
-4120.0
+-120.0
  30
 0.0
  11
-2250.0
+-120.0
  21
 4120.0
  31
@@ -6679,7 +6791,7 @@ AcDbLine
 1001
 AGENTCAD
 1000
-tag=wall.north.outer.left
+tag=wall_w_outer
   0
 LINE
   5
@@ -6693,21 +6805,21 @@ WALL
 100
 AcDbLine
  10
-3750.0
+120.0
  20
-4120.0
+120.0
  30
 0.0
  11
-6120.0
+120.0
  21
-4120.0
+3880.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=wall.north.outer.right
+tag=wall_w_inner
   0
 LINE
   5
@@ -6721,21 +6833,21 @@ WALL
 100
 AcDbLine
  10
-120.0
+6120.0
  20
-3880.0
+-120.0
  30
 0.0
  11
-2250.0
+6120.0
  21
-3880.0
+4120.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=wall.north.inner.left
+tag=wall_e_outer
   0
 LINE
   5
@@ -6749,9 +6861,9 @@ WALL
 100
 AcDbLine
  10
-3750.0
+5880.0
  20
-3880.0
+120.0
  30
 0.0
  11
@@ -6763,7 +6875,7 @@ AcDbLine
 1001
 AGENTCAD
 1000
-tag=wall.north.inner.right
+tag=wall_e_inner
   0
 LINE
   5
@@ -6777,21 +6889,21 @@ WALL
 100
 AcDbLine
  10
--120.0
+2550.0
  20
 -120.0
  30
 0.0
  11
--120.0
+2550.0
  21
-4120.0
+120.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=wall.west.outer
+tag=door_jamb_left
   0
 LINE
   5
@@ -6805,21 +6917,21 @@ WALL
 100
 AcDbLine
  10
-120.0
+3450.0
  20
-120.0
+-120.0
  30
 0.0
  11
-120.0
+3450.0
  21
-3880.0
+120.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=wall.west.inner
+tag=door_jamb_right
   0
 LINE
   5
@@ -6833,13 +6945,13 @@ WALL
 100
 AcDbLine
  10
-6120.0
+2250.0
  20
--120.0
+3880.0
  30
 0.0
  11
-6120.0
+2250.0
  21
 4120.0
  31
@@ -6847,7 +6959,7 @@ AcDbLine
 1001
 AGENTCAD
 1000
-tag=wall.east.outer
+tag=window_jamb_left
   0
 LINE
   5
@@ -6861,21 +6973,21 @@ WALL
 100
 AcDbLine
  10
-5880.0
+3750.0
  20
-120.0
+3880.0
  30
 0.0
  11
-5880.0
+3750.0
  21
-3880.0
+4120.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=wall.east.inner
+tag=window_jamb_right
   0
 LINE
   5
@@ -6885,25 +6997,25 @@ A5
 100
 AcDbEntity
   8
-WALL
+WINDOW
 100
 AcDbLine
  10
-2550.0
+2250.0
  20
--120.0
+3880.0
  30
 0.0
  11
-2550.0
+3750.0
  21
-120.0
+3880.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=door.jamb.left
+tag=window_line_1
   0
 LINE
   5
@@ -6913,25 +7025,25 @@ A6
 100
 AcDbEntity
   8
-WALL
+WINDOW
 100
 AcDbLine
  10
-3450.0
+2250.0
  20
--120.0
+3960.0
  30
 0.0
  11
-3450.0
+3750.0
  21
-120.0
+3960.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=door.jamb.right
+tag=window_line_2
   0
 LINE
   5
@@ -6941,25 +7053,25 @@ A7
 100
 AcDbEntity
   8
-WALL
+WINDOW
 100
 AcDbLine
  10
 2250.0
  20
-3880.0
+4040.0
  30
 0.0
  11
-2250.0
+3750.0
  21
-4120.0
+4040.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=window.jamb.left
+tag=window_line_3
   0
 LINE
   5
@@ -6969,13 +7081,13 @@ A8
 100
 AcDbEntity
   8
-WALL
+WINDOW
 100
 AcDbLine
  10
-3750.0
+2250.0
  20
-3880.0
+4120.0
  30
 0.0
  11
@@ -6987,7 +7099,7 @@ AcDbLine
 1001
 AGENTCAD
 1000
-tag=window.jamb.right
+tag=window_line_4
   0
 LINE
   5
@@ -6997,25 +7109,25 @@ A9
 100
 AcDbEntity
   8
-WINDOW
+AXIS
 100
 AcDbLine
  10
-2250.0
+-400.0
  20
-3880.0
+0.0
  30
 0.0
  11
-3750.0
+6400.0
  21
-3880.0
+0.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=window.rail.1
+tag=axis_s
   0
 LINE
   5
@@ -7025,25 +7137,25 @@ AA
 100
 AcDbEntity
   8
-WINDOW
+AXIS
 100
 AcDbLine
  10
-2250.0
+-400.0
  20
-3960.0
+4000.0
  30
 0.0
  11
-3750.0
+6400.0
  21
-3960.0
+4000.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=window.rail.2
+tag=axis_n
   0
 LINE
   5
@@ -7053,25 +7165,25 @@ AB
 100
 AcDbEntity
   8
-WINDOW
+AXIS
 100
 AcDbLine
  10
-2250.0
+0.0
  20
-4040.0
+-400.0
  30
 0.0
  11
-3750.0
+0.0
  21
-4040.0
+4400.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=window.rail.3
+tag=axis_w
   0
 LINE
   5
@@ -7081,25 +7193,25 @@ AC
 100
 AcDbEntity
   8
-WINDOW
+AXIS
 100
 AcDbLine
  10
-2250.0
+6000.0
  20
-4120.0
+-400.0
  30
 0.0
  11
-3750.0
+6000.0
  21
-4120.0
+4400.0
  31
 0.0
 1001
 AGENTCAD
 1000
-tag=window.rail.4
+tag=axis_e
   0
 DIMENSION
   5
@@ -7159,7 +7271,7 @@ AcDbRotatedDimension
 1001
 AGENTCAD
 1000
-tag=dim.axis.width
+tag=dim_axis_x
   0
 DIMENSION
   5
@@ -7179,13 +7291,13 @@ AcDbDimension
   3
 AGENTCAD
  10
--850.0
+-800.0
  20
 0.0
  30
 0.0
  11
--968.75
+-918.75
  21
 2000.0
  31
@@ -7219,7 +7331,7 @@ AcDbRotatedDimension
 1001
 AGENTCAD
 1000
-tag=dim.axis.height
+tag=dim_axis_y
   0
 DIMENSION
   5
@@ -7279,7 +7391,7 @@ AcDbRotatedDimension
 1001
 AGENTCAD
 1000
-tag=dim.door.width
+tag=dim_door
   0
 DIMENSION
   5
@@ -7301,13 +7413,13 @@ AGENTCAD
  10
 2250.0
  20
-4550.0
+4600.0
  30
 0.0
  11
 3000.0
  21
-4668.75
+4718.75
  31
 0.0
  70
@@ -7339,151 +7451,7 @@ AcDbRotatedDimension
 1001
 AGENTCAD
 1000
-tag=dim.window.width
-  0
-LWPOLYLINE
-  5
-F1
-330
-17
-100
-AcDbEntity
-  8
-AXIS
-100
-AcDbPolyline
- 90
-4
- 70
-0
- 10
--350.0
- 20
-0.0
- 10
-0.0
- 20
-0.0
- 10
-6000.0
- 20
-0.0
- 10
-6350.0
- 20
-0.0
-1001
-AGENTCAD
-1000
-tag=axis.south
-  0
-LWPOLYLINE
-  5
-F2
-330
-17
-100
-AcDbEntity
-  8
-AXIS
-100
-AcDbPolyline
- 90
-4
- 70
-0
- 10
--350.0
- 20
-4000.0
- 10
-0.0
- 20
-4000.0
- 10
-6000.0
- 20
-4000.0
- 10
-6350.0
- 20
-4000.0
-1001
-AGENTCAD
-1000
-tag=axis.north
-  0
-LWPOLYLINE
-  5
-F3
-330
-17
-100
-AcDbEntity
-  8
-AXIS
-100
-AcDbPolyline
- 90
-4
- 70
-0
- 10
-0.0
- 20
--350.0
- 10
-0.0
- 20
-0.0
- 10
-0.0
- 20
-4000.0
- 10
-0.0
- 20
-4350.0
-1001
-AGENTCAD
-1000
-tag=axis.west
-  0
-LWPOLYLINE
-  5
-F4
-330
-17
-100
-AcDbEntity
-  8
-AXIS
-100
-AcDbPolyline
- 90
-4
- 70
-0
- 10
-6000.0
- 20
--350.0
- 10
-6000.0
- 20
-0.0
- 10
-6000.0
- 20
-4000.0
- 10
-6000.0
- 20
-4350.0
-1001
-AGENTCAD
-1000
-tag=axis.east
+tag=dim_window
   0
 ENDSEC
   0
@@ -7893,15 +7861,15 @@ Model
  32
 0.0
  14
--1080.5422919508867
+-1030.5422919508867
  24
 -1062.5
  34
 0.0
  15
-6350.0
+6400.0
  25
-4780.5422919508865
+4830.5422919508865
  35
 0.0
 146
@@ -8591,7 +8559,7 @@ DictionaryVariables
 280
 0
   1
-1.4.5 @ 2026-10-27T13:41:14.721075+00:00
+1.4.5 @ 2026-10-27T14:28:54.218991+00:00
   0
 VISUALSTYLE
   5
@@ -9317,7 +9285,7 @@ AcDbXrecord
 280
 1
   1
-{"by": "agentcad", "template": "blank", "ts": "2026-10-27T13:41:14.723+00:00", "units": "mm"}
+{"by": "agentcad", "template": "blank", "ts": "2026-10-27T14:28:54.225+00:00", "units": "mm"}
   0
 DICTIONARYVAR
   5
@@ -9329,7 +9297,7 @@ DictionaryVariables
 280
 0
   1
-1.4.5 @ 2026-10-27T13:41:53.382048+00:00
+1.4.5 @ 2026-10-27T14:29:07.915240+00:00
   0
 ENDSEC
   0

@@ -38,6 +38,7 @@ def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="agentcad", description="Headless agent-native 2D CAD runtime (DXF)")
     ap.add_argument("--root", help="Workspace root (default: $AGENTCAD_ROOT or cwd); all paths must be inside it")
     ap.add_argument("--read-only", action="store_true", help="Refuse every modification")
+    ap.add_argument("--allow-scripts", action="store_true", help="Enable the 'script' command (agent-written ezdxf scripts)")
     ap.add_argument("--compact", action="store_true", help="Single-line JSON output")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -54,6 +55,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--tag-prefix"); s.add_argument("--ids", help="Comma-separated handles")
     s.add_argument("--limit", type=int, default=200); s.add_argument("--offset", type=int, default=0)
     s.add_argument("--brief", action="store_true")
+    s.add_argument("--layout", help="Model (default), a paper layout name, or * for all")
 
     s = sub.add_parser("apply", help="Apply an operation batch atomically")
     s.add_argument("path"); s.add_argument("--ops"); s.add_argument("--ops-file")
@@ -61,10 +63,16 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--strict", action="store_true", help="Do not save if post-validation fails")
     s.add_argument("--label")
 
+    s = sub.add_parser("script", help="Run an ezdxf script on a drawing as one transaction (needs --allow-scripts)")
+    s.add_argument("path"); s.add_argument("--file", required=True, help="Python file; the drawing is `doc`")
+    s.add_argument("--requirements-file"); s.add_argument("--dry-run", action="store_true")
+    s.add_argument("--strict", action="store_true"); s.add_argument("--label")
+
     s = sub.add_parser("validate", help="Independent validation of the file on disk")
     s.add_argument("path"); s.add_argument("--requirements-file"); s.add_argument("--requirements")
     s.add_argument("--bounds", help="x0,y0,x1,y1"); s.add_argument("--tolerance", type=float, default=1e-6)
     s.add_argument("--no-stored-spec", action="store_true"); s.add_argument("--contour-layers")
+    s.add_argument("--layout", help="Validate this paper-space layout instead of model space")
 
     s = sub.add_parser("draw", help="Generate a drawing from a part spec / plan")
     s.add_argument("--spec", required=True, help="Spec JSON file"); s.add_argument("--output", required=True)
@@ -116,6 +124,8 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
     policy = Policy(**({"root": Path(a.root)} if a.root else {}))
     if a.read_only:
         policy.read_only = True
+    if a.allow_scripts:
+        policy.allow_scripts = True
     if a.cmd == "mcp":
         from .mcp_server import serve_stdio
         serve_stdio(policy)
@@ -133,7 +143,14 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
     elif c == "entities":
         flt = {k: v for k, v in (("type", a.type), ("layer", a.layer), ("tag", a.tag), ("tag_prefix", a.tag_prefix)) if v}
         r = rt.inspect_entities(a.path, filter=flt or None, ids=a.ids.split(",") if a.ids else None,
-                                limit=a.limit, offset=a.offset, detail=not a.brief)
+                                limit=a.limit, offset=a.offset, detail=not a.brief, layout=a.layout)
+    elif c == "script":
+        try:
+            code = Path(a.file).read_text(encoding="utf-8")
+        except OSError as exc:
+            _die(f"cannot read script {a.file}: {exc}")
+        r = rt.run_script(a.path, code, label=a.label, dry_run=a.dry_run, strict=a.strict,
+                          requirements=_json_arg(None, a.requirements_file, "requirements"))
     elif c == "apply":
         ops = _json_arg(a.ops, a.ops_file, "operations")
         if ops is None:
@@ -149,7 +166,8 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
             bounds = [[v[0], v[1]], [v[2], v[3]]]
         r = rt.validate_drawing(a.path, requirements=_json_arg(a.requirements, a.requirements_file, "requirements"),
                                 use_stored_spec=not a.no_stored_spec, bounds=bounds, tolerance=a.tolerance,
-                                contour_layers=a.contour_layers.split(",") if a.contour_layers else None)
+                                contour_layers=a.contour_layers.split(",") if a.contour_layers else None,
+                                layout=a.layout)
     elif c == "draw":
         r = rt.draw_from_spec(_json_arg(None, a.spec, "spec"), a.output, overwrite=a.overwrite, dxf_version=a.dxf_version)
     elif c == "revise":

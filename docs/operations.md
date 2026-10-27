@@ -17,12 +17,14 @@ Angular dimension from vertex 'center' between rays to p1 and p2 (measured CCW f
 | `radius` | length >0 |  |  | Radius of the dimension arc (default: 0.6 x shorter ray) |
 | `text` | string |  |  | Text override; '<>' stands for the measured value |
 | `text_height` | length >0 |  |  | Override text height |
+| `length_factor` | number >0 |  |  | DIMLFAC: displayed value = measured length x factor, e.g. 1/0.325 on a sheet that shows the part at scale 0.325 |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
 | `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
 | `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_diameter_dim`
 
@@ -36,12 +38,14 @@ Diameter dimension of a circle/arc.
 | `angle` | angle |  | 45.0 | Direction of the leader |
 | `text` | string |  |  | Text override; '<>' stands for the measured value |
 | `text_height` | length >0 |  |  | Override text height |
+| `length_factor` | number >0 |  |  | DIMLFAC: displayed value = measured length x factor, e.g. 1/0.325 on a sheet that shows the part at scale 0.325 |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
 | `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
 | `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_leader`
 
@@ -58,6 +62,7 @@ Leader (arrow polyline) with an MTEXT note at the last vertex.
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_linear_dim`
 
@@ -73,12 +78,14 @@ Linear dimension between two points. orientation: horizontal | vertical | aligne
 | `base` | point |  |  | Explicit location of the dimension line |
 | `text` | string |  |  | Text override; '<>' stands for the measured value |
 | `text_height` | length >0 |  |  | Override text height |
+| `length_factor` | number >0 |  |  | DIMLFAC: displayed value = measured length x factor, e.g. 1/0.325 on a sheet that shows the part at scale 0.325 |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
 | `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
 | `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_mtext`
 
@@ -96,6 +103,7 @@ Multi-line text (MTEXT). Use '\P' or newlines for line breaks.
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_radius_dim`
 
@@ -109,12 +117,14 @@ Radius dimension of a circle/arc.
 | `angle` | angle |  | 45.0 | Direction of the leader |
 | `text` | string |  |  | Text override; '<>' stands for the measured value |
 | `text_height` | length >0 |  |  | Override text height |
+| `length_factor` | number >0 |  |  | DIMLFAC: displayed value = measured length x factor, e.g. 1/0.325 on a sheet that shows the part at scale 0.325 |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
 | `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
 | `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_table`
 
@@ -133,6 +143,7 @@ Simple table drawn as grid lines + TEXT. 'insert' is the top-left corner. Cell t
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_text`
 
@@ -151,6 +162,7 @@ Single-line text.
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_title_block`
 
@@ -167,6 +179,7 @@ Insert the standard 180x32 mm title block (ISO-like) with attributes ['TITLE', '
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `set_annotation_scale`
 
@@ -175,6 +188,7 @@ Set the plot scale 1:scale for annotations: dimension arrows/text/gaps (DIMSCALE
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
 | `scale` | number >0 | 是 |  | N of the plot scale 1:N |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ## block
 
@@ -189,6 +203,7 @@ Define (or redefine) a block from a list of draw operations and attribute defini
 | `entities` | list | 是 |  | Draw ops (['add_arc', 'add_circle', 'add_ellipse', 'add_line', 'add_mtext', 'add_point', 'add_polyline', 'add_rectangle', 'add_spline', 'add_text']) in block coordinates |
 | `attributes` | list |  |  | [{tag, insert:[x,y], height, default}] |
 | `if_exists` | enum ['error', 'skip', 'redefine'] |  | error |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `insert_block`
 
@@ -207,6 +222,7 @@ Insert a block reference, filling attributes from 'attributes' {TAG: value}.
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `set_attributes`
 
@@ -216,6 +232,7 @@ Set attribute values of block references.
 |---|---|---|---|---|
 | `target` | selector | 是 |  |  |
 | `values` | object | 是 |  | {TAG: value} |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ## draw
 
@@ -238,6 +255,7 @@ Draw a circular arc, counter-clockwise from start_angle to end_angle (degrees). 
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_circle`
 
@@ -254,6 +272,7 @@ Draw a circle. Give 'radius' or 'diameter'.
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_ellipse`
 
@@ -273,6 +292,7 @@ Draw an ellipse (or elliptical arc) by semi-axes rx, ry and rotation.
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_line`
 
@@ -288,6 +308,7 @@ Draw a straight line segment.
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_point`
 
@@ -302,6 +323,7 @@ Draw a point entity.
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_polyline`
 
@@ -317,6 +339,7 @@ Draw a 2D polyline (LWPOLYLINE). Points may carry a bulge as third value (bulge 
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_rectangle`
 
@@ -336,6 +359,7 @@ Draw an axis-aligned (optionally rotated) rectangle as a closed polyline. Give e
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `add_spline`
 
@@ -351,6 +375,7 @@ Draw a spline through fit points.
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ## edit
 
@@ -365,6 +390,7 @@ Polar array about a center: 'count' items (including the original) over 'total_a
 | `count` | int ≥2 ≤10000 | 是 |  | Total number of items including the original |
 | `total_angle` | angle |  | 360.0 | Angle to fill |
 | `rotate_items` | bool |  | True | Rotate the copies (else only translate) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `array_rect`
 
@@ -377,6 +403,7 @@ Rectangular array: copies arranged in rows and columns (the original is cell [0,
 | `cols` | int ≥1 ≤1000 | 是 |  | Number of columns |
 | `row_spacing` | length |  | 0.0 | Distance between rows (Y) |
 | `col_spacing` | length |  | 0.0 | Distance between columns (X) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `chamfer`
 
@@ -394,6 +421,7 @@ AutoCAD CHAMFER of two LINEs with distances d1 (on line1) and d2 (on line2).
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `copy`
 
@@ -406,6 +434,7 @@ Copy entities by a displacement; 'count' > 1 repeats the displacement cumulative
 | `base` | point |  |  | Base point |
 | `to` | point |  |  | Destination of the base point |
 | `count` | int ≥1 ≤10000 |  | 1 | Number of copies |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `delete`
 
@@ -415,6 +444,7 @@ Erase entities. Deleting more than the policy threshold needs confirm_large=true
 |---|---|---|---|---|
 | `target` | selector | 是 |  | Entities to operate on |
 | `confirm_large` | bool |  | False | Confirm a large deletion |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `explode`
 
@@ -423,6 +453,7 @@ Explode block references (INSERT) or polylines into their component entities.
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
 | `target` | selector | 是 |  | Entities to operate on |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `extend`
 
@@ -433,6 +464,7 @@ AutoCAD EXTEND: lengthen a LINE end until it meets the nearest boundary edge.
 | `target` | selector | 是 |  | Single LINE |
 | `edges` | selector | 是 |  | Boundary edges |
 | `end` | enum ['start', 'end', 'auto'] |  | auto | Which end to extend ('auto' = the end nearer to an intersection) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `fillet`
 
@@ -449,6 +481,7 @@ AutoCAD FILLET of two LINEs: trims/extends both to tangency and adds a tangent A
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `mirror`
 
@@ -460,15 +493,17 @@ Mirror entities about the line p1-p2. Text stays readable (MIRRTEXT=0).
 | `p1` | point | 是 |  | First point of mirror line |
 | `p2` | point | 是 |  | Second point of mirror line |
 | `keep_original` | bool |  | True | Keep the source entities (mirror a copy) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `modify`
 
-Set geometric fields of ONE entity, e.g. {target, set: {radius: 5}} for a circle, {set: {start: [0,0], end: [10,0]}} for a line, {set: {points: [...], closed: true}} for a polyline, {set: {text: 'A'}} for text.
+Set fields of ONE entity, e.g. {target, set: {radius: 5}} for a circle, {set: {start: [0,0], end: [10,0]}} for a line, {set: {points: [...], closed: true}} for a polyline, {set: {text: 'A'}} for text, {set: {text: '4X <>', text_height: 3.5, length_factor: 2}} for a dimension.
 
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
 | `target` | selector | 是 |  | Entities to operate on |
 | `set` | object | 是 |  | Field -> new value |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `move`
 
@@ -480,6 +515,7 @@ Translate entities by a displacement (or from 'base' to 'to').
 | `delta` | point |  |  | Displacement [dx, dy] |
 | `base` | point |  |  | Base point |
 | `to` | point |  |  | Destination of the base point |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `offset`
 
@@ -496,6 +532,7 @@ Create an offset copy of a LINE, CIRCLE, ARC or straight-segment LWPOLYLINE. The
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `rotate`
 
@@ -506,6 +543,7 @@ Rotate entities about a center point (degrees, CCW).
 | `target` | selector | 是 |  | Entities to operate on |
 | `angle` | angle | 是 |  | Rotation angle |
 | `center` | point | 是 |  | Rotation center |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `scale`
 
@@ -516,6 +554,7 @@ Uniformly scale entities about a base point.
 | `target` | selector | 是 |  | Entities to operate on |
 | `factor` | number >0 | 是 |  | Scale factor |
 | `center` | point | 是 |  | Base point |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `set_properties`
 
@@ -529,6 +568,7 @@ Change layer / color / linetype / lineweight / tag of entities.
 | `linetype` | string |  |  |  |
 | `lineweight` | int |  |  |  |
 | `tag` | string |  |  | New tag (only valid for a single entity) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `stretch`
 
@@ -538,6 +578,7 @@ AutoCAD STRETCH with a crossing window: entities entirely inside move; LINE end 
 |---|---|---|---|---|
 | `window` | points | 是 |  | Two opposite corners of the crossing window |
 | `delta` | point | 是 |  | Displacement [dx, dy] |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `trim`
 
@@ -548,6 +589,7 @@ AutoCAD TRIM: remove the part of the target (LINE, ARC or CIRCLE) that contains 
 | `target` | selector | 是 |  | Single LINE / ARC / CIRCLE to trim |
 | `edges` | selector | 是 |  | Cutting edges |
 | `pick` | point | 是 |  | A point on the portion to remove |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ## layer
 
@@ -562,6 +604,7 @@ Create a layer (no-op with if_exists='skip').
 | `linetype` | string |  | Continuous |  |
 | `lineweight` | int |  | -3 | 1/100 mm, -3 = default |
 | `if_exists` | enum ['error', 'skip', 'update'] |  | error |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `delete_layer`
 
@@ -571,6 +614,7 @@ Delete a layer. Fails if entities are on it unless delete_entities=true.
 |---|---|---|---|---|
 | `name` | string | 是 |  |  |
 | `delete_entities` | bool |  | False |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `modify_layer`
 
@@ -586,6 +630,7 @@ Change layer properties (color, linetype, lineweight, on, frozen, locked, rename
 | `frozen` | bool |  |  |  |
 | `locked` | bool |  |  |  |
 | `new_name` | string |  |  |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ## 约束类型
 

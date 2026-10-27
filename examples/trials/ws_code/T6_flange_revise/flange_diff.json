@@ -1,0 +1,301 @@
+{
+  "method": "local Python get_diff using ezdxf",
+  "before": "flange_before.dxf",
+  "after": "flange.dxf",
+  "modelspace": {
+    "modified_count": 9,
+    "added_count": 2,
+    "removed_count": 0,
+    "modified": [
+      {
+        "handle": "98",
+        "type": "CIRCLE",
+        "fields": {
+          "radius": {
+            "before": 55.0,
+            "after": 57.5
+          }
+        }
+      },
+      {
+        "handle": "9B",
+        "type": "CIRCLE",
+        "fields": {
+          "center": {
+            "before": [
+              0.0,
+              55.0,
+              0.0
+            ],
+            "after": [
+              0.0,
+              57.5,
+              0.0
+            ]
+          }
+        }
+      },
+      {
+        "handle": "9C",
+        "type": "CIRCLE",
+        "fields": {
+          "center": {
+            "before": [
+              -47.63139720814412,
+              27.500000000000007,
+              0.0
+            ],
+            "after": [
+              -40.65863991822648,
+              40.658639918226484,
+              0.0
+            ]
+          },
+          "radius": {
+            "before": 6.000000000000001,
+            "after": 6.0
+          }
+        }
+      },
+      {
+        "handle": "9D",
+        "type": "CIRCLE",
+        "fields": {
+          "center": {
+            "before": [
+              -47.63139720814413,
+              -27.49999999999999,
+              0.0
+            ],
+            "after": [
+              -57.5,
+              0.0,
+              0.0
+            ]
+          },
+          "radius": {
+            "before": 5.999999999999999,
+            "after": 6.0
+          }
+        }
+      },
+      {
+        "handle": "9E",
+        "type": "CIRCLE",
+        "fields": {
+          "center": {
+            "before": [
+              -6.735557395310443e-15,
+              -55.0,
+              0.0
+            ],
+            "after": [
+              -40.65863991822649,
+              -40.65863991822648,
+              0.0
+            ]
+          }
+        }
+      },
+      {
+        "handle": "9F",
+        "type": "CIRCLE",
+        "fields": {
+          "center": {
+            "before": [
+              47.631397208144115,
+              -27.500000000000025,
+              0.0
+            ],
+            "after": [
+              0.0,
+              -57.5,
+              0.0
+            ]
+          },
+          "radius": {
+            "before": 6.000000000000001,
+            "after": 6.0
+          }
+        }
+      },
+      {
+        "handle": "A0",
+        "type": "CIRCLE",
+        "fields": {
+          "center": {
+            "before": [
+              47.63139720814412,
+              27.500000000000007,
+              0.0
+            ],
+            "after": [
+              40.65863991822647,
+              -40.65863991822649,
+              0.0
+            ]
+          },
+          "radius": {
+            "before": 6.000000000000001,
+            "after": 6.0
+          }
+        }
+      },
+      {
+        "handle": "BB",
+        "type": "DIMENSION",
+        "fields": {
+          "actual_measurement": {
+            "before": 11.999999999999998,
+            "after": 12.0
+          },
+          "defpoint": {
+            "before": [
+              4.242640687119286,
+              59.242640687119284,
+              0.0
+            ],
+            "after": [
+              4.242640687119286,
+              61.742640687119284,
+              0.0
+            ]
+          },
+          "defpoint4": {
+            "before": [
+              -4.242640687119286,
+              50.757359312880716,
+              0.0
+            ],
+            "after": [
+              -4.242640687119286,
+              53.257359312880716,
+              0.0
+            ]
+          },
+          "geometry": {
+            "before": "*D3",
+            "after": "*D5"
+          },
+          "text": {
+            "before": "6×Ø12",
+            "after": "8×Ø12"
+          },
+          "text_midpoint": {
+            "before": [
+              -14.31891231902759,
+              44.03984489160852,
+              0.0
+            ],
+            "after": [
+              -14.31891231902759,
+              46.53984489160852,
+              0.0
+            ]
+          }
+        },
+        "rendered_text_before": [
+          "6×%%c12"
+        ],
+        "rendered_text_after": [
+          "8×%%c12"
+        ]
+      },
+      {
+        "handle": "C8",
+        "type": "DIMENSION",
+        "fields": {
+          "actual_measurement": {
+            "before": 110.0,
+            "after": 115.0
+          },
+          "defpoint": {
+            "before": [
+              -47.63139720814413,
+              27.499999999999996,
+              0.0
+            ],
+            "after": [
+              -49.79646071760522,
+              28.749999999999996,
+              0.0
+            ]
+          },
+          "defpoint4": {
+            "before": [
+              47.63139720814413,
+              -27.499999999999996,
+              0.0
+            ],
+            "after": [
+              49.79646071760522,
+              -28.749999999999996,
+              0.0
+            ]
+          },
+          "geometry": {
+            "before": "*D4",
+            "after": "*D6"
+          },
+          "text_midpoint": {
+            "before": [
+              57.58740442146157,
+              -30.505689666011953,
+              0.0
+            ],
+            "after": [
+              59.75246793092266,
+              -31.755689666011953,
+              0.0
+            ]
+          }
+        },
+        "rendered_text_before": [
+          "%%c110"
+        ],
+        "rendered_text_after": [
+          "%%c115"
+        ]
+      }
+    ],
+    "added": [
+      {
+        "type": "CIRCLE",
+        "attributes": {
+          "handle": "DD",
+          "owner": "17",
+          "layer": "HOLES",
+          "center": [
+            57.5,
+            0.0,
+            0.0
+          ],
+          "radius": 6.0
+        }
+      },
+      {
+        "type": "CIRCLE",
+        "attributes": {
+          "handle": "DE",
+          "owner": "17",
+          "layer": "HOLES",
+          "center": [
+            40.65863991822649,
+            40.65863991822647,
+            0.0
+          ],
+          "radius": 6.0
+        }
+      }
+    ],
+    "removed": []
+  },
+  "dimension_blocks_removed": [
+    "*D3",
+    "*D4"
+  ],
+  "dimension_blocks_added": [
+    "*D5",
+    "*D6"
+  ]
+}

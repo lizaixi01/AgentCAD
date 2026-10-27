@@ -1,7 +1,7 @@
 # 验收报告（测试 A–H）
 
 运行环境：Windows 11，Python 3.12.10，ezdxf 1.4.5，mcp 1.30.0，Pillow（SVG 导出），LibreOffice portable（仅用于独立导入检查），**AutoCAD 2027**（2026-10-27 起，仅通过无头的 accoreconsole 使用）。
-自动化测试：**116 passed**（完整逐项输出见 [test-results.txt](test-results.txt)）。其中 27 项是 AutoCAD 差分测试（不需要 AutoCAD），5 项是 AutoCAD 实机测试（未安装 AutoCAD 时自动跳过）。演示产物：`python examples/run_demo.py` → `examples/output/`。
+自动化测试：**130 passed**（完整逐项输出见 [test-results.txt](test-results.txt)）。其中 27 项是 AutoCAD 差分测试（不需要 AutoCAD），5 项是 AutoCAD 实机测试（未安装 AutoCAD 时自动跳过）。演示产物：`python examples/run_demo.py` → `examples/output/`。
 
 ## AutoCAD 2027 实机验证（2026-10-27 新增）
 
