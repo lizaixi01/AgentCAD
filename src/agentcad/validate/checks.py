@@ -234,6 +234,79 @@ def annotation_issues(doc: Drawing) -> list[dict[str, Any]]:
     return out
 
 
+MIN_PRINTED_TEXT = 2.5  # mm on paper; ISO 3098 / GB/T 14691 smallest standard character height
+
+
+def _model_text_heights(doc: Drawing):
+    """(handle, kind, height in model units, (x, y)) for text and dimension text in model space."""
+    for e in doc.modelspace():
+        t = e.dxftype()
+        try:
+            if t == "TEXT":
+                yield e.dxf.handle, "text", e.dxf.height, (e.dxf.insert.x, e.dxf.insert.y)
+            elif t == "MTEXT":
+                yield e.dxf.handle, "text", e.dxf.char_height, (e.dxf.insert.x, e.dxf.insert.y)
+            elif t == "INSERT":
+                for a in e.attribs:
+                    if a.dxf.text:
+                        yield a.dxf.handle, "text", a.dxf.height, (a.dxf.insert.x, a.dxf.insert.y)
+            elif t == "DIMENSION":
+                ov = e.override()
+                scale, txt = ov.get("dimscale", 1.0), ov.get("dimtxt", 0.18)
+                if not scale:  # DIMSCALE 0: AutoCAD sizes it to the viewport, always readable
+                    continue
+                p = e.dxf.get("text_midpoint") or e.dxf.get("defpoint")
+                yield e.dxf.handle, "dimension", txt * scale, (p.x, p.y)
+        except Exception:
+            continue
+
+
+def printed_text_issues(doc: Drawing) -> list[dict[str, Any]]:
+    """Text that comes out too small on paper: model text shown through a scaled viewport, and paper text.
+    The H6 trials put a 1:1 drawing with 3.5 mm dimensions behind a 1:2 viewport and printed 1.75 mm text."""
+    from ..model import is_model
+    out = []
+    model_text = None
+    for name in doc.layouts.names_in_taborder():
+        if is_model(name):
+            continue
+        lay = doc.layouts.get(name)
+        for vp in lay.query("VIEWPORT"):
+            vh = vp.dxf.get("view_height", 0) or 0
+            if vp.dxf.get("id", 0) == 1 or vh <= 0 or vp.dxf.get("status", 1) == 0:
+                continue
+            s = vp.dxf.height / vh
+            c = vp.dxf.view_center_point
+            hw, hh = vp.dxf.width / s / 2, vh / 2
+            if model_text is None:
+                model_text = list(_model_text_heights(doc))
+            small = [(h, k, ht) for h, k, ht, (x, y) in model_text
+                     if abs(x - c.x) <= hw and abs(y - c.y) <= hh and 0 < ht * s < MIN_PRINTED_TEXT - 1e-9]
+            if small:
+                lo = min(ht for _, _, ht in small) * s
+                kinds = sorted({k for _, k, _ in small})
+                out.append(issue("PRINTED_TEXT_TOO_SMALL", "warning",
+                                 f"Viewport {vp.dxf.handle} in layout {name!r} shows the model at "
+                                 f"{_ratio(s)}: {len(small)} {'/'.join(kinds)} text(s) print as small as "
+                                 f"{lo:.2f} mm (minimum {MIN_PRINTED_TEXT} mm)", [h for h, _, _ in small][:50],
+                                 layout=name, viewport=vp.dxf.handle, scale=s,
+                                 min_model_height=round(MIN_PRINTED_TEXT / s, 6),
+                                 hint=f"Make model text and dimension text at least {MIN_PRINTED_TEXT / s:g} "
+                                      "(modify text 'height' / dimension 'text_height'), or use a larger "
+                                      "viewport scale"))
+        tiny = [e.dxf.handle for e in lay.query("TEXT MTEXT")
+                if 0 < (e.dxf.height if e.dxftype() == "TEXT" else e.dxf.char_height) < MIN_PRINTED_TEXT - 1e-9]
+        if tiny:
+            out.append(issue("PRINTED_TEXT_TOO_SMALL", "warning",
+                             f"{len(tiny)} text(s) on layout {name!r} are under {MIN_PRINTED_TEXT} mm high on paper",
+                             tiny[:50], layout=name, hint=f"Use a text height of at least {MIN_PRINTED_TEXT} mm"))
+    return out
+
+
+def _ratio(s: float) -> str:
+    return f"1:{1 / s:g}" if s < 1 else f"{s:g}:1"
+
+
 def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = None,
                        tolerance: float = 1e-6, contour_layers: list[str] | None = None) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
@@ -279,6 +352,7 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
                 seen[k] = h
 
     out.extend(annotation_issues(doc))
+    out.extend(printed_text_issues(doc))
 
     # dimensions: stored text / measurement consistent with definition points
     blocks = BlockSnaps(doc)

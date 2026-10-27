@@ -17,16 +17,18 @@
 | `add_point` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_h_operations.py, test_layouts_and_scripts.py, test_security.py |
 | `add_polyline` | draw | test_h_operations.py |
 | `add_radius_dim` | annotate | test_autocad_findings.py, test_h_operations.py |
-| `add_rectangle` | draw | test_autocad_findings.py, test_b_revision.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py |
+| `add_rectangle` | draw | test_autocad_findings.py, test_b_revision.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py, test_layouts_and_scripts.py |
 | `add_spline` | draw | test_h_operations.py |
 | `add_table` | annotate | test_h_operations.py |
 | `add_text` | annotate | test_autocad_findings.py, test_b_revision.py, test_h_operations.py, test_layouts_and_scripts.py |
 | `add_title_block` | annotate | test_autocad_findings.py, test_h_operations.py |
+| `add_viewport` | layout | test_layouts_and_scripts.py |
 | `array_polar` | edit | test_h_operations.py |
 | `array_rect` | edit | test_h_operations.py, test_security.py |
 | `chamfer` | edit | test_h_operations.py |
 | `copy` | edit | test_h_operations.py, test_layouts_and_scripts.py |
 | `create_layer` | layer | test_f_repro_recovery.py, test_h_operations.py |
+| `create_layout` | layout | test_layouts_and_scripts.py |
 | `define_block` | block | test_autocad_findings.py, test_h_operations.py |
 | `delete` | edit | test_f_repro_recovery.py, test_h_operations.py, test_layouts_and_scripts.py, test_security.py |
 | `delete_layer` | layer | test_h_operations.py |
@@ -47,4 +49,4 @@
 | `stretch` | edit | test_b_revision.py, test_h_operations.py |
 | `trim` | edit | test_autocad_findings.py, test_d_errors.py, test_h_operations.py |
 
-共 41 个操作，未被任何测试调用: 无
+共 43 个操作，未被任何测试调用: 无

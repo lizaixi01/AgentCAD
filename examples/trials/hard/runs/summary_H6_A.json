@@ -1,0 +1,38 @@
+[
+ {
+  "arm": "A",
+  "task": "H6",
+  "rep": 1,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 128.3
+   }
+  ],
+  "seconds": 128.3
+ },
+ {
+  "arm": "A",
+  "task": "H6",
+  "rep": 2,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 200.1
+   }
+  ],
+  "seconds": 200.1
+ },
+ {
+  "arm": "A",
+  "task": "H6",
+  "rep": 3,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 130.0
+   }
+  ],
+  "seconds": 130.0
+ }
+]

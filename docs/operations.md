@@ -632,6 +632,41 @@ Change layer properties (color, linetype, lineweight, on, frozen, locked, rename
 | `new_name` | string |  |  |  |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
+## layout
+
+### `add_viewport`
+
+Add a viewport to a paper-space layout (pass layout=<name>) that shows model space at a fixed scale. center/width/height are on the paper in mm; scale is paper mm per model unit (0.5 = 1:2, 2 = 2:1). view_center defaults to the centre of everything in model space; width/height default to the model extents at that scale plus a 5% margin.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `center` | point | 是 |  | Viewport centre on the paper (mm) |
+| `scale` | number >0 | 是 |  | Paper mm per model unit, e.g. 0.5 for 1:2 |
+| `width` | number >0 |  |  | Viewport width on the paper (mm) |
+| `height` | number >0 |  |  | Viewport height on the paper (mm) |
+| `view_center` | point |  |  | Model-space point shown at the viewport centre |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `create_layout`
+
+Create a paper-space layout (a printed sheet) with its paper size. Draw the frame and title block into it with the usual ops and layout=<name>, then show the model with add_viewport.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `name` | string | 是 |  |  |
+| `paper` | enum ['A0', 'A1', 'A2', 'A3', 'A4', 'custom'] |  | A3 |  |
+| `orientation` | enum ['landscape', 'portrait'] |  | landscape |  |
+| `width` | number >0 |  |  | Paper width in mm (paper='custom') |
+| `height` | number >0 |  |  | Paper height in mm (paper='custom') |
+| `if_exists` | enum ['error', 'skip'] |  | error |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
 ## 约束类型
 
 - 可检查: angle, coincident, concentric, diameter, distance, equal, fixed, horizontal, length, parallel, perpendicular, radius, symmetric, tangent, vertical

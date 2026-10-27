@@ -166,3 +166,73 @@ def test_script_timeout(ws):
     name, _ = sheet_drawing(ws)
     e = rt.run_script(name, "while True:\n    pass")["error"]
     assert e["code"] == "SCRIPT_TIMEOUT"
+
+
+# --- printed sheets: create_layout / add_viewport and printed text height ------------------------------------
+
+def plate(ws, name="plate.dxf"):
+    """300 x 160 plate with two 3.5 mm dimensions, like the H6 trial."""
+    doc = ezdxf.new("R2010", setup=True)
+    doc.header["$INSUNITS"] = 4
+    msp = doc.modelspace()
+    msp.add_lwpolyline([(0, 0), (300, 0), (300, 160), (0, 160)], close=True)
+    for base, p2, ang in (((0, -20), (300, 0), 0), ((-20, 0), (0, 160), 90)):
+        msp.add_linear_dim(base=base, p1=(0, 0), p2=p2, angle=ang, override={"dimtxt": 3.5}).render()
+    doc.saveas(ws / name)
+    return name
+
+
+def test_create_layout_and_viewport(rt, ws):
+    name = plate(ws)
+    r = ok(rt.apply_operations(name, [
+        {"op": "create_layout", "name": "A3"},
+        {"op": "add_rectangle", "corner": [25, 5], "width": 390, "height": 287, "layout": "A3"},
+        {"op": "add_viewport", "center": [220, 160], "scale": 0.5, "layout": "A3"}]))
+    vp_res = r["results"][2]
+    assert r["results"][0]["paper"] == [420, 297] and vp_res["shows_all_model"] and vp_res["scale"] == 0.5
+    doc = reread(ws, name)
+    lay = doc.layouts.get("A3")
+    assert (lay.dxf.paper_width, lay.dxf.paper_height) == (A(420), A(297))
+    vp = doc.entitydb[vp_res["created"][0]]
+    assert vp.dxftype() == "VIEWPORT" and vp.dxf.height / vp.dxf.view_height == A(0.5)
+    sheet = next(l for l in ok(rt.read_drawing(name))["layouts"] if l["name"] == "A3")
+    assert sheet["entity_types"]["VIEWPORT"] >= 1
+    # explicit window and portrait paper
+    r = ok(rt.apply_operations(name, [
+        {"op": "create_layout", "name": "A4", "paper": "A4", "orientation": "portrait"},
+        {"op": "add_viewport", "center": [105, 150], "width": 100, "height": 60, "scale": 0.25,
+         "view_center": [150, 80], "layout": "A4"}]))
+    assert r["results"][0]["paper"] == [210, 297] and r["results"][1]["model_window"] == [-50, -40, 350, 200]
+    ok(rt.rollback(name))
+    assert "A4" not in reread(ws, name).layouts
+
+
+@pytest.mark.parametrize("ops, code", [
+    ([{"op": "add_viewport", "center": [0, 0], "scale": 1}], "VIEWPORT_NEEDS_LAYOUT"),
+    ([{"op": "create_layout", "name": "S"}, {"op": "create_layout", "name": "S"}], "LAYOUT_EXISTS"),
+    ([{"op": "create_layout", "name": "S", "paper": "custom", "width": 500}], "MISSING_PARAM"),
+    ([{"op": "create_layout", "name": "Model"}], "INVALID_NAME"),
+])
+def test_sheet_op_errors(rt, ws, ops, code):
+    name = plate(ws)
+    assert rt.apply_operations(name, ops)["error"]["code"] == code
+
+
+def test_printed_text_height(rt, ws):
+    """3.5 mm dimensions behind a 1:2 viewport print at 1.75 mm; nobody noticed in the H6 trials."""
+    name = plate(ws)
+    ok(rt.apply_operations(name, [{"op": "create_layout", "name": "A3"},
+                                  {"op": "add_viewport", "center": [220, 160], "scale": 0.5, "layout": "A3"},
+                                  {"op": "add_text", "text": "NOTE", "insert": [30, 10], "height": 1.8,
+                                   "layout": "A3"}]))
+    v = ok(rt.validate_drawing(name))["validation"]
+    small = [i for i in v["issues"] if i["code"] == "PRINTED_TEXT_TOO_SMALL"]
+    assert len(small) == 2 and v["passed"]                                  # warnings, not errors
+    vp_issue = next(i for i in small if "viewport" in i["details"])
+    assert len(vp_issue["entities"]) == 2 and "1.75 mm" in vp_issue["message"]
+    assert vp_issue["details"]["min_model_height"] == A(5)
+    ok(rt.apply_operations(name, [{"op": "modify", "target": h, "set": {"text_height": 5}}
+                                  for h in vp_issue["entities"]]
+                           + [{"op": "modify", "target": {"type": "TEXT"}, "set": {"height": 2.5}, "layout": "A3"}]))
+    v = ok(rt.validate_drawing(name, layout="A3"))["validation"]
+    assert not [i for i in v["issues"] if i["code"] == "PRINTED_TEXT_TOO_SMALL"]

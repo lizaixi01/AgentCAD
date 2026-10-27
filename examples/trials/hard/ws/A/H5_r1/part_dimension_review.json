@@ -1,0 +1,521 @@
+{
+ "units": "mm",
+ "metadata": {},
+ "entities": [
+  {
+   "id": "8E",
+   "type": "LWPOLYLINE",
+   "layer": "OUTLINE",
+   "points": [
+    [
+     0.0,
+     0.0
+    ],
+    [
+     160.0,
+     0.0
+    ],
+    [
+     160.0,
+     80.0
+    ],
+    [
+     150.0,
+     90.0
+    ],
+    [
+     0.0,
+     90.0
+    ]
+   ],
+   "closed": true
+  },
+  {
+   "id": "8F",
+   "type": "CIRCLE",
+   "layer": "OUTLINE",
+   "center": [
+    25.0,
+    25.0
+   ],
+   "radius": 7.0,
+   "diameter": 14.0
+  },
+  {
+   "id": "90",
+   "type": "LINE",
+   "layer": "CENTER",
+   "start": [
+    14.0,
+    25.0
+   ],
+   "end": [
+    36.0,
+    25.0
+   ],
+   "length": 22.0
+  },
+  {
+   "id": "91",
+   "type": "LINE",
+   "layer": "CENTER",
+   "start": [
+    25.0,
+    14.0
+   ],
+   "end": [
+    25.0,
+    36.0
+   ],
+   "length": 22.0
+  },
+  {
+   "id": "92",
+   "type": "CIRCLE",
+   "layer": "OUTLINE",
+   "center": [
+    135.0,
+    25.0
+   ],
+   "radius": 7.0,
+   "diameter": 14.0
+  },
+  {
+   "id": "93",
+   "type": "LINE",
+   "layer": "CENTER",
+   "start": [
+    124.0,
+    25.0
+   ],
+   "end": [
+    146.0,
+    25.0
+   ],
+   "length": 22.0
+  },
+  {
+   "id": "94",
+   "type": "LINE",
+   "layer": "CENTER",
+   "start": [
+    135.0,
+    14.0
+   ],
+   "end": [
+    135.0,
+    36.0
+   ],
+   "length": 22.0
+  },
+  {
+   "id": "95",
+   "type": "ARC",
+   "layer": "OUTLINE",
+   "center": [
+    66.0,
+    62.0
+   ],
+   "radius": 6.0,
+   "start_angle": 90.0,
+   "end_angle": 270.0
+  },
+  {
+   "id": "96",
+   "type": "ARC",
+   "layer": "OUTLINE",
+   "center": [
+    94.0,
+    62.0
+   ],
+   "radius": 6.0,
+   "start_angle": 270.0,
+   "end_angle": 90.0
+  },
+  {
+   "id": "97",
+   "type": "LINE",
+   "layer": "OUTLINE",
+   "start": [
+    66.0,
+    56.0
+   ],
+   "end": [
+    94.0,
+    56.0
+   ],
+   "length": 28.0
+  },
+  {
+   "id": "98",
+   "type": "LINE",
+   "layer": "OUTLINE",
+   "start": [
+    66.0,
+    68.0
+   ],
+   "end": [
+    94.0,
+    68.0
+   ],
+   "length": 28.0
+  },
+  {
+   "id": "99",
+   "type": "LINE",
+   "layer": "CENTER",
+   "start": [
+    56.0,
+    62.0
+   ],
+   "end": [
+    104.0,
+    62.0
+   ],
+   "length": 48.0
+  },
+  {
+   "id": "9A",
+   "type": "LINE",
+   "layer": "CENTER",
+   "start": [
+    66.0,
+    52.0
+   ],
+   "end": [
+    66.0,
+    72.0
+   ],
+   "length": 20.0
+  },
+  {
+   "id": "9B",
+   "type": "LINE",
+   "layer": "CENTER",
+   "start": [
+    94.0,
+    52.0
+   ],
+   "end": [
+    94.0,
+    72.0
+   ],
+   "length": 20.0
+  },
+  {
+   "id": "9C",
+   "type": "TEXT",
+   "layer": "TEXT",
+   "text": "支架板 SB-160  材料 Q235  厚 8",
+   "insert": [
+    0.0,
+    -40.0
+   ],
+   "height": 5.0,
+   "rotation": 0.0
+  },
+  {
+   "id": "A0",
+   "type": "DIMENSION",
+   "layer": "DIM",
+   "tag": "dim.overall_length",
+   "dimtype": "linear",
+   "text_override": "<>",
+   "defpoints": {
+    "defpoint": [
+     0.0,
+     -24.0
+    ],
+    "defpoint2": [
+     0.0,
+     0.0
+    ],
+    "defpoint3": [
+     160.0,
+     0.0
+    ],
+    "text_midpoint": [
+     80.0,
+     -21.625
+    ]
+   },
+   "angle": 0.0,
+   "measurement": 160.0
+  },
+  {
+   "id": "B0",
+   "type": "DIMENSION",
+   "layer": "DIM",
+   "tag": "dim.overall_height",
+   "dimtype": "linear",
+   "text_override": "<>",
+   "defpoints": {
+    "defpoint": [
+     -34.0,
+     0.0
+    ],
+    "defpoint2": [
+     0.0,
+     0.0
+    ],
+    "defpoint3": [
+     0.0,
+     90.0
+    ],
+    "text_midpoint": [
+     -36.375,
+     45.0
+    ]
+   },
+   "angle": 90.0,
+   "measurement": 90.0
+  },
+  {
+   "id": "BF",
+   "type": "DIMENSION",
+   "layer": "DIM",
+   "tag": "dim.hole_pitch",
+   "dimtype": "linear",
+   "text_override": "<>",
+   "defpoints": {
+    "defpoint": [
+     25.0,
+     -12.0
+    ],
+    "defpoint2": [
+     25.0,
+     25.0
+    ],
+    "defpoint3": [
+     135.0,
+     25.0
+    ],
+    "text_midpoint": [
+     80.0,
+     -9.625
+    ]
+   },
+   "angle": 0.0,
+   "measurement": 110.0
+  },
+  {
+   "id": "CE",
+   "type": "DIMENSION",
+   "layer": "DIM",
+   "tag": "dim.hole_x",
+   "dimtype": "linear",
+   "text_override": "<>",
+   "defpoints": {
+    "defpoint": [
+     0.0,
+     -12.0
+    ],
+    "defpoint2": [
+     0.0,
+     0.0
+    ],
+    "defpoint3": [
+     25.0,
+     25.0
+    ],
+    "text_midpoint": [
+     12.5,
+     -9.625
+    ]
+   },
+   "angle": 0.0,
+   "measurement": 25.0
+  },
+  {
+   "id": "DD",
+   "type": "DIMENSION",
+   "layer": "DIM",
+   "tag": "dim.hole_y",
+   "dimtype": "linear",
+   "text_override": "<>",
+   "defpoints": {
+    "defpoint": [
+     -10.0,
+     0.0
+    ],
+    "defpoint2": [
+     0.0,
+     0.0
+    ],
+    "defpoint3": [
+     25.0,
+     25.0
+    ],
+    "text_midpoint": [
+     -12.375,
+     12.5
+    ]
+   },
+   "angle": 90.0,
+   "measurement": 25.0
+  },
+  {
+   "id": "EC",
+   "type": "DIMENSION",
+   "layer": "DIM",
+   "tag": "dim.holes_diameter",
+   "dimtype": "diameter",
+   "text_override": "2× <>",
+   "defpoints": {
+    "defpoint": [
+     20.050253,
+     29.949747
+    ],
+    "defpoint4": [
+     29.949747,
+     20.050253
+    ],
+    "text_midpoint": [
+     41.263456,
+     12.095301
+    ]
+   },
+   "measurement": 14.0
+  },
+  {
+   "id": "F9",
+   "type": "DIMENSION",
+   "layer": "DIM",
+   "tag": "dim.slot_length",
+   "dimtype": "linear",
+   "text_override": "<>",
+   "defpoints": {
+    "defpoint": [
+     60.0,
+     102.0
+    ],
+    "defpoint2": [
+     60.0,
+     62.0
+    ],
+    "defpoint3": [
+     100.0,
+     62.0
+    ],
+    "text_midpoint": [
+     80.0,
+     104.375
+    ]
+   },
+   "angle": 0.0,
+   "measurement": 40.0
+  },
+  {
+   "id": "108",
+   "type": "DIMENSION",
+   "layer": "DIM",
+   "tag": "dim.slot_width",
+   "dimtype": "linear",
+   "text_override": "<>",
+   "defpoints": {
+    "defpoint": [
+     112.0,
+     56.0
+    ],
+    "defpoint2": [
+     94.0,
+     56.0
+    ],
+    "defpoint3": [
+     94.0,
+     68.0
+    ],
+    "text_midpoint": [
+     109.625,
+     62.0
+    ]
+   },
+   "angle": 90.0,
+   "measurement": 12.0
+  },
+  {
+   "id": "117",
+   "type": "DIMENSION",
+   "layer": "DIM",
+   "tag": "dim.slot_x",
+   "dimtype": "linear",
+   "text_override": "<>",
+   "defpoints": {
+    "defpoint": [
+     0.0,
+     114.0
+    ],
+    "defpoint2": [
+     0.0,
+     90.0
+    ],
+    "defpoint3": [
+     60.0,
+     62.0
+    ],
+    "text_midpoint": [
+     30.0,
+     116.375
+    ]
+   },
+   "angle": 0.0,
+   "measurement": 60.0
+  },
+  {
+   "id": "126",
+   "type": "DIMENSION",
+   "layer": "DIM",
+   "tag": "dim.slot_y",
+   "dimtype": "linear",
+   "text_override": "<>",
+   "defpoints": {
+    "defpoint": [
+     -22.0,
+     0.0
+    ],
+    "defpoint2": [
+     0.0,
+     0.0
+    ],
+    "defpoint3": [
+     60.0,
+     62.0
+    ],
+    "text_midpoint": [
+     -24.375,
+     31.0
+    ]
+   },
+   "angle": 90.0,
+   "measurement": 62.0
+  },
+  {
+   "id": "135",
+   "type": "DIMENSION",
+   "layer": "DIM",
+   "tag": "dim.chamfer",
+   "dimtype": "linear",
+   "text_override": "<>×45%%d",
+   "defpoints": {
+    "defpoint": [
+     150.0,
+     102.0
+    ],
+    "defpoint2": [
+     150.0,
+     90.0
+    ],
+    "defpoint3": [
+     160.0,
+     80.0
+    ],
+    "text_midpoint": [
+     155.0,
+     105.625
+    ]
+   },
+   "angle": 0.0,
+   "measurement": 10.0
+  }
+ ]
+}

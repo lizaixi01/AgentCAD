@@ -1,8 +1,9 @@
 """Neutral grading of the hard tasks (plain ezdxf plus AutoCAD only for DWG->DXF conversion and AUDIT).
 
-    python examples/trials/hard/grade_hard.py <A workspaces> <B workspaces>      (run from PowerShell/cmd)
+    python examples/trials/hard/grade_hard.py <A workspaces> <B workspaces> [task ...]   (run from PowerShell/cmd)
 
-Writes examples/trials/hard/grades.json and prints one line per (task, arm, rep).
+Writes examples/trials/hard/grades.json (or grades_<tasks>.json when tasks are given) and prints one line per
+(task, arm, rep). H4-H6 are graded by grade_hard2.py.
 """
 from __future__ import annotations
 
@@ -21,6 +22,7 @@ sys.path.insert(0, str(HERE.parents[2] / "src"))
 sys.path.insert(0, str(HERE.parent))
 from grade import Drawing, check, polar  # noqa: E402
 from summarize_run import summarize  # noqa: E402
+from grade_hard2 import grade_h4, grade_h5, grade_h6  # noqa: E402
 
 SAMPLE = Path(r"D:\Apps\AutoCAD\AutoCAD 2027\Sample\Sheet Sets\Manufacturing\VW252-02-0142.dwg")
 JOBS = Path(tempfile.mkdtemp(prefix="gradehard"))
@@ -234,10 +236,12 @@ def cost(arm: str, task: str, rep: int) -> dict:
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")
     roots = {"A": Path(sys.argv[1]), "B": Path(sys.argv[2])}
+    only = set(sys.argv[3:])
     ref = JOBS / "reference.dxf"
-    dwg_to_dxf(SAMPLE, ref)
+    if not only or "H2" in only:
+        dwg_to_dxf(SAMPLE, ref)
     summary = [s for f in sorted((HERE / "runs").glob("summary_*.json"))
-               for s in json.loads(f.read_text(encoding="utf-8"))]
+               for s in json.loads(f.read_text(encoding="utf-8")) if not only or s["task"] in only]
     secs = {(s["arm"], s["task"], s["rep"]): s["seconds"] for s in summary}
     out = []
     for (arm, task, rep) in sorted(secs):
@@ -249,6 +253,9 @@ def main() -> None:
         elif task == "H2":
             g = grade_h2(ws, ref)
             ok = g["ok"]
+        elif task in ("H4", "H5", "H6"):
+            g = {"H4": grade_h4, "H5": grade_h5, "H6": grade_h6}[task](ws)
+            ok = g["ok"]
         else:
             g = grade_h3(ws, c["final"])
             ok = g["ok"]
@@ -259,11 +266,13 @@ def main() -> None:
                   "fails": {n: r.get("fails", r.get("error")) for n, r in g["rounds"].items() if not r.get("ok")}}
                  if task == "H1" else
                  {k: v for k, v in g.items() if k not in ("files",)} if task == "H2" else
+                 {"fails": g["fails"]} if task in ("H4", "H5", "H6") else
                  {"valid_ok": f"{g['valid_ok']}/{g['valid_total']}", "invalid_handled": g["invalid_handled"],
                   "fails": {p: f.get("fails", f.get("error")) for p, f in g["files"].items() if not f["ok"]}})
         print(json.dumps({"task": task, "arm": arm, "rep": rep, "ok": ok, "s": row["seconds"], **brief,
                           "cost": row["cost"]}, ensure_ascii=False), flush=True)
-    (HERE / "grades.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+    name = f"grades_{'-'.join(sorted(only))}.json" if only else "grades.json"
+    (HERE / name).write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
 if __name__ == "__main__":

@@ -148,7 +148,7 @@ agentcad --root work create bracket.dxf --units mm
 | `"tag:hole.left"` | 带该标签的实体 |
 | `"$1"` | 本批第 1 步（从 0 数）创建的实体 |
 
-长度可以带单位，例如 `"diameter": "0.5in"`，会换算成图纸单位。全部 41 个操作及参数见 [operations.md](operations.md)，也可以运行 `agentcad ops` 获取（带 JSON Schema）。
+长度可以带单位，例如 `"diameter": "0.5in"`，会换算成图纸单位。全部 43 个操作及参数见 [operations.md](operations.md)，也可以运行 `agentcad ops` 获取（带 JSON Schema）。
 
 要求文件 `bracket_req.json`，写你希望成品满足的条件：
 
@@ -456,6 +456,7 @@ curl -X POST localhost:8765/v1/validate_drawing -H "Content-Type: application/js
 | 直径标注显示成 "ØØ12" | 标注文字里的 `<>` 已经带 Ø / R 前缀，写 `4X <>` 即可，不要写 `Ø<>`。验证器会报 `DIMENSION_DOUBLE_PREFIX`。 |
 | 想看图纸实际出图效果 | 装有 AutoCAD 时：`python examples/trials/render_png.py 输出目录 图纸.dxf`（在 PowerShell 中运行），用 AutoCAD 打印成 PNG。 |
 | 真实图纸改完后，打印出来的图纸还是旧的 | 很多真实图纸有打印用的图纸空间布局，里面有零件的缩放副本。`read_drawing` 的 `layouts` 会列出它们，`validate` 会用 `LAYOUT_NOT_VALIDATED` 提醒。操作加 `"layout": "布局名"` 即可在布局里编辑，`validate --layout 布局名` 检查它。 |
+| 要出一张打印用的图纸（A3 图框 + 1:2 视口） | `{"op": "create_layout", "name": "A3"}` 新建布局；图框、标题栏用普通绘图操作加 `"layout": "A3"`；`{"op": "add_viewport", "layout": "A3", "center": [220, 160], "scale": 0.5}` 开 1:2 视口。验证器的 `PRINTED_TEXT_TOO_SMALL` 会提醒缩小后字太小（例如 3.5 mm 标注在 1:2 下只有 1.75 mm）。 |
 | 操作目录里没有我要的编辑 | 用 `agentcad --allow-scripts --root work script 图纸.dxf --file 脚本.py`（MCP 工具 `run_script`，需 `AGENTCAD_ALLOW_SCRIPTS=1`）。脚本里图纸叫 `doc`，原地修改即可；它和批量操作一样有检查点、diff、校验，可以 `rollback`。默认关闭，只对你信任的 Agent 开启。 |
 | 想看某个操作有哪些参数 | `agentcad ops`，或查看 [operations.md](operations.md)。参数写错时错误信息的 `hint` 里也会列出。 |
 | 想看完整演示 | `python examples/run_demo.py`，输出在 `examples/output/`。 |

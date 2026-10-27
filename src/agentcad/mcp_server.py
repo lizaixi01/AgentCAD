@@ -19,7 +19,8 @@ Coordinates are [x, y] in drawing units; lengths may be strings with units ("8mm
 Every result has ok + structured error {code, category, message, entities, retryable, hint, partial_changes}.
 A failed batch never modifies the file (partial_changes=false).
 Real drawings often have paper-space layouts (printed sheets, read_drawing.layouts) with their own copy of the part:
-edit and validate them too, using the 'layout' parameter. run_script (if enabled) covers edits no op can express."""
+edit and validate them too, using the 'layout' parameter. New sheets: create_layout, then add_viewport.
+run_script (if enabled) covers edits no op can express."""
 
 Path_ = Annotated[str, Field(description="Drawing path (.dxf), relative to the workspace root")]
 

@@ -92,9 +92,9 @@ ezdxf (DXF 内核)
 
 `validate_file(path)` 自己从磁盘读取文件（解析失败本身就是一项结果），不使用生成过程中的任何对象：
 
-- **通用检查**：`$INSUNITS` 是否明确；零长度、零半径、非有限坐标、少于 2 个顶点；引用了未定义的块或图层；重复实体（几何规范化后比较，线段方向无关，标注考虑方向）；标注文字与重新测量值矛盾；group 42 与定义点不一致（`DIMENSION_STALE`）；标注锚点没有落在任何几何上（`DIMENSION_NOT_ATTACHED`）；指定图层上存在开口轮廓；超出给定边界；ezdxf audit 错误。出图可读性（来自 AutoCAD 出图复核，见 [trials-report.md](trials-report.md)）：标注文字重复 Ø/R 前缀（`DIMENSION_DOUBLE_PREFIX`）、中文用了无大字体的 SHX 字体（`TEXT_GLYPHS_MISSING`）、箭头相对标注长度过小（`ANNOTATION_TOO_SMALL`）。标注附着检查接受顶点、圆/弧、与测量方向相交的边，以及块参照内的几何；含外部参照的图纸不做附着检查。
+- **通用检查**：`$INSUNITS` 是否明确；零长度、零半径、非有限坐标、少于 2 个顶点；引用了未定义的块或图层；重复实体（几何规范化后比较，线段方向无关，标注考虑方向）；标注文字与重新测量值矛盾；group 42 与定义点不一致（`DIMENSION_STALE`）；标注锚点没有落在任何几何上（`DIMENSION_NOT_ATTACHED`）；指定图层上存在开口轮廓；超出给定边界；ezdxf audit 错误。出图可读性（来自 AutoCAD 出图复核，见 [trials-report.md](trials-report.md)）：标注文字重复 Ø/R 前缀（`DIMENSION_DOUBLE_PREFIX`）、中文用了无大字体的 SHX 字体（`TEXT_GLYPHS_MISSING`）、箭头相对标注长度过小（`ANNOTATION_TOO_SMALL`）、打印到纸上的字高小于 2.5 mm（`PRINTED_TEXT_TOO_SMALL`：模型里的文字和标注文字按各视口的比例换算，图纸空间文字直接比较）。标注附着检查接受顶点、圆/弧、与测量方向相交的边，以及块参照内的几何；含外部参照的图纸不做附着检查。
 - **特征识别**：闭合多段线，以及 LINE/ARC 首尾相接形成的环 → 轮廓；轮廓内的圆 → 孔；标注 → 类型和实测值。
-- **布局**：默认检查模型空间；`layout` 参数可以改为检查某个图纸布局。没有检查到的布局如果含有图形，会以 `LAYOUT_NOT_VALIDATED` 警告报告，并在 `coverage` 中列出（真实图纸的打印布局常常有一份零件的缩放副本，只改模型空间会交付自相矛盾的图纸）。标注值按显示值（乘以 DIMLFAC）比较。
+- **布局**：默认检查模型空间；`layout` 参数可以改为检查某个图纸布局。没有检查到的布局如果含有图形，会以 `LAYOUT_NOT_VALIDATED` 警告报告，并在 `coverage` 中列出（真实图纸的打印布局常常有一份零件的缩放副本，只改模型空间会交付自相矛盾的图纸）。标注值按显示值（乘以 DIMLFAC）比较。新建出图布局用 `create_layout`（纸张 A0–A4 或自定义，图纸空间单位为 mm），再用 `add_viewport` 按固定比例开视口（默认显示模型空间全部内容，返回实际显示的模型窗口和是否完整显示）。
 - **需求检查**：`outline`、`hole`（位置相对轮廓左下角）、`hole_count`（可按直径分组）、`dimension`（可用 `tag` 指定实体）、`entity_count`、`text`、`within_bounds`。每项给出 expected、actual、deviation、tolerance 和相关实体；需求来自文档时还附带文档来源。需求里的未知字段不会被静默忽略，而是返回 `warnings`。
 
 ## 约束

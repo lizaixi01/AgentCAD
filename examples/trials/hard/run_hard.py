@@ -7,6 +7,8 @@ Units of work = (arm, task, rep):
       After each round the drawing is copied to snapshots/ (outside the workspace, invisible to the agent).
   H2  edit a real AutoCAD sample DWG (VW252-02-0142) and deliver a DWG.
   H3  batch: 12 flange drawings from a table, two rows geometrically invalid.
+  H4  clean up a messy drawing onto a layer standard; H5 dimension an undimensioned part;
+  H6  make an A3 print sheet with a 1:2 viewport (bases in bases2.py).
 Arm A ("agentcad"): Codex with only the AgentCAD MCP server, read-only sandbox.
 Arm B ("code"): Codex writing Python with plain ezdxf, workspace outside the repo, workspace-write sandbox.
   AutoCAD does not start inside that sandbox, so for H2 the runner converts the DWG to DXF with AutoCAD before
@@ -33,6 +35,11 @@ PY = REPO / ".venv" / "Scripts" / "python.exe"
 SAMPLE = Path(r"D:\Apps\AutoCAD\AutoCAD 2027\Sample\Sheet Sets\Manufacturing\VW252-02-0142.dwg")
 TASKS = HERE / "tasks"
 sys.path.insert(0, str(REPO / "src"))
+from bases2 import make_h4_base, make_h5_base, make_h6_base  # noqa: E402
+
+SINGLE = {"H4": ("H4_cleanup.md", make_h4_base), "H5": ("H5_dimension.md", make_h5_base),
+          "H6": ("H6_sheet.md", make_h6_base)}
+ALLOW_SCRIPTS = False   # --allow-scripts: arm A's runtime gets AGENTCAD_ALLOW_SCRIPTS=1 (run_script on)
 
 
 def make_h1_base(path: Path) -> None:
@@ -99,7 +106,8 @@ def codex(arm: str, task: str, ws: Path, prompt: str, log: Path) -> dict:
                "-c", 'model_reasoning_effort="high"',
                "-c", f'mcp_servers.agentcad.command="{PY.as_posix()}"',
                "-c", 'mcp_servers.agentcad.args=["-m","agentcad.mcp_server"]',
-               "-c", f'mcp_servers.agentcad.env={{AGENTCAD_ROOT="{root}"}}',
+               "-c", f'mcp_servers.agentcad.env={{AGENTCAD_ROOT="{root}"'
+                     + (', AGENTCAD_ALLOW_SCRIPTS="1"' if ALLOW_SCRIPTS else "") + "}",
                "-c", 'mcp_servers.agentcad.default_tools_approval_mode="approve"',
                "-c", "mcp_servers.agentcad.tool_timeout_sec=300", "-"]
     else:
@@ -134,6 +142,11 @@ def unit(arm: str, task: str, rep: int, a_root: Path, b_root: Path, b_python: st
             if (ws / "part.dxf").is_file():
                 shutil.copyfile(ws / "part.dxf", snaps / f"round{n}.dxf")
             res["rounds"].append(r)
+    elif task in SINGLE:
+        name, make = SINGLE[task]
+        make(ws / "part.dxf")
+        res["rounds"].append(codex(arm, task, ws, pre + (TASKS / name).read_text(encoding="utf-8"),
+                                   logs / f"{task}_r{rep}.jsonl"))
     else:
         name = "H3_batch.md"
         if task == "H2" and arm == "A":
@@ -170,7 +183,10 @@ def main() -> None:
     ap.add_argument("--a-root", type=Path, default=HERE / "ws" / "A")
     ap.add_argument("--b-root", type=Path, required=True, help="Arm B workspaces, outside the repository")
     ap.add_argument("--b-python", required=True, help="Python with plain ezdxf only")
+    ap.add_argument("--allow-scripts", action="store_true", help="enable run_script for arm A")
     a = ap.parse_args()
+    global ALLOW_SCRIPTS
+    ALLOW_SCRIPTS = a.allow_scripts
     units = [(arm, t, r) for r in range(1, a.reps + 1) for t in a.tasks for arm in a.arms]
     # H1 units are the longest (five sessions each): start them first
     units.sort(key=lambda u: u[1] != "H1")

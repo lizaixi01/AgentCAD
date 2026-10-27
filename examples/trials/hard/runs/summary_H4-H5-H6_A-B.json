@@ -1,0 +1,218 @@
+[
+ {
+  "arm": "A",
+  "task": "H4",
+  "rep": 1,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 97.9
+   }
+  ],
+  "seconds": 97.9
+ },
+ {
+  "arm": "B",
+  "task": "H4",
+  "rep": 1,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 309.1
+   }
+  ],
+  "seconds": 309.1
+ },
+ {
+  "arm": "A",
+  "task": "H5",
+  "rep": 1,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 148.1
+   }
+  ],
+  "seconds": 148.1
+ },
+ {
+  "arm": "B",
+  "task": "H5",
+  "rep": 1,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 440.7
+   }
+  ],
+  "seconds": 440.7
+ },
+ {
+  "arm": "A",
+  "task": "H6",
+  "rep": 1,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 104.1
+   }
+  ],
+  "seconds": 104.1
+ },
+ {
+  "arm": "B",
+  "task": "H6",
+  "rep": 1,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 267.3
+   }
+  ],
+  "seconds": 267.3
+ },
+ {
+  "arm": "A",
+  "task": "H4",
+  "rep": 2,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 86.3
+   }
+  ],
+  "seconds": 86.3
+ },
+ {
+  "arm": "B",
+  "task": "H4",
+  "rep": 2,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 154.9
+   }
+  ],
+  "seconds": 154.9
+ },
+ {
+  "arm": "A",
+  "task": "H5",
+  "rep": 2,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 157.7
+   }
+  ],
+  "seconds": 157.7
+ },
+ {
+  "arm": "B",
+  "task": "H5",
+  "rep": 2,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 376.8
+   }
+  ],
+  "seconds": 376.8
+ },
+ {
+  "arm": "A",
+  "task": "H6",
+  "rep": 2,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 93.2
+   }
+  ],
+  "seconds": 93.2
+ },
+ {
+  "arm": "B",
+  "task": "H6",
+  "rep": 2,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 220.8
+   }
+  ],
+  "seconds": 220.8
+ },
+ {
+  "arm": "A",
+  "task": "H4",
+  "rep": 3,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 77.9
+   }
+  ],
+  "seconds": 77.9
+ },
+ {
+  "arm": "B",
+  "task": "H4",
+  "rep": 3,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 171.4
+   }
+  ],
+  "seconds": 171.4
+ },
+ {
+  "arm": "A",
+  "task": "H5",
+  "rep": 3,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 141.6
+   }
+  ],
+  "seconds": 141.6
+ },
+ {
+  "arm": "B",
+  "task": "H5",
+  "rep": 3,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 361.2
+   }
+  ],
+  "seconds": 361.2
+ },
+ {
+  "arm": "A",
+  "task": "H6",
+  "rep": 3,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 73.8
+   }
+  ],
+  "seconds": 73.8
+ },
+ {
+  "arm": "B",
+  "task": "H6",
+  "rep": 3,
+  "rounds": [
+   {
+    "exit": 0,
+    "seconds": 152.0
+   }
+  ],
+  "seconds": 152.0
+ }
+]
