@@ -1816,8 +1816,186 @@ def action_read_shape(job):
     return {"shape": readback(job["input"])}
 
 
+# --- preview rendering -----------------------------------------------------------------------------------------
+# FreeCAD without its GUI cannot render offscreen, so previews are rasterised here: OCC tessellation, parallel
+# projection, a z-buffer in numpy, flat shading from a light near the viewer, and the B-rep edges drawn on top.
+
+NAMED_VIEWS = {"iso": (1, -1, 1), "front": (0, -1, 0), "back": (0, 1, 0), "right": (1, 0, 0), "left": (-1, 0, 0),
+               "top": (0, 0, 1), "bottom": (0, 0, -1), "iso_back": (-1, 1, 1), "iso_bottom": (1, -1, -1)}
+FACE_RGB = (176, 188, 206)
+EDGE_RGB = (35, 38, 45)
+
+
+def _view(v, name):
+    if isinstance(v, str):
+        if v not in NAMED_VIEWS:
+            raise OpError("BAD_VIEW", f"{name}: unknown view {v!r}", hint=f"Views: {sorted(NAMED_VIEWS)} or [x, y, z]")
+        return v, V(*NAMED_VIEWS[v])
+    if isinstance(v, (list, tuple)) and len(v) == 3 and all(isinstance(c, (int, float)) for c in v):
+        d = V(*[float(c) for c in v])
+        if d.Length < TOL:
+            raise OpError("BAD_VIEW", f"{name}: zero direction")
+        return "[" + ",".join(f"{c:g}" for c in v) + "]", d
+    raise OpError("BAD_VIEW", f"{name}: expected a view name or [x, y, z] (direction from the part to the camera)")
+
+
+def _camera(d):
+    import numpy as np
+    d = np.array([d.x, d.y, d.z], float)
+    d /= np.linalg.norm(d)
+    up = np.array([0.0, 0.0, 1.0]) if abs(d[2]) < 0.99 else np.array([0.0, 1.0, 0.0])
+    right = np.cross(up, d)
+    right /= np.linalg.norm(right)
+    return right, np.cross(d, right), d  # screen x, screen y, towards the camera
+
+
+def render_view(sh, d, size, fit, ss=2):
+    import numpy as np
+    right, up, fwd = _camera(d)
+    bb = sh.BoundBox
+    corners = np.array([[x, y, z] for x in (bb.XMin, bb.XMax) for y in (bb.YMin, bb.YMax) for z in (bb.ZMin, bb.ZMax)])
+    centre = corners.mean(axis=0)
+    if fit == "uniform":  # the same scale in every view: the bounding box's diagonal spans the frame
+        span = float(np.linalg.norm(corners.max(axis=0) - corners.min(axis=0)))
+    else:  # this view's projection of the bounding box fills the frame
+        q = (corners - centre) @ np.stack([right, up]).T
+        span = float(max(np.ptp(q[:, 0]), np.ptp(q[:, 1])))
+    n = size * ss
+    k = n * 0.9 / max(span, 1e-9)
+
+    def project(P):
+        R = P - centre
+        return R @ right * k + n / 2, n / 2 - R @ up * k, R @ fwd
+
+    pts, tris = sh.tessellate(max(span, 1e-9) / 400)
+    P = np.array([[p.x, p.y, p.z] for p in pts], float)
+    T = np.array(tris, int).reshape(-1, 3)
+    X, Y, Z = project(P)
+    img = np.empty((n, n, 3), float)
+    img[:] = 255
+    zb = np.full((n, n), -np.inf)
+    light = fwd + 0.35 * up + 0.25 * right
+    light /= np.linalg.norm(light)
+    nrm = np.cross(P[T[:, 1]] - P[T[:, 0]], P[T[:, 2]] - P[T[:, 0]])
+    ln = np.linalg.norm(nrm, axis=1)
+    nrm = nrm / np.where(ln > 0, ln, 1)[:, None]
+    shade = 0.28 + 0.72 * np.abs(nrm @ light)
+    base = np.array(FACE_RGB, float)
+    for t, sv in zip(T, shade):
+        x, y, z = X[t], Y[t], Z[t]
+        x0, x1 = max(int(np.floor(x.min())), 0), min(int(np.ceil(x.max())), n - 1)
+        y0, y1 = max(int(np.floor(y.min())), 0), min(int(np.ceil(y.max())), n - 1)
+        if x0 > x1 or y0 > y1:
+            continue
+        area = (x[1] - x[0]) * (y[2] - y[0]) - (x[2] - x[0]) * (y[1] - y[0])
+        if abs(area) < 1e-12:
+            continue
+        gx, gy = np.meshgrid(np.arange(x0, x1 + 1) + 0.5, np.arange(y0, y1 + 1) + 0.5)
+        w0 = ((x[1] - gx) * (y[2] - gy) - (x[2] - gx) * (y[1] - gy)) / area
+        w1 = ((x[2] - gx) * (y[0] - gy) - (x[0] - gx) * (y[2] - gy)) / area
+        w2 = 1 - w0 - w1
+        inside = (w0 >= -1e-9) & (w1 >= -1e-9) & (w2 >= -1e-9)
+        if not inside.any():
+            continue
+        zz = w0 * z[0] + w1 * z[1] + w2 * z[2]
+        sub = zb[y0:y1 + 1, x0:x1 + 1]
+        win = inside & (zz > sub)
+        sub[win] = zz[win]
+        img[y0:y1 + 1, x0:x1 + 1][win] = base * sv
+    eps = 2.5 * ss / k  # depth slack: an edge on a visible face is drawn, one behind the solid is not
+    for e in sh.Edges:
+        if _is_seam(sh, e):  # a cylinder's parametric seam is not an edge anyone would draw
+            continue
+        pe = np.array([[q.x, q.y, q.z] for q in e.discretize(Deflection=max(span, 1e-9) / 800)], float)
+        if len(pe) < 2:
+            continue
+        ex, ey, ez = project(pe)
+        for i in range(len(pe) - 1):
+            m = int(max(abs(ex[i + 1] - ex[i]), abs(ey[i + 1] - ey[i])) * 2) + 2
+            tt = np.linspace(0, 1, m)
+            lx = np.round(ex[i] + (ex[i + 1] - ex[i]) * tt - 0.5).astype(int)
+            ly = np.round(ey[i] + (ey[i + 1] - ey[i]) * tt - 0.5).astype(int)
+            lz = ez[i] + (ez[i + 1] - ez[i]) * tt
+            ok = (lx >= 0) & (lx < n) & (ly >= 0) & (ly < n)
+            lx, ly, lz = lx[ok], ly[ok], lz[ok]
+            vis = lz >= zb[ly, lx] - eps
+            for ox in range(ss):  # line width: one output pixel
+                for oy in range(ss):
+                    xx, yy = np.clip(lx[vis] + ox - ss // 2, 0, n - 1), np.clip(ly[vis] + oy - ss // 2, 0, n - 1)
+                    img[yy, xx] = EDGE_RGB
+    return img
+
+
+def _downsample(img, ss):
+    n = img.shape[0] // ss
+    return img.reshape(n, ss, n, ss, 3).mean(axis=(1, 3))
+
+
+def _save_png(arr, path, labels=None):
+    import numpy as np
+    a = np.clip(arr, 0, 255).astype("uint8")
+    try:
+        from PIL import Image, ImageDraw
+    except ImportError:  # plain interpreters (FREECAD_LIB): write the PNG by hand, without labels
+        import struct
+        import zlib
+        h, w = a.shape[:2]
+        raw = b"".join(b"\x00" + a[r].tobytes() for r in range(h))
+
+        def chunk(tag, data):
+            return struct.pack(">I", len(data)) + tag + data + struct.pack(">I", zlib.crc32(tag + data) & 0xFFFFFFFF)
+
+        Path(path).write_bytes(b"\x89PNG\r\n\x1a\n" + chunk(b"IHDR", struct.pack(">IIBBBBB", w, h, 8, 2, 0, 0, 0))
+                               + chunk(b"IDAT", zlib.compress(raw, 9)) + chunk(b"IEND", b""))
+        return
+    im = Image.fromarray(a, "RGB")
+    if labels:
+        dr = ImageDraw.Draw(im)
+        for (x, y), text in labels:
+            dr.text((x + 6, y + 4), text, fill=(90, 90, 90))
+    im.save(path)
+
+
+def action_render(job):
+    import numpy as np
+    doc = App.openDocument(job["input"])
+    doc.recompute()
+    body = next((o for o in doc.Objects if o.TypeId == "PartDesign::Body" and not o.Shape.isNull()), None)
+    if body is None:
+        raise OpError("NO_SOLID", "Nothing to render: the part has no solid", category="geometry")
+    views = job.get("views") or ["iso"]
+    if not isinstance(views, list) or not 1 <= len(views) <= 9:
+        raise OpError("BAD_VIEW", "views: a list of 1 to 9 views")
+    views = [_view(v, f"views[{i}]") for i, v in enumerate(views)]
+    size = int(job.get("size") or 512)
+    if not 64 <= size <= 2048:
+        raise OpError("OUT_OF_RANGE", "image_size must be 64..2048 pixels")
+    fit = job.get("fit") or "view"
+    if fit not in ("view", "uniform"):
+        raise OpError("BAD_VALUE", "fit must be 'view' or 'uniform'")
+    imgs = [_downsample(render_view(body.Shape, d, size, fit), 2) for _, d in views]
+    names = [nm for nm, _ in views]
+    if len(imgs) > 1:  # several views: one sheet, two or three per row, each cell labelled
+        cols = 2 if len(imgs) <= 4 else 3
+        rows = -(-len(imgs) // cols)
+        sheet = np.full((rows * size, cols * size, 3), 255.0)
+        labels = []
+        for i, im in enumerate(imgs):
+            r, c = divmod(i, cols)
+            sheet[r * size:(r + 1) * size, c * size:(c + 1) * size] = im
+            labels.append(((c * size, r * size), names[i]))
+        sheet[:, [c * size for c in range(1, cols)]] = 200  # cell borders
+        sheet[[r * size for r in range(1, rows)], :] = 200
+        _save_png(sheet, job["output"], labels)
+        grid = [rows, cols]
+    else:
+        _save_png(imgs[0], job["output"])
+        grid = [1, 1]
+    return {"views": names, "grid": grid, "cell_size": size, "fit": fit, "shape": shape_summary(body.Shape)}
+
+
 ACTIONS = {"apply": action_apply, "summary": action_summary, "validate": action_validate,
-           "read_shape": action_read_shape,
+           "read_shape": action_read_shape, "render": action_render,
            "topology": action_topology, "export": action_export}
 
 

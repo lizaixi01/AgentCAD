@@ -812,7 +812,8 @@ class Runtime:
     def export_drawing(self, path: str, output: str, format: str = "dxf",  # noqa: A002
                        dxf_version: str | None = None, overwrite: bool = False, layout: str | None = None,
                        paper: str | None = None, scale: float | None = None, orientation: str = "auto",
-                       monochrome: bool = False) -> dict[str, Any]:
+                       monochrome: bool = False, views: list | None = None, image_size: int | None = None,
+                       fit: str | None = None) -> dict[str, Any]:
         """Export to dxf (optionally another DXF version, incl. R12 via ezdxf.addons.r12export), svg, json,
         pdf, or dwg (optional AutoCAD backend; ``dxf_version`` then selects the DWG release, default 2018).
 
@@ -821,9 +822,12 @@ class Runtime:
         their page setup; model space at ``scale`` (paper mm per drawing unit) or the largest standard scale that
         fits ``paper`` (A0-A4 or 'auto').
 
-        3D parts (.FCStd): step, iges, brep, stl or obj."""
+        3D parts (.FCStd): step, iges, brep, stl, obj, or png (shaded preview: ``views``, ``image_size``,
+        ``fit``; see part.service.export)."""
         if part.is_part(path):
-            return part.export(self, path, output, format, overwrite)
+            return part.export(self, path, output, format, overwrite, views, image_size, fit)
+        if views or image_size or fit:
+            raise input_error("UNKNOWN_PARAM", "views, image_size and fit apply to png previews of 3D parts")
         self.policy.check_write()
         p, store = self._drawing(path)
         fmt = format.lower()

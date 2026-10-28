@@ -234,7 +234,8 @@ def build_server(policy: Policy | None = None) -> FastMCP:
 
     @mcp.tool()
     def export_drawing(path: Path_, output: str,
-                       format: Literal["dxf", "svg", "json", "pdf", "dwg", "step", "iges", "brep", "stl", "obj"] = "dxf",  # noqa: A002
+                       format: Literal["dxf", "svg", "json", "pdf", "dwg", "step", "iges", "brep", "stl", "obj",
+                                       "png"] = "dxf",  # noqa: A002
                        dxf_version: Literal["R12", "R2000", "R2004", "R2007", "R2010", "R2013", "R2018"] | None = None,
                        overwrite: bool = False,
                        layout: Annotated[str | None, Field(description="pdf: 'Model', a paper layout or '*'; default "
@@ -245,13 +246,23 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                                                             "drawing unit (0.5 = 1:2); default largest standard "
                                                             "scale that fits")] = None,
                        orientation: Literal["auto", "landscape", "portrait"] = "auto",
-                       monochrome: bool = False) -> dict:
+                       monochrome: bool = False,
+                       views: Annotated[list[str | list[float]] | None, Field(description="png of a 3D part: views "
+                           "to render, names (iso, front, back, right, left, top, bottom, iso_back, iso_bottom) or "
+                           "[x, y, z] directions from the part to the camera; several make one labelled grid. "
+                           "Default ['iso']")] = None,
+                       image_size: Annotated[int | None, Field(ge=64, le=2048, description="png: pixels per view "
+                                                               "(default 512)")] = None,
+                       fit: Annotated[Literal["view", "uniform"] | None, Field(description="png: 'view' (default) "
+                           "fills each view with the part; 'uniform' uses one scale for every view")] = None) -> dict:
         """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, PDF (plotted without
         external software: one page per layout, paper layouts 1:1 on their sheet, vector output, reports scale and
         too-small printed text), or DWG (optional AutoCAD backend; dxf_version selects the DWG release).
-        3D parts: step, iges, brep, stl or obj."""
+        3D parts: step, iges, brep, stl, obj, or png: a shaded preview (parallel projection, part centred and
+        filling the frame, edges drawn) to look at what you built, e.g. against a reference image.
+        STEP/IGES/BREP are read back and compared with the part; a part that is not one valid solid is refused."""
         return rt.export_drawing(path, output, format, dxf_version, overwrite, layout, paper, scale, orientation,
-                                 monochrome)
+                                 monochrome, views, image_size, fit)
 
     @mcp.tool()
     def import_drawing(source: Annotated[str, Field(description="DWG file in the workspace")], output: Path_,

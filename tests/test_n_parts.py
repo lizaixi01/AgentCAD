@@ -375,3 +375,30 @@ def test_create_is_part_of_the_batch(rt, ws):
     assert not (ws / "new.FCStd").exists()  # a failed batch leaves no empty part behind
     r = ok(rt.apply_operations("new.FCStd", PLATE[:3], create={"units": "mm"}))
     assert r["created"] == {"units": "mm"} and ok(rt.history("new.FCStd"))["records"][-1]["ok"]
+
+
+@needs_freecad
+def test_png_preview(rt, ws, plate):
+    """Shaded parallel projection, part centred and filling the frame: in the top view of the 80 x 50 plate a
+    hole centre is background and solid material is shaded."""
+    from PIL import Image
+    r = ok(rt.export_drawing("plate.FCStd", "top.png", "png", views=["top"], image_size=256))
+    assert r["views"] == ["top"] and r["grid"] == [1, 1]
+    im = Image.open(ws / "top.png").convert("RGB")
+    assert im.size == (256, 256)
+    k = 256 * 0.9 / 80  # the longer side spans 90 % of the frame
+
+    def px(x, y):
+        return im.getpixel((int((x - 40) * k + 128), int(128 - (y - 25) * k)))
+
+    assert px(12, 12) == (255, 255, 255)  # through hole
+    assert max(px(30, 30)) < 250  # material
+    assert px(40, 25 + 26) == (255, 255, 255) and px(40 + 41, 25) == (255, 255, 255)  # just outside the part
+    r = ok(rt.export_drawing("plate.FCStd", "four.png", "png", views=["iso", "front", [1, 1, 1], "right"],
+                             image_size=128, fit="uniform"))
+    assert r["grid"] == [2, 2] and Image.open(ws / "four.png").size == (256, 256)
+    assert r["views"][2] == "[1,1,1]"
+    bad = rt.export_drawing("plate.FCStd", "x.png", "png", views=["sideways"])
+    assert bad["error"]["code"] == "BAD_VIEW" and "iso" in bad["error"]["hint"]
+    bad = rt.export_drawing("plate.FCStd", "x.step", "step", views=["iso"])
+    assert bad["error"]["code"] == "UNKNOWN_PARAM"

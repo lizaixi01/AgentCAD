@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 SUFFIX = ".fcstd"
 EXPORTS = {"step": (".step", ".stp"), "iges": (".iges", ".igs"), "brep": (".brep", ".brp"), "stl": (".stl",),
-           "obj": (".obj",)}
+           "obj": (".obj",), "png": (".png",)}
 
 
 def is_part(path: Any) -> bool:
@@ -223,7 +223,11 @@ def validate(rt: "Runtime", path: str, requirements: list[dict] | None, detail: 
     return {"drawing": rt._rel(p), "validation": report if detail else _brief(report)}
 
 
-def export(rt: "Runtime", path: str, output: str, format: str, overwrite: bool) -> dict[str, Any]:  # noqa: A002
+def export(rt: "Runtime", path: str, output: str, format: str, overwrite: bool,  # noqa: A002
+           views: list | None = None, image_size: int | None = None, fit: str | None = None) -> dict[str, Any]:
+    """png: a shaded preview (parallel projection, part centred and filling the frame) of one view, or a labelled
+    grid of several. views: names (iso, front, back, right, left, top, bottom, iso_back, iso_bottom) or [x, y, z]
+    directions from the part towards the camera. fit 'view' fills each view; 'uniform' uses one scale for all."""
     rt.policy.check_write()
     p, store = store_for(rt, path)
     store.load()
@@ -235,15 +239,19 @@ def export(rt: "Runtime", path: str, output: str, format: str, overwrite: bool) 
     if out.exists() and not overwrite:
         raise input_error("FILE_EXISTS", f"{output} exists", hint="overwrite=true")
     out.parent.mkdir(parents=True, exist_ok=True)
+    if fmt != "png" and (views or image_size or fit):
+        raise input_error("UNKNOWN_PARAM", "views, image_size and fit apply to png previews only")
     tmp = _jobs(rt) / f"export-{uuid.uuid4().hex[:12]}{out.suffix}"
+    job = {"action": "render", "views": views, "size": image_size, "fit": fit} if fmt == "png" else \
+        {"action": "export", "format": fmt}
     try:
-        res = _run(rt, {"action": "export", "format": fmt}, inputs={"input": p}, outputs={"output": tmp})
+        res = _run(rt, job, inputs={"input": p}, outputs={"output": tmp})
         shutil.move(str(tmp), out)
     finally:
         tmp.unlink(missing_ok=True)
     store.journal({"tool": "export_drawing", "kind": "part", "ok": True, "output": rt._rel(out), "format": fmt})
     return {"drawing": rt._rel(p), "output": rt._rel(out), "format": fmt, "bytes": out.stat().st_size,
-            "shape": res["shape"], **({"readback": res["readback"]} if "readback" in res else {})}
+            "shape": res["shape"], **{k: res[k] for k in ("readback", "views", "grid", "cell_size", "fit") if k in res}}
 
 
 def diff(rt: "Runtime", path: str, against: str) -> dict[str, Any]:

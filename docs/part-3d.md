@@ -81,15 +81,24 @@ FreeCAD 1.1.4 自带的拓扑命名修复在脚本建模时不可靠：实测改
 
 ## 导出
 
-`export_drawing` 对零件支持 `step`（BenchCAD 等按 STEP 评分）、`iges`、`brep`、`stl`、`obj`。
+`export_drawing` 对零件支持 `step`（BenchCAD 等按 STEP 评分）、`iges`、`brep`、`stl`、`obj` 和 `png`（预览图，见下）。
 
 Body 不是恰好一个有效实体（或有特征出错）时拒绝导出（`NOT_EXPORTABLE`）：评分器会照样体素化一个坏文件，而不是拒收。STEP/IGES/BREP 写完后用 `Part.read` 读回，和零件比较实体数、有效性、体积和尺寸，结果在 `readback` 里；不一致时报 `EXPORT_MISMATCH`。
+
+## 预览图
+
+`export_drawing(part.FCStd, out.png, "png", views=[...], image_size=512, fit="view")` 给 Agent 看它做出的实体：
+着色、平行投影、画出可见的 B-rep 边（不画圆柱面的参数接缝），零件包围盒居中并撑满画面（`fit="view"` 每个视图各自撑满；
+`"uniform"` 所有视图同一比例，按包围盒对角线）。`views` 是视图名（iso、front、back、right、left、top、bottom、
+iso_back、iso_bottom）或从零件指向相机的方向 `[x, y, z]`；多个视图拼成一张带标签的网格（≤4 个为 2 列）。
+
+无 GUI 的 FreeCAD 不能离屏渲染，所以预览在 runner 里自己光栅化：OCC 三角化 → numpy z-buffer → 平面着色（光源靠近视线方向）
+→ 2 倍超采样。用 FreeCAD 自带的 numpy 和 PIL；纯 `FREECAD_LIB` 解释器没有 PIL 时用 zlib 直接写 PNG（不带标签）。
 
 ## 已知限制
 
 - 一个零件一个 Body（CADBench 的要求）；多零件装配还没有。
 - 没有从三维生成二维工程图（投影视图 → DXF）；这是下一步，接上之后三维模型能直接出图。
-- 没有渲染图片给 Agent 看（无 GUI 的 FreeCAD 不能离屏渲染）。
 - `on_face` 的草图是绝对定位：面移动时由 AgentCAD 的重新解析跟上，直接用 FreeCAD GUI 改模型则不会跟。
 - 非 mm 零件里，`set_parameters` 的裸数字按长度（零件单位）换算；计数类参数（如阵列个数）请直接写在操作里。
 - 还没有用 Agent 跑过三维任务的对比实验。

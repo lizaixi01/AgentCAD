@@ -106,9 +106,9 @@ The same `Runtime` is available from Python and over HTTP (`agentcad --root work
 | Agent tools (MCP) | 24, including `apply_operations`, `apply_batch` (several drawings in one call), `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`, `standard_library`, `autocad_live`. `list_operations` returns a compact index and full schemas on request, so it fits in an agent's context |
 | Live AutoCAD | `autocad_live` works next to the user's running AutoCAD (Windows, COM): shows the agent's drawing there, reloads it after every change (`AGENTCAD_LIVE_SYNC=1`), and pulls the user's edits back as a normal checkpointed, validated change. Raw command lines are off unless `AGENTCAD_ALLOW_LIVE_COMMANDS=1` |
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
-| 3D parts | Parametric FreeCAD parts (`.FCStd`) through the same tools: sketches, pad, pocket, revolve, holes, fillets, chamfers, shells, patterns, lofts, sweeps, helices, driven by named parameters. Edge and face selections survive edits. STEP/STL export. Needs FreeCAD 1.1 (optional) — see [docs/part-3d.md](docs/part-3d.md) |
+| 3D parts | Parametric FreeCAD parts (`.FCStd`) through the same tools: sketches, pad, pocket, revolve, holes, fillets, chamfers, shells, patterns, lofts, sweeps, helices, driven by named parameters. Edge and face selections survive edits. STEP/STL export and shaded PNG previews. Needs FreeCAD 1.1 (optional) — see [docs/part-3d.md](docs/part-3d.md) |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | 226 automated tests, including 27 cases checked against AutoCAD 2027 behaviour and 19 3D-part tests (13 of them build parts in FreeCAD 1.1) |
+| Tests | 232 automated tests, including 27 cases checked against AutoCAD 2027 behaviour and 25 3D-part tests (19 of them build parts in FreeCAD 1.1) |
 
 Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial software.
 
