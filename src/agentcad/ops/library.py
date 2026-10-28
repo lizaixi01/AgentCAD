@@ -102,6 +102,30 @@ def _layer_default(ctx: Ctx, p: dict, name: str, **props) -> dict:
     return q
 
 
+def check_group(ctx: Ctx, p: dict) -> list[str] | None:
+    """check_tag for ops that tag several entities '<tag>' and '<tag>.<suffix>': 'skip' returns the whole group,
+    'replace' removes the whole group, 'error' reports any of it."""
+    tag = p.get("tag")
+    if not tag:
+        return None
+    group = [e for t, ents in ctx.tags().items() if t == tag or t.startswith(tag + ".") for e in ents]
+    if not group:
+        return None
+    mode = p.get("if_tag_exists") or "error"
+    if mode == "skip":
+        return [e.dxf.handle for e in group]
+    if mode == "replace":
+        for e in group:
+            if e.is_alive:
+                ctx.removed(e)
+        for t in [t for t in ctx.tags() if t == tag or t.startswith(tag + ".")]:
+            ctx.tags().pop(t, None)
+        return None
+    raise input_error("TAG_EXISTS", f"Entities tagged {tag!r} (or {tag + '.*'!r}) already exist",
+                      entities=[e.dxf.handle for e in group][:50],
+                      hint="Use if_tag_exists='skip' for idempotent replays or 'replace' to redraw them")
+
+
 def _check_size(size: str, sizes: list[str], what: str) -> None:
     if size not in sizes:
         raise input_error("INVALID_SIZE", f"No {what} size {size!r}", hint=f"Sizes: {sizes}")
@@ -132,11 +156,16 @@ def _split_instrument_tag(tag_no: str) -> dict[str, str]:
     return {"FUNC": m.group(1).upper(), "LOOP": m.group(2)} if m else {"FUNC": tag_no, "LOOP": ""}
 
 
+PIPE_ATTRS = ("layer", "color", "linetype", "lineweight", "ltscale", "true_color", "transparency", "elevation",
+              "extrusion", "const_width")
+EPS = 1e-9
+
+
 def _break_for_symbol(ctx: Ctx, e, at, half: float) -> tuple[tuple, float, tuple, tuple, list[str]]:
     """Cut a gap of 2*half into a LINE or open LWPOLYLINE around the point nearest ``at``. Returns the gap
-    centre, the pipe direction (degrees), the two gap ends and ids of new pieces."""
+    centre, the pipe direction (degrees), the two gap ends and ids of new pieces. A side of the gap with nothing
+    left (symbol at a pipe end) leaves no piece; a gap ending on a vertex adds no duplicate vertex."""
     t = e.dxftype()
-    attrs = {k: e.dxf.get(k) for k in ("layer", "color", "linetype", "lineweight") if e.dxf.hasattr(k)}
     from ..model import get_tag
     keep = {"tag": get_tag(e)} if get_tag(e) else {}  # every piece keeps the pipe's tag: 'on' still finds it
     space = ctx.space_of(e)
@@ -146,7 +175,7 @@ def _break_for_symbol(ctx: Ctx, e, at, half: float) -> tuple[tuple, float, tuple
         if e.closed:
             raise input_error("UNSUPPORTED_ENTITY", "Symbols go on open lines; this polyline is closed",
                               entities=[e.dxf.handle])
-        pts = list(e.get_points("xyb"))
+        pts = [tuple(q) for q in e.get_points("xyseb")]
         segs = [((pts[i][0], pts[i][1]), (pts[i + 1][0], pts[i + 1][1])) for i in range(len(pts) - 1)]
     else:
         raise input_error("UNSUPPORTED_ENTITY", "'on' must be a LINE or an open LWPOLYLINE (a pipe)",
@@ -165,34 +194,53 @@ def _break_for_symbol(ctx: Ctx, e, at, half: float) -> tuple[tuple, float, tuple
     if best is None:
         raise geometry_error("DEGENERATE_GEOMETRY", "The pipe has no length", entities=[e.dxf.handle])
     _, i, u, ln, (ux, uy) = best
-    if t == "LWPOLYLINE" and abs(pts[i][2]) > 1e-12:
+    if t == "LWPOLYLINE" and abs(pts[i][4]) > 1e-12:
         raise input_error("UNSUPPORTED_ENTITY", "Symbols go on straight pipe segments; this one is an arc",
                           entities=[e.dxf.handle])
-    u = max(half, min(ln - half, u))  # keep the symbol on the segment
-    if ln < 2 * half - 1e-9:
+    if ln < 2 * half - EPS:
         raise geometry_error("SYMBOL_DOES_NOT_FIT", f"The pipe segment is {ln:g} long, the symbol needs {2 * half:g}",
                              entities=[e.dxf.handle], hint="Use a smaller 'size' or a longer segment")
-    a = segs[i][0]
+    u = max(half, min(ln - half, u))  # keep the symbol on the segment
+    a, b = segs[i]
     g0 = (a[0] + ux * (u - half), a[1] + uy * (u - half))
     g1 = (a[0] + ux * (u + half), a[1] + uy * (u + half))
     centre = (a[0] + ux * u, a[1] + uy * u)
+    attrs = {k: e.dxf.get(k) for k in PIPE_ATTRS if e.dxf.hasattr(k)}
     new: list[str] = []
     if t == "LINE":
-        end = (e.dxf.end.x, e.dxf.end.y)
-        e.dxf.end = (*g0, 0)
-        ctx.touched(e)
-        if math.dist(g1, end) > 1e-9:
+        start, end = segs[0]
+        before, after = math.dist(start, g0) > EPS, math.dist(g1, end) > EPS
+        if before:
+            e.dxf.end = (*g0, 0)
+            ctx.touched(e)
+        elif after:
+            e.dxf.start = (*g1, 0)  # nothing before the symbol: the line keeps only its far part
+            ctx.touched(e)
+            after = False
+        else:
+            ctx.removed(e)  # the symbol covers the whole line
+        if after:
             new.append(ctx.finish(space.add_line(g1, end, dxfattribs=attrs), keep))
-    else:
-        first = [*pts[:i + 1], (g0[0], g0[1], 0.0)]
-        second = [(g1[0], g1[1], 0.0), *pts[i + 1:]]
-        e.set_points(first, format="xyb")
+        return centre, math.degrees(math.atan2(uy, ux)), g0, g1, new
+    head = pts[:i + 1]
+    first = head if math.dist(head[-1][:2], g0) <= EPS else [*head, (g0[0], g0[1], 0.0, 0.0, 0.0)]
+    tail = pts[i + 1:]
+    second = tail if math.dist(tail[0][:2], g1) <= EPS else [(g1[0], g1[1], 0.0, 0.0, 0.0), *tail]
+
+    def has_length(q) -> bool:
+        return len(q) >= 2 and any(math.dist(q[j][:2], q[j + 1][:2]) > EPS for j in range(len(q) - 1))
+    first = [(*v[:4], 0.0) if j == len(first) - 1 else v for j, v in enumerate(first)]  # the cut end is straight
+    if has_length(first):
+        e.set_points(first, format="xyseb")
         ctx.touched(e)
-        if len(second) >= 2 and math.dist(g1, second[1][:2]) > 1e-9 or len(second) > 2:
-            n = space.add_lwpolyline(second, format="xyb", dxfattribs=attrs)
-            if e.dxf.hasattr("const_width"):
-                n.dxf.const_width = e.dxf.const_width
+        if has_length(second):
+            n = space.add_lwpolyline(second, format="xyseb", dxfattribs=attrs)
             new.append(ctx.finish(n, keep))
+    elif has_length(second):
+        e.set_points(second, format="xyseb")  # nothing before the symbol: the pipe keeps only its far part
+        ctx.touched(e)
+    else:
+        ctx.removed(e)
     return centre, math.degrees(math.atan2(uy, ux)), g0, g1, new
 
 
@@ -224,6 +272,11 @@ def _distance(e, pt) -> float:
                                                                           "e.g. 'V-101' or 'FIC-101'")},
     common_draw=True)
 def add_pid_symbol(ctx: Ctx, symbol, insert, on, rotation, size, tag_no, **p):
+    if on is not None and p.get("if_tag_exists") == "replace" and p.get("tag") and ctx.tags().get(p["tag"]):
+        raise input_error("REPLACE_NOT_SUPPORTED", "Replacing a symbol placed on a pipe would leave its old gap in "
+                          "the pipe", entities=[e.dxf.handle for e in ctx.tags()[p["tag"]]],
+                          hint="Use if_tag_exists='skip' to replay, or delete the symbol, close the gap (join) and "
+                               "place it again")
     if (s := check_tag(ctx, p)) is not None:
         return {"created": [], "skipped": True, "existing": s}
     d = L.PID[symbol]
@@ -245,9 +298,9 @@ def add_pid_symbol(ctx: Ctx, symbol, insert, on, rotation, size, tag_no, **p):
             insert = tuple(bbox.extents(ents, fast=True).center)[:2]
         # a pipe already cut by earlier symbols is several pieces sharing its tag: use the one nearest 'insert'
         pipe = min(ents, key=lambda e: _distance(e, insert))
+        space = ctx.space_of(pipe)  # before the cut: a symbol as long as the pipe consumes it
         insert, ang, g0, g1, new = _break_for_symbol(ctx, pipe, insert, d.get("span", 0.5) * size)
         rot = ang + rotation
-        space = ctx.space_of(pipe)
         # a flow arrow of the pipe sitting where the symbol goes would be drawn through it
         for a in list(space.query('INSERT[name=="PID_FLOW_ARROW"]')):
             if math.dist((a.dxf.insert.x, a.dxf.insert.y), insert) <= d.get("span", 0.5) * size + 1e-9:
@@ -262,12 +315,19 @@ def add_pid_symbol(ctx: Ctx, symbol, insert, on, rotation, size, tag_no, **p):
                                                          "rotation": rot})
     if d.get("instrument"):
         ref.add_auto_attribs(_split_instrument_tag(tag_no) if tag_no else {})
-    elif not d.get("no_tag"):
+        upright = None
+    elif d.get("no_tag"):
+        upright = None
+    else:
         ref.add_auto_attribs({"TAG": tag_no or ""})
         th = 2.5 * _anno(ctx)  # tag text stays 2.5 mm on paper whatever the symbol size
         for a in ref.attribs:
             a.dxf.height = th
             a.set_placement(a.dxf.align_point, align=TextEntityAlignment.MIDDLE_CENTER)
+        upright = ref
+    if upright is not None and 90 < rot % 360 <= 270:  # keep text readable on pipes drawn right to left
+        for a in upright.attribs:
+            a.dxf.rotation = (rot + 180) % 360
     return {"created": [ctx.finish(ref, p), *new], "block": name, "rotation": round(rot % 360, 6),
             "size": size, **out}
 
@@ -281,7 +341,7 @@ def add_pid_symbol(ctx: Ctx, symbol, insert, on, rotation, size, tag_no, **p):
      "flow_arrows": P("bool", default=True, description="Arrow in the middle of each segment, pointing along it"),
      "arrow_size": P("length", gt=0, description="Default 4 mm on paper")}, common_draw=True)
 def add_process_line(ctx: Ctx, points, kind, line_number, flow_arrows, arrow_size, **p):
-    if (s := check_tag(ctx, p)) is not None:
+    if (s := check_group(ctx, p)) is not None:
         return {"created": [], "skipped": True, "existing": s}
     if len(points) < 2:
         raise input_error("TOO_FEW_POINTS", "A process line needs at least 2 points")
@@ -482,7 +542,7 @@ def add_surface_finish(ctx: Ctx, insert, ra, process, rotation, height, **p):
      "fit": P("enum", enum=list(L.FITS), default="medium"),
      "center_marks": P("bool", default=True)}, common_draw=True)
 def add_standard_hole(ctx: Ctx, centers, size, kind, fit, center_marks, **p):
-    if (s := check_tag(ctx, p)) is not None:
+    if (s := check_group(ctx, p)) is not None:
         return {"created": [], "skipped": True, "existing": s}
     dims = L.hole_dims(size, kind, fit)
     k = _per_mm(ctx)

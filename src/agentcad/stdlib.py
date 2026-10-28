@@ -2,8 +2,8 @@
 
 - P&ID symbols in the style of ISO 10628 / ISA-5.1, drawn in a unit box and scaled on insertion.
 - GD&T characteristic symbols (ISO 1101 / ASME Y14.5), drawn in a unit cell of the feature control frame.
-- ISO metric fasteners, deep groove ball bearings and hole sizes. Values are the nominal (or, for nut
-  and bolt heads, the maximum) dimensions of the cited standards, which is what a drawing shows.
+- ISO metric fasteners, deep groove ball bearings and hole sizes. Values are the nominal dimensions of the
+  cited standards (nut heights: the maximum), which is what a drawing shows.
 
 Geometry primitives (unit coordinates):
     ("line", p, q)  ("poly", [p...], closed)  ("circle", c, r)  ("arc", c, r, a0, a1)
@@ -34,7 +34,7 @@ FITS = ("fine", "medium", "coarse")
 HEX_S = {"M3": 5.5, "M4": 7.0, "M5": 8.0, "M6": 10.0, "M8": 13.0, "M10": 16.0, "M12": 18.0, "M14": 21.0,
          "M16": 24.0, "M20": 30.0, "M24": 36.0}  # width across flats (ISO 4014/4017/4032)
 BOLT_K = {"M3": 2.0, "M4": 2.8, "M5": 3.5, "M6": 4.0, "M8": 5.3, "M10": 6.4, "M12": 7.5, "M14": 8.8,
-          "M16": 10.0, "M20": 12.5, "M24": 15.0}  # hex head height (ISO 4014/4017)
+          "M16": 10.0, "M20": 12.5, "M24": 15.0}  # hex head height k, nominal (ISO 4014/4017)
 NUT_M = {"M3": 2.4, "M4": 3.2, "M5": 4.7, "M6": 5.2, "M8": 6.8, "M10": 8.4, "M12": 10.8, "M14": 12.8,
          "M16": 14.8, "M20": 18.0, "M24": 21.5}  # nut height (ISO 4032)
 WASHER = {"M3": (3.2, 7.0, 0.5), "M4": (4.3, 9.0, 0.8), "M5": (5.3, 10.0, 1.0), "M6": (6.4, 12.0, 1.6),

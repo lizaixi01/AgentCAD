@@ -228,3 +228,78 @@ def test_library_ops_in_the_compact_catalog(rt):
     lib = [o["op"] for o in cat["operations"] if o["category"] == "library"]
     assert len(lib) == 7 and len(json.dumps(cat)) < 16000
     assert ok(rt.list_operations(category="library"))["count"] == 7
+
+
+# --- review of PR #6 ---------------------------------------------------------------------------------------------
+def test_replays_of_multi_entity_ops(rt, ws, blank):
+    hole = {"op": "add_standard_hole", "centers": [[10, 10], [30, 10]], "size": "M8", "kind": "tapped", "tag": "H"}
+    line = {"op": "add_process_line", "points": [[0, 50], [100, 50]], "line_number": "P-1", "tag": "L"}
+    ok(rt.apply_operations(blank, [hole, line]))
+    n = ok(rt.read_drawing(blank))["entity_count"]
+    assert rt.apply_operations(blank, [hole])["error"]["code"] == "TAG_EXISTS"
+    ok(rt.apply_operations(blank, [{**hole, "if_tag_exists": "skip"}, {**line, "if_tag_exists": "skip"}]))
+    assert ok(rt.read_drawing(blank))["entity_count"] == n
+    ok(rt.apply_operations(blank, [{**hole, "if_tag_exists": "replace"}, {**line, "if_tag_exists": "replace"}]))
+    assert ok(rt.read_drawing(blank))["entity_count"] == n  # redrawn, not doubled
+    nomarks = {**hole, "center_marks": False, "tag": "N"}
+    ok(rt.apply_operations(blank, [nomarks]))
+    n = ok(rt.read_drawing(blank))["entity_count"]
+    ok(rt.apply_operations(blank, [{**nomarks, "if_tag_exists": "skip"}]))
+    assert ok(rt.read_drawing(blank))["entity_count"] == n
+
+
+def test_replacing_a_symbol_on_a_pipe_is_refused(rt, blank):
+    ok(rt.apply_operations(blank, [{"op": "add_process_line", "points": [[0, 0], [100, 0]], "tag": "L1"},
+                                   {"op": "add_pid_symbol", "symbol": "gate_valve", "on": "tag:L1",
+                                    "insert": [30, 0], "tag": "v"}]))
+    again = {"op": "add_pid_symbol", "symbol": "gate_valve", "on": "tag:L1", "insert": [30, 0], "tag": "v"}
+    assert rt.apply_operations(blank, [{**again, "if_tag_exists": "replace"}])["error"]["code"] == \
+        "REPLACE_NOT_SUPPORTED"
+    assert ok(rt.apply_operations(blank, [{**again, "if_tag_exists": "skip"}]))["results"][0]["skipped"]
+
+
+def _lengths(ws, path, tag):
+    out = []
+    for e in by_tag(ws, path, tag):
+        if e.dxftype() == "LINE":
+            out.append(round(math.dist(e.dxf.start, e.dxf.end), 6))
+        else:
+            pts = [tuple(q)[:2] for q in e.get_points("xy")]
+            assert all(math.dist(a, b) > 1e-9 for a, b in zip(pts, pts[1:])), pts  # no duplicate vertices
+            out.append(round(sum(math.dist(a, b) for a, b in zip(pts, pts[1:])), 6))
+    return sorted(out)
+
+
+def test_cutting_a_line_pipe(rt, ws, blank):
+    ok(rt.apply_operations(blank, [{"op": "add_line", "start": [0, 0], "end": [100, 0], "tag": "P"},
+                                   {"op": "add_pid_symbol", "symbol": "ball_valve", "on": "tag:P",
+                                    "insert": [50, 0]}]))
+    assert _lengths(ws, blank, "P") == [45, 45]
+    # at the start of the line: no zero-length piece is left
+    ok(rt.apply_operations(blank, [{"op": "add_pid_symbol", "symbol": "gate_valve", "on": "tag:P",
+                                    "insert": [0, 0]}]))
+    assert _lengths(ws, blank, "P") == [35, 45]
+    # a symbol exactly as long as the remaining piece consumes it
+    ok(rt.apply_operations(blank, [{"op": "add_line", "start": [0, 20], "end": [10, 20], "tag": "Q"},
+                                   {"op": "add_pid_symbol", "symbol": "gate_valve", "on": "tag:Q"}]))
+    assert by_tag(ws, blank, "Q") == []
+
+
+def test_cutting_a_polyline_at_its_ends_and_corners(rt, ws, blank):
+    ok(rt.apply_operations(blank, [{"op": "add_process_line", "points": [[0, 0], [50, 0], [50, 50]],
+                                    "flow_arrows": False, "tag": "P", "lineweight": 70},
+                                   {"op": "add_pid_symbol", "symbol": "gate_valve", "on": "tag:P", "insert": [0, 0]},
+                                   {"op": "add_pid_symbol", "symbol": "gate_valve", "on": "tag:P",
+                                    "insert": [49, 0]}]))
+    assert _lengths(ws, blank, "P") == [30, 50]  # [0,10] and [40,50] cut; the corner vertex is not doubled
+    assert all(e.dxf.lineweight == 70 for e in by_tag(ws, blank, "P"))  # pieces keep the pipe's properties
+
+
+def test_tags_stay_readable_on_right_to_left_pipes(rt, ws, blank):
+    r = ok(rt.apply_operations(blank, [{"op": "add_process_line", "points": [[100, 0], [0, 0]], "tag": "P",
+                                        "flow_arrows": False},
+                                       {"op": "add_pid_symbol", "symbol": "gate_valve", "on": "tag:P",
+                                        "insert": [50, 0], "tag_no": "V-9"}]))
+    assert r["results"][1]["rotation"] == 180
+    v = [e for e in reread(ws, blank).modelspace().query("INSERT") if e.dxf.name == "PID_GATE_VALVE"][0]
+    assert v.get_attrib("TAG").dxf.rotation == 0
