@@ -34,7 +34,7 @@ def shape(r):
 
 def test_catalog_lists_part_operations(rt):
     idx = ok(rt.list_operations())
-    names = {o["op"] for o in idx["part_operations"]}
+    names = {n for ops in idx["part_operations"].values() for n in ops}
     assert {"add_sketch", "pad", "pocket", "revolve", "hole", "fillet", "chamfer", "linear_pattern",
             "polar_pattern", "mirror", "set_parameters", "modify_feature"} <= names
     full = ok(rt.list_operations(category="part", ops=["fillet"]))
@@ -296,3 +296,13 @@ def test_pocket_polar_pattern_loft_sweep_helix(rt):
     # Pappus along the helix: profile area x path length of its centre (4 turns of radius 10, pitch 5)
     want = math.pi * 1 * 4 * math.hypot(2 * math.pi * 10, 5)
     assert shape(r)["solids"] == 1 and shape(r)["volume"] == pytest.approx(want, rel=0.02)
+
+
+@needs_freecad
+def test_create_in_one_call_and_batch(rt):
+    r = ok(rt.apply_operations("one.FCStd", PLATE[:3], create={"units": "mm"}))
+    assert shape(r)["size"] == [80.0, 50.0, 6.0]
+    r = ok(rt.apply_batch([{"path": "one.FCStd", "operations": [{"op": "set_parameters", "params": {"width": 60}}]},
+                           {"path": "two.dxf", "create": {"units": "mm"},
+                            "operations": [{"op": "add_line", "start": [0, 0], "end": [10, 0]}]}]))
+    assert r["succeeded"] == 2, r

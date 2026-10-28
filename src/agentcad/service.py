@@ -214,13 +214,13 @@ class Runtime:
                   "color": "ACI color, 256 = BYLAYER", "linetype": "e.g. CONTINUOUS, CENTER, DASHED",
                   "lineweight": "1/100 mm, -1 = BYLAYER", "tag": "name for later reference as 'tag:<name>'",
                   "if_tag_exists": "error | skip | replace"}
-        part_index = [{"op": d.name, "category": d.category, "summary": d.description.split(". ")[0].rstrip("."),
-                       "params": [k + ("*" if p.required else "") for k, p in d.params.items()]}
-                      for d in PART_REGISTRY.values()]
+        part_index: dict[str, list[str]] = {}  # names only: a 3D task fetches category='part' anyway
+        for d in PART_REGISTRY.values():
+            part_index.setdefault(d.category, []).append(d.name)
         return {"operations": index, "count": len(index), "detail": False, "categories": cats,
                 "part_operations": part_index,
-                "part_hint": "3D parts (.FCStd, FreeCAD) take part_operations in apply_operations; their full "
-                             "schemas: list_operations(category='part'), or category='part' with ops=[...]",
+                "part_hint": "3D parts (.FCStd, FreeCAD) take part_operations in apply_operations; their "
+                             "summaries and schemas: list_operations(category='part')",
                 "common_params": {"all_ops": sorted(COMMON_ALL), "draw_params": sorted(COMMON_DRAW),
                                   "meaning": common},
                 "constraint_types": constraints,
@@ -310,12 +310,22 @@ class Runtime:
     @tool
     def apply_operations(self, path: str, operations: list[dict], dry_run: bool = False,
                          requirements: list[dict] | None = None, strict: bool = False,
-                         label: str | None = None) -> dict[str, Any]:
-        """Run a batch atomically. ``strict``: abort (no save) if post-validation finds errors."""
+                         label: str | None = None, create: dict | None = None, bounds: list | None = None,
+                         layout: str | None = None) -> dict[str, Any]:
+        """Run a batch atomically. ``strict``: abort (no save) if post-validation finds errors.
+        ``create``: create the drawing first if it does not exist ({units, template, dxf_version, annotation_scale}),
+        so a new drawing needs one call. The returned validation is the same independent re-read of the saved file
+        as validate_drawing (``requirements``, ``bounds``, ``layout``), so a separate validate_drawing call is only
+        needed for its detail=true report."""
         if part.is_part(path):
+            if create is not None and not self.policy.resolve(path, suffixes=(".fcstd",)).exists() and not dry_run:
+                part.create(self, path, create.get("units", "mm"), False)
             return part.apply(self, path, operations, dry_run, requirements, strict, label)
         if not dry_run:
             self.policy.check_write()
+        created = None
+        if create is not None:
+            created = self._create_if_missing(path, create, dry_run)
         p, store = self._drawing(path)
         with self._lock(store):
             doc = store.load()
@@ -330,7 +340,7 @@ class Runtime:
                 return {"drawing": self._rel(p), "dry_run": True, "would_change": _changes(res),
                         "results": res["results"]}
             # without strict the pre-commit report is unused; the file is validated once, after the commit
-            tmp_report = self._validate_doc(doc, requirements) if strict else None
+            tmp_report = self._validate_doc(doc, requirements, bounds, layout) if strict else None
             if tmp_report is not None and not tmp_report["passed"]:
                 fail = self._save_failure(store, doc, "strict-validation")
                 store.journal({"tool": "apply_operations", "ok": False, "label": label, "operations": operations,
@@ -342,9 +352,81 @@ class Runtime:
             info = store.commit(doc, label=label or "apply_operations")
             seq = store.journal({"tool": "apply_operations", "ok": True, "label": label, "operations": operations,
                                  "changes": _changes(res), **info})
-        report = validate_file(p, requirements=requirements)
-        return {"drawing": self._rel(p), "changes": _changes(res), "results": res["results"],
-                "validation": _brief(report), "journal_seq": seq, **info}
+        report = validate_file(p, requirements=requirements, bounds=bounds, layout=layout)
+        out = {"drawing": self._rel(p), "changes": _changes(res), "results": res["results"],
+               "validation": _brief(report), "journal_seq": seq, **info}
+        if created:
+            out["created_drawing"] = created
+        return out
+
+    @staticmethod
+    def _check_create(create: Any, where: str = "create") -> None:
+        if not isinstance(create, dict):
+            raise input_error("INVALID_OBJECT", f"{where}: expected an object {{units, template, ...}}")
+        bad = sorted(set(create) - CREATE_FIELDS)
+        if bad:
+            raise input_error("UNKNOWN_PARAM", f"{where}: unknown field(s) {bad}", hint=f"Fields: {sorted(CREATE_FIELDS)}")
+
+    def _create_if_missing(self, path: str, create: dict, dry_run: bool) -> dict | None:
+        """apply_operations(create=...): make the drawing unless it already exists. Returns what was created.
+        The new drawing is committed on its own: if the operations then fail, it stays, empty."""
+        self._check_create(create)
+        p, _ = self._drawing(path, must_exist=False)
+        if p.exists():
+            return None
+        if dry_run:
+            raise input_error("DRY_RUN_NEEDS_DRAWING", f"{path} does not exist; dry_run cannot create it",
+                              hint="Run without dry_run, or create the drawing first")
+        r = TOOLS["create_drawing"](self, path, **create)
+        return {"units": r["units"], "dxf_version": r["dxf_version"], "template": create.get("template", "mechanical")}
+
+    @tool
+    def apply_batch(self, jobs: list[dict], stop_on_error: bool = False) -> dict[str, Any]:
+        """apply_operations on several drawings in one call (e.g. a family of parts from a table). Each job is
+        {path, operations, create?, requirements?, bounds?, layout?, strict?, label?} and is its own transaction:
+        a failing job's operations change nothing (a drawing its 'create' made stays, empty) and do not undo the
+        other jobs. ``stop_on_error`` skips the jobs after the first failure."""
+        allowed = {"path", "operations", "create", "requirements", "bounds", "layout", "strict", "label"}
+        self.policy.check_write()
+        if not isinstance(jobs, list) or not jobs:
+            raise input_error("INVALID_LIST", "jobs: expected a non-empty list")
+        if len(jobs) > MAX_BATCH_JOBS:
+            raise policy_error("BUDGET_EXCEEDED", f"{len(jobs)} jobs (limit {MAX_BATCH_JOBS})", hint="Split the batch")
+        resolved = []
+        for i, j in enumerate(jobs):  # check every job's shape and path before touching any drawing
+            if not isinstance(j, dict) or "path" not in j or "operations" not in j:
+                raise input_error("INVALID_JOB", f"jobs[{i}]: needs 'path' and 'operations'")
+            bad = sorted(set(j) - allowed)
+            if bad:
+                raise input_error("UNKNOWN_PARAM", f"jobs[{i}]: unknown field(s) {bad}", hint=f"Fields: {sorted(allowed)}")
+            if j.get("create") is not None:
+                self._check_create(j["create"], f"jobs[{i}].create")
+            resolved.append(str(self._drawing(str(j["path"]), must_exist=False, part_ok=True)[0]).lower())
+        dup = sorted({j["path"] for j, r in zip(jobs, resolved) if resolved.count(r) > 1})
+        if dup:
+            raise input_error("DUPLICATE_PATH", f"jobs name the same drawing more than once: {dup}",
+                              hint="Put all operations for one drawing into one job")
+        out = []
+        for j in jobs:
+            if stop_on_error and any(not x["ok"] for x in out):
+                out.append({"path": j["path"], "ok": False, "skipped": True})
+                continue
+            r = self.apply_operations(j["path"], j["operations"], requirements=j.get("requirements"),
+                                      strict=bool(j.get("strict", False)), label=j.get("label"),
+                                      create=j.get("create"), bounds=j.get("bounds"), layout=j.get("layout"))
+            if not r["ok"]:
+                out.append({"path": j["path"], "ok": False, "error": r["error"]})
+                continue
+            item = {"path": j["path"], "ok": True, "passed": r["validation"]["passed"],
+                    "changes": {k: len(v) for k, v in r["changes"].items()}, "validation": r["validation"],
+                    "journal_seq": r["journal_seq"]}
+            if r.get("created_drawing"):
+                item["created"] = True
+            out.append(item)
+        skipped = sum(1 for x in out if x.get("skipped"))
+        return {"jobs": out, "succeeded": sum(1 for x in out if x["ok"]),
+                "failed": sum(1 for x in out if not x["ok"]) - skipped, "skipped": skipped,
+                "all_passed": all(x["ok"] and x["passed"] for x in out)}
 
     @tool
     def run_script(self, path: str, code: str, label: str | None = None, dry_run: bool = False,
@@ -401,12 +483,12 @@ class Runtime:
         report = validate_file(p, requirements=requirements)
         return {**out, "validation": _brief(report), "journal_seq": seq, **info}
 
-    def _validate_doc(self, doc, requirements):
+    def _validate_doc(self, doc, requirements, bounds=None, layout=None):
         import tempfile
         with tempfile.TemporaryDirectory() as td:
             fp = Path(td) / "candidate.dxf"
             doc.saveas(fp)
-            return validate_file(fp, requirements=requirements)
+            return validate_file(fp, requirements=requirements, bounds=bounds, layout=layout)
 
     @tool
     def validate_drawing(self, path: str, requirements: list[dict] | None = None, use_stored_spec: bool = True,
@@ -830,6 +912,28 @@ class Runtime:
         return {"drawing": self._rel(p), "backend": "autocad", **res}
 
     @tool
+    def standard_library(self, item: str | None = None, size: str | None = None,
+                         drawing: str | None = None) -> dict[str, Any]:
+        """Industry libraries (stdlib.py). No arguments: a compact index of P&ID symbols, GD&T characteristics,
+        standard parts and holes with their sizes. ``item`` (with optional ``size``): that item's dimensions.
+        ``drawing``: the parts list of a drawing (standard parts by part/standard/size, P&ID symbols with tags)."""
+        from . import stdlib
+        from .ops import REGISTRY
+        if drawing:
+            p, store = self._drawing(drawing)
+            return {"drawing": self._rel(p), **bill_of_materials(store.load())}
+        if item is None:
+            return {**stdlib.index(), "ops": sorted(k for k, d in REGISTRY.items() if d.category == "library"),
+                    "hint": "item=<name> (and size=...) gives dimensions; drawing=<path> gives its parts list"}
+        try:
+            return stdlib.table(item, size)
+        except KeyError:
+            known = sorted([*stdlib.PARTS, *stdlib.HOLE_KINDS, *stdlib.PID, *stdlib.GDT])
+            if item in known:
+                raise input_error("INVALID_SIZE", f"{item} has no size {size!r}", hint="See standard_library()")
+            raise input_error("UNKNOWN_ITEM", f"No library item {item!r}", hint=f"Items: {known}")
+
+    @tool
     def get_metrics(self) -> dict[str, Any]:
         calls = len(self.metrics)
         fails = sum(1 for m in self.metrics if not m["ok"])
@@ -886,6 +990,32 @@ def _min_model_text(doc) -> float | None:
     return min(hs) if hs else None
 
 
+def bill_of_materials(doc) -> dict[str, Any]:
+    """Standard parts (blocks with PART / STANDARD / SIZE attributes) and P&ID symbols in every layout."""
+    parts: dict[tuple, int] = {}
+    symbols, instruments = [], []
+    for sp in layout_spaces(doc, "*"):
+        for e in sp.query("INSERT"):
+            name = e.dxf.name
+            vals = {a.dxf.tag: a.dxf.text for a in e.attribs}
+            if "PART" in vals:
+                if not vals["PART"]:
+                    continue  # another view of a part counted elsewhere
+                key = (vals["PART"], vals.get("STANDARD", ""), vals.get("SIZE", ""))
+                parts[key] = parts.get(key, 0) + 1
+            elif name.startswith("PID_") and name != "PID_FLOW_ARROW":
+                sym = name[4:].lower()
+                if "FUNC" in vals:
+                    instruments.append({"symbol": sym, "tag": "-".join(v for v in (vals["FUNC"], vals.get("LOOP"))
+                                                                        if v), "id": e.dxf.handle})
+                else:
+                    symbols.append({"symbol": sym, "tag": vals.get("TAG", ""), "id": e.dxf.handle})
+    return {"parts": [{"part": k[0], "standard": k[1], "size": k[2], "quantity": n}
+                      for k, n in sorted(parts.items())],
+            "pid_symbols": sorted(symbols, key=lambda r: (r["symbol"], r["tag"])),
+            "instruments": sorted(instruments, key=lambda r: r["tag"])}
+
+
 def _changes(res: dict[str, Any]) -> dict[str, Any]:
     return {"added": res["added"], "modified": res["modified"], "deleted": res["deleted"]}
 
@@ -915,6 +1045,8 @@ def _journal_line(r: dict[str, Any]) -> dict[str, Any]:
 
 
 MAX_ISSUES = 50
+MAX_BATCH_JOBS = 200
+CREATE_FIELDS = {"units", "template", "dxf_version", "annotation_scale"}
 
 
 def _requirements(reqs: list[dict[str, Any]], out: dict[str, Any]) -> None:
@@ -932,9 +1064,11 @@ def _issues(report: dict[str, Any], out: dict[str, Any]) -> None:
 
 
 def _brief(report: dict[str, Any]) -> dict[str, Any]:
-    out = {"passed": report["passed"], "summary": report["summary"]}
-    _issues(report, out)
-    _requirements(report["requirements"], out)
+    """The validation attached to edit results: validate_drawing's compact report (recognized counts and coverage
+    included, so the agent need not call validate_drawing again), without the file name and the detail hint."""
+    out = compact_report(report)
+    for k in ("file", "readable", "detail_hint", "requirements_source"):
+        out.pop(k, None)
     return out
 
 

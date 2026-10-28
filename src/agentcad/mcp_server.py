@@ -12,19 +12,22 @@ from .policy import Policy
 from .service import Runtime
 
 INSTRUCTIONS = """AgentCAD: headless CAD runtime: 2D drawings (DXF) and 3D parametric parts (FreeCAD .FCStd).
-Workflow: list_operations (compact index; ops=[...] gives full schemas) -> create_drawing or draw_from_spec ->
-apply_operations (batch many ops in one call; ops can reference entities created earlier in the batch as
-"$<index>", tagged entities as "tag:<name>") ->
-validate_drawing (independent re-read of the file) -> get_diff / rollback as needed.
+Workflow: list_operations (compact index; ops=[...] gives full schemas) -> apply_operations (batch many ops in one
+call; create={units,...} makes a new drawing in the same call; ops can reference entities created earlier in the
+batch as "$<index>", tagged entities as "tag:<name>"). Its result already holds the independent validation of the
+saved file (pass requirements to check them); call validate_drawing only for detail=true. Several drawings:
+apply_batch, one call. get_diff / history / rollback as needed. Independent read-only calls can go in one turn.
 Coordinates are [x, y] in drawing units; lengths may be strings with units ("8mm"). Angles are degrees CCW.
 Every result has ok + structured error {code, category, message, entities, retryable, hint, partial_changes}.
 A failed batch never modifies the file (partial_changes=false).
 Real drawings often have paper-space layouts (printed sheets, read_drawing.layouts) with their own copy of the part:
 edit and validate them too, using the 'layout' parameter. New sheets: create_layout, then add_viewport.
 run_script (if enabled) covers edits no op can express.
+Industry content (P&ID symbols and lines, GD&T frames, ISO holes, bolts, nuts, bearings) comes from the 'library'
+ops; standard_library looks up sizes and lists a drawing's parts.
 3D parts: give a .FCStd path to create_drawing / apply_operations / read_drawing / inspect_entities /
 validate_drawing / get_diff / export_drawing (step, stl, ...) / rollback / history. Their operations are
-list_operations().part_operations (schemas: list_operations(category='part')): set_parameters, add_sketch, then
+list_operations(category='part') (names: list_operations().part_operations): set_parameters, add_sketch, then
 pad / pocket / revolve / hole / fillet / chamfer / patterns ... A part is one PartDesign Body, one solid, all
 features native and editable. Drive dimensions by parameters ('=Params.width') and change them later with
 set_parameters or modify_feature; edge and face selectors ({"type": "line", "direction": "z"}, "top") are
@@ -39,7 +42,7 @@ def build_server(policy: Policy | None = None) -> FastMCP:
     mcp = FastMCP("agentcad", instructions=INSTRUCTIONS)
 
     @mcp.tool()
-    def list_operations(category: Annotated[str | None, Field(description="draw|edit|annotate|layer|block|layout: "
+    def list_operations(category: Annotated[str | None, Field(description="draw|edit|annotate|layer|block|layout|library: "
                                                                            "full schemas for that category; 'part' "
                                                                            "(or part_sketch|part_feature|part_edit) "
                                                                            "for 3D part operations")] = None,
@@ -90,13 +93,34 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                              "[{\"op\":\"add_circle\",\"center\":[10,10],\"diameter\":8,\"layer\":\"HOLES\",\"tag\":\"h1\"}]. "
                              "See list_operations for every op's parameters.")],
                          dry_run: bool = False,
-                         requirements: Annotated[list[dict] | None, Field(description="Optional requirements to validate after")] = None,
+                         requirements: Annotated[list[dict] | None, Field(description="Requirements the result is "
+                                                 "validated against (same as validate_drawing)")] = None,
                          strict: Annotated[bool, Field(description="Do not save if post-validation fails")] = False,
-                         label: str | None = None) -> dict:
+                         label: str | None = None,
+                         create: Annotated[dict | None, Field(description="Create the drawing first if it does not "
+                                           "exist: {units, template, dxf_version, annotation_scale}")] = None,
+                         bounds: Annotated[list[list[float]] | None, Field(description="[[x0,y0],[x1,y1]] for the "
+                                           "validation")] = None,
+                         layout: Annotated[str | None, Field(description="Validate this paper-space sheet instead of "
+                                           "model space (ops choose their own layout)")] = None) -> dict:
         """Execute an operation batch as one transaction: all params are checked first, any failure aborts with the
         file untouched; success checkpoints the old file, saves atomically, journals, and validates the result.
+        The returned 'validation' is the same independent re-read of the saved file as validate_drawing (issues,
+        failed requirements, passed ids, recognized counts, coverage): no separate validate_drawing call is needed
+        unless you want its detail=true report. With 'create' a new drawing takes one call.
         On a .FCStd part the ops are part_operations (list_operations(category='part'))."""
-        return rt.apply_operations(path, operations, dry_run, requirements, strict, label)
+        return rt.apply_operations(path, operations, dry_run, requirements, strict, label, create, bounds, layout)
+
+    @mcp.tool()
+    def apply_batch(jobs: Annotated[list[dict[str, Any]], Field(description="[{path, operations, create?, "
+                                    "requirements?, bounds?, layout?, strict?, label?}, ...], one per drawing")],
+                    stop_on_error: Annotated[bool, Field(description="Skip the remaining jobs after a failure")] = False
+                    ) -> dict:
+        """apply_operations on several drawings in one call, e.g. a family of parts from a parameter table. Each job
+        is its own transaction (a failed job's operations change nothing, though a drawing its 'create' made stays
+        empty; the other jobs still run) and returns its own validation, so one call creates, draws and checks the
+        whole set."""
+        return rt.apply_batch(jobs, stop_on_error)
 
     @mcp.tool()
     def run_script(path: Path_,
@@ -239,6 +263,18 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         """Open the drawing in AutoCAD headlessly and run AUDIT (no fixes): AutoCAD's own verdict on the file.
         Needs the optional AutoCAD backend; returns a dependency error otherwise."""
         return rt.autocad_audit(path)
+
+    @mcp.tool()
+    def standard_library(item: Annotated[str | None, Field(description="A part, hole kind, P&ID symbol or GD&T "
+                                                           "characteristic: its dimensions / details")] = None,
+                         size: Annotated[str | None, Field(description="e.g. 'M8' or '6204'")] = None,
+                         drawing: Annotated[str | None, Field(description="A drawing: its parts list (standard "
+                                                              "parts, P&ID symbols and instruments)")] = None) -> dict:
+        """Industry libraries: P&ID symbols (ISO 10628 / ISA-5.1), GD&T (ISO 1101), ISO bolts, nuts, washers,
+        cap screws, ball bearings and hole sizes. No arguments: compact index. Draw them with the 'library' ops
+        (add_pid_symbol, add_process_line, add_feature_control_frame, add_datum_feature, add_surface_finish,
+        add_standard_hole, add_standard_part)."""
+        return rt.standard_library(item, size, drawing)
 
     @mcp.tool()
     def get_metrics() -> dict:

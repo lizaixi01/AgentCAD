@@ -856,6 +856,146 @@ Create a paper-space layout (a printed sheet) with its paper size. Draw the fram
 | `if_exists` | enum ['error', 'skip'] |  | error |  |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
+## library
+
+### `add_datum_feature`
+
+GD&T datum feature symbol: a filled triangle on the feature at 'on', a line to a square box centred at 'insert' with the datum letter. All entities share the tag.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `letter` | string | 是 |  |  |
+| `on` | point | 是 |  | Point on the datum feature |
+| `insert` | point | 是 |  | Centre of the letter box |
+| `height` | length >0 |  |  | Text height (default 3.5 mm on paper) |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `add_feature_control_frame`
+
+GD&T feature control frame (ISO 1101 / ASME Y14.5): characteristic symbol, tolerance (with diameter sign and material modifier) and up to three datum references such as 'A', 'B(M)', 'A-B'. 'insert' is the frame's lower-left corner; 'leader_to' adds a leader with an arrow to the feature. Text height defaults to 3.5 mm on paper; the frame is twice as high. All entities share the tag.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `insert` | point | 是 |  |  |
+| `characteristic` | enum ['angularity', 'circular_runout', 'circularity', 'concentricity', 'cylindricity', 'flatness', 'parallelism', 'perpendicularity', 'position', 'profile_line', 'profile_surface', 'straightness', 'symmetry', 'total_runout'] | 是 |  |  |
+| `tolerance` | string | 是 |  | e.g. '0.05' |
+| `diameter` | bool |  | False | Cylindrical zone: prefix %%c (Ø) |
+| `modifier` | enum ['M', 'L', 'S', 'P', 'F', 'T', 'U'] |  |  | Tolerance modifier, e.g. M = MMC |
+| `datums` | list |  |  | Datum references, primary first |
+| `height` | length >0 |  |  | Text height |
+| `leader_to` | point |  |  |  |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `add_pid_symbol`
+
+P&ID symbol (ISO 10628 / ISA-5.1 style) as a block with a TAG attribute (instruments: FUNC and LOOP, from tag_no 'FIC-101'). With 'on' (a pipe: LINE or open LWPOLYLINE) an inline symbol (valves, reducer, flange, strainer, orifice) is placed on the pipe at the point nearest 'insert' (default its middle), turned along it, and the pipe is cut where the symbol sits. 'size' is the symbol width (default 10 mm on paper). See standard_library for the symbol list.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `symbol` | enum ['ball_valve', 'blind_flange', 'butterfly_valve', 'centrifugal_pump', 'check_valve', 'compressor', 'control_valve', 'flange', 'flow_arrow', 'gate_valve', 'globe_valve', 'heat_exchanger', 'instrument_dcs', 'instrument_field', 'instrument_panel', 'instrument_plc', 'orifice_plate', 'reducer', 'relief_valve', 'strainer', 'tank', 'three_way_valve', 'vessel_horizontal', 'vessel_vertical'] | 是 |  |  |
+| `insert` | point |  |  | Position (or point near the pipe with 'on') |
+| `on` | selector |  |  | Pipe to put an inline symbol on |
+| `rotation` | angle |  | 0.0 | Rotation; with 'on' added to the pipe direction (180 reverses a check valve) |
+| `size` | length >0 |  |  | Symbol width |
+| `tag_no` | string |  |  | Tag number, e.g. 'V-101' or 'FIC-101' |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `add_process_line`
+
+P&ID line through 'points' (one LWPOLYLINE): process, utility, signal_electric (dashed) or signal_pneumatic (with // marks), on a PID_* layer unless 'layer' is given. Optional flow arrows on each segment and a line number written along the longest segment. Arrows, marks and the number are tagged '<tag>.deco'.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `points` | points | 是 |  |  |
+| `kind` | enum ['process', 'utility', 'signal_electric', 'signal_pneumatic'] |  | process |  |
+| `line_number` | string |  |  | e.g. '2"-P-1001-A1A' |
+| `flow_arrows` | bool |  | True | Arrow in the middle of each segment, pointing along it |
+| `arrow_size` | length >0 |  |  | Default 4 mm on paper |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `add_standard_hole`
+
+ISO metric holes at one or more 'centers' in one op: clearance (ISO 273, fit fine|medium|coarse), tapped (tap-drill circle plus the thin 3/4 thread circle of ISO 6410, on layer THREAD) or counterbore for ISO 4762 cap screws. Circles go on HOLES unless 'layer' is given; center marks are added by default. The result gives the diameters and a callout text (e.g. 'M8-6H') for a leader.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `centers` | points | 是 |  |  |
+| `size` | enum ['M3', 'M4', 'M5', 'M6', 'M8', 'M10', 'M12', 'M14', 'M16', 'M20', 'M24'] | 是 |  |  |
+| `kind` | enum ['clearance', 'tapped', 'counterbore'] |  | clearance |  |
+| `fit` | enum ['fine', 'medium', 'coarse'] |  | medium |  |
+| `center_marks` | bool |  | True |  |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `add_standard_part`
+
+ISO standard part as a block, true size: hex_bolt (ISO 4014/4017), hex_nut (ISO 4032), washer (ISO 7089), socket_head_cap_screw (ISO 4762) in sizes M3-M24, or ball_bearing (ISO 15, 6000-6310). view 'top' looks along the axis; 'side' stands on 'insert' (bolts and screws: the bearing face under the head, shank pointing -y before 'rotation'; bearings: centred). Bolts and screws need 'length' for the side view. The block carries PART / STANDARD / SIZE attributes for the parts list (standard_library drawing=...).
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `part` | enum ['hex_bolt', 'hex_nut', 'washer', 'socket_head_cap_screw', 'ball_bearing'] | 是 |  |  |
+| `size` | string | 是 |  | 'M10' or '6204' |
+| `insert` | point | 是 |  |  |
+| `view` | enum ['top', 'side'] |  | side |  |
+| `length` | length >0 |  |  | Nominal length (bolts and screws) |
+| `rotation` | angle |  | 0.0 |  |
+| `count_in_bom` | bool |  | True | false for a second view of a part already counted |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `add_surface_finish`
+
+Surface texture symbol (ISO 1302 / ISO 21920): tip at 'insert' on the surface; process any | removal_required (closed V) | removal_prohibited (circle); optional Ra value written over the extension bar. 'rotation' turns the symbol about its tip.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `insert` | point | 是 |  |  |
+| `ra` | string |  |  | e.g. '3.2' (written 'Ra 3.2') |
+| `process` | enum ['any', 'removal_required', 'removal_prohibited'] |  | any |  |
+| `rotation` | angle |  | 0.0 |  |
+| `height` | length >0 |  |  | Text height (default 3.5 mm on paper) |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
 ## part_edit
 
 ### `delete_feature`
