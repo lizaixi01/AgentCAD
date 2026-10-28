@@ -31,5 +31,7 @@ examples/trials/**/T7_real_dwg__*.png
 examples/trials/hard/**/H2_r*.jsonl
 examples/trials/hard/**/H2_r*.stderr.log
 
+# Claude Code desktop session worktrees (see AGENTS.md)
+.claude/worktrees/
 # MCP client config holds this checkout's absolute paths; generate it with `agentcad --root playground mcp-config --write`
 .mcp.json
