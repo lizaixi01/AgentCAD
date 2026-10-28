@@ -8,9 +8,10 @@ changes apart.
 Never edit in the main checkout (`D:\Projects\AgentCAD`) while another agent may be working there. Do
 each task in its own worktree on its own branch:
 
-- A Claude Code desktop session started with a worktree already has one (`.claude/worktrees/`).
+- A Claude Code desktop session started with a worktree already has one (`.claude/worktrees/`). Run
+  `scripts\new-worktree.ps1 -Here` in it once to set up the two items below.
 - Otherwise: `scripts\new-worktree.ps1 <task-name>` creates `..\AgentCAD-wt\<task-name>` on branch
-  `agent/<task-name>` from `main`.
+  `agent/<task-name>` from a freshly fetched `origin/main` (the local `main` may lag behind).
 
 Each worktree needs what git does not carry over (the script does both):
 
@@ -35,7 +36,8 @@ Not isolated by a worktree:
 3. Commit, push the branch (`git push -u origin <branch>`) and open a pull request against `main`
    (`gh pr create`). Never push to `main` directly.
 4. Get the PR reviewed and merged as below.
-5. After the merge: `scripts\new-worktree.ps1 <task-name> -Remove`. Update the main checkout with
+5. After the merge: `scripts\new-worktree.ps1 <task-name> -Remove` (it refuses while the branch is not
+   in `origin/main`). Update the main checkout with
    `git pull --ff-only` only when its working tree is clean (another agent may be using it).
 
 ## Review and merge
@@ -50,8 +52,9 @@ The user has handed review and merge to AI. A PR is merged when all of these hol
 2. **Tests pass** on the PR branch, brought up to date with `main`, in a worktree.
 3. **GitHub reports the PR mergeable.**
 
-Then merge with `gh pr merge <n> --merge --delete-branch` (merge commits keep the branch's commit
-SHAs, so checkouts that already have them fast-forward). If the review finds problems, the author
+Then the agent that opened the PR, or the session that started that agent, merges with
+`gh pr merge <n> --merge --delete-branch`. Merge commits keep the branch's commit SHAs, so checkouts
+that already have them fast-forward. If the review finds problems, the author
 fixes them on the same branch and the PR is reviewed again.
 
 Ask the user before merging a PR that:
