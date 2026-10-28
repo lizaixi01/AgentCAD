@@ -489,7 +489,7 @@ $SKPOLY
   9
 $TDCREATE
  40
-2461342.985474537
+2461343.0430324073
   9
 $TDUCREATE
  40
@@ -497,7 +497,7 @@ $TDUCREATE
   9
 $TDUPDATE
  40
-2461342.985474537
+2461343.0430324073
   9
 $TDUUPDATE
  40
@@ -549,7 +549,7 @@ $SPLINESEGS
   9
 $HANDSEED
   5
-117
+114
   9
 $SURFTAB1
  70
@@ -929,11 +929,11 @@ $PSTYLEMODE
   9
 $FINGERPRINTGUID
   2
-{AC9859F2-6132-4855-9366-B2938649C3F2}
+{5CC0B79B-6DF4-49B2-BEEC-D65474CDA251}
   9
 $VERSIONGUID
   2
-{75E45B01-72DD-41A5-ABC6-5760E6E0E20E}
+{7BEC0745-7968-4E7B-93C4-856828186954}
   9
 $EXTNAMES
 290
@@ -1323,9 +1323,9 @@ ISM
   0
 CLASS
   1
-LAYOUT
+ACDBPLACEHOLDER
   2
-AcDbLayout
+AcDbPlaceHolder
   3
 ObjectDBX Classes
  90
@@ -1339,9 +1339,9 @@ ObjectDBX Classes
   0
 CLASS
   1
-ACDBPLACEHOLDER
+LAYOUT
   2
-AcDbPlaceHolder
+AcDbLayout
   3
 ObjectDBX Classes
  90
@@ -2359,7 +2359,7 @@ Continuous
   0
 LAYER
   5
-F6
+F7
 330
 1
 100
@@ -2383,7 +2383,7 @@ Continuous
   0
 LAYER
   5
-FA
+102
 330
 1
 100
@@ -2391,7 +2391,7 @@ AcDbSymbolTableRecord
 100
 AcDbLayerTableRecord
   2
-TITLE
+TEXT
  70
 0
  62
@@ -2407,7 +2407,7 @@ Continuous
   0
 LAYER
   5
-115
+112
 330
 1
 100
@@ -2441,7 +2441,7 @@ STYLE
 100
 AcDbSymbolTable
  70
-26
+27
   0
 STYLE
   5
@@ -3171,6 +3171,34 @@ LiberationMono-Italic.ttf
   4
 
   0
+STYLE
+  5
+F6
+330
+5
+100
+AcDbSymbolTableRecord
+100
+AcDbTextStyleTableRecord
+  2
+CN
+ 70
+0
+ 40
+0.0
+ 41
+1.0
+ 50
+0.0
+ 71
+0
+ 42
+2.5
+  3
+gbenor.shx
+  4
+gbcbig.shx
+  0
 ENDTAB
   0
 TABLE
@@ -3257,7 +3285,7 @@ EZDXF
   0
 APPID
   5
-F8
+F9
 330
 3
 100
@@ -6729,7 +6757,7 @@ AcDbViewport
   0
 LWPOLYLINE
   5
-F7
+F8
 330
 F1
 100
@@ -6738,6 +6766,8 @@ AcDbEntity
 1
   8
 BORDER
+370
+25
 100
 AcDbPolyline
  90
@@ -6767,7 +6797,7 @@ tag=frame_outer
   0
 LWPOLYLINE
   5
-F9
+FA
 330
 F1
 100
@@ -6805,7 +6835,7 @@ AGENTCAD
 1000
 tag=frame_inner
   0
-LINE
+LWPOLYLINE
   5
 FB
 330
@@ -6815,867 +6845,7 @@ AcDbEntity
  67
 1
   8
-TITLE
-100
-AcDbLine
- 10
-235.0
- 20
-45.0
- 30
-0.0
- 11
-415.0
- 21
-45.0
- 31
-0.0
-  0
-LINE
-  5
-FC
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbLine
- 10
-235.0
- 20
-35.0
- 30
-0.0
- 11
-415.0
- 21
-35.0
- 31
-0.0
-  0
-LINE
-  5
-FD
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbLine
- 10
-235.0
- 20
-25.0
- 30
-0.0
- 11
-415.0
- 21
-25.0
- 31
-0.0
-  0
-LINE
-  5
-FE
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbLine
- 10
-235.0
- 20
-15.0
- 30
-0.0
- 11
-415.0
- 21
-15.0
- 31
-0.0
-  0
-LINE
-  5
-FF
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbLine
- 10
-235.0
- 20
-5.0
- 30
-0.0
- 11
-415.0
- 21
-5.0
- 31
-0.0
-  0
-LINE
-  5
-100
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbLine
- 10
-235.0
- 20
-45.0
- 30
-0.0
- 11
-235.0
- 21
-5.0
- 31
-0.0
-  0
-LINE
-  5
-101
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbLine
- 10
-265.0
- 20
-45.0
- 30
-0.0
- 11
-265.0
- 21
-5.0
- 31
-0.0
-  0
-LINE
-  5
-102
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbLine
- 10
-325.0
- 20
-45.0
- 30
-0.0
- 11
-325.0
- 21
-5.0
- 31
-0.0
-  0
-LINE
-  5
-103
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbLine
- 10
-355.0
- 20
-45.0
- 30
-0.0
- 11
-355.0
- 21
-5.0
- 31
-0.0
-  0
-LINE
-  5
-104
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbLine
- 10
-415.0
- 20
-45.0
- 30
-0.0
- 11
-415.0
- 21
-5.0
- 31
-0.0
-  0
-TEXT
-  5
-105
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-250.0
- 20
-40.0
- 30
-0.0
- 40
-3.5
-  1
-图名
- 72
-1
- 11
-250.0
- 21
-40.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r0c0
-  0
-TEXT
-  5
-106
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-295.0
- 20
-40.0
- 30
-0.0
- 40
-3.5
-  1
-底板
- 72
-1
- 11
-295.0
- 21
-40.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r0c1
-  0
-TEXT
-  5
-107
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-340.0
- 20
-40.0
- 30
-0.0
- 40
-3.5
-  1
-图号
- 72
-1
- 11
-340.0
- 21
-40.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r0c2
-  0
-TEXT
-  5
-108
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-385.0
- 20
-40.0
- 30
-0.0
- 40
-3.5
-  1
-BP-300
- 72
-1
- 11
-385.0
- 21
-40.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r0c3
-  0
-TEXT
-  5
-109
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-250.0
- 20
-30.0
- 30
-0.0
- 40
-3.5
-  1
-比例
- 72
-1
- 11
-250.0
- 21
-30.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r1c0
-  0
-TEXT
-  5
-10A
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-295.0
- 20
-30.0
- 30
-0.0
- 40
-3.5
-  1
-1:2
- 72
-1
- 11
-295.0
- 21
-30.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r1c1
-  0
-TEXT
-  5
-10B
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-340.0
- 20
-30.0
- 30
-0.0
- 40
-3.5
-  1
-材料
- 72
-1
- 11
-340.0
- 21
-30.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r1c2
-  0
-TEXT
-  5
-10C
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-385.0
- 20
-30.0
- 30
-0.0
- 40
-3.5
-  1
-Q235
- 72
-1
- 11
-385.0
- 21
-30.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r1c3
-  0
-TEXT
-  5
-10D
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-250.0
- 20
-20.0
- 30
-0.0
- 40
-3.5
-  1
-单位
- 72
-1
- 11
-250.0
- 21
-20.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r2c0
-  0
-TEXT
-  5
-10E
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-295.0
- 20
-20.0
- 30
-0.0
- 40
-3.5
-  1
-mm
- 72
-1
- 11
-295.0
- 21
-20.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r2c1
-  0
-TEXT
-  5
-10F
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-340.0
- 20
-20.0
- 30
-0.0
- 40
-3.5
-  1
-数量
- 72
-1
- 11
-340.0
- 21
-20.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r2c2
-  0
-TEXT
-  5
-110
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-385.0
- 20
-20.0
- 30
-0.0
- 40
-3.5
-  1
-1
- 72
-1
- 11
-385.0
- 21
-20.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r2c3
-  0
-TEXT
-  5
-111
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-250.0
- 20
-10.0
- 30
-0.0
- 40
-3.5
-  1
-设计
- 72
-1
- 11
-250.0
- 21
-10.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r3c0
-  0
-TEXT
-  5
-112
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-340.0
- 20
-10.0
- 30
-0.0
- 40
-3.5
-  1
-日期
- 72
-1
- 11
-340.0
- 21
-10.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r3c2
-  0
-TEXT
-  5
-113
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
-100
-AcDbText
- 10
-385.0
- 20
-10.0
- 30
-0.0
- 40
-3.5
-  1
-2026-10-28
- 72
-1
- 11
-385.0
- 21
-10.0
- 31
-0.0
-100
-AcDbText
- 73
-2
-1001
-AGENTCAD
-1000
-tag=tb.r3c3
-  0
-LWPOLYLINE
-  5
-114
-330
-F1
-100
-AcDbEntity
- 67
-1
-  8
-TITLE
+BORDER
 370
 50
 100
@@ -7703,11 +6873,765 @@ AcDbPolyline
 1001
 AGENTCAD
 1000
-tag=tb_outline
+tag=tb_outer
+  0
+LINE
+  5
+FC
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+BORDER
+370
+25
+100
+AcDbLine
+ 10
+235.0
+ 20
+15.0
+ 30
+0.0
+ 11
+415.0
+ 21
+15.0
+ 31
+0.0
+  0
+LINE
+  5
+FD
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+BORDER
+370
+25
+100
+AcDbLine
+ 10
+235.0
+ 20
+25.0
+ 30
+0.0
+ 11
+415.0
+ 21
+25.0
+ 31
+0.0
+  0
+LINE
+  5
+FE
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+BORDER
+370
+25
+100
+AcDbLine
+ 10
+235.0
+ 20
+35.0
+ 30
+0.0
+ 11
+415.0
+ 21
+35.0
+ 31
+0.0
+  0
+LINE
+  5
+FF
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+BORDER
+370
+25
+100
+AcDbLine
+ 10
+265.0
+ 20
+5.0
+ 30
+0.0
+ 11
+265.0
+ 21
+45.0
+ 31
+0.0
+  0
+LINE
+  5
+100
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+BORDER
+370
+25
+100
+AcDbLine
+ 10
+325.0
+ 20
+5.0
+ 30
+0.0
+ 11
+325.0
+ 21
+45.0
+ 31
+0.0
+  0
+LINE
+  5
+101
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+BORDER
+370
+25
+100
+AcDbLine
+ 10
+355.0
+ 20
+5.0
+ 30
+0.0
+ 11
+355.0
+ 21
+45.0
+ 31
+0.0
+  0
+TEXT
+  5
+103
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+250.0
+ 20
+40.0
+ 30
+0.0
+ 40
+3.5
+  1
+图名
+  7
+CN
+ 72
+1
+ 11
+250.0
+ 21
+40.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+104
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+295.0
+ 20
+40.0
+ 30
+0.0
+ 40
+5.0
+  1
+底板
+  7
+CN
+ 72
+1
+ 11
+295.0
+ 21
+40.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+1001
+AGENTCAD
+1000
+tag=tb_title
+  0
+TEXT
+  5
+105
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+340.0
+ 20
+40.0
+ 30
+0.0
+ 40
+3.5
+  1
+图号
+  7
+CN
+ 72
+1
+ 11
+340.0
+ 21
+40.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+106
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+385.0
+ 20
+40.0
+ 30
+0.0
+ 40
+3.5
+  1
+BP-300
+  7
+CN
+ 72
+1
+ 11
+385.0
+ 21
+40.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+1001
+AGENTCAD
+1000
+tag=tb_dwgno
+  0
+TEXT
+  5
+107
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+250.0
+ 20
+30.0
+ 30
+0.0
+ 40
+3.5
+  1
+比例
+  7
+CN
+ 72
+1
+ 11
+250.0
+ 21
+30.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+108
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+295.0
+ 20
+30.0
+ 30
+0.0
+ 40
+3.5
+  1
+1:2
+  7
+CN
+ 72
+1
+ 11
+295.0
+ 21
+30.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+1001
+AGENTCAD
+1000
+tag=tb_scale
+  0
+TEXT
+  5
+109
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+340.0
+ 20
+30.0
+ 30
+0.0
+ 40
+3.5
+  1
+材料
+  7
+CN
+ 72
+1
+ 11
+340.0
+ 21
+30.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+10A
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+385.0
+ 20
+30.0
+ 30
+0.0
+ 40
+3.5
+  1
+Q235
+  7
+CN
+ 72
+1
+ 11
+385.0
+ 21
+30.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+1001
+AGENTCAD
+1000
+tag=tb_material
+  0
+TEXT
+  5
+10B
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+250.0
+ 20
+20.0
+ 30
+0.0
+ 40
+3.5
+  1
+单位
+  7
+CN
+ 72
+1
+ 11
+250.0
+ 21
+20.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+10C
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+295.0
+ 20
+20.0
+ 30
+0.0
+ 40
+3.5
+  1
+mm
+  7
+CN
+ 72
+1
+ 11
+295.0
+ 21
+20.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+10D
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+340.0
+ 20
+20.0
+ 30
+0.0
+ 40
+3.5
+  1
+张数
+  7
+CN
+ 72
+1
+ 11
+340.0
+ 21
+20.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+10E
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+385.0
+ 20
+20.0
+ 30
+0.0
+ 40
+3.5
+  1
+共1张 第1张
+  7
+CN
+ 72
+1
+ 11
+385.0
+ 21
+20.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+10F
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+250.0
+ 20
+10.0
+ 30
+0.0
+ 40
+3.5
+  1
+设计
+  7
+CN
+ 72
+1
+ 11
+250.0
+ 21
+10.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+110
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+340.0
+ 20
+10.0
+ 30
+0.0
+ 40
+3.5
+  1
+日期
+  7
+CN
+ 72
+1
+ 11
+340.0
+ 21
+10.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
+  0
+TEXT
+  5
+111
+330
+F1
+100
+AcDbEntity
+ 67
+1
+  8
+TEXT
+100
+AcDbText
+ 10
+385.0
+ 20
+10.0
+ 30
+0.0
+ 40
+3.5
+  1
+2026-10-29
+  7
+CN
+ 72
+1
+ 11
+385.0
+ 21
+10.0
+ 31
+0.0
+100
+AcDbText
+ 73
+2
   0
 VIEWPORT
   5
-116
+113
 330
 F1
 100
@@ -7721,13 +7645,13 @@ AcDbViewport
  10
 220.0
  20
-148.5
+150.0
  30
 0.0
  40
-175.0
+210.0
  41
-110.0
+130.0
  68
 2
  69
@@ -7735,7 +7659,7 @@ AcDbViewport
  12
 137.7
  22
-79.18
+79.2
  13
 0.0
  23
@@ -7767,7 +7691,7 @@ AcDbViewport
  44
 0.0
  45
-220.0
+260.0
  50
 0.0
  51
@@ -9559,7 +9483,7 @@ DictionaryVariables
 280
 0
   1
-1.4.5 @ 2026-10-28T15:38:44.011562+00:00
+1.4.5 @ 2026-10-28T17:01:13.571116+00:00
   0
 VISUALSTYLE
   5
@@ -10271,7 +10195,7 @@ DictionaryVariables
 280
 0
   1
-1.4.5 @ 2026-10-28T15:39:05.787814+00:00
+1.4.5 @ 2026-10-28T17:01:58.643166+00:00
   0
 LAYOUT
   5
