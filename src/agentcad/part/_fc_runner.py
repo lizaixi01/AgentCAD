@@ -1436,9 +1436,11 @@ def feature_info(o, detail=False):
 
 
 def parameters(doc):
+    """Parameter values in the part's unit (FreeCAD holds them in mm)."""
     ss = doc.getObject("Params")
     if ss is None:
         return {}
+    k = UNIT_MM.get((doc.Meta or {}).get("agentcad_units", "mm"), 1.0)
     out = {}
     row = 1
     while row < 1000:
@@ -1448,7 +1450,7 @@ def parameters(doc):
         alias = ss.getAlias(f"B{row}")
         if alias:
             v = ss.get(alias)
-            out[alias] = {"value": r6(getattr(v, "Value", v)) if not isinstance(v, str) else v,
+            out[alias] = {"value": r6(getattr(v, "Value", v) / k) if not isinstance(v, str) else v,
                           **({"formula": ss.getContents(f"B{row}")} if ss.getContents(f"B{row}").startswith("=")
                              and not _is_literal(ss.getContents(f"B{row}")) else {})}
         row += 1
@@ -1547,11 +1549,16 @@ def _non_partdesign(body):
 
 
 REQ_KEYS = {
-    "bbox": {"size", "min", "max", "tolerance"}, "volume": {"value", "tolerance", "rel_tolerance"},
+    "bbox": {"size", "min", "max", "tolerance", "any_orientation"}, "volume": {"value", "tolerance", "rel_tolerance"},
     "area": {"value", "tolerance", "rel_tolerance"}, "hole": {"diameter", "count", "tolerance"},
     "hole_count": {"count"}, "solid_count": {"count"}, "parameter": {"name", "value", "tolerance"},
-    "center_of_mass": {"value", "tolerance"}, "feature_count": {"type", "count", "min"},
+    "center_of_mass": {"value", "tolerance"}, "feature_count": {"feature_type", "count", "min"},
 }
+
+
+REQ_NEEDS = {"bbox": [("size", "min", "max")], "volume": [("value",)], "area": [("value",)],
+             "hole": [("diameter",)], "hole_count": [("count",)], "solid_count": [("count",)],
+             "parameter": [("name",)], "center_of_mass": [("value",)], "feature_count": [("count", "min")]}
 
 
 def check_requirements(doc, reqs):
@@ -1570,6 +1577,12 @@ def check_requirements(doc, reqs):
         if unknown:
             warns.append(f"requirements[{k}] ({t}): unknown fields {sorted(unknown)} ignored")
         out = {"index": k, "type": t, **({"id": r["id"]} if r.get("id") else {})}
+        missing = [alts for alts in REQ_NEEDS.get(t, []) if not any(r.get(a) is not None for a in alts)]
+        if missing:
+            out.update(passed=False, message=f"{t} needs {' and '.join(' or '.join(a) for a in missing)}",
+                       hint=f"{t} fields: {sorted(REQ_KEYS[t])}")
+            res.append(out)
+            continue
         if s is None and t not in ("parameter",):
             out.update(passed=False, message="no solid to measure")
             res.append(out)
@@ -1578,8 +1591,10 @@ def check_requirements(doc, reqs):
         if t == "bbox":
             ok = True
             if r.get("size") is not None:
-                want = sorted(float(x) for x in r["size"]) if r.get("any_orientation") else [float(x) for x in r["size"]]
+                want = [float(x) for x in r["size"]]
                 act = s["size"]
+                if r.get("any_orientation"):  # compare sizes regardless of which axis carries which
+                    want, act = sorted(want), sorted(act)
                 dev = [abs(a - w) for a, w in zip(act, want)]
                 ok = all(d <= tol for d in dev)
                 out.update(expected=want, actual=act, deviation=[r6(d) for d in dev])
@@ -1617,8 +1632,8 @@ def check_requirements(doc, reqs):
             dev = [abs(a - float(w)) for a, w in zip(act, r["value"])]
             out.update(expected=r["value"], actual=act, passed=all(x <= tol for x in dev))
         elif t == "feature_count":
-            feats = [o for o in b.Group if o.TypeId.endswith("::" + str(r.get("type")))] if r.get("type") else \
-                [o for o in b.Group if o.TypeId != "Sketcher::SketchObject"]
+            feats = [o for o in b.Group if o.TypeId.endswith("::" + str(r["feature_type"]))] \
+                if r.get("feature_type") else [o for o in b.Group if o.TypeId != "Sketcher::SketchObject"]
             n = len(feats)
             ok = n >= int(r["min"]) if r.get("min") is not None else n == int(r["count"])
             out.update(actual=n, passed=ok)
@@ -1753,6 +1768,13 @@ def action_export(job):
     body = next((o for o in doc.Objects if o.TypeId == "PartDesign::Body" and not o.Shape.isNull()), None)
     if body is None:
         raise OpError("NO_SOLID", "Nothing to export: the part has no solid", category="geometry")
+    sh = body.Shape
+    if len(sh.Solids) != 1 or not sh.isValid() or broken(doc):
+        # a scorer such as BenchCAD voxelises whatever it reads: a broken export would be scored, not refused
+        raise OpError("NOT_EXPORTABLE", f"{body.Name} is not one valid solid ({len(sh.Solids)} solids, "
+                      f"valid={sh.isValid()}, failed features: {[b['feature'] for b in broken(doc)]})",
+                      category="geometry", hint="Fix the part first (validate_drawing lists the issues)",
+                      details={"shape": shape_summary(sh)})
     out = job["output"]
     if fmt == "step":
         import Import
@@ -1769,10 +1791,33 @@ def action_export(job):
         Mesh.Mesh(m).write(out) if fmt == "stl" else m.write(out)
     else:
         raise OpError("UNSUPPORTED_FORMAT", f"Unsupported 3D export format {fmt!r}")
-    return {"format": fmt, "shape": shape_summary(body.Shape)}
+    res = {"format": fmt, "shape": shape_summary(sh)}
+    if fmt in ("step", "iges", "brep"):
+        res["readback"] = readback(out, sh)
+        if not res["readback"]["matches"]:
+            raise OpError("EXPORT_MISMATCH", f"The written {fmt.upper()} reads back differently from the part",
+                          category="geometry", details=res)
+    return res
+
+
+def readback(path, ref=None):
+    """Read an exported B-rep file back with Part.read and compare it with the part's shape."""
+    got = Part.read(path)
+    out = {k: v for k, v in shape_summary(got).items() if k in ("valid", "solids", "volume", "size", "bbox")}
+    if ref is not None:
+        out["matches"] = bool(out["valid"] and out["solids"] == len(ref.Solids)
+                              and abs(got.Volume - ref.Volume) <= 1e-6 * max(1.0, abs(ref.Volume))
+                              and all(abs(a - b) <= 1e-4 for a, b in zip(out["size"], shape_summary(ref)["size"])))
+    return out
+
+
+def action_read_shape(job):
+    """Summary of a STEP/IGES/BREP file (an export, or a reference part), independent of any FCStd."""
+    return {"shape": readback(job["input"])}
 
 
 ACTIONS = {"apply": action_apply, "summary": action_summary, "validate": action_validate,
+           "read_shape": action_read_shape,
            "topology": action_topology, "export": action_export}
 
 

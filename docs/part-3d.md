@@ -77,11 +77,13 @@ FreeCAD 1.1.4 自带的拓扑命名修复在脚本建模时不可靠：实测改
 - B-rep 有效性、Tip 之后的特征（`FEATURES_AFTER_TIP`）、草图冲突/冗余约束。
 
 需求：`bbox {size}`、`volume`/`area {value, rel_tolerance}`、`hole {diameter, count}`（按内圆柱面识别、同轴合并）、
-`hole_count`、`solid_count`、`parameter {name, value}`、`center_of_mass`、`feature_count`。
+`hole_count`、`solid_count`、`parameter {name, value}`、`center_of_mass`、`feature_count {feature_type, count|min}`。零件参数按零件单位报告和比较，几何（体积、尺寸、包围盒）一律按 mm。
 
 ## 导出
 
 `export_drawing` 对零件支持 `step`（BenchCAD 等按 STEP 评分）、`iges`、`brep`、`stl`、`obj`。
+
+Body 不是恰好一个有效实体（或有特征出错）时拒绝导出（`NOT_EXPORTABLE`）：评分器会照样体素化一个坏文件，而不是拒收。STEP/IGES/BREP 写完后用 `Part.read` 读回，和零件比较实体数、有效性、体积和尺寸，结果在 `readback` 里；不一致时报 `EXPORT_MISMATCH`。
 
 ## 已知限制
 
@@ -89,4 +91,5 @@ FreeCAD 1.1.4 自带的拓扑命名修复在脚本建模时不可靠：实测改
 - 没有从三维生成二维工程图（投影视图 → DXF）；这是下一步，接上之后三维模型能直接出图。
 - 没有渲染图片给 Agent 看（无 GUI 的 FreeCAD 不能离屏渲染）。
 - `on_face` 的草图是绝对定位：面移动时由 AgentCAD 的重新解析跟上，直接用 FreeCAD GUI 改模型则不会跟。
+- 非 mm 零件里，`set_parameters` 的裸数字按长度（零件单位）换算；计数类参数（如阵列个数）请直接写在操作里。
 - 还没有用 Agent 跑过三维任务的对比实验。

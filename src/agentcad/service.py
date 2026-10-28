@@ -362,9 +362,7 @@ class Runtime:
         as validate_drawing (``requirements``, ``bounds``, ``layout``), so a separate validate_drawing call is only
         needed for its detail=true report."""
         if part.is_part(path):
-            if create is not None and not self.policy.resolve(path, suffixes=(".fcstd",)).exists() and not dry_run:
-                part.create(self, path, create.get("units", "mm"), False)
-            return part.apply(self, path, operations, dry_run, requirements, strict, label)
+            return part.apply(self, path, operations, dry_run, requirements, strict, label, create)
         if not dry_run:
             self.policy.check_write()
         created = None

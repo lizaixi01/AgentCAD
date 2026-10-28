@@ -200,7 +200,7 @@ def test_rollback_diff_export(rt, ws, plate):
     assert d["shape"]["size"]["new"][2] == 8.0
     e = ok(rt.export_drawing("plate.FCStd", "out/plate.step", "step"))
     assert (ws / "out/plate.step").read_text("utf-8", errors="replace").startswith("ISO-10303-21")
-    assert e["shape"]["size"][2] == 8.0
+    assert e["shape"]["size"][2] == 8.0 and e["readback"]["matches"]
     ok(rt.export_drawing("plate.FCStd", "out/plate.stl", "stl"))
     assert (ws / "out/plate.stl").stat().st_size > 1000
     ok(rt.rollback("plate.FCStd"))
@@ -306,3 +306,72 @@ def test_create_in_one_call_and_batch(rt):
                            {"path": "two.dxf", "create": {"units": "mm"},
                             "operations": [{"op": "add_line", "start": [0, 0], "end": [10, 0]}]}]))
     assert r["succeeded"] == 2, r
+
+
+def _plate_volume(t):
+    return 80 * 50 * t - 3 * math.pi * 16 * t - 4 * (9 - math.pi * 9 / 4) * t
+
+
+@needs_freecad
+def test_step_export_reads_back_as_the_part(rt, ws, plate):
+    """BenchCAD scores the STEP by voxel IoU, so the file itself must hold the part: read it back in a separate
+    FreeCAD job (Part.read, no FCStd involved) and compare with the known plate."""
+    ok(rt.export_drawing("plate.FCStd", "plate.step", "step"))
+    got = freecad.run({"action": "read_shape"}, inputs={"input": ws / "plate.step"})
+    assert got["ok"], got
+    s = got["shape"]
+    assert s["valid"] and s["solids"] == 1
+    assert s["volume"] == pytest.approx(_plate_volume(6), rel=1e-6)
+    assert s["bbox"] == [[0.0, 0.0, 0.0], [80.0, 50.0, 6.0]]
+
+
+@needs_freecad
+def test_export_refuses_a_part_that_is_not_one_solid(rt, ws):
+    ok(rt.apply_operations("two.FCStd", [
+        {"op": "add_sketch", "shapes": [{"type": "rectangle", "corner": [0, 0], "width": 10, "height": 10},
+                                         {"type": "rectangle", "corner": [20, 0], "width": 10, "height": 10}]},
+        {"op": "pad", "sketch": "$0", "length": 5}], create={"units": "mm"}))
+    r = rt.export_drawing("two.FCStd", "two.step", "step")
+    assert not r["ok"] and r["error"]["code"] == "NOT_EXPORTABLE" and r["error"]["category"] == "geometry"
+    assert not (ws / "two.step").exists()
+
+
+@needs_freecad
+def test_requirement_fields_are_checked(rt, plate):
+    r = ok(rt.validate_drawing("plate.FCStd", requirements=[
+        {"type": "bbox", "size": [6, 80, 50], "any_orientation": True},
+        {"type": "bbox", "size": [6, 80, 50]},
+        {"type": "feature_count", "feature_type": "Pad"},
+        {"type": "volume"},
+        {"type": "feature_count", "feature_type": "Fillet", "count": 1},
+    ], detail=True))["validation"]
+    res = r["requirements"]
+    assert [x["passed"] for x in res] == [True, False, False, False, True]
+    assert "count or min" in res[2]["message"] and "value" in res[3]["message"]
+    assert not any("any_orientation" in w for w in r["warnings"])
+
+
+@needs_freecad
+def test_inch_part_reports_parameters_in_inches(rt):
+    r = ok(rt.apply_operations("in.FCStd", [
+        {"op": "set_parameters", "params": {"w": 2, "height": "1in"}},
+        {"op": "add_sketch", "shapes": [{"type": "rectangle", "corner": [0, 0], "width": "=Params.w",
+                                         "height": "=Params.height"}]},
+        {"op": "pad", "sketch": "$1", "length": 0.5}],
+        create={"units": "in"}, requirements=[{"type": "parameter", "name": "w", "value": 2}]))
+    assert r["validation"]["passed"], r["validation"]
+    assert shape(r)["size"] == [50.8, 25.4, 12.7]  # geometry is reported in mm
+    assert ok(rt.read_drawing("in.FCStd"))["parameters"]["height"]["value"] == pytest.approx(1)
+
+
+@needs_freecad
+def test_create_is_part_of_the_batch(rt, ws):
+    r = ok(rt.apply_operations("new.FCStd", PLATE[:3], create={"units": "mm"}, dry_run=True))
+    assert r["dry_run"] and r["validation"]["shape"]["size"] == [80.0, 50.0, 6.0]
+    assert not (ws / "new.FCStd").exists()
+    r = rt.apply_operations("new.FCStd", PLATE[:3] + [{"op": "fillet", "edges": "all", "radius": 40}],
+                            create={"units": "mm"})
+    assert not r["ok"] and r["error"]["op_index"] == 3
+    assert not (ws / "new.FCStd").exists()  # a failed batch leaves no empty part behind
+    r = ok(rt.apply_operations("new.FCStd", PLATE[:3], create={"units": "mm"}))
+    assert r["created"] == {"units": "mm"} and ok(rt.history("new.FCStd"))["records"][-1]["ok"]

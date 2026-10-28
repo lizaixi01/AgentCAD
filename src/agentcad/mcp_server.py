@@ -167,7 +167,7 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         3D part: FreeCAD re-opens and recomputes the file; checks feature errors, one Body with one valid solid,
         only editable PartDesign features (what CADBench requires), sketch constraints. Requirements: bbox {size},
         volume/area {value, rel_tolerance}, hole {diameter, count}, hole_count, solid_count, parameter {name,
-        value}, center_of_mass, feature_count {type, count|min}."""
+        value}, center_of_mass, feature_count {feature_type, count|min}."""
         return rt.validate_drawing(path, requirements, True, bounds, tolerance, None, layout, detail)
 
     @mcp.tool()
