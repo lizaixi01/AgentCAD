@@ -51,6 +51,11 @@
           "check": "no other objects added",
           "cat": "objects",
           "ok": true
+        },
+        {
+          "check": "centre-line endpoints preserved from fixture",
+          "cat": "preserve",
+          "ok": true
         }
       ],
       "fails": []
@@ -62,8 +67,14 @@
     "input_tokens": 266378,
     "cached_input_tokens": 226816,
     "output_tokens": 1593,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H4",
@@ -117,6 +128,11 @@
           "check": "no other objects added",
           "cat": "objects",
           "ok": true
+        },
+        {
+          "check": "centre-line endpoints preserved from fixture",
+          "cat": "preserve",
+          "ok": true
         }
       ],
       "fails": []
@@ -128,7 +144,13 @@
     "input_tokens": 535975,
     "cached_input_tokens": 497280,
     "output_tokens": 3557,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   }
 ]

@@ -48,8 +48,18 @@
     "input_tokens": 1422737,
     "cached_input_tokens": 1252096,
     "output_tokens": 4625,
+    "rounds_attempted": 5,
     "rounds_completed": 5,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H1",
@@ -106,8 +116,18 @@
     "input_tokens": 2719278,
     "cached_input_tokens": 2539008,
     "output_tokens": 11911,
+    "rounds_attempted": 5,
     "rounds_completed": 5,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": false
   },
   {
     "task": "H1",
@@ -158,8 +178,18 @@
     "input_tokens": 1419970,
     "cached_input_tokens": 1209216,
     "output_tokens": 4813,
+    "rounds_attempted": 5,
     "rounds_completed": 5,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H1",
@@ -216,8 +246,18 @@
     "input_tokens": 2705203,
     "cached_input_tokens": 2465920,
     "output_tokens": 11410,
+    "rounds_attempted": 5,
     "rounds_completed": 5,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": false
   },
   {
     "task": "H1",
@@ -264,8 +304,16 @@
     "input_tokens": 615492,
     "cached_input_tokens": 550656,
     "output_tokens": 2030,
-    "rounds_completed": 3,
-    "infrastructure_ok": false
+    "rounds_attempted": 3,
+    "rounds_completed": 2,
+    "round_statuses": [
+      "completed",
+      "completed",
+      "model_service_interrupted"
+    ],
+    "run_status": "model_service_interrupted",
+    "eligible_for_rate": false,
+    "counted_success": false
   },
   {
     "task": "H1",
@@ -312,8 +360,14 @@
     "input_tokens": 0,
     "cached_input_tokens": 0,
     "output_tokens": 0,
-    "rounds_completed": 1,
-    "infrastructure_ok": false
+    "rounds_attempted": 1,
+    "rounds_completed": 0,
+    "round_statuses": [
+      "model_service_interrupted"
+    ],
+    "run_status": "model_service_interrupted",
+    "eligible_for_rate": false,
+    "counted_success": false
   },
   {
     "task": "H4",
@@ -366,6 +420,11 @@
         {
           "check": "no other objects added",
           "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "centre-line endpoints preserved from fixture",
+          "cat": "preserve",
           "ok": true
         }
       ],
@@ -378,8 +437,14 @@
     "input_tokens": 252825,
     "cached_input_tokens": 215552,
     "output_tokens": 1363,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H4",
@@ -433,6 +498,11 @@
           "check": "no other objects added",
           "cat": "objects",
           "ok": true
+        },
+        {
+          "check": "centre-line endpoints preserved from fixture",
+          "cat": "preserve",
+          "ok": true
         }
       ],
       "fails": []
@@ -444,8 +514,14 @@
     "input_tokens": 478509,
     "cached_input_tokens": 440448,
     "output_tokens": 3545,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H4",
@@ -498,6 +574,11 @@
         {
           "check": "no other objects added",
           "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "centre-line endpoints preserved from fixture",
+          "cat": "preserve",
           "ok": true
         }
       ],
@@ -510,8 +591,14 @@
     "input_tokens": 314778,
     "cached_input_tokens": 272000,
     "output_tokens": 1403,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H4",
@@ -565,6 +652,11 @@
           "check": "no other objects added",
           "cat": "objects",
           "ok": true
+        },
+        {
+          "check": "centre-line endpoints preserved from fixture",
+          "cat": "preserve",
+          "ok": true
         }
       ],
       "fails": []
@@ -576,8 +668,14 @@
     "input_tokens": 525971,
     "cached_input_tokens": 482560,
     "output_tokens": 3235,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H4",
@@ -631,6 +729,11 @@
           "check": "no other objects added",
           "cat": "objects",
           "ok": true
+        },
+        {
+          "check": "centre-line endpoints preserved from fixture",
+          "cat": "preserve",
+          "ok": true
         }
       ],
       "fails": []
@@ -642,8 +745,14 @@
     "input_tokens": 340426,
     "cached_input_tokens": 301568,
     "output_tokens": 1643,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H4",
@@ -697,6 +806,11 @@
           "check": "no other objects added",
           "cat": "objects",
           "ok": true
+        },
+        {
+          "check": "centre-line endpoints preserved from fixture",
+          "cat": "preserve",
+          "ok": true
         }
       ],
       "fails": []
@@ -708,8 +822,14 @@
     "input_tokens": 530479,
     "cached_input_tokens": 484992,
     "output_tokens": 3036,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H5",
@@ -805,8 +925,14 @@
     "input_tokens": 349649,
     "cached_input_tokens": 309632,
     "output_tokens": 2943,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H5",
@@ -902,8 +1028,14 @@
     "input_tokens": 840308,
     "cached_input_tokens": 801152,
     "output_tokens": 5675,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H5",
@@ -999,8 +1131,14 @@
     "input_tokens": 428212,
     "cached_input_tokens": 384768,
     "output_tokens": 3445,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H5",
@@ -1096,8 +1234,14 @@
     "input_tokens": 798199,
     "cached_input_tokens": 760192,
     "output_tokens": 5726,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H5",
@@ -1193,8 +1337,14 @@
     "input_tokens": 316118,
     "cached_input_tokens": 231808,
     "output_tokens": 2684,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H5",
@@ -1290,7 +1440,13 @@
     "input_tokens": 1322944,
     "cached_input_tokens": 1230336,
     "output_tokens": 4698,
+    "rounds_attempted": 1,
     "rounds_completed": 1,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   }
 ]

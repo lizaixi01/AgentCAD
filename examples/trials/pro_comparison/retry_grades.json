@@ -48,8 +48,18 @@
     "input_tokens": 1541785,
     "cached_input_tokens": 1340544,
     "output_tokens": 5136,
+    "rounds_attempted": 5,
     "rounds_completed": 5,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
   },
   {
     "task": "H1",
@@ -106,7 +116,17 @@
     "input_tokens": 2751334,
     "cached_input_tokens": 2546816,
     "output_tokens": 12319,
+    "rounds_attempted": 5,
     "rounds_completed": 5,
-    "infrastructure_ok": true
+    "round_statuses": [
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": false
   }
 ]

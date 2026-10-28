@@ -63,6 +63,83 @@ def test_grade_checks_drawing_instead_of_agent_claim(tmp_path, monkeypatch):
     }), encoding="utf-8")
     monkeypatch.setattr(tempfile, "tempdir", tempfile.tempdir)
     rows = benchmark.grade(out)
-    assert len(rows) == 1 and rows[0]["infrastructure_ok"]
+    assert len(rows) == 1 and rows[0]["run_status"] == "completed"
     assert not rows[0]["ok"]
     assert rows[0]["grade"]["fails"]
+
+
+def test_h4_center_lines_must_stay_at_their_original_positions(tmp_path):
+    import ezdxf
+
+    fixture, drawing = tmp_path / "fixture.dxf", tmp_path / "drawing.dxf"
+    benchmark.make_h4_base(fixture)
+    doc = ezdxf.readfile(fixture)
+    msp = doc.modelspace()
+    for line in list(msp.query("LINE")):
+        if line.dxf.get("color", 256) == 1 and (line.dxf.end - line.dxf.start).magnitude > 1e-6:
+            line.dxf.layer = "CENTER"
+        else:
+            msp.delete_entity(line)
+    doc.saveas(drawing)
+    assert benchmark.h4_center_lines_preserved(fixture, drawing)
+    line = list(msp.query("LINE"))[0]
+    line.dxf.start += (1000, 0, 0)
+    line.dxf.end += (1000, 0, 0)
+    doc.saveas(drawing)
+    assert not benchmark.h4_center_lines_preserved(fixture, drawing)
+
+
+@pytest.mark.parametrize("message,status", [
+    ("Selected model is at capacity. Please try a different model.", "model_service_interrupted"),
+    ("Reconnecting... waiting for network (Connection failed)", "model_service_interrupted"),
+    ("MCP server failed to start", "unclassified_failure"),
+    ("", "unclassified_failure"),
+])
+def test_unfinished_rounds_need_evidence_for_model_service_classification(tmp_path, message, status):
+    log = tmp_path / "events.jsonl"
+    log.write_text(json.dumps({"type": "error", "message": message}), encoding="utf-8")
+    summary = benchmark.summarize(log)
+    assert benchmark.round_status({"exit": 1, "timeout": False, **summary}) == status
+    assert benchmark.unit_status([], 1) == "unclassified_failure"
+
+
+def test_other_tool_use_invalidates_completed_unit_and_deduplicates_events(tmp_path):
+    log = tmp_path / "events.jsonl"
+    item = {"id": "one", "type": "command_execution", "command": "pwd"}
+    events = [{"type": "item.started", "item": item}, {"type": "item.completed", "item": item},
+              {"type": "turn.completed", "usage": {}}]
+    log.write_text("\n".join(json.dumps(e) for e in events), encoding="utf-8")
+    summary = benchmark.summarize(log)
+    assert summary["other_tool_calls"] == 1
+    assert benchmark.unit_status([{"exit": 0, "timeout": False, **summary}], 1) == "tool_policy_violation"
+
+
+def test_failed_pair_records_each_arm_and_exits_unsuccessfully(tmp_path, monkeypatch):
+    import sys
+    import tempfile
+
+    out = tmp_path / "failed-run"
+
+    def prepare(out, pro, reps, tasks):
+        (out / "fixtures").mkdir(parents=True)
+        benchmark.make_h4_base(out / "fixtures" / "H4.dxf")
+
+    def fail(*args):
+        raise OSError("could not start")
+
+    monkeypatch.setattr(benchmark, "prepare", prepare)
+    monkeypatch.setattr(benchmark, "run_unit", fail)
+    monkeypatch.setattr(tempfile, "tempdir", tempfile.tempdir)
+    monkeypatch.setattr(sys, "argv", ["run.py", "--out", str(out), "--pro", str(tmp_path),
+                                      "--tasks", "H4", "--reps", "1"])
+    with pytest.raises(SystemExit) as exc:
+        benchmark.main()
+    assert exc.value.code == 1
+    events = [json.loads(line) for line in (out / "progress.jsonl").read_text(encoding="utf-8").splitlines()]
+    assert {event["arm"] for event in events if event["event"] == "unit_error"} == {"A", "B"}
+    assert events[-2]["event"] == "pair_incomplete"
+    assert events[-1]["event"] == "all_incomplete"
+    rows = json.loads((out / "grades.json").read_text(encoding="utf-8"))
+    assert len(rows) == 2
+    assert all(r["run_status"] == "unclassified_failure" and r["eligible_for_rate"]
+               and not r["counted_success"] for r in rows)

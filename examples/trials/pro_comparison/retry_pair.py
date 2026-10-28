@@ -49,11 +49,18 @@ def main():
     bench.write_json(out / "manifest.json", manifest)
     bench.event(out, {"event": "pair_started", "task": args.task, "rep": args.rep, "retry": True})
     with ThreadPoolExecutor(max_workers=2) as ex:
-        futures = [ex.submit(bench.run_unit, out, pro, args.task, args.rep, arm) for arm in ("A", "B")]
-        for future in futures:
-            future.result()
-    bench.grade(out)
-    bench.event(out, {"event": "pair_finished", "task": args.task, "rep": args.rep, "retry": True})
+        futures = {arm: ex.submit(bench.run_unit, out, pro, args.task, args.rep, arm) for arm in ("A", "B")}
+        for arm, future in futures.items():
+            try:
+                future.result()
+            except Exception as exc:
+                bench.record_unit_error(out, args.task, args.rep, arm, exc)
+    rows = bench.grade(out)
+    complete = len(rows) == 2 and all(row["run_status"] == "completed" for row in rows)
+    bench.event(out, {"event": "pair_finished" if complete else "pair_incomplete",
+                      "task": args.task, "rep": args.rep, "retry": True})
+    if not complete:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

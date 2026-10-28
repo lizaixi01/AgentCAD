@@ -83,16 +83,18 @@ async def case(out: Path, pro: Path, name: str, arm: str, fixture: Path, handle:
         details["drawing_bytes_unchanged"] = path.read_bytes() == initial_bytes
 
     elif name.startswith("pro_batch"):
-        mode = "rollback" if name.endswith("rollback") else "stop"
         async with session(arm, ws, pro, ws / "server1.log") as c:
             details["open"] = await call(c, "drawing_open", {"path": str(path)})
-            details["batch"] = await call(c, "cad_batch", {
+            batch_args = {
                 "steps": [
                     {"tool": "entity_move", "args": {"handle": handle, "dx": 3, "dy": 0}},
                     {"tool": "entity_delete", "args": {"handle": "FFFFFFFE"}},
                 ],
-                "on_error": mode, "verbose": True,
-            })
+                "verbose": True,
+            }
+            if name.endswith("rollback"):
+                batch_args["on_error"] = "rollback"
+            details["batch"] = await call(c, "cad_batch", batch_args)
             details["save"] = await call(c, "drawing_save", {})
 
     elif name == "agentcad_restart":

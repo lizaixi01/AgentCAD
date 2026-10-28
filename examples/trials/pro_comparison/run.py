@@ -16,6 +16,7 @@ import sys
 import tempfile
 import threading
 import time
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -70,7 +71,7 @@ def event(out: Path, payload: dict) -> None:
         with (out / "progress.jsonl").open("a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
             f.flush()
-        print(json.dumps(record, ensure_ascii=False), flush=True)
+        print(json.dumps(record, ensure_ascii=True), flush=True)
 
 
 def version(path: Path) -> str:
@@ -103,27 +104,34 @@ def summarize(path: Path) -> dict:
     final = None
     calls = 0
     errors = 0
-    other_tools = 0
+    other_tools: set[str] = set()
+    event_errors = []
     finished = False
-    for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
+    for index, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines()):
         try:
             e = json.loads(line)
         except json.JSONDecodeError:
             continue
         if e.get("type") == "turn.completed":
             finished, tokens = True, e.get("usage")
+        if e.get("type") == "error" and e.get("message"):
+            event_errors.append(str(e["message"]))
+        if e.get("type") == "turn.failed" and isinstance(e.get("error"), dict):
+            event_errors.append(str(e["error"].get("message", "")))
         item = e.get("item") or {}
+        kind = item.get("type")
+        forbidden = (kind in {"command_execution", "web_search", "file_change", "dynamic_tool_call"}
+                     or (isinstance(kind, str) and kind.endswith("_tool_call")
+                         and (kind != "mcp_tool_call" or item.get("server") != "cad")))
+        if e.get("type") in {"item.started", "item.completed"} and forbidden:
+            other_tools.add(item.get("id") or "event-" + str(index))
         if e.get("type") != "item.completed":
             continue
-        kind = item.get("type")
         if kind == "agent_message":
             final = item.get("text")
-        if kind == "command_execution":
-            other_tools += 1
         if kind != "mcp_tool_call":
             continue
         if item.get("server") != "cad":
-            other_tools += 1
             continue
         calls += 1
         result = item.get("result") or {}
@@ -142,7 +150,45 @@ def summarize(path: Path) -> dict:
         ):
             errors += 1
     return {"turn_completed": finished, "usage": tokens, "cad_calls": calls,
-            "reported_tool_errors": errors, "other_tool_calls": other_tools, "final": final}
+            "reported_tool_errors": errors, "other_tool_calls": len(other_tools), "final": final,
+            "event_errors": event_errors}
+
+
+def round_status(round_result: dict) -> str:
+    """Only recognized model-service evidence permits an interruption classification."""
+    if round_result.get("other_tool_calls", 0):
+        return "tool_policy_violation"
+    if round_result.get("exit") == 0 and round_result.get("turn_completed") and not round_result.get("timeout"):
+        return "completed"
+    messages = "\n".join(round_result.get("event_errors") or []).lower()
+    if "selected model is at capacity" in messages or "reconnecting... waiting for network" in messages:
+        return "model_service_interrupted"
+    return "unclassified_failure"
+
+
+def unit_status(rounds: list[dict], expected: int) -> str:
+    statuses = [round_status(r) for r in rounds]
+    for status in ("tool_policy_violation", "unclassified_failure", "model_service_interrupted"):
+        if status in statuses:
+            return status
+    return "completed" if len(statuses) == expected else "unclassified_failure"
+
+
+def h4_center_lines_preserved(fixture: Path, drawing: Path) -> bool:
+    """Compare center-line endpoints against the red, nonzero lines in the H4 fixture."""
+    import ezdxf
+
+    def endpoints(line):
+        start = tuple(round(float(v), 3) for v in line.dxf.start)
+        end = tuple(round(float(v), 3) for v in line.dxf.end)
+        return tuple(sorted((start, end)))
+
+    original = ezdxf.readfile(fixture).modelspace().query("LINE")
+    expected = Counter(endpoints(e) for e in original
+                       if e.dxf.get("color", 256) == 1 and (e.dxf.end - e.dxf.start).magnitude > 1e-6)
+    actual = ezdxf.readfile(drawing).modelspace().query("LINE")
+    observed = Counter(endpoints(e) for e in actual if e.dxf.layer.upper() == "CENTER")
+    return len(expected) == 10 and expected == observed
 
 
 def prompt(task: str, round_no: int, arm: str) -> str:
@@ -200,12 +246,26 @@ def run_unit(out: Path, pro: Path, task: str, rep: int, arm: str) -> dict:
     for n in range(1, 6 if task == "H1" else 2):
         result = one_round(out, pro, task, rep, arm, ws, n)
         rounds.append(result)
-        if result["exit"] != 0 or not result["turn_completed"] or result["timeout"]:
+        if round_status(result) != "completed":
             break
     result = {"task": task, "rep": rep, "arm": arm, "fixture_sha256": sha(fixture),
               "seconds": round(sum(x["seconds"] for x in rounds), 2), "rounds": rounds}
     write_json(result_file, result)
     return result
+
+
+def record_unit_error(out: Path, task: str, rep: int, arm: str, exc: Exception) -> None:
+    """Keep completed round evidence and represent a failed runner as a failed sample."""
+    unit = out / "runs" / task / ("r" + str(rep)) / arm
+    unit.mkdir(parents=True, exist_ok=True)
+    result_file = unit / "result.json"
+    if not result_file.exists():
+        rounds = [json.loads(p.read_text(encoding="utf-8")) for p in sorted(unit.glob("round[0-9]*.json"))]
+        write_json(result_file, {"task": task, "rep": rep, "arm": arm,
+                                 "seconds": round(sum(r.get("seconds", 0) for r in rounds), 2),
+                                 "rounds": rounds, "unit_error": type(exc).__name__ + ": " + str(exc)})
+    event(out, {"event": "unit_error", "task": task, "rep": rep, "arm": arm,
+                "error": str(exc), "type": type(exc).__name__})
 
 
 def prepare(out: Path, pro: Path, reps: int, tasks: list[str]) -> None:
@@ -240,6 +300,7 @@ def grade(out: Path) -> list[dict]:
     tempfile.tempdir = str(out / "tmp")
     from grade_hard import grade_h1  # imported after setting our own temporary directory
     from grade_hard2 import grade_h4, grade_h5
+    from grade import check
     graders = {"H4": grade_h4, "H5": grade_h5}
     rows = []
     for file in sorted((out / "runs").glob("*/*/*/result.json")):
@@ -250,18 +311,39 @@ def grade(out: Path) -> list[dict]:
             ok = g["rounds_ok"] == 5
         else:
             g = graders[r["task"]](unit / "workspace")
+            if r["task"] == "H4":
+                try:
+                    preserved = h4_center_lines_preserved(out / "fixtures" / "H4.dxf", unit / "workspace" / "part.dxf")
+                except Exception:
+                    preserved = False
+                center_check = check(preserved, "centre-line endpoints preserved from fixture", "preserve")
+                g["checks"].append(center_check)
+                if not preserved:
+                    g["fails"].append(center_check["check"])
+                    g["ok"] = False
             ok = bool(g["ok"])
-        usage = [v.get("usage") or {} for v in r["rounds"]]
+        rounds = []
+        for v in r["rounds"]:
+            log = unit / ("round" + str(v["round"]) + ".jsonl") if "round" in v else None
+            rounds.append({**v, **summarize(log)} if log and log.is_file() else v)
+        usage = [v.get("usage") or {} for v in rounds]
+        status = unit_status(rounds, 5 if r["task"] == "H1" else 1)
+        if r.get("unit_error") and status != "tool_policy_violation":
+            status = "unclassified_failure"
         rows.append({"task": r["task"], "rep": r["rep"], "arm": r["arm"], "ok": ok,
                      "grade": g, "seconds": r["seconds"],
-                     "calls": sum(v.get("cad_calls", 0) for v in r["rounds"]),
-                     "reported_tool_errors": sum(v.get("reported_tool_errors", 0) for v in r["rounds"]),
-                     "other_tool_calls": sum(v.get("other_tool_calls", 0) for v in r["rounds"]),
+                     "calls": sum(v.get("cad_calls", 0) for v in rounds),
+                     "reported_tool_errors": sum(v.get("reported_tool_errors", 0) for v in rounds),
+                     "other_tool_calls": sum(v.get("other_tool_calls", 0) for v in rounds),
                      "input_tokens": sum(v.get("input_tokens", 0) for v in usage),
                      "cached_input_tokens": sum(v.get("cached_input_tokens", 0) for v in usage),
                      "output_tokens": sum(v.get("output_tokens", 0) for v in usage),
-                     "rounds_completed": len(r["rounds"]),
-                     "infrastructure_ok": all(v["exit"] == 0 and v["turn_completed"] for v in r["rounds"])})
+                     "rounds_attempted": len(rounds),
+                     "rounds_completed": sum(round_status(v) == "completed" for v in rounds),
+                     "round_statuses": [round_status(v) for v in rounds],
+                     "run_status": status,
+                     "eligible_for_rate": status in {"completed", "unclassified_failure"},
+                     "counted_success": status == "completed" and ok})
     write_json(out / "grades.json", rows)
     return rows
 
@@ -281,24 +363,28 @@ def main() -> None:
     SESSION_TIMEOUT_SECONDS = args.timeout_sec
     out, pro = args.out.resolve(), args.pro.resolve()
     if args.grade_only:
-        print(json.dumps(grade(out), ensure_ascii=False, indent=2))
+        print(json.dumps(grade(out), ensure_ascii=True, indent=2))
         return
     prepare(out, pro, args.reps, args.tasks)
+    incomplete = False
     for task in args.tasks:
         for rep in range(1, args.reps + 1):
             event(out, {"event": "pair_started", "task": task, "rep": rep})
             with ThreadPoolExecutor(max_workers=2) as ex:
-                a = ex.submit(run_unit, out, pro, task, rep, "A")
-                b = ex.submit(run_unit, out, pro, task, rep, "B")
-                for future in (a, b):
+                futures = {arm: ex.submit(run_unit, out, pro, task, rep, arm) for arm in ("A", "B")}
+                for arm, future in futures.items():
                     try:
                         future.result()
                     except Exception as exc:
-                        event(out, {"event": "unit_error", "task": task, "rep": rep,
-                                    "error": str(exc), "type": type(exc).__name__})
-            grade(out)
-            event(out, {"event": "pair_finished", "task": task, "rep": rep})
-    event(out, {"event": "all_finished"})
+                        record_unit_error(out, task, rep, arm, exc)
+            rows = grade(out)
+            pair = [r for r in rows if r["task"] == task and r["rep"] == rep]
+            pair_complete = len(pair) == 2 and all(r["run_status"] == "completed" for r in pair)
+            incomplete |= not pair_complete
+            event(out, {"event": "pair_finished" if pair_complete else "pair_incomplete", "task": task, "rep": rep})
+    event(out, {"event": "all_incomplete" if incomplete else "all_finished"})
+    if incomplete:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":

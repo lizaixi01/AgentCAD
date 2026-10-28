@@ -5,6 +5,8 @@
     "original_bytes_unchanged": true
   },
   "pro_batch_stop": {
+    "on_error_argument_omitted": true,
+    "observed_mode": "stop",
     "reported_failure": true,
     "first_step_retained_after_save": true,
     "atomicity": "none"
