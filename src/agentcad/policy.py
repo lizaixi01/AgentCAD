@@ -25,6 +25,11 @@ class Policy:
     # run_script (agent-written ezdxf scripts, see scripting.py) is off unless explicitly enabled
     allow_scripts: bool = field(default_factory=lambda: os.environ.get("AGENTCAD_ALLOW_SCRIPTS", "") in {"1", "true", "yes"})
     script_timeout: float = field(default_factory=lambda: float(os.environ.get("AGENTCAD_SCRIPT_TIMEOUT", "60")))
+    # live AutoCAD session (backends/acad_live.py): re-open a drawing in AutoCAD after each change the runtime
+    # commits; sending raw command lines to AutoCAD is off unless enabled
+    live_sync: bool = field(default_factory=lambda: os.environ.get("AGENTCAD_LIVE_SYNC", "") in {"1", "true", "yes"})
+    allow_live_commands: bool = field(default_factory=lambda: os.environ.get("AGENTCAD_ALLOW_LIVE_COMMANDS", "")
+                                      in {"1", "true", "yes"})
 
     def __post_init__(self) -> None:
         self.root = Path(self.root).resolve()
@@ -60,6 +65,12 @@ class Policy:
             raise policy_error("SCRIPTS_DISABLED", "run_script is disabled for this workspace",
                                hint="Use apply_operations, or start the runtime with AGENTCAD_ALLOW_SCRIPTS=1 "
                                     "(only for agents you would let run Python as your user)")
+
+    def check_live_commands_allowed(self) -> None:
+        if not self.allow_live_commands:
+            raise policy_error("LIVE_COMMANDS_DISABLED", "Sending command lines to AutoCAD is disabled",
+                               hint="Edit with apply_operations and reload, or start the runtime with "
+                                    "AGENTCAD_ALLOW_LIVE_COMMANDS=1")
 
     def check_op_allowed(self, op: str, index: int) -> None:
         if self.allowed_ops is not None and op not in self.allowed_ops:

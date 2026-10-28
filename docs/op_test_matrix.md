@@ -8,7 +8,7 @@
 | `add_angular_dim` | annotate | test_autocad_findings.py, test_h_operations.py |
 | `add_arc` | draw | test_autocad_findings.py, test_h_operations.py, test_i_common_ops.py |
 | `add_center_mark` | annotate | test_i_common_ops.py |
-| `add_circle` | draw | test_autocad_findings.py, test_b_revision.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py, test_i_common_ops.py, test_j_compact_results.py, test_k_pdf.py, test_l_fewer_turns.py, test_m_library.py |
+| `add_circle` | draw | test_autocad_findings.py, test_b_revision.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py, test_i_common_ops.py, test_j_compact_results.py, test_k_pdf.py, test_l_fewer_turns.py, test_l_live_session.py, test_m_library.py |
 | `add_datum_feature` | library | test_m_library.py |
 | `add_diameter_dim` | annotate | test_autocad_findings.py, test_h_operations.py, test_layouts_and_scripts.py |
 | `add_donut` | draw | test_i_common_ops.py |
@@ -21,7 +21,7 @@
 | `add_mtext` | annotate | test_h_operations.py, test_i_common_ops.py |
 | `add_ordinate_dim` | annotate | test_i_common_ops.py |
 | `add_pid_symbol` | library | test_m_library.py |
-| `add_point` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_h_operations.py, test_l_fewer_turns.py, test_layouts_and_scripts.py, test_security.py |
+| `add_point` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_h_operations.py, test_l_fewer_turns.py, test_l_live_session.py, test_layouts_and_scripts.py, test_security.py |
 | `add_polygon` | draw | test_i_common_ops.py |
 | `add_polyline` | draw | test_h_operations.py, test_i_common_ops.py |
 | `add_process_line` | library | test_m_library.py |
