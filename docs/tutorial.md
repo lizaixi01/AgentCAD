@@ -413,7 +413,7 @@ MCP 配置里要写解释器和工作区的绝对路径。这两个路径因机�
 
 > 按 docs/spec.pdf 出图，有缺失或矛盾的地方先列出来问我。
 
-Agent 会调用 `draw_from_spec`、`apply_operations`、`validate_drawing`、`get_diff`、`rollback` 等 21 个工具，与 CLI 一一对应。可用环境变量限制 Agent 的权限：`AGENTCAD_READ_ONLY=1` 设为只读，`AGENTCAD_ALLOWED_OPS=add_line,add_circle,...` 设置操作白名单。
+Agent 会调用 `draw_from_spec`、`apply_operations`、`validate_drawing`、`get_diff`、`rollback` 等 22 个工具，除 `apply_batch`（一次调用处理多张图）外与 CLI 一一对应。可用环境变量限制 Agent 的权限：`AGENTCAD_READ_ONLY=1` 设为只读，`AGENTCAD_ALLOWED_OPS=add_line,add_circle,...` 设置操作白名单。
 
 ### Python
 
