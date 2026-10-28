@@ -33,5 +33,30 @@ Not isolated by a worktree:
    Never `git add .`, `git add -A` or a whole directory: in a shared checkout that commits another
    agent's unfinished work.
 3. Commit, push the branch (`git push -u origin <branch>`) and open a pull request against `main`
-   (`gh pr create`). Do not push to `main` and do not merge your own PR; the user merges.
-4. After the merge: `scripts\new-worktree.ps1 <task-name> -Remove`.
+   (`gh pr create`). Never push to `main` directly.
+4. Get the PR reviewed and merged as below.
+5. After the merge: `scripts\new-worktree.ps1 <task-name> -Remove`. Update the main checkout with
+   `git pull --ff-only` only when its working tree is clean (another agent may be using it).
+
+## Review and merge
+
+The user has handed review and merge to AI. A PR is merged when all of these hold:
+
+1. **Independent review.** A reviewer that did not write the change reads the diff: a fresh subagent
+   or session given only the PR (not the author's reasoning), `/code-review`, or `codex review`. It
+   checks correctness, that tests cover the change, and that the diff holds only files the task meant
+   to change. It posts its verdict on the PR (`gh pr comment`; GitHub does not let the author's
+   account approve its own PR).
+2. **Tests pass** on the PR branch, brought up to date with `main`, in a worktree.
+3. **GitHub reports the PR mergeable.**
+
+Then merge with `gh pr merge <n> --merge --delete-branch` (merge commits keep the branch's commit
+SHAs, so checkouts that already have them fast-forward). If the review finds problems, the author
+fixes them on the same branch and the PR is reviewed again.
+
+Ask the user before merging a PR that:
+
+- removes or rewrites recorded trial results or measurements that the README or docs cite;
+- adds Autodesk sample drawings or files derived from them (not ours to redistribute; see `.gitignore`);
+- touches the license, credentials, GitHub settings or CI;
+- needs a force push or a history rewrite.
