@@ -46,5 +46,6 @@
 
 - 自动化测试用的是模拟 COM 对象。本机 AutoCAD 2027 的 GUI 启动后停在 Autodesk 许可证/登录界面，COM 调用被拒绝（`RPC_E_CALL_REJECTED`），所以还没有在真实 GUI 上跑通；遇到这种情况返回 `AUTOCAD_BUSY`，提示用户先处理 AutoCAD 中的对话框。
 - AutoCAD 2027 只注册了带版本号的 ProgID（`AutoCAD.Application.26`），后端会从注册表中查找；可用 `AGENTCAD_ACAD_PROGID` 指定。
-- `pull` 期间 AutoCAD 中的文档会先另存为临时 DXF，再关闭并从提交后的文件重新打开（保留视图）。AutoCAD 中未保存的修改不会被 `reload` 丢弃，除非显式传 `discard=true`。
+- AutoCAD 只持有它打开时读到的版本。运行时会记录这个版本（open / reload 时）；如果之后 Agent 又提交了修改，`pull` 会拒绝（`LIVE_CONFLICT`），除非 `force=true`（被覆盖的版本留在检查点里）。不是由运行时打开的图纸同样需要 `force`。
+- `pull` 期间 AutoCAD 中的文档会先另存为临时 DXF，再关闭并从提交后的文件重新打开（保留视图）。如果提交失败，临时 DXF 保留下来（结果里的 `autocad_copy`），它就是 AutoCAD 当前打开的文档。视图恢复使用 VIEWCTR，在非世界坐标系（UCS）下可能偏移。AutoCAD 中未保存的修改不会被 `reload` 丢弃，除非显式传 `discard=true`。
 - `command` 发送原始命令行，默认关闭（`AGENTCAD_ALLOW_LIVE_COMMANDS=1` 开启），其效果只在 AutoCAD 中，需要 `pull` 才会进入图纸。

@@ -22,6 +22,7 @@ class FakeDoc:
     def __init__(self, app: "FakeApp", path: str) -> None:
         self.app, self.FullName, self.Name, self.Saved = app, str(Path(path)), Path(path).name, True
         self.user_edit = None  # simulated GUI edit, applied to what SaveAs writes
+        self.content = Path(path).read_bytes()  # like AutoCAD: what was read at open time, not the file later
 
     def Activate(self):
         self.app.ActiveDocument = self
@@ -32,7 +33,8 @@ class FakeDoc:
 
     def SaveAs(self, path, kind):
         assert kind == 65  # ac2018_dxf
-        doc = ezdxf.readfile(self.FullName)
+        import io
+        doc = ezdxf.read(io.StringIO(self.content.decode("utf-8", "replace")))
         if self.user_edit:
             self.user_edit(doc)
         doc.saveas(path)
@@ -72,6 +74,9 @@ class FakeApp:
         self.log: list[tuple] = []
         self.Documents = FakeDocuments(self)
         self.ActiveDocument = None
+
+    def GetAcadState(self):
+        return type("State", (), {"IsQuiescent": True})()
 
     def ZoomCenter(self, center, size):
         self.log.append(("zoom_center", tuple(center.value), size))
@@ -171,5 +176,82 @@ def test_zoom_and_gated_commands(ws, plate):
     assert rt.autocad_live("command", plate, command="_.ERASE _ALL ")["error"]["code"] == "LIVE_COMMANDS_DISABLED"
     rt2 = live_rt(ws, app, allow_live_commands=True)
     r = ok(rt2.autocad_live("command", plate, command="_.LINE _non 0,0 _non 10,10 "))
-    assert app.log[-1] == ("command", "_.LINE _non 0,0 _non 10,10 ") and "pull" in r["hint"]
+    assert app.log[-1] == ("command", "_.LINE _non 0,0 _non 10,10 ") and "pull" in r["hint"] and r["finished"]
     assert rt2.autocad_live("command", plate, command="  ")["error"]["code"] == "INVALID_STRING"
+
+
+def test_pull_refuses_to_revert_newer_agent_changes(ws, plate):
+    """AutoCAD keeps what it read at open time. Pulling it after the agent changed the file would silently undo
+    the agent's change, so pull refuses unless forced (and the forced pull keeps a checkpoint)."""
+    app = FakeApp()
+    rt = live_rt(ws, app)  # no live sync: AutoCAD is not reloaded after the agent's change
+    ok(rt.autocad_live("open", plate))
+    ok(rt.apply_operations(plate, [{"op": "add_circle", "center": [50, 30], "radius": 3, "tag": "agent"}]))
+    app.docs[0].user_edit = add_user_line
+    app.docs[0].Saved = False
+    e = rt.autocad_live("pull", plate)["error"]
+    assert e["code"] == "LIVE_CONFLICT" and "force" in e["hint"]
+    assert app.docs[0].Saved is False and app.docs[0].FullName == str(ws / plate)  # AutoCAD untouched
+    r = ok(rt.autocad_live("pull", plate, force=True))
+    assert r["forced"] and r["changed"]
+    assert not ezdxf.readfile(ws / plate).query("CIRCLE[radius==3]")  # AutoCAD's version won, as asked
+    sm = ok(rt.get_diff(plate))["summary"]  # the agent's circle is in the checkpoint (its handle may be reused)
+    assert sm["deleted"] + sm["modified"] >= 1
+    # after the pull AutoCAD shows the committed file: the next pull is not stale
+    assert ok(rt.autocad_live("pull", plate))["changed"] is False
+
+
+def test_pull_of_a_drawing_this_runtime_did_not_open(ws, plate):
+    app = FakeApp()
+    app.Documents.Open(str(ws / plate), False)  # the user opened it themselves
+    e = live_rt(ws, app).autocad_live("pull", plate)["error"]
+    assert e["code"] == "LIVE_CONFLICT"
+    assert ok(live_rt(ws, app).autocad_live("pull", plate, force=True))["forced"]
+
+
+def test_pull_keeps_edits_that_are_not_entities(ws, plate):
+    app = FakeApp()
+    rt = live_rt(ws, app)
+    ok(rt.autocad_live("open", plate))
+    app.docs[0].user_edit = lambda d: d.layers.add("USER_LAYER", color=2)
+    app.docs[0].Saved = False
+    r = ok(rt.autocad_live("pull", plate))
+    assert r["changed"] and r["layers"]["added"] == ["USER_LAYER"]
+    assert "USER_LAYER" in ezdxf.readfile(ws / plate).layers
+
+
+def test_failed_pull_keeps_autocads_copy(ws, plate, monkeypatch):
+    app = FakeApp()
+    rt = live_rt(ws, app)
+    ok(rt.autocad_live("open", plate))
+    app.docs[0].user_edit = add_user_line
+    app.docs[0].Saved = False
+    before = (ws / plate).read_bytes()
+
+    def boom(*a, **k):
+        from agentcad.errors import file_error
+        raise file_error("FILE_TOO_LARGE", "simulated")
+    monkeypatch.setattr("agentcad.store.DrawingStore.commit", boom)
+    e = rt.autocad_live("pull", plate)["error"]
+    copy = ws / e["details"]["autocad_copy"]
+    assert copy.is_file() and any(x.dxftype() == "LINE" and x.dxf.end.x == 100
+                                  for x in ezdxf.readfile(copy).modelspace())
+    assert (ws / plate).read_bytes() == before and app.docs[0].FullName == str(copy)  # nothing closed or lost
+
+
+def test_dry_runs_do_not_touch_autocad(ws, plate):
+    app = FakeApp()
+    rt = live_rt(ws, app, live_sync=True)
+    ok(rt.autocad_live("open", plate))
+    n = len(app.log)
+    r = ok(rt.apply_operations(plate, [{"op": "add_point", "location": [1, 1]}], dry_run=True))
+    assert "live" not in r and len(app.log) == n
+
+
+def test_sync_survives_unexpected_com_errors(ws, plate):
+    app = FakeApp()
+    rt = live_rt(ws, app, live_sync=True)
+    ok(rt.autocad_live("open", plate))
+    app.Documents = None  # anything at all going wrong inside AutoCAD
+    r = ok(rt.apply_operations(plate, [{"op": "add_point", "location": [1, 1]}]))
+    assert r["live"]["reloaded"] is False and "error" in r["live"]

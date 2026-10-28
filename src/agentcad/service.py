@@ -27,7 +27,7 @@ from .model import entity_to_dict, get_tag, is_model, layout_spaces, select
 from .ops import catalog
 from .ops.annotate import DIMSTYLE, apply_annotation_scale, setup_text_style
 from .policy import Policy
-from .store import DrawingStore, finalize, read_dxf, now
+from .store import DrawingStore, finalize, read_dxf, now, sha256_file
 from .units import UNITS, normalize_unit, unit_from_insunits
 from .validate import validate_file
 from .validate.checks import MIN_PRINTED_TEXT
@@ -40,6 +40,20 @@ TOOLS: dict[str, Callable] = {}
 LIVE_SYNC_TOOLS = {"create_drawing", "apply_operations", "run_script", "apply_constraints", "draw_from_spec",
                    "revise_drawing", "revise_from_document", "rollback", "recover", "import_drawing"}
 LIVE_ACTIONS = ("status", "open", "reload", "pull", "zoom", "command")
+
+
+def _live_base(store, path: Path | None = None) -> str | None:
+    """sha256 of the file version AutoCAD opened (set when ``path`` is given, else read)."""
+    f = store.dir / "live.json"
+    if path is None:
+        try:
+            return json.loads(f.read_text("utf-8")).get("base_sha256")
+        except (OSError, ValueError):
+            return None
+    from .store import sha256_file
+    store.dir.mkdir(parents=True, exist_ok=True)
+    f.write_text(json.dumps({"base_sha256": sha256_file(path)}), "utf-8")
+    return None
 
 
 def tool(fn):
@@ -59,7 +73,8 @@ def tool(fn):
             env = {"ok": False, "tool": name,
                    "error": AgentCADError("INTERNAL_ERROR", f"{type(exc).__name__}: {exc}", category="internal",
                                           details={"traceback": traceback.format_exc(limit=8)}).to_dict()}
-        if env["ok"] and name in LIVE_SYNC_TOOLS and self.policy.live_sync and env.get("drawing"):
+        if (env["ok"] and name in LIVE_SYNC_TOOLS and self.policy.live_sync and env.get("drawing")
+                and not env.get("dry_run")):
             env["live"] = self._live_sync(env["drawing"])
         env["metrics"] = {"duration_ms": round((time.perf_counter() - t0) * 1000, 2), "input_bytes": in_bytes,
                           "output_bytes": len(json.dumps(env, default=str))}
@@ -185,10 +200,16 @@ class Runtime:
                 app = self.live_connect()
                 if app is None:
                     return {"autocad_running": False}
-                return acad_live.Session(app).reload(self.policy.resolve(drawing))
+                p, store = self._drawing(drawing)
+                res = acad_live.Session(app).reload(p)
+                if res.get("reloaded"):
+                    _live_base(store, p)
+                return res
         except AgentCADError as exc:  # never fail a committed change because AutoCAD could not follow
             e = exc.to_dict()
             return {"reloaded": False, "error": {k: e[k] for k in ("code", "message", "hint") if k in e}}
+        except Exception as exc:  # noqa: BLE001 - same: the change is already committed
+            return {"reloaded": False, "error": {"code": "AUTOCAD_COM_ERROR", "message": f"{type(exc).__name__}: {exc}"}}
 
     # --- tools ------------------------------------------------------------------------------------
     @tool
@@ -817,10 +838,14 @@ class Runtime:
     @tool
     def autocad_live(self, action: str = "status", path: str | None = None, start: bool = False,
                      discard: bool = False, window: list | None = None, ids: list[str] | None = None,
-                     command: str | None = None, label: str | None = None) -> dict[str, Any]:
+                     command: str | None = None, label: str | None = None, force: bool = False) -> dict[str, Any]:
         """Work alongside the user's running AutoCAD (backends/acad_live.py): status | open | reload | pull |
         zoom | command. ``pull`` commits the edits made in AutoCAD like any other change (checkpoint, journal,
-        diff, validation); the drawing is then re-opened in AutoCAD from the committed file."""
+        diff, validation); the drawing is then re-opened in AutoCAD from the committed file.
+
+        The version AutoCAD opened is recorded (open / reload). If the runtime committed changes since, AutoCAD's
+        copy is stale and ``pull`` would revert them: it refuses unless ``force`` (the overwritten version stays
+        in a checkpoint)."""
         from .backends import acad_live
         if action not in LIVE_ACTIONS:
             raise input_error("INVALID_ENUM", f"Unknown action {action!r}", hint=f"One of {list(LIVE_ACTIONS)}")
@@ -845,9 +870,16 @@ class Runtime:
             p, store = self._drawing(path)
             rel = self._rel(p)
             if action == "open":
-                return {"drawing": rel, "open_in_autocad": True, **s.describe(s.open(p))}
+                was_open = s.find(p) is not None
+                doc = s.open(p)
+                if not was_open or _live_base(store) is None:
+                    _live_base(store, p)
+                return {"drawing": rel, "open_in_autocad": True, **s.describe(doc)}
             if action == "reload":
-                return {"drawing": rel, **s.reload(p, discard)}
+                res = s.reload(p, discard)
+                if res.get("reloaded"):
+                    _live_base(store, p)
+                return {"drawing": rel, **res}
             if action == "zoom":
                 win = window
                 if win is None and ids:
@@ -861,32 +893,59 @@ class Runtime:
                 self.policy.check_live_commands_allowed()
                 if not command or not command.strip():
                     raise input_error("INVALID_STRING", "command must be a non-empty command line")
-                s.command(p, command)
+                idle = s.command(p, command)
                 store.journal({"tool": "autocad_live", "ok": True, "action": "command", "command": command})
-                return {"drawing": rel, "sent": command,
-                        "hint": "The command changed the drawing in AutoCAD only; action='pull' commits its edits"}
+                return {"drawing": rel, "sent": command, "finished": idle,
+                        "hint": "The command changed the drawing in AutoCAD only; action='pull' commits its edits"
+                                + ("" if idle else ". AutoCAD is still busy (the command waits for input?)")}
             # pull
             self.policy.check_write()
             with self._lock(store):
+                if s.find(p) is None:
+                    raise AgentCADError("NOT_OPEN_IN_AUTOCAD", f"{p.name} is not open in AutoCAD", category="input",
+                                        hint="autocad_live action='open' first")
+                base = _live_base(store)
+                current = sha256_file(p)
+                if base != current and not force:
+                    raise AgentCADError(
+                        "LIVE_CONFLICT", "AutoCAD shows an older version of the drawing: pulling it would revert "
+                        "changes committed since AutoCAD opened it" if base else "This runtime did not open the "
+                        "drawing in AutoCAD, so it cannot tell which version AutoCAD shows", category="policy",
+                        hint="If AutoCAD has no edits to keep: reload. To keep AutoCAD's version anyway: pull with "
+                             "force=true (the newer version stays in a checkpoint, see get_diff / rollback)")
                 tmp = self.policy.state_dir() / "live" / f"pull-{int(time.time() * 1000)}.dxf"
-                gui_doc, view = s.save_copy(p, tmp)
+                gui_doc, view, dirty = s.save_copy(p, tmp)
+                # from here the temporary DXF is the only saved copy of the user's edits: keep it on any failure
                 try:
                     new = read_dxf(tmp, self.policy)
                     diff = diff_docs(store.load(), new)
                     changes = {k: [e["id"] for e in diff[k]] for k in ("added", "modified", "deleted")}
-                    changed = any(changes.values())
+                    # unsaved edits count even when no entity changed (a new layer, style, block, setting)
+                    changed = dirty or any(changes.values()) or any(diff["layers"].values())
                     info: dict[str, Any] = {}
                     seq = None
                     if changed:
                         info = store.commit(new, label=label or "autocad_live pull")
                         seq = store.journal({"tool": "autocad_live", "action": "pull", "ok": True, "label": label,
-                                             "changes": changes, **info})
-                finally:
+                                             "forced": base != current, "changes": changes, **info})
+                except AgentCADError as exc:
+                    exc.details = {**(exc.details or {}), "autocad_copy": self._rel(tmp)}
+                    exc.hint = (exc.hint or "") + f" AutoCAD's edits are saved in {self._rel(tmp)}, which is the " \
+                                                  "document now open in AutoCAD"
+                    raise
+                out = {"drawing": rel, "changed": changed, "changes": changes, "diff_summary": diff["summary"],
+                       "layers": diff["layers"], **info}
+                if base != current:
+                    out["forced"] = True
+                try:
                     acad_live._retry(lambda: gui_doc.Close(False))
                     s.open(p)
                     s.set_view(view)
                     tmp.unlink(missing_ok=True)
-        out = {"drawing": rel, "changed": changed, "changes": changes, "diff_summary": diff["summary"], **info}
+                    _live_base(store, p)
+                except AgentCADError as exc:  # the pull is committed; only re-opening failed
+                    out["live"] = {"reopened": False, "error": {"code": exc.code, "message": exc.message},
+                                   "autocad_copy": self._rel(tmp)}
         if changed:
             out["validation"] = _brief(validate_file(p))
             out["journal_seq"] = seq

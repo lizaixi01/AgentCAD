@@ -230,11 +230,13 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                      discard: Annotated[bool, Field(description="reload: drop unsaved edits made in AutoCAD")] = False,
                      ids: Annotated[list[str] | None, Field(description="zoom: entity ids or 'tag:<name>'")] = None,
                      window: Annotated[list[list[float]] | None, Field(description="zoom: [[x0,y0],[x1,y1]]")] = None,
-                     command: str | None = None, label: str | None = None) -> dict:
+                     command: str | None = None, label: str | None = None,
+                     force: Annotated[bool, Field(description="pull: take AutoCAD's version even though the file "
+                                                  "changed since AutoCAD opened it")] = False) -> dict:
         """Work alongside the user's running AutoCAD (Windows, optional). You keep editing with apply_operations;
         AutoCAD shows the result (servers started with AGENTCAD_LIVE_SYNC=1 reload it after every change, see
         'live' in results). Edits the user makes in AutoCAD come back with pull, as a normal checkpointed change."""
-        return rt.autocad_live(action, path, start, discard, window, ids, command, label)
+        return rt.autocad_live(action, path, start, discard, window, ids, command, label, force)
 
     @mcp.tool()
     def get_metrics() -> dict:

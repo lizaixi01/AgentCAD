@@ -197,17 +197,19 @@ class Session:
         self.set_view(view)
         return {"reloaded": True, "open_in_autocad": True, "view_kept": view is not None}
 
-    def save_copy(self, path: Path, tmp: Path) -> Any:
+    def save_copy(self, path: Path, tmp: Path) -> tuple[Any, Any, bool]:
         """Save the open drawing (with the user's edits) as DXF ``tmp``. AutoCAD renames the document to ``tmp``;
-        the caller closes it and re-opens ``path`` once the edits are committed."""
+        the caller closes it and re-opens ``path`` once the edits are committed. Also returns the view and
+        whether the document had unsaved edits."""
         doc = self.find(path)
         if doc is None:
             raise AgentCADError("NOT_OPEN_IN_AUTOCAD", f"{path.name} is not open in AutoCAD", category="input",
                                 hint="autocad_live action='open' first")
         view = self.view(doc)
+        dirty = not bool(_retry(lambda: doc.Saved))
         tmp.parent.mkdir(parents=True, exist_ok=True)
         _retry(lambda: doc.SaveAs(str(tmp), AC2018_DXF))
-        return doc, view
+        return doc, view, dirty
 
     def zoom(self, path: Path, window: tuple[tuple[float, float], tuple[float, float]] | None) -> None:
         self.open(path)
@@ -217,7 +219,18 @@ class Session:
             (x0, y0), (x1, y1) = window
             _retry(lambda: self.app.ZoomWindow(_point((x0, y0, 0)), _point((x1, y1, 0))))
 
-    def command(self, path: Path, text: str) -> None:
+    def command(self, path: Path, text: str, wait: float = 60.0) -> bool:
+        """Send a command line; returns whether AutoCAD went idle again within ``wait`` seconds (SendCommand
+        returns before the command has finished, and a pull right after it would race the command)."""
         doc = self.open(path)
         line = text if text.endswith(("\n", " ")) else text + "\n"
         _retry(lambda: doc.SendCommand(line))
+        deadline = time.monotonic() + wait
+        while time.monotonic() < deadline:
+            try:
+                if _retry(lambda: self.app.GetAcadState().IsQuiescent, seconds=5):
+                    return True
+            except AgentCADError:
+                pass
+            time.sleep(0.2)
+        return False
