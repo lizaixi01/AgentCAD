@@ -12,10 +12,11 @@ from .policy import Policy
 from .service import Runtime
 
 INSTRUCTIONS = """AgentCAD: headless 2D CAD runtime over DXF files.
-Workflow: list_operations (compact index; ops=[...] gives full schemas) -> create_drawing or draw_from_spec ->
-apply_operations (batch many ops in one call; ops can reference entities created earlier in the batch as
-"$<index>", tagged entities as "tag:<name>") ->
-validate_drawing (independent re-read of the file) -> get_diff / rollback as needed.
+Workflow: list_operations (compact index; ops=[...] gives full schemas) -> apply_operations (batch many ops in one
+call; create={units,...} makes a new drawing in the same call; ops can reference entities created earlier in the
+batch as "$<index>", tagged entities as "tag:<name>"). Its result already holds the independent validation of the
+saved file (pass requirements to check them); call validate_drawing only for detail=true. Several drawings:
+apply_batch, one call. get_diff / history / rollback as needed. Independent read-only calls can go in one turn.
 Coordinates are [x, y] in drawing units; lengths may be strings with units ("8mm"). Angles are degrees CCW.
 Every result has ok + structured error {code, category, message, entities, retryable, hint, partial_changes}.
 A failed batch never modifies the file (partial_changes=false).
@@ -75,12 +76,32 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                              "[{\"op\":\"add_circle\",\"center\":[10,10],\"diameter\":8,\"layer\":\"HOLES\",\"tag\":\"h1\"}]. "
                              "See list_operations for every op's parameters.")],
                          dry_run: bool = False,
-                         requirements: Annotated[list[dict] | None, Field(description="Optional requirements to validate after")] = None,
+                         requirements: Annotated[list[dict] | None, Field(description="Requirements the result is "
+                                                 "validated against (same as validate_drawing)")] = None,
                          strict: Annotated[bool, Field(description="Do not save if post-validation fails")] = False,
-                         label: str | None = None) -> dict:
+                         label: str | None = None,
+                         create: Annotated[dict | None, Field(description="Create the drawing first if it does not "
+                                           "exist: {units, template, dxf_version, annotation_scale}")] = None,
+                         bounds: Annotated[list[list[float]] | None, Field(description="[[x0,y0],[x1,y1]] for the "
+                                           "validation")] = None,
+                         layout: Annotated[str | None, Field(description="Validate this paper-space sheet instead of "
+                                           "model space (ops choose their own layout)")] = None) -> dict:
         """Execute an operation batch as one transaction: all params are checked first, any failure aborts with the
-        file untouched; success checkpoints the old file, saves atomically, journals, and validates the result."""
-        return rt.apply_operations(path, operations, dry_run, requirements, strict, label)
+        file untouched; success checkpoints the old file, saves atomically, journals, and validates the result.
+        The returned 'validation' is the same independent re-read of the saved file as validate_drawing (issues,
+        failed requirements, passed ids, recognized counts, coverage): no separate validate_drawing call is needed
+        unless you want its detail=true report. With 'create' a new drawing takes one call."""
+        return rt.apply_operations(path, operations, dry_run, requirements, strict, label, create, bounds, layout)
+
+    @mcp.tool()
+    def apply_batch(jobs: Annotated[list[dict[str, Any]], Field(description="[{path, operations, create?, "
+                                    "requirements?, bounds?, layout?, strict?, label?}, ...], one per drawing")],
+                    stop_on_error: Annotated[bool, Field(description="Skip the remaining jobs after a failure")] = False
+                    ) -> dict:
+        """apply_operations on several drawings in one call, e.g. a family of parts from a parameter table. Each job
+        is its own transaction (a failed job leaves its drawing untouched, the others still run) and returns its
+        own validation, so one call creates, draws and checks the whole set."""
+        return rt.apply_batch(jobs, stop_on_error)
 
     @mcp.tool()
     def run_script(path: Path_,

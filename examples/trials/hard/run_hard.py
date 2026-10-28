@@ -37,7 +37,7 @@ SAMPLE = Path(r"D:\Apps\AutoCAD\AutoCAD 2027\Sample\Sheet Sets\Manufacturing\VW2
 TASKS = HERE / "tasks"
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(TRIALS))
-from agents import command  # noqa: E402
+from agents import agent_env, command  # noqa: E402
 from bases2 import make_h4_base, make_h5_base, make_h6_base  # noqa: E402
 
 SINGLE = {"H4": ("H4_cleanup.md", make_h4_base), "H5": ("H5_dimension.md", make_h5_base),
@@ -112,7 +112,7 @@ def codex(arm: str, task: str, ws: Path, prompt: str, log: Path, b_python: str =
     t0 = time.time()
     with open(log, "wb") as out, open(log.with_suffix(".stderr.log"), "wb") as err:
         p = subprocess.run(cmd, input=prompt.encode("utf-8"), stdout=out, stderr=err, shell=False, timeout=5400,
-                           cwd=ws)
+                           cwd=ws, env=agent_env())
     return {"exit": p.returncode, "seconds": round(time.time() - t0, 1)}
 
 
