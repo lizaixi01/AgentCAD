@@ -163,6 +163,98 @@ def add_angular_dim(ctx: Ctx, center, p1, p2, radius, text, text_height, length_
     return _finish_dim(ctx, d, p, text)
 
 
+@op("add_ordinate_dim", "annotate", "Ordinate (datum) dimension: the X or Y distance of 'feature' from 'origin', "
+    "written at the end of a leader from the feature to 'leader_end'.",
+    {"feature": P("point", True, description="Point being dimensioned"),
+     "leader_end": P("point", True, description="End of the leader, where the text goes"),
+     "axis": P("enum", True, enum=["x", "y"], description="'x' measures the X distance (vertical leader), 'y' the Y distance"),
+     "origin": P("point", default=(0.0, 0.0), description="Datum point (UCS origin of the ordinates)"), **DIM_COMMON},
+    common_draw=True)
+def add_ordinate_dim(ctx: Ctx, feature, leader_end, axis, origin, text, text_height, length_factor, **p):
+    if (s := check_tag(ctx, p)) is not None:
+        return {"created": [], "skipped": True, "existing": s}
+    if G.dist(feature, leader_end) < 1e-9:
+        raise input_error("DEGENERATE_GEOMETRY", "leader_end coincides with feature")
+    add = ctx.msp.add_ordinate_x_dim if axis == "x" else ctx.msp.add_ordinate_y_dim
+    d = add(feature_location=feature, offset=G.sub(leader_end, feature), origin=origin, dimstyle=_dimstyle(ctx),
+            override=_override(text_height, length_factor), dxfattribs=ctx.attribs(p))
+    return _finish_dim(ctx, d, p, text)
+
+
+@op("add_center_mark", "annotate", "Center mark of CIRCLEs / ARCs (AutoCAD CENTERMARK): a horizontal and a vertical "
+    "LINE through each center, 'extension' beyond the radius. Layer CENTER with linetype CENTER unless given. With "
+    "'tag' the lines are tagged '<tag>.h' / '<tag>.v' (several targets: '<tag>.<i>.h').",
+    {"target": P("selector", True, description="CIRCLE / ARC entities"),
+     "extension": P("length", ge=0, description="Overshoot past the circle (default: max(2, radius/2))")},
+    common_draw=True)
+def add_center_mark(ctx: Ctx, target, extension, **p):
+    from ..model import circle_wcs
+    from .registry import check_tag as _check
+    ents = select(ctx.doc, target, ctx.refs)
+    bad = [e.dxf.handle for e in ents if e.dxftype() not in ("CIRCLE", "ARC")]
+    if bad:
+        raise input_error("UNSUPPORTED_ENTITY", "add_center_mark needs CIRCLE or ARC targets", entities=bad)
+    q = dict(p)
+    q["layer"] = p.get("layer") or "CENTER"
+    if "CENTER" in ctx.doc.linetypes and not p.get("linetype") and q["layer"] not in ctx.doc.layers:
+        ctx.doc.layers.add(q["layer"], color=1, linetype="CENTER")
+    attrs = ctx.attribs(q)
+    created = []
+    for i, e in enumerate(ents):
+        c, r, _, _ = circle_wcs(e)
+        ext = r + (max(2.0, r / 2) if extension is None else extension)
+        for suffix, a, b in (("h", (c[0] - ext, c[1]), (c[0] + ext, c[1])), ("v", (c[0], c[1] - ext), (c[0], c[1] + ext))):
+            tag = p.get("tag") and (f"{p['tag']}.{suffix}" if len(ents) == 1 else f"{p['tag']}.{i}.{suffix}")
+            tp = {**p, "tag": tag}
+            if tag and (s := _check(ctx, tp)) is not None:
+                created.extend(s)
+                continue
+            created.append(ctx.finish(ctx.space_of(e).add_line(a, b, dxfattribs=attrs), tp))
+    return {"created": created}
+
+
+@op("create_text_style", "annotate", "Create a text style for add_text / add_mtext 'style'. 'font' is an SHX "
+    "(e.g. gbenor.shx, txt.shx) or TrueType file (e.g. simsun.ttc, arial.ttf); SHX fonts need 'big_font' "
+    "(e.g. gbcbig.shx) to show Chinese, which is the default for SHX fonts.",
+    {"name": P("string", True, description="Style name"),
+     "font": P("string", default=TEXT_FONT, description="Font file"),
+     "big_font": P("string", description="Big font for CJK characters (SHX fonts only; default gbcbig.shx)"),
+     "width_factor": P("number", default=1.0, gt=0, description="Character width factor"),
+     "oblique": P("angle", default=0.0, description="Slant angle"),
+     "height": P("length", default=0.0, ge=0, description="Fixed text height (0 = set per text)"),
+     "if_exists": P("enum", enum=["error", "skip", "update"], default="error")})
+def create_text_style(ctx: Ctx, name, font, big_font, width_factor, oblique, height, if_exists):
+    shx = font.lower().endswith(".shx")
+    if big_font and not shx:
+        raise input_error("INVALID_PARAMS", "big_font only applies to SHX fonts", hint="Drop big_font for TrueType fonts")
+    if name in ctx.doc.styles:
+        if if_exists == "error":
+            raise input_error("STYLE_EXISTS", f"Text style {name!r} already exists", hint="Use if_exists='skip' or 'update'")
+        if if_exists == "skip":
+            return {"style": name, "skipped": True}
+        st = ctx.doc.styles.get(name)
+    else:
+        st = ctx.doc.styles.new(name)
+    st.dxf.font = font
+    if shx:
+        st.dxf.bigfont = big_font or BIG_FONT
+    else:
+        st.dxf.discard("bigfont")
+    st.dxf.width = width_factor
+    st.dxf.oblique = oblique
+    st.dxf.height = height
+    return {"style": name}
+
+
+def text_style(ctx: Ctx, name: str | None) -> dict[str, Any]:
+    if not name:
+        return {}
+    if name not in ctx.doc.styles:
+        raise input_error("UNKNOWN_STYLE", f"Text style {name!r} is not defined",
+                          hint=f"Create it with create_text_style; defined: {sorted(s.dxf.name for s in ctx.doc.styles if s.dxf.name)}")
+    return {"style": name}
+
+
 @op("add_leader", "annotate", "Leader (arrow polyline) with an MTEXT note at the last vertex.",
     {"points": P("points", True, description="Leader vertices, arrow at the first point"),
      "text": P("string", True), "text_height": P("length", default=2.5, gt=0)}, common_draw=True)

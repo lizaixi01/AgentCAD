@@ -771,3 +771,261 @@ def explode(ctx: Ctx, target):
             created.append(ctx.created(c))
     ctx._tags = None
     return {"created": created, "deleted": deleted}
+
+
+# --- break / join / draw order / purge ---------------------------------------------------------
+
+@op("break", "edit", "AutoCAD BREAK: remove the part of a LINE, ARC or CIRCLE between p1 and p2 (points are projected "
+    "onto the entity). Without p2 a LINE or ARC is split at p1 into two touching pieces. A CIRCLE loses the "
+    "counter-clockwise part from p1 to p2 and becomes an ARC. The first piece keeps the entity's id and tag.",
+    {"target": P("selector", True, description="Single LINE / ARC / CIRCLE"),
+     "p1": P("point", True, description="First break point"),
+     "p2": P("point", description="Second break point (omit to split at p1)")})
+def break_(ctx: Ctx, target, p1, p2):
+    ents = select(ctx.doc, target, ctx.refs)
+    if len(ents) != 1:
+        raise input_error("TARGET_NOT_UNIQUE", "break needs exactly one target", entities=[e.dxf.handle for e in ents])
+    e = ents[0]
+    t = e.dxftype()
+    normalize_extrusion(e)
+    if t == "LINE":
+        seg = G.Seg(_vec(e.dxf.start), _vec(e.dxf.end))
+        eps = 1e-9 / max(G.dist(seg.p, seg.q), 1e-12)
+        t1 = max(0.0, min(1.0, seg.param(p1)))
+        if p2 is None:
+            if t1 <= eps or t1 >= 1 - eps:
+                raise geometry_error("BREAK_AT_END", "p1 is at an end of the line: nothing to split",
+                                     entities=[e.dxf.handle])
+            keep = [(0.0, t1), (t1, 1.0)]
+        else:
+            t2 = max(0.0, min(1.0, seg.param(p2)))
+            lo, hi = min(t1, t2), max(t1, t2)
+            keep = [(a, b) for a, b in ((0.0, lo), (hi, 1.0)) if b - a > eps]
+        if not keep:
+            raise geometry_error("BREAK_REMOVES_ALL", "The break points span the whole line", entities=[e.dxf.handle],
+                                 hint="Use delete instead")
+
+        def set_line(x, ab):
+            x.dxf.start, x.dxf.end = (*ab[0], 0), (*ab[1], 0)
+        return _pieces(ctx, e, [(seg.at(a), seg.at(b)) for a, b in keep], set_line)
+    if t in ("ARC", "CIRCLE"):
+        c, rad, s, en = circle_wcs(e)
+        a1 = G.angle_of(G.sub(p1, c))
+        if t == "CIRCLE":
+            if p2 is None:
+                raise input_error("MISSING_PARAM", "Breaking a circle needs p2 (a circle cannot be split at one point)")
+            a2 = G.angle_of(G.sub(p2, c))
+            if G.ccw_span(a1, a2) < 1e-9:
+                raise geometry_error("DEGENERATE_GEOMETRY", "p1 and p2 are at the same angle", entities=[e.dxf.handle])
+            arc = ctx.space_of(e).add_arc(c, rad, a2, a1, dxfattribs=_props(e))
+            tag = get_tag(e)
+            h = e.dxf.handle
+            ctx.removed(e)
+            if tag:
+                set_tag(ctx.doc, arc, tag)
+            return {"deleted": [h], "created": [ctx.created(arc)]}
+        span = G.ccw_span(s, en)
+
+        def rel(a: float) -> float:
+            r_ = (a - s) % 360.0
+            # a point beyond the arc snaps to the nearer end
+            return r_ if r_ <= span else (span if r_ - span < 360.0 - r_ else 0.0)
+        r1 = rel(a1)
+        if p2 is None:
+            if r1 < 1e-9 or r1 > span - 1e-9:
+                raise geometry_error("BREAK_AT_END", "p1 is at an end of the arc: nothing to split",
+                                     entities=[e.dxf.handle])
+            keep = [(0.0, r1), (r1, span)]
+        else:
+            r2 = rel(G.angle_of(G.sub(p2, c)))
+            lo, hi = min(r1, r2), max(r1, r2)
+            keep = [(a, b) for a, b in ((0.0, lo), (hi, span)) if b - a > 1e-9]
+        if not keep:
+            raise geometry_error("BREAK_REMOVES_ALL", "The break points span the whole arc", entities=[e.dxf.handle],
+                                 hint="Use delete instead")
+
+        def set_arc(x, ab):
+            x.dxf.start_angle, x.dxf.end_angle = ab
+        return _pieces(ctx, e, [((s + a) % 360.0, (s + b) % 360.0) for a, b in keep], set_arc)
+    raise input_error("UNSUPPORTED_ENTITY", f"break does not support {t}", entities=[e.dxf.handle],
+                      hint="Explode polylines first")
+
+
+def _props(e) -> dict[str, Any]:
+    return {k: e.dxf.get(k) for k in ("layer", "color", "linetype", "lineweight") if e.dxf.hasattr(k)}
+
+
+def _pieces(ctx: Ctx, e, parts: list, setter) -> dict[str, Any]:
+    """The original entity becomes parts[0]; the other parts are copies of it."""
+    created = []
+    for part in parts[1:]:
+        c = _copy_into_msp(ctx, e)
+        setter(c, part)
+        created.append(c.dxf.handle)
+    setter(e, parts[0])
+    ctx.touched(e)
+    return {"modified": [e.dxf.handle], "created": created}
+
+
+def _segments(e) -> list[tuple[G.Vec, G.Vec, float]]:
+    """(start, end, bulge) segments of a LINE, ARC or open LWPOLYLINE, in WCS."""
+    t = e.dxftype()
+    if t == "LINE":
+        return [(_vec(e.dxf.start), _vec(e.dxf.end), 0.0)]
+    if t == "ARC":
+        c, rad, s, en = circle_wcs(e)
+        return [(G.polar(c, rad, s), G.polar(c, rad, en), math.tan(math.radians(G.ccw_span(s, en)) / 4))]
+    if t == "LWPOLYLINE":
+        if e.closed:
+            raise input_error("UNSUPPORTED_ENTITY", f"Polyline {e.dxf.handle} is already closed",
+                              entities=[e.dxf.handle])
+        pts = lwpoly_wcs(e)
+        return [((a[0], a[1]), (b[0], b[1]), a[2]) for a, b in zip(pts, pts[1:])]
+    raise input_error("UNSUPPORTED_ENTITY", f"join does not support {t}", entities=[e.dxf.handle],
+                      hint="Join LINE, ARC and open LWPOLYLINE entities")
+
+
+def _reverse(segs):
+    return [(b, a, -k) for a, b, k in reversed(segs)]
+
+
+@op("join", "edit", "AutoCAD JOIN / PEDIT Join: chain LINEs, ARCs and open LWPOLYLINEs whose ends meet (within "
+    "'tolerance') into one LWPOLYLINE, closed when the chain closes. The sources are deleted; the polyline takes the "
+    "layer, color, linetype and lineweight of the first target, and its tag unless 'tag' is given.",
+    {"target": P("selector", True, description="Entities to join (at least 2, or 1 polyline whose ends meet)"),
+     "tolerance": P("length", default=1e-6, ge=0, description="Largest gap between ends that still counts as touching"),
+     "tag": P("string", description="Tag for the resulting polyline")})
+def join(ctx: Ctx, target, tolerance, tag):
+    ents = select(ctx.doc, target, ctx.refs)
+    pieces = [(e, _segments(e)) for e in ents]
+    tol = max(tolerance, 1e-9)
+    chain = list(pieces[0][1])
+    rest = pieces[1:]
+    progress = True
+    while rest and progress:
+        progress = False
+        for i, (e, segs) in enumerate(rest):
+            head, tail = chain[0][0], chain[-1][1]
+            if G.dist(tail, segs[0][0]) <= tol:
+                chain += segs
+            elif G.dist(tail, segs[-1][1]) <= tol:
+                chain += _reverse(segs)
+            elif G.dist(head, segs[-1][1]) <= tol:
+                chain = segs + chain
+            elif G.dist(head, segs[0][0]) <= tol:
+                chain = _reverse(segs) + chain
+            else:
+                continue
+            rest.pop(i)
+            progress = True
+            break
+    if rest:
+        raise geometry_error("NOT_CONNECTED", f"{len(rest)} of the targets do not touch the chain",
+                             entities=[e.dxf.handle for e, _ in rest],
+                             hint="Check end points, raise 'tolerance', or join the pieces separately")
+    closed = G.dist(chain[0][0], chain[-1][1]) <= tol
+    if len(ents) == 1 and not closed:
+        raise input_error("NOTHING_TO_JOIN", "Give at least two entities (or one polyline whose ends meet)",
+                          entities=[ents[0].dxf.handle])
+    verts = [(a[0], a[1], k) for a, _b, k in chain]
+    if not closed:
+        verts.append((chain[-1][1][0], chain[-1][1][1], 0.0))
+    first = ents[0]
+    keep_tag = tag if tag is not None else get_tag(first)
+    pl = ctx.space_of(first).add_lwpolyline(verts, format="xyb", close=closed, dxfattribs=_props(first))
+    deleted = []
+    for e in ents:
+        deleted.append(e.dxf.handle)
+        ctx.removed(e)
+    if keep_tag:
+        set_tag(ctx.doc, pl, keep_tag)
+    return {"created": [ctx.created(pl)], "deleted": deleted, "closed": closed, "vertices": len(verts)}
+
+
+@op("draw_order", "edit", "AutoCAD DRAWORDER: show the targets on top of ('front') or under ('back') every other "
+    "entity of their layout, e.g. a solid hatch behind its outline.",
+    {"target": TARGET, "order": P("enum", True, enum=["front", "back"], description="Where to put the targets")})
+def draw_order(ctx: Ctx, target, order):
+    from .draw import restack
+    ents = select(ctx.doc, target, ctx.refs)
+    by_space: dict[str, tuple[Any, list[str]]] = {}
+    for e in ents:
+        sp = ctx.space_of(e)
+        by_space.setdefault(sp.layout_key, (sp, []))[1].append(e.dxf.handle)
+    for sp, hs in by_space.values():
+        restack(sp, hs, front=order == "front")
+    for e in ents:
+        ctx.touched(e)
+    return {"modified": [e.dxf.handle for e in ents]}
+
+
+PURGE_KINDS = ["layers", "blocks", "text_styles", "linetypes"]
+
+
+def _in_use(doc) -> dict[str, set[str]]:
+    """Upper-case names of the layers, blocks, text styles and linetypes something refers to."""
+    used = {"layers": {"0", "DEFPOINTS", str(doc.header.get("$CLAYER", "0")).upper()}, "blocks": set(),
+            "text_styles": {"STANDARD", str(doc.header.get("$TEXTSTYLE", "Standard")).upper()},
+            "linetypes": {"BYLAYER", "BYBLOCK", "CONTINUOUS", str(doc.header.get("$CELTYPE", "ByLayer")).upper()}}
+    for blk in doc.blocks:  # every layout and block definition
+        for e in blk:
+            items = [e, *(e.attribs if e.dxftype() == "INSERT" else [])]
+            for x in items:
+                used["layers"].add(x.dxf.layer.upper())
+                if x.dxf.hasattr("linetype"):
+                    used["linetypes"].add(x.dxf.linetype.upper())
+                if x.dxf.hasattr("style"):
+                    used["text_styles"].add(x.dxf.style.upper())
+            if e.dxftype() == "INSERT":
+                used["blocks"].add(e.dxf.name.upper())
+    for lay in doc.layers:
+        used["linetypes"].add(lay.dxf.get("linetype", "Continuous").upper())
+    # dimension and multileader styles point at text styles, linetypes and arrow blocks by handle
+    kind_of = {"STYLE": "text_styles", "LTYPE": "linetypes", "BLOCK_RECORD": "blocks"}
+    for style in [*doc.dimstyles, *doc.objects.query("MLEADERSTYLE")]:
+        for key, val in style.dxf.all_existing_dxf_attribs().items():
+            if key.endswith("_handle") and isinstance(val, str) and val in doc.entitydb:
+                ref = doc.entitydb[val]
+                if ref.dxftype() in kind_of:
+                    used[kind_of[ref.dxftype()]].add(ref.dxf.name.upper())
+        st = style.dxf.all_existing_dxf_attribs().get("dimtxsty")
+        if isinstance(st, str):
+            used["text_styles"].add(st.upper())
+    return used
+
+
+@op("purge", "edit", "AutoCAD PURGE: delete layers, blocks, text styles and linetypes that nothing uses. Never purges "
+    "layer 0 / Defpoints / the current layer, the Standard style, ByLayer / ByBlock / Continuous, arrow blocks "
+    "('_' names) or anonymous blocks. Repeats until nothing more is unused (nested blocks).",
+    {"kinds": P("list", description=f"Subset of {PURGE_KINDS} (default: all)")})
+def purge(ctx: Ctx, kinds):
+    kinds = PURGE_KINDS if kinds is None else kinds
+    bad = [k for k in kinds if k not in PURGE_KINDS]
+    if bad:
+        raise input_error("INVALID_ENUM", f"purge.kinds: unknown kind(s) {bad}", hint=f"Use {PURGE_KINDS}")
+    doc = ctx.doc
+    tables = {"layers": doc.layers, "text_styles": doc.styles, "linetypes": doc.linetypes}
+    purged: dict[str, list[str]] = {k: [] for k in kinds}
+    while True:
+        used = _in_use(doc)
+        found = False
+        for kind in kinds:
+            if kind == "blocks":
+                for blk in list(doc.blocks):
+                    n = blk.name
+                    if blk.is_any_layout or n.startswith(("*", "_")) or n.upper() in used["blocks"]:
+                        continue
+                    doc.blocks.delete_block(n, safe=False)
+                    purged["blocks"].append(n)
+                    found = True
+                continue
+            for entry in list(tables[kind]):
+                n = entry.dxf.name
+                if not n or n.upper() in used[kind] or (kind == "text_styles" and entry.is_shape_file):
+                    continue
+                tables[kind].remove(n)
+                purged[kind].append(n)
+                found = True
+        if not found:
+            break
+    return {"purged": purged, "count": sum(len(v) for v in purged.values())}

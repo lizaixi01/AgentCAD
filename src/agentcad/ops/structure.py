@@ -84,7 +84,7 @@ def delete_layer(ctx: Ctx, name, delete_entities):
 
 
 DRAW_OPS_IN_BLOCK = {"add_line", "add_polyline", "add_rectangle", "add_circle", "add_arc", "add_ellipse",
-                     "add_spline", "add_point", "add_text", "add_mtext"}
+                     "add_spline", "add_point", "add_text", "add_mtext", "add_polygon", "add_donut", "add_hatch"}
 
 
 @op("define_block", "block", "Define (or redefine) a block from a list of draw operations and attribute definitions.",

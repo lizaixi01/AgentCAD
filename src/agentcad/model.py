@@ -20,7 +20,7 @@ ROUND = 6
 
 SUPPORTED_TYPES = {
     "LINE", "CIRCLE", "ARC", "LWPOLYLINE", "ELLIPSE", "SPLINE", "POINT",
-    "TEXT", "MTEXT", "DIMENSION", "INSERT", "LEADER", "MULTILEADER", "HATCH",
+    "TEXT", "MTEXT", "DIMENSION", "INSERT", "LEADER", "MULTILEADER", "HATCH", "XLINE", "RAY",
 }
 
 
@@ -194,7 +194,26 @@ def geometry_of(e: DXFGraphic) -> dict[str, Any]:
                 "scale": [r(x.xscale), r(x.yscale)], "attributes": attribs}
     if t == "LEADER":
         return {"vertices": [pt(v) for v in e.vertices]}
+    if t in ("XLINE", "RAY"):
+        return {"point": pt(x.start), "direction": pt(x.unit_vector)}
+    if t == "HATCH":
+        return hatch_info(e)
     return {}
+
+
+def hatch_info(e: DXFGraphic) -> dict[str, Any]:
+    x = e.dxf
+    loops = []
+    for path in e.paths:
+        if hasattr(path, "vertices"):  # polyline path
+            loops.append({"points": [[r(v[0]), r(v[1]), r(v[2])] if abs(v[2]) > 1e-12 else [r(v[0]), r(v[1])]
+                                     for v in path.vertices]})
+        else:
+            loops.append({"edges": [type(edge).__name__.replace("Edge", "").lower() for edge in path.edges]})
+    info: dict[str, Any] = {"pattern": x.pattern_name, "solid": bool(x.solid_fill), "loops": loops}
+    if not x.solid_fill:
+        info.update(pattern_scale=r(x.get("pattern_scale", 1.0)), pattern_angle=r(x.get("pattern_angle", 0.0)))
+    return info
 
 
 DIMTYPES = {0: "linear", 1: "aligned", 2: "angular", 3: "diameter", 4: "radius", 5: "angular3p", 6: "ordinate"}
@@ -245,6 +264,10 @@ def measure_dimension(e: DXFGraphic) -> float | None:
             a2 = math.degrees(math.atan2(x.defpoint3.y - c.y, x.defpoint3.x - c.x))
             span = (a2 - a1) % 360.0
             return 360.0 if span < 1e-12 else span
+        if kind == "ordinate":
+            # 10 = origin, 13 = feature; bit 64 of the type = X ordinate. The value has no sign.
+            d = x.defpoint2 - x.defpoint
+            return abs(d.x) if x.dimtype & 64 else abs(d.y)
     except Exception:
         return None
     return None

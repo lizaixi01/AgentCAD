@@ -26,6 +26,22 @@ Angular dimension from vertex 'center' between rays to p1 and p2 (measured CCW f
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
+### `add_center_mark`
+
+Center mark of CIRCLEs / ARCs (AutoCAD CENTERMARK): a horizontal and a vertical LINE through each center, 'extension' beyond the radius. Layer CENTER with linetype CENTER unless given. With 'tag' the lines are tagged '<tag>.h' / '<tag>.v' (several targets: '<tag>.<i>.h').
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `target` | selector | 是 |  | CIRCLE / ARC entities |
+| `extension` | length ≥0 |  |  | Overshoot past the circle (default: max(2, radius/2)) |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
 ### `add_diameter_dim`
 
 Diameter dimension of a circle/arc.
@@ -97,6 +113,28 @@ Multi-line text (MTEXT). Use '\P' or newlines for line breaks.
 | `insert` | point | 是 |  | Top-left insert point |
 | `char_height` | length >0 |  | 2.5 | Character height |
 | `width` | length >0 |  |  | Reference column width (optional) |
+| `style` | string |  |  | Text style (see create_text_style); default Standard |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `add_ordinate_dim`
+
+Ordinate (datum) dimension: the X or Y distance of 'feature' from 'origin', written at the end of a leader from the feature to 'leader_end'.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `feature` | point | 是 |  | Point being dimensioned |
+| `leader_end` | point | 是 |  | End of the leader, where the text goes |
+| `axis` | enum ['x', 'y'] | 是 |  | 'x' measures the X distance (vertical leader), 'y' the Y distance |
+| `origin` | point |  | (0.0, 0.0) | Datum point (UCS origin of the ordinates) |
+| `text` | string |  |  | Text override; '<>' stands for the measured value |
+| `text_height` | length >0 |  |  | Override text height |
+| `length_factor` | number >0 |  |  | DIMLFAC: displayed value = measured length x factor, e.g. 1/0.325 on a sheet that shows the part at scale 0.325 |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
 | `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
 | `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
@@ -156,6 +194,7 @@ Single-line text.
 | `height` | length >0 |  | 2.5 | Text height |
 | `rotation` | angle |  | 0.0 | Rotation |
 | `align` | enum ['left', 'center', 'right', 'middle', 'middle_center', 'top_left', 'top_center', 'bottom_center', 'middle_left'] |  | left | Alignment of the insert point |
+| `style` | string |  |  | Text style (see create_text_style); default Standard |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
 | `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
 | `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
@@ -181,6 +220,21 @@ Insert the standard 180x32 mm title block (ISO-like) with attributes ['TITLE', '
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
+### `create_text_style`
+
+Create a text style for add_text / add_mtext 'style'. 'font' is an SHX (e.g. gbenor.shx, txt.shx) or TrueType file (e.g. simsun.ttc, arial.ttf); SHX fonts need 'big_font' (e.g. gbcbig.shx) to show Chinese, which is the default for SHX fonts.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `name` | string | 是 |  | Style name |
+| `font` | string |  | gbenor.shx | Font file |
+| `big_font` | string |  |  | Big font for CJK characters (SHX fonts only; default gbcbig.shx) |
+| `width_factor` | number >0 |  | 1.0 | Character width factor |
+| `oblique` | angle |  | 0.0 | Slant angle |
+| `height` | length ≥0 |  | 0.0 | Fixed text height (0 = set per text) |
+| `if_exists` | enum ['error', 'skip', 'update'] |  | error |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
 ### `set_annotation_scale`
 
 Set the plot scale 1:scale for annotations: dimension arrows/text/gaps (DIMSCALE) and linetype dash lengths (LTSCALE) are multiplied by 'scale'. Use e.g. 50 or 100 for building plans in mm. Existing dimensions are re-rendered.
@@ -200,7 +254,7 @@ Define (or redefine) a block from a list of draw operations and attribute defini
 |---|---|---|---|---|
 | `name` | string | 是 |  |  |
 | `base_point` | point |  | (0.0, 0.0) |  |
-| `entities` | list | 是 |  | Draw ops (['add_arc', 'add_circle', 'add_ellipse', 'add_line', 'add_mtext', 'add_point', 'add_polyline', 'add_rectangle', 'add_spline', 'add_text']) in block coordinates |
+| `entities` | list | 是 |  | Draw ops (['add_arc', 'add_circle', 'add_donut', 'add_ellipse', 'add_hatch', 'add_line', 'add_mtext', 'add_point', 'add_polygon', 'add_polyline', 'add_rectangle', 'add_spline', 'add_text']) in block coordinates |
 | `attributes` | list |  |  | [{tag, insert:[x,y], height, default}] |
 | `if_exists` | enum ['error', 'skip', 'redefine'] |  | error |  |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
@@ -274,6 +328,23 @@ Draw a circle. Give 'radius' or 'diameter'.
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
+### `add_donut`
+
+AutoCAD DONUT: a filled ring (inner_diameter 0 = filled disc), stored as AutoCAD does: a closed LWPOLYLINE of two half-circle segments with a constant width.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `center` | point | 是 |  | Center |
+| `outer_diameter` | length >0 | 是 |  | Outer diameter |
+| `inner_diameter` | length ≥0 |  | 0.0 | Inner diameter (0 = solid disc) |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
 ### `add_ellipse`
 
 Draw an ellipse (or elliptical arc) by semi-axes rx, ry and rotation.
@@ -286,6 +357,27 @@ Draw an ellipse (or elliptical arc) by semi-axes rx, ry and rotation.
 | `rotation` | angle |  | 0.0 | Rotation of the rx axis |
 | `start_angle` | angle |  | 0.0 | Start parameter angle |
 | `end_angle` | angle |  | 360.0 | End parameter angle |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `add_hatch`
+
+Fill an area (AutoCAD HATCH). Boundary: 'boundary' = closed LWPOLYLINE / CIRCLE / full ELLIPSE entities (several = islands, filled by the odd-even rule), or 'points' (outer loop, bulges allowed) plus optional 'holes' (list of point loops). 'pattern' is SOLID (default) or a standard pattern such as ANSI31 (section lines), ANSI37, ANGLE, BRICK, DOTS, NET, AR-CONC, AR-SAND, with 'pattern_scale' and 'pattern_angle'. The hatch is not associative: editing the boundary later does not update it. 'behind' (default true) draws it under everything already in the layout.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `boundary` | selector |  |  | Closed boundary entities |
+| `points` | points |  |  | Outer loop (instead of 'boundary') |
+| `holes` | list |  |  | Inner loops, each a list of [x, y] (or [x, y, bulge]) |
+| `pattern` | string |  | SOLID | SOLID or a pattern name (ANSI31, ...) |
+| `pattern_scale` | number >0 |  | 1.0 | Pattern scale |
+| `pattern_angle` | angle |  | 0.0 | Pattern rotation |
+| `behind` | bool |  | True | Send the hatch to the back of the draw order |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
 | `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
 | `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
@@ -325,6 +417,26 @@ Draw a point entity.
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
+### `add_polygon`
+
+Regular polygon (AutoCAD POLYGON) as a closed polyline. Size by 'radius' with mode 'inscribed' (corners on the circle) or 'circumscribed' (edge midpoints on the circle, e.g. a hex nut across flats), or by 'side_length'. Without 'rotation' the bottom edge is horizontal, as AutoCAD does for a typed radius; 'rotation' is the direction of the first corner (inscribed / side_length) or of the first edge midpoint (circumscribed).
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `center` | point | 是 |  | Center |
+| `sides` | int ≥3 ≤1024 | 是 |  | Number of sides |
+| `radius` | length >0 |  |  | Radius of the construction circle |
+| `mode` | enum ['inscribed', 'circumscribed'] |  | inscribed | How 'radius' is measured |
+| `side_length` | length >0 |  |  | Edge length (instead of 'radius') |
+| `rotation` | angle |  |  | Direction of the first corner / edge midpoint |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
 ### `add_polyline`
 
 Draw a 2D polyline (LWPOLYLINE). Points may carry a bulge as third value (bulge = tan(arc_angle/4), positive = CCW arc to the next vertex).
@@ -333,6 +445,24 @@ Draw a 2D polyline (LWPOLYLINE). Points may carry a bulge as third value (bulge 
 |---|---|---|---|---|
 | `points` | points | 是 |  | Vertices |
 | `closed` | bool |  | False | Close the polyline |
+| `width` | length ≥0 |  | 0.0 | Constant segment width, drawn filled (PLINE Width) |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `add_ray`
+
+Construction line from 'point' to infinity in one direction (AutoCAD RAY).
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `point` | point | 是 |  | A point on the line |
+| `through` | point |  |  | Second point that gives the direction |
+| `angle` | angle |  |  | Direction (instead of 'through') |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
 | `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
 | `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
@@ -377,6 +507,23 @@ Draw a spline through fit points.
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
+### `add_xline`
+
+Construction line infinite in both directions (AutoCAD XLINE). Not counted in extents.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `point` | point | 是 |  | A point on the line |
+| `through` | point |  |  | Second point that gives the direction |
+| `angle` | angle |  |  | Direction (instead of 'through') |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
 ## edit
 
 ### `array_polar`
@@ -403,6 +550,17 @@ Rectangular array: copies arranged in rows and columns (the original is cell [0,
 | `cols` | int ≥1 ≤1000 | 是 |  | Number of columns |
 | `row_spacing` | length |  | 0.0 | Distance between rows (Y) |
 | `col_spacing` | length |  | 0.0 | Distance between columns (X) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `break`
+
+AutoCAD BREAK: remove the part of a LINE, ARC or CIRCLE between p1 and p2 (points are projected onto the entity). Without p2 a LINE or ARC is split at p1 into two touching pieces. A CIRCLE loses the counter-clockwise part from p1 to p2 and becomes an ARC. The first piece keeps the entity's id and tag.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `target` | selector | 是 |  | Single LINE / ARC / CIRCLE |
+| `p1` | point | 是 |  | First break point |
+| `p2` | point |  |  | Second break point (omit to split at p1) |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `chamfer`
@@ -446,6 +604,16 @@ Erase entities. Deleting more than the policy threshold needs confirm_large=true
 | `confirm_large` | bool |  | False | Confirm a large deletion |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
+### `draw_order`
+
+AutoCAD DRAWORDER: show the targets on top of ('front') or under ('back') every other entity of their layout, e.g. a solid hatch behind its outline.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `target` | selector | 是 |  | Entities to operate on |
+| `order` | enum ['front', 'back'] | 是 |  | Where to put the targets |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
 ### `explode`
 
 Explode block references (INSERT) or polylines into their component entities.
@@ -481,6 +649,17 @@ AutoCAD FILLET of two LINEs: trims/extends both to tangency and adds a tangent A
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `join`
+
+AutoCAD JOIN / PEDIT Join: chain LINEs, ARCs and open LWPOLYLINEs whose ends meet (within 'tolerance') into one LWPOLYLINE, closed when the chain closes. The sources are deleted; the polyline takes the layer, color, linetype and lineweight of the first target, and its tag unless 'tag' is given.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `target` | selector | 是 |  | Entities to join (at least 2, or 1 polyline whose ends meet) |
+| `tolerance` | length ≥0 |  | 1e-06 | Largest gap between ends that still counts as touching |
+| `tag` | string |  |  | Tag for the resulting polyline |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `mirror`
@@ -532,6 +711,15 @@ Create an offset copy of a LINE, CIRCLE, ARC or straight-segment LWPOLYLINE. The
 | `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `purge`
+
+AutoCAD PURGE: delete layers, blocks, text styles and linetypes that nothing uses. Never purges layer 0 / Defpoints / the current layer, the Standard style, ByLayer / ByBlock / Continuous, arrow blocks ('_' names) or anonymous blocks. Repeats until nothing more is unused (nested blocks).
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `kinds` | list |  |  | Subset of ['layers', 'blocks', 'text_styles', 'linetypes'] (default: all) |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `rotate`

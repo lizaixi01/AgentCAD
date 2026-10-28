@@ -36,16 +36,210 @@ def add_line(ctx: Ctx, start, end, **p):
 
 @op("add_polyline", "draw", "Draw a 2D polyline (LWPOLYLINE). Points may carry a bulge as third value "
     "(bulge = tan(arc_angle/4), positive = CCW arc to the next vertex).",
-    {"points": P("points", True, description="Vertices"), "closed": P("bool", default=False, description="Close the polyline")},
+    {"points": P("points", True, description="Vertices"), "closed": P("bool", default=False, description="Close the polyline"),
+     "width": P("length", default=0.0, ge=0, description="Constant segment width, drawn filled (PLINE Width)")},
     common_draw=True)
-def add_polyline(ctx: Ctx, points, closed, **p):
+def add_polyline(ctx: Ctx, points, closed, width, **p):
     if (s := _guard(ctx, p)):
         return s
     if len(points) < 2:
         raise input_error("TOO_FEW_POINTS", "A polyline needs at least 2 points")
     pts = [(q[0], q[1], q[2] if len(q) == 3 else 0.0) for q in points]
     e = ctx.layout.add_lwpolyline(pts, format="xyb", close=closed, dxfattribs=ctx.attribs(p))
+    if width:
+        e.dxf.const_width = width
     return _single(ctx, e, p)
+
+
+@op("add_polygon", "draw", "Regular polygon (AutoCAD POLYGON) as a closed polyline. Size by 'radius' with mode "
+    "'inscribed' (corners on the circle) or 'circumscribed' (edge midpoints on the circle, e.g. a hex nut across "
+    "flats), or by 'side_length'. Without 'rotation' the bottom edge is horizontal, as AutoCAD does for a typed "
+    "radius; 'rotation' is the direction of the first corner (inscribed / side_length) or of the first edge "
+    "midpoint (circumscribed).",
+    {"center": P("point", True, description="Center"), "sides": P("int", True, ge=3, le=1024, description="Number of sides"),
+     "radius": P("length", gt=0, description="Radius of the construction circle"),
+     "mode": P("enum", enum=["inscribed", "circumscribed"], default="inscribed", description="How 'radius' is measured"),
+     "side_length": P("length", gt=0, description="Edge length (instead of 'radius')"),
+     "rotation": P("angle", description="Direction of the first corner / edge midpoint")}, common_draw=True)
+def add_polygon(ctx: Ctx, center, sides, radius, mode, side_length, rotation, **p):
+    if (s := _guard(ctx, p)):
+        return s
+    if (radius is None) == (side_length is None):
+        raise input_error("AMBIGUOUS_PARAMS", "add_polygon: give exactly one of 'radius' or 'side_length'")
+    half = math.pi / sides
+    if side_length is not None:
+        r, mode = side_length / (2 * math.sin(half)), "inscribed"
+    else:
+        r = radius if mode == "inscribed" else radius / math.cos(half)
+    if rotation is None:  # bottom edge horizontal: an edge midpoint points straight down
+        first = -90.0 + (180.0 / sides)
+    else:
+        first = rotation + (180.0 / sides if mode == "circumscribed" else 0.0)
+    pts = [(center[0] + r * math.cos(math.radians(first) + 2 * half * k),
+            center[1] + r * math.sin(math.radians(first) + 2 * half * k)) for k in range(sides)]
+    e = ctx.layout.add_lwpolyline(pts, format="xy", close=True, dxfattribs=ctx.attribs(p))
+    return _single(ctx, e, p)
+
+
+@op("add_donut", "draw", "AutoCAD DONUT: a filled ring (inner_diameter 0 = filled disc), stored as AutoCAD does: "
+    "a closed LWPOLYLINE of two half-circle segments with a constant width.",
+    {"center": P("point", True, description="Center"), "outer_diameter": P("length", True, gt=0, description="Outer diameter"),
+     "inner_diameter": P("length", default=0.0, ge=0, description="Inner diameter (0 = solid disc)")}, common_draw=True)
+def add_donut(ctx: Ctx, center, outer_diameter, inner_diameter, **p):
+    if (s := _guard(ctx, p)):
+        return s
+    if inner_diameter >= outer_diameter:
+        raise geometry_error("DEGENERATE_GEOMETRY", "inner_diameter must be smaller than outer_diameter")
+    r = (outer_diameter + inner_diameter) / 4
+    e = ctx.layout.add_lwpolyline([(center[0] - r, center[1], 1.0), (center[0] + r, center[1], 1.0)], format="xyb",
+                                  close=True, dxfattribs=ctx.attribs(p))
+    e.dxf.const_width = (outer_diameter - inner_diameter) / 2
+    return _single(ctx, e, p)
+
+
+def _direction(base, through, angle, name: str):
+    if (through is None) == (angle is None):
+        raise input_error("AMBIGUOUS_PARAMS", f"{name}: give exactly one of 'through' or 'angle'")
+    if through is not None:
+        d = (through[0] - base[0], through[1] - base[1])
+        n = math.hypot(*d)
+        if n < 1e-9:
+            raise geometry_error("DEGENERATE_GEOMETRY", f"{name}: 'through' coincides with 'point'")
+        return (d[0] / n, d[1] / n, 0.0)
+    a = math.radians(angle)
+    return (math.cos(a), math.sin(a), 0.0)
+
+
+XL_PARAMS = {"point": P("point", True, description="A point on the line"),
+             "through": P("point", description="Second point that gives the direction"),
+             "angle": P("angle", description="Direction (instead of 'through')")}
+
+
+@op("add_xline", "draw", "Construction line infinite in both directions (AutoCAD XLINE). Not counted in extents.",
+    XL_PARAMS, common_draw=True)
+def add_xline(ctx: Ctx, point, through, angle, **p):
+    if (s := _guard(ctx, p)):
+        return s
+    d = _direction(point, through, angle, "add_xline")
+    return _single(ctx, ctx.layout.add_xline(point, d, dxfattribs=ctx.attribs(p)), p)
+
+
+@op("add_ray", "draw", "Construction line from 'point' to infinity in one direction (AutoCAD RAY).",
+    XL_PARAMS, common_draw=True)
+def add_ray(ctx: Ctx, point, through, angle, **p):
+    if (s := _guard(ctx, p)):
+        return s
+    d = _direction(point, through, angle, "add_ray")
+    return _single(ctx, ctx.layout.add_ray(point, d, dxfattribs=ctx.attribs(p)), p)
+
+
+def _loop_area(pts) -> float:
+    return 0.5 * sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(pts, pts[1:] + pts[:1]))
+
+
+def _hatch_loops(ctx: Ctx, boundary, points, holes) -> list[tuple[str, Any]]:
+    """Boundary loops as ('poly', [(x, y, bulge)]), ('circle', (center, r)) or ('ellipse', entity)."""
+    from ..model import circle_wcs, lwpoly_wcs, select
+    if (boundary is None) == (points is None):
+        raise input_error("AMBIGUOUS_PARAMS", "add_hatch: give exactly one of 'boundary' (entities) or 'points'")
+    if holes and points is None:
+        raise input_error("AMBIGUOUS_PARAMS", "add_hatch: 'holes' goes with 'points'; with 'boundary' select the "
+                          "hole entities too")
+    loops: list[tuple[str, Any]] = []
+    if points is not None:
+        for i, loop in enumerate([points, *(holes or [])]):
+            name = "points" if i == 0 else f"holes[{i - 1}]"
+            if i and (not isinstance(loop, list) or not loop):
+                raise input_error("INVALID_POINTS", f"{name}: expected a list of points")
+            if i:
+                from .registry import _point
+                loop = [_point(q, ctx.unit, f"{name}[{k}]", allow_bulge=True) for k, q in enumerate(loop)]
+            pts = [(q[0], q[1], q[2] if len(q) == 3 else 0.0) for q in loop]
+            if len(pts) > 1 and math.dist(pts[0][:2], pts[-1][:2]) < 1e-9:
+                pts = pts[:-1]
+            if (len(pts) < 3 and not any(b for _, _, b in pts)) or len(pts) < 2:
+                raise geometry_error("DEGENERATE_GEOMETRY", f"{name}: a hatch loop needs at least 3 points")
+            if not any(b for _, _, b in pts) and abs(_loop_area([q[:2] for q in pts])) < 1e-12:
+                raise geometry_error("DEGENERATE_GEOMETRY", f"{name}: hatch loop encloses no area")
+            loops.append(("poly", pts))
+        return loops
+    for e in select(ctx.doc, boundary, ctx.refs, field="boundary"):
+        t = e.dxftype()
+        if t == "LWPOLYLINE":
+            pts = lwpoly_wcs(e)
+            if not e.closed and not (len(pts) > 2 and math.dist(pts[0][:2], pts[-1][:2]) < 1e-9):
+                raise geometry_error("BOUNDARY_NOT_CLOSED", f"Polyline {e.dxf.handle} is not closed",
+                                     entities=[e.dxf.handle], hint="Close it (modify closed=true) or use 'points'")
+            loops.append(("poly", pts))
+        elif t == "CIRCLE":
+            c, r, _, _ = circle_wcs(e)
+            loops.append(("circle", (c, r)))
+        elif t == "ELLIPSE" and abs(abs(e.dxf.end_param - e.dxf.start_param) - 2 * math.pi) < 1e-9:
+            loops.append(("ellipse", e))
+        else:
+            raise input_error("UNSUPPORTED_BOUNDARY", f"{t} {e.dxf.handle} is not a closed boundary",
+                              entities=[e.dxf.handle],
+                              hint="Use closed LWPOLYLINE / CIRCLE / full ELLIPSE entities, or 'points'")
+    return loops
+
+
+@op("add_hatch", "draw", "Fill an area (AutoCAD HATCH). Boundary: 'boundary' = closed LWPOLYLINE / CIRCLE / full "
+    "ELLIPSE entities (several = islands, filled by the odd-even rule), or 'points' (outer loop, bulges allowed) "
+    "plus optional 'holes' (list of point loops). 'pattern' is SOLID (default) or a standard pattern such as "
+    "ANSI31 (section lines), ANSI37, ANGLE, BRICK, DOTS, NET, AR-CONC, AR-SAND, with 'pattern_scale' and "
+    "'pattern_angle'. The hatch is not associative: editing the boundary later does not update it. 'behind' "
+    "(default true) draws it under everything already in the layout.",
+    {"boundary": P("selector", description="Closed boundary entities"),
+     "points": P("points", description="Outer loop (instead of 'boundary')"),
+     "holes": P("list", description="Inner loops, each a list of [x, y] (or [x, y, bulge])"),
+     "pattern": P("string", default="SOLID", description="SOLID or a pattern name (ANSI31, ...)"),
+     "pattern_scale": P("number", default=1.0, gt=0, description="Pattern scale"),
+     "pattern_angle": P("angle", default=0.0, description="Pattern rotation"),
+     "behind": P("bool", default=True, description="Send the hatch to the back of the draw order")}, common_draw=True)
+def add_hatch(ctx: Ctx, boundary, points, holes, pattern, pattern_scale, pattern_angle, behind, **p):
+    from ezdxf.tools import pattern as patterns
+    if (s := _guard(ctx, p)):
+        return s
+    name = pattern.upper()
+    if name != "SOLID" and name not in patterns.ISO_PATTERN:
+        raise input_error("UNKNOWN_PATTERN", f"Hatch pattern {pattern!r} is not defined",
+                          hint=f"SOLID or one of {sorted(patterns.ISO_PATTERN)}")
+    loops = _hatch_loops(ctx, boundary, points, holes)
+    attrs = ctx.attribs(p)
+    color = attrs.pop("color", 256)  # ezdxf's fill setters default to color 7: pass it explicitly
+    h = ctx.layout.add_hatch(color=color, dxfattribs=attrs)
+    if name == "SOLID":
+        h.set_solid_fill(color=color, style=0)
+    else:  # ezdxf picks the ISO or imperial definition from $MEASUREMENT, which create_drawing sets
+        h.set_pattern_fill(name, color=color, angle=pattern_angle, scale=pattern_scale, style=0)
+    for i, (kind, data) in enumerate(loops):
+        flags = 1 if i == 0 else 0  # first loop external, the rest default (odd-even nesting)
+        if kind == "poly":
+            h.paths.add_polyline_path(data, is_closed=True, flags=flags | 2)
+        elif kind == "circle":
+            h.paths.add_edge_path(flags).add_arc(data[0], data[1], 0, 360)
+        else:
+            el = data
+            h.paths.add_edge_path(flags).add_ellipse(el.dxf.center, el.dxf.major_axis, el.dxf.ratio, 0, 360)
+    created = _single(ctx, h, p)
+    if behind:
+        restack(ctx.layout, [h.dxf.handle], front=False)
+    return created
+
+
+def restack(space, moved: list[str], front: bool) -> None:
+    """Draw order (SORTENTS): put 'moved' on top of or under every other entity of 'space'. The sort handles
+    are the space's own entity handles redistributed, as AutoCAD's DRAWORDER does."""
+    current = dict(space.get_redraw_order())
+    ents = [e.dxf.handle for e in space]
+    key = {h: int(current.get(h, h), 16) for h in ents}
+    order = sorted(ents, key=lambda h: (key[h], int(h, 16)))
+    mset = set(moved)
+    rest = [h for h in order if h not in mset]
+    mv = [h for h in order if h in mset]
+    new = rest + mv if front else mv + rest
+    slots = sorted(int(h, 16) for h in ents)
+    space.set_redraw_order({h: format(k, "X") for h, k in zip(new, slots)})
 
 
 @op("add_rectangle", "draw", "Draw an axis-aligned (optionally rotated) rectangle as a closed polyline. "
@@ -186,13 +380,15 @@ ALIGN = {"left": TextEntityAlignment.LEFT, "center": TextEntityAlignment.CENTER,
 @op("add_text", "annotate", "Single-line text.",
     {"text": P("string", True, description="Text content"), "insert": P("point", True, description="Alignment point"),
      "height": P("length", default=2.5, gt=0, description="Text height"), "rotation": P("angle", default=0.0, description="Rotation"),
-     "align": P("enum", enum=list(ALIGN), default="left", description="Alignment of the insert point")},
+     "align": P("enum", enum=list(ALIGN), default="left", description="Alignment of the insert point"),
+     "style": P("string", description="Text style (see create_text_style); default Standard")},
     common_draw=True)
-def add_text(ctx: Ctx, text, insert, height, rotation, align, **p):
+def add_text(ctx: Ctx, text, insert, height, rotation, align, style, **p):
+    from .annotate import text_style
     if (s := _guard(ctx, p)):
         return s
     attrs = ctx.attribs(p)
-    attrs.update(height=height, rotation=rotation)
+    attrs.update(height=height, rotation=rotation, **text_style(ctx, style))
     e = ctx.layout.add_text(text, dxfattribs=attrs)
     e.set_placement(insert, align=ALIGN[align])
     return _single(ctx, e, p)
@@ -201,12 +397,14 @@ def add_text(ctx: Ctx, text, insert, height, rotation, align, **p):
 @op("add_mtext", "annotate", "Multi-line text (MTEXT). Use '\\P' or newlines for line breaks.",
     {"text": P("string", True, description="Text content"), "insert": P("point", True, description="Top-left insert point"),
      "char_height": P("length", default=2.5, gt=0, description="Character height"),
-     "width": P("length", gt=0, description="Reference column width (optional)")}, common_draw=True)
-def add_mtext(ctx: Ctx, text, insert, char_height, width, **p):
+     "width": P("length", gt=0, description="Reference column width (optional)"),
+     "style": P("string", description="Text style (see create_text_style); default Standard")}, common_draw=True)
+def add_mtext(ctx: Ctx, text, insert, char_height, width, style, **p):
+    from .annotate import text_style
     if (s := _guard(ctx, p)):
         return s
     attrs = ctx.attribs(p)
-    attrs.update(insert=insert, char_height=char_height)
+    attrs.update(insert=insert, char_height=char_height, **text_style(ctx, style))
     if width:
         attrs["width"] = width
     e = ctx.layout.add_mtext(text.replace("\n", "\\P"), dxfattribs=attrs)

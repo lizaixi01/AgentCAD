@@ -7,6 +7,7 @@ from typing import Any
 
 from ezdxf import bbox
 from ezdxf.document import Drawing
+from ezdxf.math import Vec3
 
 from .. import geom as G
 from ..model import circle_wcs, get_tag
@@ -337,6 +338,10 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
                 out.append(issue("DEGENERATE_GEOMETRY", "error", "Polyline has fewer than 2 distinct vertices", [h]))
         elif t == "INSERT" and x.name not in doc.blocks:
             out.append(issue("UNDEFINED_BLOCK", "error", f"Block {x.name!r} is not defined", [h]))
+        elif t == "HATCH" and not len(e.paths):
+            out.append(issue("DEGENERATE_GEOMETRY", "error", "Hatch has no boundary path", [h]))
+        elif t in ("XLINE", "RAY") and Vec3(x.unit_vector).magnitude < 1e-9:
+            out.append(issue("DEGENERATE_GEOMETRY", "error", f"{t} has no direction", [h]))
         if x.layer not in doc.layers:
             out.append(issue("UNDEFINED_LAYER", "warning", f"Layer {x.layer!r} has no layer table entry", [h]))
         if t == "ARC" and not (0 <= x.start_angle < 360 and 0 <= x.end_angle < 360):

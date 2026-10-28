@@ -93,6 +93,9 @@ def measure_dimension(e) -> tuple[str, float | None]:
             v1 = x.defpoint3 - x.defpoint2
             v2 = x.defpoint - x.defpoint4
             return kind, math.degrees(math.acos(max(-1, min(1, v1.normalize().dot(v2.normalize())))))
+        if kind == "ordinate":
+            d = x.defpoint2 - x.defpoint
+            return kind, abs(d.x) if x.dimtype & 64 else abs(d.y)
     except Exception:
         return kind, None
     return kind, None
@@ -122,6 +125,8 @@ def dimension_anchor_points(e) -> list[G.Vec]:
         return [(x.defpoint.x, x.defpoint.y)]
     if kind == "angular3p":
         return [(x.defpoint4.x, x.defpoint4.y)]
+    if kind == "ordinate":
+        return [(x.defpoint2.x, x.defpoint2.y)]
     return []
 
 
