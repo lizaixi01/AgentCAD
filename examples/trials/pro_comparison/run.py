@@ -112,6 +112,8 @@ def summarize(path: Path) -> dict:
         try:
             e = json.loads(line)
         except json.JSONDecodeError:
+            if line.strip():
+                terminal_error = None
             continue
         if e.get("type") == "turn.completed":
             finished, tokens = True, e.get("usage")
@@ -178,6 +180,32 @@ def unit_status(rounds: list[dict], expected: int) -> str:
         if status in statuses:
             return status
     return "completed" if len(statuses) == expected else "unclassified_failure"
+
+
+def result_rounds_and_status(result: dict, unit: Path) -> tuple[list[dict], str]:
+    rounds = []
+    for value in result["rounds"]:
+        log = unit / ("round" + str(value["round"]) + ".jsonl") if "round" in value else None
+        rounds.append({**value, **summarize(log)} if log and log.is_file() else value)
+    status = unit_status(rounds, 5 if result["task"] == "H1" else 1)
+    if result.get("unit_error") and status != "tool_policy_violation":
+        status = "unclassified_failure"
+    return rounds, status
+
+
+def read_pair_status(out: Path, task: str, rep: int) -> list[dict]:
+    """Read the original logs and results without modifying the source directory."""
+    rows = []
+    for arm in ("A", "B"):
+        file = out / "runs" / task / ("r" + str(rep)) / arm / "result.json"
+        if not file.is_file():
+            continue
+        result = json.loads(file.read_text(encoding="utf-8"))
+        if (result["task"], result["rep"], result["arm"]) != (task, rep, arm):
+            raise RuntimeError("Source result identity does not match its path: " + str(file))
+        _, status = result_rounds_and_status(result, file.parent)
+        rows.append({"task": task, "rep": rep, "arm": arm, "run_status": status})
+    return rows
 
 
 def pair_can_retry(rows: list[dict]) -> bool:
@@ -349,14 +377,8 @@ def grade(out: Path) -> list[dict]:
                     g["fails"].append(center_check["check"])
                     g["ok"] = False
             ok = bool(g["ok"])
-        rounds = []
-        for v in r["rounds"]:
-            log = unit / ("round" + str(v["round"]) + ".jsonl") if "round" in v else None
-            rounds.append({**v, **summarize(log)} if log and log.is_file() else v)
+        rounds, status = result_rounds_and_status(r, unit)
         usage = [v.get("usage") or {} for v in rounds]
-        status = unit_status(rounds, 5 if r["task"] == "H1" else 1)
-        if r.get("unit_error") and status != "tool_policy_violation":
-            status = "unclassified_failure"
         rows.append({"task": r["task"], "rep": r["rep"], "arm": r["arm"], "ok": ok,
                      "grade": g, "seconds": r["seconds"],
                      "calls": sum(v.get("cad_calls", 0) for v in rounds),

@@ -125,6 +125,14 @@ def test_old_network_message_does_not_explain_later_mcp_timeout(tmp_path):
     assert benchmark.round_status({"exit": None, "timeout": True, **summary}) == "unclassified_failure"
 
 
+def test_truncated_terminal_event_does_not_prove_network_interruption(tmp_path):
+    log = tmp_path / "events.jsonl"
+    event = {"type": "error", "message": "Reconnecting... waiting for network (Connection failed)"}
+    log.write_text(json.dumps(event) + '\n{"type":"item.started",', encoding="utf-8")
+    summary = benchmark.summarize(log)
+    assert benchmark.round_status({"exit": None, "timeout": True, **summary}) == "unclassified_failure"
+
+
 def test_interrupted_pair_excludes_completed_side_and_cannot_duplicate_retry():
     pair = [{"task": "H4", "rep": 1, "arm": "A", "run_status": "completed",
              "eligible_for_rate": True, "counted_success": True},
@@ -144,6 +152,38 @@ def test_unclassified_failure_prevents_excluding_a_pair_as_model_interruption():
     assert not benchmark.pair_can_retry(pair)
     benchmark.mark_pair_eligibility(pair)
     assert pair[0]["eligible_for_rate"] and not pair[0]["counted_success"]
+
+
+def test_rejected_retry_does_not_change_source_evidence(tmp_path, monkeypatch):
+    import sys
+
+    source, target = tmp_path / "source", tmp_path / "retry"
+    fixture = source / "fixtures" / "H4.dxf"
+    fixture.parent.mkdir(parents=True)
+    fixture.write_bytes(b"fixture")
+    manifest = {"agentcad_commit": "same", "pro_commit": "same", "fixtures": {"H4": benchmark.sha(fixture)}}
+    (source / "manifest.json").write_text(json.dumps(manifest), encoding="utf-8")
+    (source / "grades.json").write_bytes(b"original evidence")
+    for arm, exit_code in (("A", 0), ("B", 1)):
+        unit = source / "runs" / "H4" / "r1" / arm
+        unit.mkdir(parents=True)
+        result = {"task": "H4", "rep": 1, "arm": arm,
+                  "rounds": [{"exit": exit_code, "turn_completed": exit_code == 0}]}
+        (unit / "result.json").write_text(json.dumps(result), encoding="utf-8")
+    before = {p.relative_to(source): p.read_bytes() for p in source.rglob("*") if p.is_file()}
+    path = SOURCE.with_name("retry_pair.py")
+    spec = importlib.util.spec_from_file_location("pro_comparison_retry", path)
+    retry = importlib.util.module_from_spec(spec)
+    assert spec.loader
+    spec.loader.exec_module(retry)
+    monkeypatch.setattr(retry.bench, "version", lambda path: "same")
+    monkeypatch.setattr(sys, "argv", ["retry_pair.py", "--source", str(source), "--out", str(target),
+                                      "--pro", str(tmp_path), "--task", "H4", "--rep", "1"])
+    with pytest.raises(RuntimeError, match="confirmed model-service interruption"):
+        retry.main()
+    after = {p.relative_to(source): p.read_bytes() for p in source.rglob("*") if p.is_file()}
+    assert after == before
+    assert not target.exists()
 
 
 def test_failed_pair_records_each_arm_and_exits_unsuccessfully(tmp_path, monkeypatch):
