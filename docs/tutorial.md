@@ -81,7 +81,7 @@ agentcad --root work entities plate.dxf --type CIRCLE --brief
 agentcad --root work validate plate.dxf
 ```
 
-验证器只读磁盘上的文件，从几何本身识别轮廓、孔和标注，再与图纸里存储的规格比对。不通过时退出码为 1，每一项都给出 expected、actual 和偏差。
+验证器只读磁盘上的文件，从几何本身识别轮廓、孔和标注，再与图纸里存储的规格比对。不通过时退出码为 1。默认输出是精简的：没通过的要求给出 expected、actual 和偏差，通过的只在 `requirements_passed` 里列出 ID，识别到的圆和标注只给数量。加 `--detail` 可以看到每一项的 expected/actual，以及每个圆和标注。
 
 也可以指定自己的要求，见第 5 节。
 
@@ -235,11 +235,13 @@ agentcad --root work checkpoints plate.dxf
 agentcad --root work rollback plate.dxf
 ```
 
-查看完整操作记录（每次调用的输入、变更、版本、哈希，失败的也会记录）：
+查看操作记录（失败的调用也会记录）。默认每条一行：调用了什么、用了哪些操作、改了几个实体、对应的检查点：
 
 ```bash
 agentcad --root work history plate.dxf
 ```
+
+要看某几条的完整内容（每个操作的参数、脚本、错误、版本和哈希），加 `--seq 3 --seq 4`；`--detail` 输出全部记录的完整内容。`diff` 默认只列出新增和删除实体的 ID、类型、图层和标签，修改过的实体总会列出每个字段的旧值和新值；加 `--detail` 可以看到新增和删除实体的完整几何。
 
 如果进程在写文件时崩溃，或文件被破坏，运行 `agentcad --root work recover plate.dxf`。它会从最近一次提交的副本或检查点恢复，损坏的文件保留在 `.agentcad/.../failed/` 下。
 
@@ -411,7 +413,7 @@ MCP 配置里要写解释器和工作区的绝对路径。这两个路径因机�
 
 > 按 docs/spec.pdf 出图，有缺失或矛盾的地方先列出来问我。
 
-Agent 会调用 `draw_from_spec`、`apply_operations`、`validate_drawing`、`get_diff`、`rollback` 等 21 个工具，与 CLI 一一对应。可用环境变量限制 Agent 的权限：`AGENTCAD_READ_ONLY=1` 设为只读，`AGENTCAD_ALLOWED_OPS=add_line,add_circle,...` 设置操作白名单。
+Agent 会调用 `draw_from_spec`、`apply_operations`、`validate_drawing`、`get_diff`、`rollback` 等 22 个工具，除 `apply_batch`（一次调用处理多张图）外与 CLI 一一对应。可用环境变量限制 Agent 的权限：`AGENTCAD_READ_ONLY=1` 设为只读，`AGENTCAD_ALLOWED_OPS=add_line,add_circle,...` 设置操作白名单。
 
 ### Python
 

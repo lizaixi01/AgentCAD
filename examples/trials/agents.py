@@ -76,3 +76,26 @@ def command(agent: str, arm: str, root: str, effort: str, conf_dir: Path, python
     if agent == "claude":
         return claude_cmd(arm, root, effort, conf_dir, python, scripts)
     return codex_cmd(arm, root, effort, scripts)
+
+
+# Variables a Claude Code (desktop) session sets for the processes it starts. A trial launched from inside such a
+# session inherited them, and the agent then ran as a desktop child (entrypoint claude-desktop, the desktop's skills
+# and subagents, a scratchpad): ~300 more tokens of context on every turn. Kept: login (ANTHROPIC_*, account / OAuth),
+# provider choice (Bedrock / Vertex) and the Windows bash path, which a user sets on purpose.
+SESSION_ENV_PREFIXES = ("CLAUDECODE", "CLAUDE_CODE_", "CLAUDE_AGENT_SDK_", "CLAUDE_PID", "CLAUDE_EFFORT",
+                        "CLAUDE_PREVIEW_", "AI_AGENT", "MCP_CONNECTION_", "MCP_SERVER_CONNECTION_")
+SESSION_ENV_KEEP = {"CLAUDE_CODE_ACCOUNT_UUID", "CLAUDE_CODE_ORGANIZATION_UUID", "CLAUDE_CODE_OAUTH_SCOPES",
+                    "CLAUDE_CODE_OAUTH_TOKEN", "CLAUDE_CODE_USER_EMAIL", "CLAUDE_CODE_SDK_HAS_HOST_AUTH_REFRESH",
+                    "CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX", "CLAUDE_CODE_SKIP_BEDROCK_AUTH",
+                    "CLAUDE_CODE_SKIP_VERTEX_AUTH", "CLAUDE_CODE_GIT_BASH_PATH"}
+
+
+def agent_env() -> dict[str, str]:
+    """The environment for an agent process: this one, minus what a surrounding Claude Code session injected, and
+    without Claude Code's git context. The workspaces sit inside this repository and Claude Code puts the
+    repository's `git status` into every turn's context: a dirty checkout cost ~1.7K tokens per turn in the v3
+    rerun (docs/comparison-claude-code.md), so batches run at different times were not comparable."""
+    env = {k: v for k, v in os.environ.items()
+           if k in SESSION_ENV_KEEP or not k.upper().startswith(SESSION_ENV_PREFIXES)}
+    env["CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS"] = "1"
+    return env
