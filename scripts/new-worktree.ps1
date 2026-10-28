@@ -72,14 +72,23 @@ $branch = "agent/$Name"
 Invoke-Checked "git fetch" { git -C $repo fetch -q origin }
 
 if ($Remove) {
-    # Check before deleting anything, so a refusal leaves the worktree and branch as they were.
+    # Check before deleting anything, so a refusal leaves the worktree and branches as they were.
     $ErrorActionPreference = "Continue"
-    git -C $repo merge-base --is-ancestor $branch origin/main
-    if ($LASTEXITCODE -ne 0) { throw "$branch is not merged into origin/main; nothing removed" }
-    Invoke-Checked "git worktree remove" { git -C $repo worktree remove $path }
+    git -C $repo show-ref -q --verify "refs/heads/$branch"; $local = $LASTEXITCODE -eq 0
+    git -C $repo show-ref -q --verify "refs/remotes/origin/$branch"; $remote = $LASTEXITCODE -eq 0
+    foreach ($ref in @($(if ($local) { $branch }), $(if ($remote) { "origin/$branch" })) | Where-Object { $_ }) {
+        git -C $repo merge-base --is-ancestor $ref origin/main
+        if ($LASTEXITCODE -ne 0) { throw "$ref is not merged into origin/main; nothing removed" }
+    }
+    if (Test-Path $path) {
+        Invoke-Checked "git worktree remove" { git -C $repo worktree remove $path }
+    } else {
+        Invoke-Checked "git worktree prune" { git -C $repo worktree prune }
+    }
     # -D: merged into origin/main, which local main may not have pulled yet.
-    Invoke-Checked "git branch -D" { git -C $repo branch -q -D $branch }
-    Write-Host "Removed $path and $branch"
+    if ($local) { Invoke-Checked "git branch -D" { git -C $repo branch -q -D $branch } }
+    if ($remote) { Invoke-Checked "git push --delete" { git -C $repo push -q origin --delete $branch } }
+    Write-Host "Removed $path and $branch (local: $local, origin: $remote)"
     return
 }
 

@@ -36,8 +36,8 @@ Not isolated by a worktree:
 3. Commit, push the branch (`git push -u origin <branch>`) and open a pull request against `main`
    (`gh pr create`). Never push to `main` directly.
 4. Get the PR reviewed and merged as below.
-5. After the merge: `scripts\new-worktree.ps1 <task-name> -Remove` (it refuses while the branch is not
-   in `origin/main`). Update the main checkout with
+5. After the merge: `scripts\new-worktree.ps1 <task-name> -Remove` removes the worktree and the local
+   and remote branch (it refuses while the branch is not in `origin/main`). Update the main checkout with
    `git pull --ff-only` only when its working tree is clean (another agent may be using it).
 
 ## Review and merge
@@ -49,12 +49,13 @@ The user has handed review and merge to AI. A PR is merged when all of these hol
    checks correctness, that tests cover the change, and that the diff holds only files the task meant
    to change. It posts its verdict on the PR (`gh pr comment`; GitHub does not let the author's
    account approve its own PR).
-2. **Tests pass** on the PR branch, brought up to date with `main`, in a worktree.
+2. **Tests pass** on the PR branch, brought up to date with `origin/main`, in a worktree.
 3. **GitHub reports the PR mergeable.**
 
 Then the agent that opened the PR, or the session that started that agent, merges with
-`gh pr merge <n> --merge --delete-branch`. Merge commits keep the branch's commit SHAs, so checkouts
-that already have them fast-forward. If the review finds problems, the author
+`gh pr merge <n> --merge`, then cleans up with `-Remove`. Merge commits keep the branch's commit SHAs,
+so checkouts that already have them fast-forward. (Not `--delete-branch`: it tries to delete the local
+branch, which the task's worktree still has checked out.) If the review finds problems, the author
 fixes them on the same branch and the PR is reviewed again.
 
 Ask the user before merging a PR that:
