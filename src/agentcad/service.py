@@ -328,12 +328,18 @@ class Runtime:
             out["created_drawing"] = created
         return out
 
-    def _create_if_missing(self, path: str, create: dict, dry_run: bool) -> dict | None:
-        """apply_operations(create=...): make the drawing unless it already exists. Returns what was created."""
-        allowed = {"units", "template", "dxf_version", "annotation_scale"}
-        bad = sorted(set(create) - allowed)
+    @staticmethod
+    def _check_create(create: Any, where: str = "create") -> None:
+        if not isinstance(create, dict):
+            raise input_error("INVALID_OBJECT", f"{where}: expected an object {{units, template, ...}}")
+        bad = sorted(set(create) - CREATE_FIELDS)
         if bad:
-            raise input_error("UNKNOWN_PARAM", f"create: unknown field(s) {bad}", hint=f"Fields: {sorted(allowed)}")
+            raise input_error("UNKNOWN_PARAM", f"{where}: unknown field(s) {bad}", hint=f"Fields: {sorted(CREATE_FIELDS)}")
+
+    def _create_if_missing(self, path: str, create: dict, dry_run: bool) -> dict | None:
+        """apply_operations(create=...): make the drawing unless it already exists. Returns what was created.
+        The new drawing is committed on its own: if the operations then fail, it stays, empty."""
+        self._check_create(create)
         p, _ = self._drawing(path, must_exist=False)
         if p.exists():
             return None
@@ -347,21 +353,25 @@ class Runtime:
     def apply_batch(self, jobs: list[dict], stop_on_error: bool = False) -> dict[str, Any]:
         """apply_operations on several drawings in one call (e.g. a family of parts from a table). Each job is
         {path, operations, create?, requirements?, bounds?, layout?, strict?, label?} and is its own transaction:
-        a failing job leaves its drawing untouched and does not undo the others. ``stop_on_error`` skips the jobs
-        after the first failure."""
+        a failing job's operations change nothing (a drawing its 'create' made stays, empty) and do not undo the
+        other jobs. ``stop_on_error`` skips the jobs after the first failure."""
         allowed = {"path", "operations", "create", "requirements", "bounds", "layout", "strict", "label"}
+        self.policy.check_write()
         if not isinstance(jobs, list) or not jobs:
             raise input_error("INVALID_LIST", "jobs: expected a non-empty list")
         if len(jobs) > MAX_BATCH_JOBS:
             raise policy_error("BUDGET_EXCEEDED", f"{len(jobs)} jobs (limit {MAX_BATCH_JOBS})", hint="Split the batch")
-        for i, j in enumerate(jobs):  # check every job's shape before touching any drawing
+        resolved = []
+        for i, j in enumerate(jobs):  # check every job's shape and path before touching any drawing
             if not isinstance(j, dict) or "path" not in j or "operations" not in j:
                 raise input_error("INVALID_JOB", f"jobs[{i}]: needs 'path' and 'operations'")
             bad = sorted(set(j) - allowed)
             if bad:
                 raise input_error("UNKNOWN_PARAM", f"jobs[{i}]: unknown field(s) {bad}", hint=f"Fields: {sorted(allowed)}")
-        paths = [str(j["path"]) for j in jobs]
-        dup = sorted({x for x in paths if paths.count(x) > 1})
+            if j.get("create") is not None:
+                self._check_create(j["create"], f"jobs[{i}].create")
+            resolved.append(str(self._drawing(str(j["path"]), must_exist=False)[0]).lower())
+        dup = sorted({j["path"] for j, r in zip(jobs, resolved) if resolved.count(r) > 1})
         if dup:
             raise input_error("DUPLICATE_PATH", f"jobs name the same drawing more than once: {dup}",
                               hint="Put all operations for one drawing into one job")
@@ -948,6 +958,7 @@ def _journal_line(r: dict[str, Any]) -> dict[str, Any]:
 
 MAX_ISSUES = 50
 MAX_BATCH_JOBS = 200
+CREATE_FIELDS = {"units", "template", "dxf_version", "annotation_scale"}
 
 
 def _requirements(reqs: list[dict[str, Any]], out: dict[str, Any]) -> None:

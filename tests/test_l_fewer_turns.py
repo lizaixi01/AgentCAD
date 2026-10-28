@@ -82,11 +82,31 @@ def test_apply_batch_isolates_a_failing_job(rt, ws):
 def test_apply_batch_rejects_bad_jobs_before_running_any(rt, ws):
     good = {"path": "g.dxf", "create": {"units": "mm"}, "operations": flange(100, 4)}
     for jobs, code in (([], "INVALID_LIST"), ([good, {"path": "h.dxf"}], "INVALID_JOB"),
-                       ([good, {**good, "colour": 3}], "UNKNOWN_PARAM"), ([good, good], "DUPLICATE_PATH")):
-        assert rt.apply_batch(jobs)["error"]["code"] == code
+                       ([good, {**good, "colour": 3}], "UNKNOWN_PARAM"), ([good, good], "DUPLICATE_PATH"),
+                       ([good, {**good, "path": "./G.dxf"}], "DUPLICATE_PATH"),  # same file, other spelling
+                       ([good, {**good, "path": "h.dxf", "create": {"unit": "mm"}}], "UNKNOWN_PARAM"),
+                       ([good, {**good, "path": "../outside.dxf"}], "PATH_OUTSIDE_WORKSPACE"),
+                       ([good] * 201, "BUDGET_EXCEEDED")):
+        assert rt.apply_batch(jobs)["error"]["code"] == code, jobs[-1]
     assert not (ws / "g.dxf").exists()
 
 
-def test_mcp_lists_apply_batch_and_says_validation_is_included():
-    from agentcad.mcp_server import INSTRUCTIONS
+def test_apply_batch_read_only_and_strict(ws):
+    from agentcad.policy import Policy
+    from agentcad.service import Runtime
+    jobs = [{"path": "a.dxf", "create": {"units": "mm"}, "operations": flange(100, 4)}]
+    assert Runtime(Policy(root=ws, read_only=True)).apply_batch(jobs)["error"]["code"] == "READ_ONLY"
+    rt = Runtime(Policy(root=ws))
+    r = ok(rt.apply_batch([{**jobs[0], "strict": True, "requirements": [{"type": "hole_count", "count": 9}]}]))
+    assert r["jobs"][0]["error"]["code"] == "VALIDATION_FAILED"
+    assert len(reread(ws, "a.dxf").modelspace()) == 0  # strict: nothing saved
+
+
+def test_mcp_registers_apply_batch_and_says_validation_is_included(ws):
+    import anyio
+    from agentcad.mcp_server import INSTRUCTIONS, build_server
+    from agentcad.policy import Policy
     assert "apply_batch" in INSTRUCTIONS and "validate_drawing only for detail=true" in INSTRUCTIONS
+    tools = {t.name: t for t in anyio.run(build_server(Policy(root=ws)).list_tools)}
+    assert "jobs" in tools["apply_batch"].inputSchema["required"]
+    assert {"create", "bounds", "layout"} <= set(tools["apply_operations"].inputSchema["properties"])

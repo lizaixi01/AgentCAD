@@ -99,8 +99,9 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                     stop_on_error: Annotated[bool, Field(description="Skip the remaining jobs after a failure")] = False
                     ) -> dict:
         """apply_operations on several drawings in one call, e.g. a family of parts from a parameter table. Each job
-        is its own transaction (a failed job leaves its drawing untouched, the others still run) and returns its
-        own validation, so one call creates, draws and checks the whole set."""
+        is its own transaction (a failed job's operations change nothing, though a drawing its 'create' made stays
+        empty; the other jobs still run) and returns its own validation, so one call creates, draws and checks the
+        whole set."""
         return rt.apply_batch(jobs, stop_on_error)
 
     @mcp.tool()
