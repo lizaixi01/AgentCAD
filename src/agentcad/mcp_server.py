@@ -11,7 +11,7 @@ from pydantic import Field
 from .policy import Policy
 from .service import Runtime
 
-INSTRUCTIONS = """AgentCAD: headless 2D CAD runtime over DXF files.
+INSTRUCTIONS = """AgentCAD: headless CAD runtime: 2D drawings (DXF) and 3D parametric parts (FreeCAD .FCStd).
 Workflow: list_operations (compact index; ops=[...] gives full schemas) -> create_drawing or draw_from_spec ->
 apply_operations (batch many ops in one call; ops can reference entities created earlier in the batch as
 "$<index>", tagged entities as "tag:<name>") ->
@@ -21,9 +21,17 @@ Every result has ok + structured error {code, category, message, entities, retry
 A failed batch never modifies the file (partial_changes=false).
 Real drawings often have paper-space layouts (printed sheets, read_drawing.layouts) with their own copy of the part:
 edit and validate them too, using the 'layout' parameter. New sheets: create_layout, then add_viewport.
-run_script (if enabled) covers edits no op can express."""
+run_script (if enabled) covers edits no op can express.
+3D parts: give a .FCStd path to create_drawing / apply_operations / read_drawing / inspect_entities /
+validate_drawing / get_diff / export_drawing (step, stl, ...) / rollback / history. Their operations are
+list_operations().part_operations (schemas: list_operations(category='part')): set_parameters, add_sketch, then
+pad / pocket / revolve / hole / fillet / chamfer / patterns ... A part is one PartDesign Body, one solid, all
+features native and editable. Drive dimensions by parameters ('=Params.width') and change them later with
+set_parameters or modify_feature; edge and face selectors ({"type": "line", "direction": "z"}, "top") are
+re-resolved after every edit. Coordinates are mm, [x, y] in a sketch, [x, y, z] in space."""
 
-Path_ = Annotated[str, Field(description="Drawing path (.dxf), relative to the workspace root")]
+Path_ = Annotated[str, Field(description="Drawing path (.dxf) or 3D part (.FCStd), relative to the workspace "
+                                        "root")]
 
 
 def build_server(policy: Policy | None = None) -> FastMCP:
@@ -32,7 +40,9 @@ def build_server(policy: Policy | None = None) -> FastMCP:
 
     @mcp.tool()
     def list_operations(category: Annotated[str | None, Field(description="draw|edit|annotate|layer|block|layout: "
-                                                                           "full schemas for that category")] = None,
+                                                                           "full schemas for that category; 'part' "
+                                                                           "(or part_sketch|part_feature|part_edit) "
+                                                                           "for 3D part operations")] = None,
                         ops: Annotated[list[str] | None, Field(description="Op names: full schemas for just these")] = None,
                         detail: Annotated[bool, Field(description="Full schemas for every op (~90K chars)")] = False) -> dict:
         """Operations usable in apply_operations. Without arguments: a compact index (name, category, summary,
@@ -47,7 +57,8 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                        annotation_scale: Annotated[float, Field(gt=0, description="N of plot scale 1:N; dimension and "
                                                                 "linetype sizes are multiplied by N. 1 for parts, "
                                                                 "50-100 for building plans in mm")] = 1.0) -> dict:
-        """Create an empty drawing with an explicit length unit. 'mechanical' adds OUTLINE/HOLES/CENTER/DIM/TEXT/BORDER layers."""
+        """Create an empty drawing with an explicit length unit. 'mechanical' adds OUTLINE/HOLES/CENTER/DIM/TEXT/BORDER layers.
+        A .FCStd path creates an empty 3D part (FreeCAD); units then set what bare numbers mean (stored in mm)."""
         return rt.create_drawing(path, units, template, dxf_version, overwrite, annotation_scale)
 
     @mcp.tool()
@@ -55,7 +66,9 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         """Drawing summary: units, extents, layers (with entity counts), entity type counts, blocks, tags, stored spec,
         integrity status and checkpoints. Counts and extents are for model space; 'layouts' lists the paper-space
         sheets and what they contain. A sheet holding geometry is usually the printed drawing (often a scaled copy of
-        the part): edits to the part may have to be made there too (use the 'layout' parameter of ops)."""
+        the part): edits to the part may have to be made there too (use the 'layout' parameter of ops).
+        3D part: feature tree (op, tag, error, sketch planes and dimensions), parameters and the solid's volume,
+        size, bbox and holes."""
         return rt.read_drawing(path)
 
     @mcp.tool()
@@ -66,7 +79,9 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                          limit: Annotated[int, Field(ge=1, le=5000)] = 200, offset: int = 0, detail: bool = True,
                          layout: Annotated[str | None, Field(description="'Model' (default), a paper layout name "
                                                                 "from read_drawing.layouts, or '*' for all")] = None) -> dict:
-        """List entities with geometry (paginated, filterable). Paper-space entities carry a 'layout' field."""
+        """List entities with geometry (paginated, filterable). Paper-space entities carry a 'layout' field.
+        3D part: filter={kind: features|faces|edges, feature: <ref> (default the Body), selector: {...}} lists
+        features, or faces/edges with their geometry; pass the selector you plan to use to see what it picks."""
         return rt.inspect_entities(path, filter, ids, limit, offset, detail, window, layout)
 
     @mcp.tool()
@@ -79,7 +94,8 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                          strict: Annotated[bool, Field(description="Do not save if post-validation fails")] = False,
                          label: str | None = None) -> dict:
         """Execute an operation batch as one transaction: all params are checked first, any failure aborts with the
-        file untouched; success checkpoints the old file, saves atomically, journals, and validates the result."""
+        file untouched; success checkpoints the old file, saves atomically, journals, and validates the result.
+        On a .FCStd part the ops are part_operations (list_operations(category='part'))."""
         return rt.apply_operations(path, operations, dry_run, requirements, strict, label)
 
     @mcp.tool()
@@ -122,7 +138,11 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         """Independent validator: re-reads the DXF from disk and checks integrity (duplicates, degenerate geometry,
         dimension consistency, bounds) and requirements (failed ones with expected / actual / deviation /
         tolerance). It reports layouts it did not check (LAYOUT_NOT_VALIDATED, 'coverage'); dimension values are
-        compared as displayed. Compact by default; detail=true for everything."""
+        compared as displayed. Compact by default; detail=true for everything.
+        3D part: FreeCAD re-opens and recomputes the file; checks feature errors, one Body with one valid solid,
+        only editable PartDesign features (what CADBench requires), sketch constraints. Requirements: bbox {size},
+        volume/area {value, rel_tolerance}, hole {diameter, count}, hole_count, solid_count, parameter {name,
+        value}, center_of_mass, feature_count {type, count|min}."""
         return rt.validate_drawing(path, requirements, True, bounds, tolerance, None, layout, detail)
 
     @mcp.tool()
@@ -157,7 +177,7 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         return rt.revise_from_document(document, output, facts, overrides, overwrite)
 
     @mcp.tool()
-    def get_diff(path: Path_, against: Annotated[str, Field(description="'previous', a checkpoint id 'cp-0003' or another .dxf")] = "previous",
+    def get_diff(path: Path_, against: Annotated[str, Field(description="'previous', a checkpoint id 'cp-0003' or another file of the same kind")] = "previous",
                  detail: Annotated[bool, Field(description="Full geometry of added/deleted entities")] = False) -> dict:
         """Entity-level diff between the drawing and a checkpoint or file: modified entities with old/new values of
         each changed field; added/deleted entities by id/type/layer/tag (detail=true for their geometry)."""
@@ -188,7 +208,8 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         return rt.recover(path)
 
     @mcp.tool()
-    def export_drawing(path: Path_, output: str, format: Literal["dxf", "svg", "json", "pdf", "dwg"] = "dxf",  # noqa: A002
+    def export_drawing(path: Path_, output: str,
+                       format: Literal["dxf", "svg", "json", "pdf", "dwg", "step", "iges", "brep", "stl", "obj"] = "dxf",  # noqa: A002
                        dxf_version: Literal["R12", "R2000", "R2004", "R2007", "R2010", "R2013", "R2018"] | None = None,
                        overwrite: bool = False,
                        layout: Annotated[str | None, Field(description="pdf: 'Model', a paper layout or '*'; default "
@@ -202,7 +223,8 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                        monochrome: bool = False) -> dict:
         """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, PDF (plotted without
         external software: one page per layout, paper layouts 1:1 on their sheet, vector output, reports scale and
-        too-small printed text), or DWG (optional AutoCAD backend; dxf_version selects the DWG release)."""
+        too-small printed text), or DWG (optional AutoCAD backend; dxf_version selects the DWG release).
+        3D parts: step, iges, brep, stl or obj."""
         return rt.export_drawing(path, output, format, dxf_version, overwrite, layout, paper, scale, orientation,
                                  monochrome)
 

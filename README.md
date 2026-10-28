@@ -104,6 +104,7 @@ The same `Runtime` is available from Python and over HTTP (`agentcad --root work
 | Operations | 55: draw (lines to splines, hatches, polygons), edit (trim, fillet, offset, arrays, break/join, purge), annotate (linear, radial, angular, ordinate dimensions, leaders, tables, title blocks), layers, blocks with attributes, sheets and viewports |
 | Agent tools (MCP) | 21, including `apply_operations`, `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`. `list_operations` returns a compact index and full schemas on request, so it fits in an agent's context |
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
+| 3D parts | Parametric FreeCAD parts (`.FCStd`) through the same tools: sketches, pad, pocket, revolve, holes, fillets, chamfers, shells, patterns, lofts, sweeps, helices, driven by named parameters. Edge and face selections survive edits. STEP/STL export. Needs FreeCAD 1.1 (optional) — see [docs/part-3d.md](docs/part-3d.md) |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
 | Tests | 150 automated tests, including 27 cases checked against AutoCAD 2027 behaviour |
 
@@ -111,7 +112,7 @@ Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial so
 
 ## Where it stands
 
-AgentCAD is early. It is 2D only. DWG needs AutoCAD on the machine. It can't print to PDF yet, can't drive a live AutoCAD session, and has no industry libraries (P&ID, GD&T, standard parts). Readability checks cover text height, and plot layout still needs a human eye. The evidence so far is 12 tasks on two agents. What's missing is tracked in [docs/limitations-roadmap.md](docs/limitations-roadmap.md).
+AgentCAD is early. 3D parts are new and not yet measured with agents; they can't be turned into 2D drawings yet. DWG needs AutoCAD on the machine. It can't print to PDF yet, can't drive a live AutoCAD session, and has no industry libraries (P&ID, GD&T, standard parts). Readability checks cover text height, and plot layout still needs a human eye. The evidence so far is 12 tasks on two agents. What's missing is tracked in [docs/limitations-roadmap.md](docs/limitations-roadmap.md).
 
 ## Documentation
 
@@ -122,6 +123,7 @@ Most in-depth documents are in Chinese.
 | [docs/tutorial.md](docs/tutorial.md) | Step-by-step tutorial: generate, validate, revise, roll back, DWG, connecting agents |
 | [docs/architecture.md](docs/architecture.md) | Architecture, data model, transactions, error envelope |
 | [docs/operations.md](docs/operations.md) | Reference for every operation (generated from code) |
+| [docs/part-3d.md](docs/part-3d.md) | 3D parametric parts: FreeCAD backend, operations, selectors, validation |
 | [docs/comparison-claude-code.md](docs/comparison-claude-code.md) | Claude Code: AgentCAD vs. writing code, before and after the compact catalog |
 | [docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md), [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md) | Codex: the same comparison |
 | [docs/trials-report.md](docs/trials-report.md) | Classic drafting tasks and 96 real AutoCAD sample drawings |

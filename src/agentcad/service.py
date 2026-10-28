@@ -26,6 +26,7 @@ from .metadata import all_meta, get_meta, set_meta
 from .model import entity_to_dict, get_tag, is_model, layout_spaces, select
 from .ops import catalog
 from .ops.annotate import DIMSTYLE, apply_annotation_scale, setup_text_style
+from .part import service as part
 from .policy import Policy
 from .store import DrawingStore, finalize, read_dxf, now
 from .units import UNITS, normalize_unit, unit_from_insunits
@@ -127,8 +128,12 @@ class Runtime:
         self.metrics: list[dict[str, Any]] = []
 
     # --- helpers ---------------------------------------------------------------------------
-    def _drawing(self, path: str, must_exist: bool = True) -> tuple[Path, DrawingStore]:
-        p = self.policy.resolve(path, must_exist=must_exist, suffixes=(".dxf",))
+    def _drawing(self, path: str, must_exist: bool = True, part_ok: bool = False) -> tuple[Path, DrawingStore]:
+        """``part_ok``: the tool works on 3D parts (.FCStd) too, through the store alone."""
+        if part_ok and part.is_part(path):
+            return part.store_for(self, path, must_exist)
+        p = self.policy.resolve(path, must_exist=must_exist, suffixes=(".dxf",),
+                                hint_suffix=" (3D parts: .FCStd)")
         return p, DrawingStore(self.policy, p)
 
     @contextmanager
@@ -177,6 +182,16 @@ class Runtime:
         Claude Code trials failed on their first list_operations call (docs/comparison-claude-code.md)."""
         from .ops import REGISTRY
         from .ops.registry import COMMON_ALL, COMMON_DRAW
+        from .part.ops import PART_REGISTRY
+        if category is not None and (category == "part" or category.startswith("part_")):
+            names = ops or sorted(PART_REGISTRY)
+            unknown = [o for o in names if o not in PART_REGISTRY]
+            if unknown:
+                raise input_error("UNKNOWN_OPERATION", f"Unknown part operation(s) {unknown}",
+                                  hint=f"Part operations: {sorted(PART_REGISTRY)}")
+            full = [PART_REGISTRY[o].schema() for o in names
+                    if category == "part" or PART_REGISTRY[o].category == category]
+            return {"operations": full, "count": len(full), "detail": True, "kind": "part"}
         constraints = {"check": sorted(CHECK_TYPES), "enforce": sorted(ENFORCE_TYPES)}
         cats = sorted({d.category for d in REGISTRY.values()})
         if category is not None and category not in cats:
@@ -199,7 +214,13 @@ class Runtime:
                   "color": "ACI color, 256 = BYLAYER", "linetype": "e.g. CONTINUOUS, CENTER, DASHED",
                   "lineweight": "1/100 mm, -1 = BYLAYER", "tag": "name for later reference as 'tag:<name>'",
                   "if_tag_exists": "error | skip | replace"}
+        part_index = [{"op": d.name, "category": d.category, "summary": d.description.split(". ")[0].rstrip("."),
+                       "params": [k + ("*" if p.required else "") for k, p in d.params.items()]}
+                      for d in PART_REGISTRY.values()]
         return {"operations": index, "count": len(index), "detail": False, "categories": cats,
+                "part_operations": part_index,
+                "part_hint": "3D parts (.FCStd, FreeCAD) take part_operations in apply_operations; their full "
+                             "schemas: list_operations(category='part'), or category='part' with ops=[...]",
                 "common_params": {"all_ops": sorted(COMMON_ALL), "draw_params": sorted(COMMON_DRAW),
                                   "meaning": common},
                 "constraint_types": constraints,
@@ -210,6 +231,8 @@ class Runtime:
     @tool
     def create_drawing(self, path: str, units: str = "mm", template: str = "mechanical", dxf_version: str = "R2010",
                        overwrite: bool = False, annotation_scale: float = 1.0) -> dict[str, Any]:
+        if part.is_part(path):
+            return part.create(self, path, units, overwrite)
         self.policy.check_write()
         u = normalize_unit(units)
         p, store = self._drawing(path, must_exist=False)
@@ -225,6 +248,8 @@ class Runtime:
 
     @tool
     def read_drawing(self, path: str) -> dict[str, Any]:
+        if part.is_part(path):
+            return part.read(self, path)
         p, store = self._drawing(path)
         doc = store.load()
         msp = doc.modelspace()
@@ -257,6 +282,8 @@ class Runtime:
     def inspect_entities(self, path: str, filter: dict | None = None, ids: list[str] | None = None,  # noqa: A002
                          limit: int = 200, offset: int = 0, detail: bool = True,
                          window: list | None = None, layout: str | None = None) -> dict[str, Any]:
+        if part.is_part(path):
+            return part.inspect(self, path, filter, limit, offset)
         p, store = self._drawing(path)
         doc = store.load()
         if ids:
@@ -285,6 +312,8 @@ class Runtime:
                          requirements: list[dict] | None = None, strict: bool = False,
                          label: str | None = None) -> dict[str, Any]:
         """Run a batch atomically. ``strict``: abort (no save) if post-validation finds errors."""
+        if part.is_part(path):
+            return part.apply(self, path, operations, dry_run, requirements, strict, label)
         if not dry_run:
             self.policy.check_write()
         p, store = self._drawing(path)
@@ -388,6 +417,8 @@ class Runtime:
         explicit requirements are given, requirements are re-derived from that spec (not from the plan).
         ``layout``: check a paper-space sheet instead of model space (the stored spec describes model space).
         ``detail``: the full report (see compact_report for the default)."""
+        if part.is_part(path):
+            return part.validate(self, path, requirements, detail)
         p, store = self._drawing(path)
         reqs = requirements
         source = "explicit" if requirements else None
@@ -563,6 +594,8 @@ class Runtime:
         """Diff the drawing against 'previous' (latest checkpoint), a checkpoint id, or another .dxf path.
         Modified entities always list their changed fields (old/new); added and deleted entities are listed by
         id/type/layer/tag unless ``detail`` asks for their full geometry."""
+        if part.is_part(path):
+            return part.diff(self, path, against)
         p, store = self._drawing(path)
         cur = store.load()
         if against == "previous":
@@ -588,7 +621,7 @@ class Runtime:
     def rollback(self, path: str, checkpoint: str | None = None) -> dict[str, Any]:
         """Restore a checkpoint (default: the latest). The pre-rollback state is checkpointed too."""
         self.policy.check_write()
-        p, store = self._drawing(path, must_exist=False)
+        p, store = self._drawing(path, must_exist=False, part_ok=True)
         cps = store.list_checkpoints()
         if not cps:
             raise input_error("NO_CHECKPOINT", "Drawing has no checkpoints")
@@ -600,14 +633,14 @@ class Runtime:
 
     @tool
     def list_checkpoints(self, path: str) -> dict[str, Any]:
-        p, store = self._drawing(path, must_exist=False)
+        p, store = self._drawing(path, must_exist=False, part_ok=True)
         return {"drawing": self._rel(p), "checkpoints": store.list_checkpoints()}
 
     @tool
     def history(self, path: str, limit: int = 50, detail: bool = False, seq: list[int] | None = None) -> dict[str, Any]:
         """Operation journal, oldest first. By default one line per record (what ran, what changed, checkpoint);
         ``seq`` returns those records in full (operations with their parameters, scripts, errors), ``detail`` all."""
-        p, store = self._drawing(path, must_exist=False)
+        p, store = self._drawing(path, must_exist=False, part_ok=True)
         if seq:
             want = set(seq)
             recs = [r for r in store.read_journal() if r.get("seq") in want]
@@ -621,8 +654,8 @@ class Runtime:
     @tool
     def recover(self, path: str) -> dict[str, Any]:
         """Crash recovery: if the file is unreadable, or an interrupted transaction left it inconsistent, restore
-        the most recent checkpoint whose content is a valid DXF."""
-        p, store = self._drawing(path, must_exist=False)
+        the most recent checkpoint whose content is a valid DXF (or FreeCAD file, for a part)."""
+        p, store = self._drawing(path, must_exist=False, part_ok=True)
         st = store.status()
         needed = (not st["exists"]) or (not st["readable"]) or bool(st["pending_transaction"])
         if not needed:
@@ -635,12 +668,13 @@ class Runtime:
         candidates += list(reversed(store.list_checkpoints()))
         for cp in candidates:
             try:
-                read_dxf(store.committed_path if cp["id"] == "committed" else store.checkpoint_path(cp["id"]), self.policy)
+                store.reader(store.committed_path if cp["id"] == "committed" else store.checkpoint_path(cp["id"]),
+                             self.policy)
             except AgentCADError:
                 continue
             with self._lock(store):
                 if st["exists"]:
-                    bad = store.dir / "failed" / f"{time.strftime('%Y%m%d-%H%M%S')}-corrupt.dxf"
+                    bad = store.dir / "failed" / f"{time.strftime('%Y%m%d-%H%M%S')}-corrupt{store.ext}"
                     bad.parent.mkdir(parents=True, exist_ok=True)
                     bad.write_bytes(p.read_bytes())
                 info = store.restore(cp["id"], label="recover")
@@ -661,7 +695,11 @@ class Runtime:
         pdf (plot.py, no external software): ``layout`` 'Model', a paper layout, or '*' for every paper layout
         (default: every paper layout with content, else model space), one page each. Paper layouts print 1:1 on
         their page setup; model space at ``scale`` (paper mm per drawing unit) or the largest standard scale that
-        fits ``paper`` (A0-A4 or 'auto')."""
+        fits ``paper`` (A0-A4 or 'auto').
+
+        3D parts (.FCStd): step, iges, brep, stl or obj."""
+        if part.is_part(path):
+            return part.export(self, path, output, format, overwrite)
         self.policy.check_write()
         p, store = self._drawing(path)
         fmt = format.lower()

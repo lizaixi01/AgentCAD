@@ -74,7 +74,7 @@ def test_no_shell_or_arbitrary_execution_surface():
     import agentcad
     from pathlib import Path
     pkg = Path(agentcad.__file__).parent
-    launchers = {pkg / "backends" / "autocad.py", pkg / "scripting.py"}
+    launchers = {pkg / "backends" / "autocad.py", pkg / "backends" / "freecad.py", pkg / "scripting.py"}
     for f in pkg.rglob("*.py"):
         text = f.read_text("utf-8")
         assert "os.system" not in text and "eval(" not in text, f
@@ -85,6 +85,8 @@ def test_no_shell_or_arbitrary_execution_surface():
     # process launchers: fixed executables, no shell
     backend = (pkg / "backends" / "autocad.py").read_text("utf-8")
     assert "shell=False" in backend and "shell=True" not in backend and "Popen(args" in backend
+    fc = (pkg / "backends" / "freecad.py").read_text("utf-8")
+    assert "shell=False" in fc and "shell=True" not in fc and "timeout=TIMEOUT" in fc
     scripting = (pkg / "scripting.py").read_text("utf-8")
     assert "shell=False" in scripting and "shell=True" not in scripting and "timeout=timeout" in scripting
     assert "check_script(code)" in (pkg / "service.py").read_text("utf-8")

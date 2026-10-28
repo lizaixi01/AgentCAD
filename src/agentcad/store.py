@@ -7,6 +7,9 @@ State for ``<root>/path/to/part.dxf`` lives in
     head.json         committed sha256 + pending-transaction marker
     journal.jsonl     one JSON record per committed (or failed) operation
     checkpoints/      cp-0001.dxf ... byte-exact copies taken before each change
+
+The same store serves 3D parts (``.FCStd``): checkpoints keep the file's own
+suffix and ``reader`` is the format's strict reader (``read_dxf`` by default).
 """
 from __future__ import annotations
 
@@ -18,7 +21,7 @@ import os
 import platform
 import shutil
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import ezdxf
 from ezdxf.document import Drawing
@@ -95,15 +98,17 @@ def finalize(doc: Drawing) -> None:
 
 
 class DrawingStore:
-    def __init__(self, policy: Policy, path: Path) -> None:
+    def __init__(self, policy: Policy, path: Path, reader: Callable[[Path, Policy], Any] = read_dxf) -> None:
         self.policy = policy
         self.path = path
+        self.reader = reader
+        self.ext = path.suffix.lower() or ".dxf"
         rel = path.relative_to(policy.root).as_posix().replace("/", "__")
         self.dir = policy.state_dir() / "drawings" / rel
         self.cp_dir = self.dir / "checkpoints"
         self.journal_path = self.dir / "journal.jsonl"
         self.head_path = self.dir / "head.json"
-        self.committed_path = self.dir / "committed.dxf"
+        self.committed_path = self.dir / f"committed{self.ext}"
 
     # --- head / journal ---------------------------------------------------------
     def head(self) -> dict[str, Any]:
@@ -145,7 +150,7 @@ class DrawingStore:
         head = self.head()
         n = len(head["checkpoints"]) + 1
         cid = f"cp-{n:04d}"
-        shutil.copy2(self.path, self.cp_dir / f"{cid}.dxf")
+        shutil.copy2(self.path, self.cp_dir / f"{cid}{self.ext}")
         head["checkpoints"].append({"id": cid, "ts": now(), "label": label, "sha256": sha256_file(self.path)})
         self._write_head(head)
         return cid
@@ -154,7 +159,7 @@ class DrawingStore:
         return self.head()["checkpoints"]
 
     def checkpoint_path(self, cid: str) -> Path:
-        p = self.cp_dir / f"{cid}.dxf"
+        p = self.cp_dir / f"{cid}{self.ext}"
         if not p.is_file():
             raise input_error("CHECKPOINT_NOT_FOUND", f"No checkpoint {cid!r}",
                               hint=f"Available: {[c['id'] for c in self.list_checkpoints()]}")
@@ -162,7 +167,7 @@ class DrawingStore:
 
     # --- load / commit --------------------------------------------------------------
     def load(self) -> Drawing:
-        return read_dxf(self.path, self.policy)
+        return self.reader(self.path, self.policy)
 
     def commit(self, doc: Drawing, *, label: str, overwrite_ok: bool = True) -> dict[str, Any]:
         """Checkpoint the current file, then atomically replace it with ``doc``.
@@ -170,8 +175,11 @@ class DrawingStore:
         A ``pending`` marker is written to head.json before the replace and
         cleared afterwards; a crash in between is detected by ``recover``.
         """
+        return self.commit_bytes(dxf_bytes(doc), label=label, overwrite_ok=overwrite_ok)
+
+    def commit_bytes(self, data: bytes, *, label: str, overwrite_ok: bool = True) -> dict[str, Any]:
+        """``commit`` for a file already serialised (a 3D part saved by FreeCAD)."""
         self.policy.check_write()
-        data = dxf_bytes(doc)
         if len(data) > self.policy.max_file_bytes:
             raise file_error("FILE_TOO_LARGE", f"Result would be {len(data)} bytes")
         existed = self.path.is_file()
@@ -206,7 +214,7 @@ class DrawingStore:
         before = None
         if self.path.is_file():
             try:
-                read_dxf(self.path, self.policy)
+                self.reader(self.path, self.policy)
                 before = self.checkpoint(f"before {label}")
             except AgentCADError:
                 before = None  # never checkpoint a corrupt file
@@ -229,7 +237,7 @@ class DrawingStore:
         err = None
         if exists:
             try:
-                read_dxf(self.path, self.policy)
+                self.reader(self.path, self.policy)
             except AgentCADError as exc:
                 readable = False
                 err = exc.to_dict()

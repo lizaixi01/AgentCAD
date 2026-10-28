@@ -1,7 +1,7 @@
 [project]
 name = "agentcad"
 version = "0.1.0"
-description = "Agent-native, headless 2D CAD runtime (DXF) with CLI, MCP and Python API"
+description = "Agent-native, headless CAD runtime: 2D drawings (DXF) and 3D parametric parts (FreeCAD), with CLI, MCP and Python API"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }

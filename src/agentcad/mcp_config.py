@@ -4,6 +4,7 @@ so the config is generated from the running interpreter instead of committed."""
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Any
@@ -19,6 +20,9 @@ def server_entry(policy: Policy) -> dict[str, Any]:
         env["AGENTCAD_READ_ONLY"] = "1"
     if policy.allow_scripts:
         env["AGENTCAD_ALLOW_SCRIPTS"] = "1"
+    for key in ("AGENTCAD_FREECAD", "FREECAD_LIB"):  # where 3D parts find FreeCAD, if it is not installed normally
+        if os.environ.get(key):
+            env[key] = os.environ[key]
     return {"command": Path(sys.executable).absolute().as_posix(), "args": ["-m", "agentcad.mcp_server"], "env": env}
 
 

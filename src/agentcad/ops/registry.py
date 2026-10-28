@@ -20,7 +20,7 @@ from ..units import parse_length
 
 @dataclass
 class Param:
-    type: str  # length|number|angle|int|bool|string|enum|point|points|selector|object|list
+    type: str  # length|number|angle|int|bool|string|enum|point|points|selector|object|list|dim|any
     required: bool = False
     default: Any = None
     description: str = ""
@@ -57,6 +57,11 @@ class Param:
                  "a list of these, or a filter object {type, layer, tag, tag_prefix}"}
         elif t == "object":
             s = {"type": "object", "description": self.description}
+        elif t == "dim":
+            s = {"type": ["number", "string"], "description": self.description + " (mm, a string with a unit "
+                 "such as '0.5in', or an expression such as '=Params.width * 2')"}
+        elif t == "any":
+            s = {"description": self.description}
         else:
             s = {"type": "array", "description": self.description}
         for k, v in (("exclusiveMinimum", self.gt), ("minimum", self.ge), ("maximum", self.le)):
@@ -75,6 +80,7 @@ class OpDef:
     params: dict[str, Param]
     fn: Callable[..., dict[str, Any]]
     common_draw: bool = False  # accepts layer/color/linetype/lineweight/tag
+    common_all: bool = True  # accepts layout (2D ops; 3D part ops have no layouts)
 
     def schema(self) -> dict[str, Any]:
         props = {k: p.json_schema() for k, p in self.all_params().items()}
@@ -84,6 +90,8 @@ class OpDef:
                            "additionalProperties": False}}
 
     def all_params(self) -> dict[str, Param]:
+        if not self.common_all:
+            return dict(self.params)
         if not self.common_draw:
             return {**self.params, **COMMON_ALL}
         return {**self.params, **COMMON_DRAW, **COMMON_ALL}
@@ -302,6 +310,10 @@ def coerce(opdef: OpDef, raw: dict[str, Any], unit: str | None, index: int) -> d
             elif p.type == "selector":
                 if not isinstance(v, (str, list, dict)):
                     raise input_error("BAD_SELECTOR", f"{fname}: invalid selector {v!r}")
+            elif p.type == "dim":  # parsed by the 3D backend, which also evaluates expressions
+                if isinstance(v, bool) or not isinstance(v, (int, float, str)) or v == "":
+                    raise input_error("INVALID_LENGTH", f"{fname}: expected a number, a length string or "
+                                                        f"'=expression', got {v!r}")
         except Exception as exc:  # attach op context
             from ..errors import AgentCADError
             if isinstance(exc, AgentCADError):
