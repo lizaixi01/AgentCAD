@@ -106,6 +106,7 @@ def summarize(path: Path) -> dict:
     errors = 0
     other_tools: set[str] = set()
     event_errors = []
+    terminal_error = None
     finished = False
     for index, line in enumerate(path.read_text(encoding="utf-8", errors="replace").splitlines()):
         try:
@@ -115,9 +116,14 @@ def summarize(path: Path) -> dict:
         if e.get("type") == "turn.completed":
             finished, tokens = True, e.get("usage")
         if e.get("type") == "error" and e.get("message"):
-            event_errors.append(str(e["message"]))
-        if e.get("type") == "turn.failed" and isinstance(e.get("error"), dict):
-            event_errors.append(str(e["error"].get("message", "")))
+            terminal_error = str(e["message"])
+            event_errors.append(terminal_error)
+        elif e.get("type") == "turn.failed" and isinstance(e.get("error"), dict):
+            terminal_error = str(e["error"].get("message", ""))
+            event_errors.append(terminal_error)
+        else:
+            # An old reconnect followed by more activity does not explain a later failure.
+            terminal_error = None
         item = e.get("item") or {}
         kind = item.get("type")
         forbidden = (kind in {"command_execution", "web_search", "file_change", "dynamic_tool_call"}
@@ -151,7 +157,7 @@ def summarize(path: Path) -> dict:
             errors += 1
     return {"turn_completed": finished, "usage": tokens, "cad_calls": calls,
             "reported_tool_errors": errors, "other_tool_calls": len(other_tools), "final": final,
-            "event_errors": event_errors}
+            "event_errors": event_errors, "terminal_error": terminal_error}
 
 
 def round_status(round_result: dict) -> str:
@@ -160,8 +166,8 @@ def round_status(round_result: dict) -> str:
         return "tool_policy_violation"
     if round_result.get("exit") == 0 and round_result.get("turn_completed") and not round_result.get("timeout"):
         return "completed"
-    messages = "\n".join(round_result.get("event_errors") or []).lower()
-    if "selected model is at capacity" in messages or "reconnecting... waiting for network" in messages:
+    terminal_error = (round_result.get("terminal_error") or "").lower()
+    if "selected model is at capacity" in terminal_error or "reconnecting... waiting for network" in terminal_error:
         return "model_service_interrupted"
     return "unclassified_failure"
 
@@ -172,6 +178,27 @@ def unit_status(rounds: list[dict], expected: int) -> str:
         if status in statuses:
             return status
     return "completed" if len(statuses) == expected else "unclassified_failure"
+
+
+def pair_can_retry(rows: list[dict]) -> bool:
+    """Retry only a whole pair affected solely by a confirmed model interruption."""
+    return (len(rows) == 2 and {r["arm"] for r in rows} == {"A", "B"}
+            and any(r["run_status"] == "model_service_interrupted" for r in rows)
+            and all(r["run_status"] in {"completed", "model_service_interrupted"} for r in rows))
+
+
+def mark_pair_eligibility(rows: list[dict]) -> None:
+    groups: dict[tuple[str, int], list[dict]] = {}
+    for row in rows:
+        groups.setdefault((row["task"], row["rep"]), []).append(row)
+    for pair in groups.values():
+        reason = "pair_model_service_interrupted" if pair_can_retry(pair) else (
+            "incomplete_pair" if len(pair) != 2 or {r["arm"] for r in pair} != {"A", "B"} else None)
+        if reason:
+            for row in pair:
+                row["eligible_for_rate"] = False
+                row["counted_success"] = False
+                row["exclusion_reason"] = reason
 
 
 def h4_center_lines_preserved(fixture: Path, drawing: Path) -> bool:
@@ -344,6 +371,7 @@ def grade(out: Path) -> list[dict]:
                      "run_status": status,
                      "eligible_for_rate": status in {"completed", "unclassified_failure"},
                      "counted_success": status == "completed" and ok})
+    mark_pair_eligibility(rows)
     write_json(out / "grades.json", rows)
     return rows
 

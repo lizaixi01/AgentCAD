@@ -35,6 +35,9 @@ def main():
         raise RuntimeError("Original fixture no longer matches its manifest")
     if bench.version(bench.REPO) != manifest["agentcad_commit"] or bench.version(pro) != manifest["pro_commit"]:
         raise RuntimeError("A repository revision changed since the interrupted run")
+    source_rows = [row for row in bench.grade(previous) if row["task"] == args.task and row["rep"] == args.rep]
+    if not bench.pair_can_retry(source_rows):
+        raise RuntimeError("Retry requires a complete pair with a confirmed model-service interruption and no other failure")
     out.mkdir(parents=True, exist_ok=False)
     (out / "fixtures").mkdir()
     shutil.copyfile(fixture, out / "fixtures" / fixture.name)

@@ -114,6 +114,38 @@ def test_other_tool_use_invalidates_completed_unit_and_deduplicates_events(tmp_p
     assert benchmark.unit_status([{"exit": 0, "timeout": False, **summary}], 1) == "tool_policy_violation"
 
 
+def test_old_network_message_does_not_explain_later_mcp_timeout(tmp_path):
+    log = tmp_path / "events.jsonl"
+    events = [{"type": "error", "message": "Reconnecting... waiting for network (Connection failed)"},
+              {"type": "item.completed", "item": {"type": "mcp_tool_call", "server": "cad"}},
+              {"type": "item.started", "item": {"type": "mcp_tool_call", "server": "cad"}}]
+    log.write_text("\n".join(json.dumps(e) for e in events), encoding="utf-8")
+    summary = benchmark.summarize(log)
+    assert summary["event_errors"]
+    assert benchmark.round_status({"exit": None, "timeout": True, **summary}) == "unclassified_failure"
+
+
+def test_interrupted_pair_excludes_completed_side_and_cannot_duplicate_retry():
+    pair = [{"task": "H4", "rep": 1, "arm": "A", "run_status": "completed",
+             "eligible_for_rate": True, "counted_success": True},
+            {"task": "H4", "rep": 1, "arm": "B", "run_status": "model_service_interrupted",
+             "eligible_for_rate": False, "counted_success": False}]
+    assert benchmark.pair_can_retry(pair)
+    benchmark.mark_pair_eligibility(pair)
+    assert all(not row["eligible_for_rate"] and not row["counted_success"] for row in pair)
+    assert all(row["exclusion_reason"] == "pair_model_service_interrupted" for row in pair)
+
+
+def test_unclassified_failure_prevents_excluding_a_pair_as_model_interruption():
+    pair = [{"task": "H4", "rep": 1, "arm": "A", "run_status": "unclassified_failure",
+             "eligible_for_rate": True, "counted_success": False},
+            {"task": "H4", "rep": 1, "arm": "B", "run_status": "model_service_interrupted",
+             "eligible_for_rate": False, "counted_success": False}]
+    assert not benchmark.pair_can_retry(pair)
+    benchmark.mark_pair_eligibility(pair)
+    assert pair[0]["eligible_for_rate"] and not pair[0]["counted_success"]
+
+
 def test_failed_pair_records_each_arm_and_exits_unsuccessfully(tmp_path, monkeypatch):
     import sys
     import tempfile
