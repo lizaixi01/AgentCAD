@@ -8,27 +8,34 @@
 | `add_angular_dim` | annotate | test_autocad_findings.py, test_h_operations.py |
 | `add_arc` | draw | test_autocad_findings.py, test_h_operations.py, test_i_common_ops.py |
 | `add_center_mark` | annotate | test_i_common_ops.py |
-| `add_circle` | draw | test_autocad_findings.py, test_b_revision.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py, test_i_common_ops.py |
+| `add_circle` | draw | test_autocad_findings.py, test_b_revision.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py, test_i_common_ops.py, test_j_compact_results.py, test_k_pdf.py, test_m_library.py |
+| `add_datum_feature` | library | test_m_library.py |
 | `add_diameter_dim` | annotate | test_autocad_findings.py, test_h_operations.py, test_layouts_and_scripts.py |
 | `add_donut` | draw | test_i_common_ops.py |
 | `add_ellipse` | draw | test_h_operations.py |
+| `add_feature_control_frame` | library | test_m_library.py |
 | `add_hatch` | draw | test_i_common_ops.py |
 | `add_leader` | annotate | test_h_operations.py |
-| `add_line` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_h_operations.py, test_i_common_ops.py, test_layouts_and_scripts.py, test_security.py |
+| `add_line` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_h_operations.py, test_i_common_ops.py, test_j_compact_results.py, test_layouts_and_scripts.py, test_security.py |
 | `add_linear_dim` | annotate | test_autocad_findings.py, test_b_revision.py, test_f_repro_recovery.py, test_h_operations.py |
 | `add_mtext` | annotate | test_h_operations.py, test_i_common_ops.py |
 | `add_ordinate_dim` | annotate | test_i_common_ops.py |
+| `add_pid_symbol` | library | test_m_library.py |
 | `add_point` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_h_operations.py, test_layouts_and_scripts.py, test_security.py |
 | `add_polygon` | draw | test_i_common_ops.py |
 | `add_polyline` | draw | test_h_operations.py, test_i_common_ops.py |
+| `add_process_line` | library | test_m_library.py |
 | `add_radius_dim` | annotate | test_autocad_findings.py, test_h_operations.py |
 | `add_ray` | draw | test_i_common_ops.py |
-| `add_rectangle` | draw | test_autocad_findings.py, test_b_revision.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py, test_i_common_ops.py, test_layouts_and_scripts.py |
-| `add_spline` | draw | test_h_operations.py |
+| `add_rectangle` | draw | test_autocad_findings.py, test_b_revision.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py, test_i_common_ops.py, test_k_pdf.py, test_layouts_and_scripts.py, test_m_library.py |
+| `add_spline` | draw | test_h_operations.py, test_j_compact_results.py |
+| `add_standard_hole` | library | test_m_library.py |
+| `add_standard_part` | library | test_m_library.py |
+| `add_surface_finish` | library | test_m_library.py |
 | `add_table` | annotate | test_h_operations.py |
-| `add_text` | annotate | test_autocad_findings.py, test_b_revision.py, test_h_operations.py, test_i_common_ops.py, test_layouts_and_scripts.py |
+| `add_text` | annotate | test_autocad_findings.py, test_b_revision.py, test_h_operations.py, test_i_common_ops.py, test_k_pdf.py, test_layouts_and_scripts.py |
 | `add_title_block` | annotate | test_autocad_findings.py, test_h_operations.py |
-| `add_viewport` | layout | test_layouts_and_scripts.py |
+| `add_viewport` | layout | test_k_pdf.py, test_layouts_and_scripts.py |
 | `add_xline` | draw | test_i_common_ops.py |
 | `array_polar` | edit | test_h_operations.py |
 | `array_rect` | edit | test_h_operations.py, test_security.py |
@@ -36,10 +43,10 @@
 | `chamfer` | edit | test_h_operations.py |
 | `copy` | edit | test_h_operations.py, test_layouts_and_scripts.py |
 | `create_layer` | layer | test_f_repro_recovery.py, test_h_operations.py |
-| `create_layout` | layout | test_layouts_and_scripts.py |
+| `create_layout` | layout | test_k_pdf.py, test_layouts_and_scripts.py |
 | `create_text_style` | annotate | test_i_common_ops.py |
 | `define_block` | block | test_autocad_findings.py, test_h_operations.py, test_i_common_ops.py |
-| `delete` | edit | test_f_repro_recovery.py, test_h_operations.py, test_layouts_and_scripts.py, test_security.py |
+| `delete` | edit | test_f_repro_recovery.py, test_h_operations.py, test_layouts_and_scripts.py, test_m_library.py, test_security.py |
 | `delete_layer` | layer | test_h_operations.py |
 | `draw_order` | edit | test_i_common_ops.py |
 | `explode` | edit | test_h_operations.py |
@@ -48,9 +55,9 @@
 | `insert_block` | block | test_autocad_findings.py, test_h_operations.py, test_i_common_ops.py |
 | `join` | edit | test_i_common_ops.py |
 | `mirror` | edit | test_autocad_findings.py, test_h_operations.py |
-| `modify` | edit | test_h_operations.py, test_layouts_and_scripts.py |
+| `modify` | edit | test_h_operations.py, test_j_compact_results.py, test_layouts_and_scripts.py |
 | `modify_layer` | layer | test_h_operations.py |
-| `move` | edit | test_d_errors.py, test_f_repro_recovery.py, test_h_operations.py |
+| `move` | edit | test_d_errors.py, test_f_repro_recovery.py, test_h_operations.py, test_j_compact_results.py |
 | `offset` | edit | test_autocad_findings.py, test_h_operations.py |
 | `purge` | edit | test_i_common_ops.py |
 | `rotate` | edit | test_h_operations.py |
@@ -61,4 +68,4 @@
 | `stretch` | edit | test_b_revision.py, test_h_operations.py |
 | `trim` | edit | test_autocad_findings.py, test_d_errors.py, test_h_operations.py |
 
-共 55 个操作，未被任何测试调用: 无
+共 62 个操作，未被任何测试调用: 无
