@@ -125,6 +125,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--id", action="append", dest="ids", help="zoom: entity id or tag:<name> (repeatable)")
     s.add_argument("--command", help="command: the command line to send"); s.add_argument("--label")
     s.add_argument("--force", action="store_true", help="pull: even if the file changed since AutoCAD opened it")
+    s = sub.add_parser("library", help="Industry libraries: index, an item's dimensions, or a drawing's parts list")
+    s.add_argument("item", nargs="?"); s.add_argument("--size"); s.add_argument("--drawing")
 
     s = sub.add_parser("acad-audit", help="Run AutoCAD's AUDIT on a drawing (optional AutoCAD backend)")
     s.add_argument("path")
@@ -232,6 +234,8 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
     elif c == "live":
         r = rt.autocad_live(a.action, a.path, start=a.start, discard=a.discard, ids=a.ids, command=a.command,
                             label=a.label, force=a.force)
+    elif c == "library":
+        r = rt.standard_library(a.item, a.size, a.drawing)
     elif c == "acad-audit":
         r = rt.autocad_audit(a.path)
     elif c == "ops":

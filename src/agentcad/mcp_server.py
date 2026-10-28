@@ -23,7 +23,9 @@ A failed batch never modifies the file (partial_changes=false).
 Real drawings often have paper-space layouts (printed sheets, read_drawing.layouts) with their own copy of the part:
 edit and validate them too, using the 'layout' parameter. New sheets: create_layout, then add_viewport.
 run_script (if enabled) covers edits no op can express.
-If the user works in AutoCAD next to you, autocad_live shows your drawing there and pulls their edits back."""
+If the user works in AutoCAD next to you, autocad_live shows your drawing there and pulls their edits back.
+Industry content (P&ID symbols and lines, GD&T frames, ISO holes, bolts, nuts, bearings) comes from the 'library'
+ops; standard_library looks up sizes and lists a drawing's parts."""
 
 Path_ = Annotated[str, Field(description="Drawing path (.dxf), relative to the workspace root")]
 
@@ -33,7 +35,7 @@ def build_server(policy: Policy | None = None) -> FastMCP:
     mcp = FastMCP("agentcad", instructions=INSTRUCTIONS)
 
     @mcp.tool()
-    def list_operations(category: Annotated[str | None, Field(description="draw|edit|annotate|layer|block|layout: "
+    def list_operations(category: Annotated[str | None, Field(description="draw|edit|annotate|layer|block|layout|library: "
                                                                            "full schemas for that category")] = None,
                         ops: Annotated[list[str] | None, Field(description="Op names: full schemas for just these")] = None,
                         detail: Annotated[bool, Field(description="Full schemas for every op (~90K chars)")] = False) -> dict:
@@ -259,6 +261,18 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         AutoCAD shows the result (servers started with AGENTCAD_LIVE_SYNC=1 reload it after every change, see
         'live' in results). Edits the user makes in AutoCAD come back with pull, as a normal checkpointed change."""
         return rt.autocad_live(action, path, start, discard, window, ids, command, label, force)
+
+    @mcp.tool()
+    def standard_library(item: Annotated[str | None, Field(description="A part, hole kind, P&ID symbol or GD&T "
+                                                           "characteristic: its dimensions / details")] = None,
+                         size: Annotated[str | None, Field(description="e.g. 'M8' or '6204'")] = None,
+                         drawing: Annotated[str | None, Field(description="A drawing: its parts list (standard "
+                                                              "parts, P&ID symbols and instruments)")] = None) -> dict:
+        """Industry libraries: P&ID symbols (ISO 10628 / ISA-5.1), GD&T (ISO 1101), ISO bolts, nuts, washers,
+        cap screws, ball bearings and hole sizes. No arguments: compact index. Draw them with the 'library' ops
+        (add_pid_symbol, add_process_line, add_feature_control_frame, add_datum_feature, add_surface_finish,
+        add_standard_hole, add_standard_part)."""
+        return rt.standard_library(item, size, drawing)
 
     @mcp.tool()
     def get_metrics() -> dict:

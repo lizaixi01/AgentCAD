@@ -1046,6 +1046,28 @@ class Runtime:
         return out
 
     @tool
+    def standard_library(self, item: str | None = None, size: str | None = None,
+                         drawing: str | None = None) -> dict[str, Any]:
+        """Industry libraries (stdlib.py). No arguments: a compact index of P&ID symbols, GD&T characteristics,
+        standard parts and holes with their sizes. ``item`` (with optional ``size``): that item's dimensions.
+        ``drawing``: the parts list of a drawing (standard parts by part/standard/size, P&ID symbols with tags)."""
+        from . import stdlib
+        from .ops import REGISTRY
+        if drawing:
+            p, store = self._drawing(drawing)
+            return {"drawing": self._rel(p), **bill_of_materials(store.load())}
+        if item is None:
+            return {**stdlib.index(), "ops": sorted(k for k, d in REGISTRY.items() if d.category == "library"),
+                    "hint": "item=<name> (and size=...) gives dimensions; drawing=<path> gives its parts list"}
+        try:
+            return stdlib.table(item, size)
+        except KeyError:
+            known = sorted([*stdlib.PARTS, *stdlib.HOLE_KINDS, *stdlib.PID, *stdlib.GDT])
+            if item in known:
+                raise input_error("INVALID_SIZE", f"{item} has no size {size!r}", hint="See standard_library()")
+            raise input_error("UNKNOWN_ITEM", f"No library item {item!r}", hint=f"Items: {known}")
+
+    @tool
     def get_metrics(self) -> dict[str, Any]:
         calls = len(self.metrics)
         fails = sum(1 for m in self.metrics if not m["ok"])
@@ -1100,6 +1122,32 @@ def _min_model_text(doc) -> float | None:
     from .validate.checks import _model_text_heights
     hs = [h for _, _, h, _ in _model_text_heights(doc) if h > 0]
     return min(hs) if hs else None
+
+
+def bill_of_materials(doc) -> dict[str, Any]:
+    """Standard parts (blocks with PART / STANDARD / SIZE attributes) and P&ID symbols in every layout."""
+    parts: dict[tuple, int] = {}
+    symbols, instruments = [], []
+    for sp in layout_spaces(doc, "*"):
+        for e in sp.query("INSERT"):
+            name = e.dxf.name
+            vals = {a.dxf.tag: a.dxf.text for a in e.attribs}
+            if "PART" in vals:
+                if not vals["PART"]:
+                    continue  # another view of a part counted elsewhere
+                key = (vals["PART"], vals.get("STANDARD", ""), vals.get("SIZE", ""))
+                parts[key] = parts.get(key, 0) + 1
+            elif name.startswith("PID_") and name != "PID_FLOW_ARROW":
+                sym = name[4:].lower()
+                if "FUNC" in vals:
+                    instruments.append({"symbol": sym, "tag": "-".join(v for v in (vals["FUNC"], vals.get("LOOP"))
+                                                                        if v), "id": e.dxf.handle})
+                else:
+                    symbols.append({"symbol": sym, "tag": vals.get("TAG", ""), "id": e.dxf.handle})
+    return {"parts": [{"part": k[0], "standard": k[1], "size": k[2], "quantity": n}
+                      for k, n in sorted(parts.items())],
+            "pid_symbols": sorted(symbols, key=lambda r: (r["symbol"], r["tag"])),
+            "instruments": sorted(instruments, key=lambda r: r["tag"])}
 
 
 def _changes(res: dict[str, Any]) -> dict[str, Any]:

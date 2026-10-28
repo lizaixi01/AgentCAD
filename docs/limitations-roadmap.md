@@ -49,3 +49,12 @@
 - AutoCAD 只持有它打开时读到的版本。运行时会记录这个版本（open / reload 时）；如果之后 Agent 又提交了修改，`pull` 会拒绝（`LIVE_CONFLICT`），除非 `force=true`（被覆盖的版本留在检查点里）。不是由运行时打开的图纸同样需要 `force`。
 - `pull` 期间 AutoCAD 中的文档会先另存为临时 DXF，再关闭并从提交后的文件重新打开（保留视图）。如果提交失败，临时 DXF 保留下来（结果里的 `autocad_copy`），它就是 AutoCAD 当前打开的文档。视图恢复使用 VIEWCTR，在非世界坐标系（UCS）下可能偏移。AutoCAD 中未保存的修改不会被 `reload` 丢弃，除非显式传 `discard=true`。
 - `command` 发送原始命令行，默认关闭（`AGENTCAD_ALLOW_LIVE_COMMANDS=1` 开启），其效果只在 AutoCAD 中，需要 `pull` 才会进入图纸。
+
+## 行业库（2026-10-29）
+
+`library` 类操作（`ops/library.py`，数据在 `stdlib.py`）和 `standard_library` 工具。限制：
+
+- **P&ID**：24 个常用符号（ISO 10628 / ISA-5.1 风格），不是完整符号库；没有管道等级表、管线自动编号或连通性检查。符号放到管道上时会切断管道，但不会自动连到设备接口。
+- **GD&T**：特征控制框用直线、圆和文字绘制（不是 AutoCAD 的 TOLERANCE 实体），所以任何查看器都能显示，但 AutoCAD 的 TOLERANCE 编辑命令不能编辑它。不检查公差标注本身是否合理（例如位置度是否该带 Ø）。
+- **标准件**：ISO 4014/4017、4032、7089、4762（M3–M24）和 ISO 15 深沟球轴承 60xx/62xx/63xx。螺栓头部高度用公称尺寸，螺母高度用最大尺寸，视图为简化画法（无倒角）。孔：ISO 273 通孔、ISO 2306 底孔、DIN 974-1 沉孔。
+- 同一个零件画两个视图时，第二个视图应传 `count_in_bom=false`，否则明细表会数两次。
