@@ -14,7 +14,7 @@ service.Runtime          ← 唯一业务层：信封、指标、锁、journal�
    ├─ spec / docspec     ← 规格 → 操作计划 + 需求；文档 → 带溯源的规格
    ├─ store              ← 安全读写、检查点、journal、提交副本、恢复
    └─ policy             ← 沙箱路径、只读、操作白名单、预算
-ezdxf (DXF 内核)
+ezdxf (DXF 内核)                 part/* → backends/freecad → FreeCAD 进程 (三维零件 .FCStd，见 part-3d.md)
 ```
 
 适配层（`cli.py`、`mcp_server.py`、`http_api.py`）不导入 ezdxf、ops 或 engine，`tests/test_g_interfaces.py::test_interfaces_share_one_implementation` 对此做了检查。

@@ -1,7 +1,8 @@
 # 操作目录 (自动生成)
 
-由 `scripts/gen_docs.py` 从 `agentcad.ops.REGISTRY` 生成，与 `list_operations` 返回一致。
+由 `scripts/gen_docs.py` 从 `agentcad.ops.REGISTRY` 和 `agentcad.part.ops.PART_REGISTRY` 生成，与 `list_operations` 返回一致。
 长度参数接受数字（图纸单位）或带单位字符串（如 `"8mm"`）；角度为度、逆时针。
+`part_*` 类别是三维零件（.FCStd）的操作，`dim` 类型还接受表达式（如 `"=Params.width"`），见 [part-3d.md](part-3d.md)。
 
 ## annotate
 
@@ -994,6 +995,261 @@ Surface texture symbol (ISO 1302 / ISO 21920): tip at 'insert' on the surface; p
 | `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+## part_edit
+
+### `delete_feature`
+
+Delete a feature (cascade=true also deletes the features that use it)
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `feature` | string | 是 |  | feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `cascade` | bool |  | False | Delete dependent features too |
+
+### `modify_feature`
+
+Change parameters of a feature made by an earlier op (same names as that op, e.g. {length: 12} for a pad, {shapes: [...]} to redraw a sketch, {edges: ...} for a fillet). Later features follow
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `feature` | string | 是 |  | feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `set` | object | 是 |  | {param: new value} |
+
+### `set_parameters`
+
+Create or change named parameters (a FreeCAD spreadsheet 'Params'). Reference them in any dimension as '=Params.<name>'; changing one later re-solves every feature that uses it. Names must not be units or reserved words (t, m, mm, deg, pi)
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `params` | object | 是 |  | {name: number | '8mm' | '=expression'} |
+
+## part_feature
+
+### `chamfer`
+
+Bevel edges of the solid
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `edges` | any | 是 |  | edge selector, re-resolved after every edit: 'all', 'Edge3', or an object with any of type (line|circle|...), direction (x|y|z|-z|[x,y,z], lines parallel to it), axis (circles around it), radius|diameter, length, x|y|z (all points on that coordinate), box [[x0,y0,z0],[x1,y1,z1]], face (a face selector: edges of those faces), near [x,y,z] + count (nearest ones); a list unites selectors |
+| `size` | dim | 是 |  | Chamfer distance |
+| `size2` | dim |  |  | Second distance (unequal chamfer) |
+| `angle` | dim |  |  | Angle in degrees (distance-and-angle chamfer) |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `fillet`
+
+Round edges of the solid
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `edges` | any | 是 |  | edge selector, re-resolved after every edit: 'all', 'Edge3', or an object with any of type (line|circle|...), direction (x|y|z|-z|[x,y,z], lines parallel to it), axis (circles around it), radius|diameter, length, x|y|z (all points on that coordinate), box [[x0,y0,z0],[x1,y1,z1]], face (a face selector: edges of those faces), near [x,y,z] + count (nearest ones); a list unites selectors |
+| `radius` | dim | 是 |  | Fillet radius |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `groove`
+
+Revolve a sketch's profile around an axis and cut it out of the solid
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `sketch` | string | 是 |  | Sketch feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `axis` | string |  | V | 'V' / 'H' (the sketch's vertical / horizontal axis), 'X'|'Y'|'Z' (origin axes) or 'sketch_edge:<i>' (a line of the sketch) |
+| `angle` | dim |  | 360 | Degrees |
+| `symmetric` | bool |  | False | Revolve half to each side |
+| `reversed` | bool |  | False | Revolve the other way |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `helix`
+
+Sweep a sketch's profile along a helix (springs, threads)
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `sketch` | string | 是 |  | Profile sketch feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `axis` | string |  | V | 'V'|'H' (sketch axes) or 'X'|'Y'|'Z' |
+| `pitch` | dim | 是 |  | Rise per turn |
+| `height` | dim | 是 |  | Total height |
+| `left_handed` | bool |  | False | Left-hand helix |
+| `reversed` | bool |  | False | Grow the other way |
+| `subtractive` | bool |  | False | Cut instead of add |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `hole`
+
+Drill a hole at every circle centre of a sketch, into the solid against the sketch normal (sketch on the face you drill from). Optional counterbore/countersink and ISO metric thread
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `sketch` | string | 是 |  | Sketch with circles feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `diameter` | dim |  |  | Hole diameter (not with thread) |
+| `depth` | dim |  |  | Depth (or through_all) |
+| `through_all` | bool |  | False | Through the whole solid |
+| `thread` | string |  |  | ISO metric size such as 'M8' (diameter then follows the standard tap drill) |
+| `model_thread` | bool |  | False | Model the thread geometry (slow) |
+| `counterbore` | object |  |  | {diameter, depth} |
+| `countersink` | object |  |  | {diameter, angle (default 90)} |
+| `drill_point` | enum ['flat', 'angled'] |  | flat | Blind hole bottom |
+| `reversed` | bool |  | False | Drill along the normal instead |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `linear_pattern`
+
+Repeat features along an axis
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `features` | list | 是 |  | Features to repeat, each a feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `direction` | string |  | X | 'X'|'Y'|'Z' |
+| `length` | dim |  |  | Distance from the first to the last copy (or spacing) |
+| `spacing` | dim |  |  | Distance between neighbouring copies (or length) |
+| `occurrences` | dim | 是 |  | Number of copies including the original (>= 2) |
+| `reversed` | bool |  | False | Repeat in the negative direction |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `loft`
+
+Loft through two or more sketches (in order)
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `sections` | list | 是 |  | Sketches, each a feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `ruled` | bool |  | False | Straight faces between sections |
+| `closed` | bool |  | False | Loop back to the first section |
+| `subtractive` | bool |  | False | Cut instead of add |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `mirror`
+
+Mirror features across an origin plane
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `features` | list | 是 |  | Features to mirror, each a feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `plane` | enum ['XY', 'XZ', 'YZ'] | 是 |  | Mirror plane |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `pad`
+
+Extrude a sketch's closed profiles into solid, along the sketch normal
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `sketch` | string | 是 |  | Sketch feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `length` | dim | 是 |  | Extrusion length |
+| `symmetric` | bool |  | False | Extrude half to each side of the sketch |
+| `reversed` | bool |  | False | Extrude against the normal |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `pocket`
+
+Cut a sketch's closed profiles out of the solid, against the sketch normal
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `sketch` | string | 是 |  | Sketch feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `depth` | dim |  |  | Cut depth (or through_all) |
+| `through_all` | bool |  | False | Cut through the whole solid |
+| `symmetric` | bool |  | False | Cut half to each side |
+| `reversed` | bool |  | False | Cut along the normal instead |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `polar_pattern`
+
+Repeat features around an axis
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `features` | list | 是 |  | Features to repeat, each a feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `axis` | string |  | Z | 'X'|'Y'|'Z' (through the origin) |
+| `angle` | dim |  | 360 | Total angle in degrees (360 = evenly around) |
+| `occurrences` | dim | 是 |  | Number of copies including the original (>= 2) |
+| `reversed` | bool |  | False | Repeat clockwise |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `primitive`
+
+Add (or with subtractive=true cut) a box, cylinder, cone, sphere, torus, prism or wedge
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `kind` | enum ['box', 'cylinder', 'cone', 'sphere', 'torus', 'prism', 'wedge'] | 是 |  | Primitive |
+| `dims` | object |  |  | box {length, width, height}; cylinder {radius, height, angle}; cone {radius1, radius2, height}; sphere {radius}; torus {radius1, radius2}; prism {sides, circumradius, height}; wedge {xmin, xmax, ymin, ymax, zmin, zmax, x2min, x2max, z2min, z2max} |
+| `position` | list |  |  | [x, y, z] of the primitive's origin (box: a corner; cylinder: base centre) |
+| `direction` | list |  |  | [x, y, z] the primitive's local Z points along (default +Z) |
+| `subtractive` | bool |  | False | Cut instead of add |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `revolve`
+
+Revolve a sketch's profile into solid around an axis
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `sketch` | string | 是 |  | Sketch feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `axis` | string |  | V | 'V' / 'H' (the sketch's vertical / horizontal axis), 'X'|'Y'|'Z' (origin axes) or 'sketch_edge:<i>' (a line of the sketch) |
+| `angle` | dim |  | 360 | Degrees |
+| `symmetric` | bool |  | False | Revolve half to each side |
+| `reversed` | bool |  | False | Revolve the other way |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `sweep`
+
+Sweep a closed profile sketch along a path sketch
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `sketch` | string | 是 |  | Profile sketch feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `path` | string | 是 |  | Path sketch (open wire) feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
+| `frenet` | bool |  | False | Frenet orientation (for helical paths) |
+| `subtractive` | bool |  | False | Cut instead of add |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+### `thickness`
+
+Shell the solid: remove the selected faces and keep walls of a thickness
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `faces` | any | 是 |  | face selector, re-resolved after every edit: 'top'|'bottom'|'front'|'back'|'left'|'right' (outermost planar face), 'Face2', or an object with any of type (plane|cylinder|...), normal (+z|-x|[x,y,z]), extreme (max|min along the normal), axis, radius|diameter, inner (holes), x|y|z, box, near + count (the faces to open) |
+| `thickness` | dim | 是 |  | Wall thickness |
+| `outward` | bool |  | False | Grow walls outward instead of inward |
+| `join` | enum ['arc', 'intersection'] |  | arc | Corner style |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
+
+## part_sketch
+
+### `add_sketch`
+
+Add a sketch: placed on an origin plane (plane + offset), on a planar face of the solid (on_face; sketch x/y then follow the global axes projected onto the face, origin = global origin projected), or by origin + normal (+ x_dir)
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `shapes` | list | 是 |  | closed profiles (or construction geometry), each {type, ...}: rectangle {corner [x,y] (lower left) | center, width, height, name}; circle {center, diameter | radius, name}; polygon {points: [[x,y] | [x,y,bulge], ...]}; polyline {points, closed}; regular_polygon {center, sides, circumradius | across_flats, rotation}; slot {start, end, width}; line {start, end}; arc {center, radius, start_angle, end_angle}; point {at}. Any shape: construction=true. Rectangle sizes and circle diameters accept expressions ('=Params.w'). End points that touch are joined; every shape is fully constrained. Coordinates are in the sketch plane |
+| `plane` | enum ['XY', 'XZ', 'YZ'] |  |  | Origin plane (default XY). XY: x=X, y=Y, normal +Z. XZ: x=X, y=Z, normal -Y. YZ: x=Y, y=Z, normal +X |
+| `offset` | dim |  |  | Distance along the plane's normal |
+| `on_face` | any |  |  | face selector, re-resolved after every edit: 'top'|'bottom'|'front'|'back'|'left'|'right' (outermost planar face), 'Face2', or an object with any of type (plane|cylinder|...), normal (+z|-x|[x,y,z]), extreme (max|min along the normal), axis, radius|diameter, inner (holes), x|y|z, box, near + count; must match one planar face |
+| `origin` | list |  |  | [x, y, z] of the sketch origin (with normal) |
+| `normal` | list |  |  | [x, y, z] sketch normal (with origin) |
+| `x_dir` | list |  |  | [x, y, z] sketch x axis (default: global X projected) |
+| `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
+| `tag` | string |  |  | Name for later reference as 'tag:<name>' |
 
 ## 约束类型
 

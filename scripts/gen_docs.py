@@ -9,16 +9,20 @@ from pathlib import Path
 
 from agentcad.constraints import CHECK_TYPES, ENFORCE_TYPES
 from agentcad.ops import REGISTRY
+from agentcad.part.ops import PART_REGISTRY
 
 ROOT = Path(__file__).resolve().parents[1]
 DOCS = ROOT / "docs"
 
 
 def ops_md() -> str:
-    lines = ["# 操作目录 (自动生成)", "", "由 `scripts/gen_docs.py` 从 `agentcad.ops.REGISTRY` 生成，与 `list_operations` 返回一致。",
-             "长度参数接受数字（图纸单位）或带单位字符串（如 `\"8mm\"`）；角度为度、逆时针。", ""]
+    lines = ["# 操作目录 (自动生成)", "", "由 `scripts/gen_docs.py` 从 `agentcad.ops.REGISTRY` 和 "
+             "`agentcad.part.ops.PART_REGISTRY` 生成，与 `list_operations` 返回一致。",
+             "长度参数接受数字（图纸单位）或带单位字符串（如 `\"8mm\"`）；角度为度、逆时针。",
+             "`part_*` 类别是三维零件（.FCStd）的操作，`dim` 类型还接受表达式（如 `\"=Params.width\"`），"
+             "见 [part-3d.md](part-3d.md)。", ""]
     by_cat: dict[str, list] = {}
-    for d in REGISTRY.values():
+    for d in [*REGISTRY.values(), *PART_REGISTRY.values()]:
         by_cat.setdefault(d.category, []).append(d)
     for cat in sorted(by_cat):
         lines += [f"## {cat}", ""]
@@ -38,15 +42,19 @@ def ops_md() -> str:
 def matrix_md() -> str:
     tests = {p.name: p.read_text("utf-8") for p in sorted((ROOT / "tests").glob("test_*.py"))}
     lines = ["# 操作 × 测试矩阵 (自动生成)", "", "统计每个操作在哪些测试文件中以 `\"op\": \"<name>\"` 形式被调用。",
-             "这只说明“被执行过”，断言质量见各测试本身。", "", "| 操作 | 类别 | 测试文件 |", "|---|---|---|"]
+             "这只说明“被执行过”，断言质量见各测试本身。三维零件操作只统计 test_n_parts.py（二维和三维有同名操作）。",
+             "", "| 操作 | 类别 | 测试文件 |", "|---|---|---|"]
     untested = []
-    for name in sorted(REGISTRY):
+    part_tests = {f: t for f, t in tests.items() if f == "test_n_parts.py"}
+    rows = [(n, REGISTRY[n].category, {f: t for f, t in tests.items() if f != "test_n_parts.py"}) for n in sorted(REGISTRY)]
+    rows += [(n, PART_REGISTRY[n].category, part_tests) for n in sorted(PART_REGISTRY)]
+    for name, cat, where in rows:
         pat = re.compile(r'"op":\s*"' + re.escape(name) + r'"')
-        hits = [f for f, t in tests.items() if pat.search(t)]
+        hits = [f for f, t in where.items() if pat.search(t)]
         if not hits:
-            untested.append(name)
-        lines.append(f"| `{name}` | {REGISTRY[name].category} | {', '.join(hits) or '**无**'} |")
-    lines += ["", f"共 {len(REGISTRY)} 个操作，未被任何测试调用: {untested or '无'}", ""]
+            untested.append(f"{name} ({cat})")
+        lines.append(f"| `{name}` | {cat} | {', '.join(hits) or '**无**'} |")
+    lines += ["", f"共 {len(rows)} 个操作，未被任何测试调用: {untested or '无'}", ""]
     return "\n".join(lines)
 
 

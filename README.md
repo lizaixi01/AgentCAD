@@ -106,14 +106,15 @@ The same `Runtime` is available from Python and over HTTP (`agentcad --root work
 | Agent tools (MCP) | 24, including `apply_operations`, `apply_batch` (several drawings in one call), `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`, `standard_library`, `autocad_live`. `list_operations` returns a compact index and full schemas on request, so it fits in an agent's context |
 | Live AutoCAD | `autocad_live` works next to the user's running AutoCAD (Windows, COM): shows the agent's drawing there, reloads it after every change (`AGENTCAD_LIVE_SYNC=1`), and pulls the user's edits back as a normal checkpointed, validated change. Raw command lines are off unless `AGENTCAD_ALLOW_LIVE_COMMANDS=1` |
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
+| 3D parts | Parametric FreeCAD parts (`.FCStd`) through the same tools: sketches, pad, pocket, revolve, holes, fillets, chamfers, shells, patterns, lofts, sweeps, helices, driven by named parameters. Edge and face selections survive edits. STEP/STL export. Needs FreeCAD 1.1 (optional) — see [docs/part-3d.md](docs/part-3d.md) |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | 192 automated tests, including 27 cases checked against AutoCAD 2027 behaviour |
+| Tests | 226 automated tests, including 27 cases checked against AutoCAD 2027 behaviour and 19 3D-part tests (13 of them build parts in FreeCAD 1.1) |
 
 Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial software.
 
 ## Where it stands
 
-AgentCAD is early. It is 2D only. DWG needs AutoCAD on the machine. The industry libraries cover common P&ID, GD&T and ISO fastener content, not a full catalogue. The live AutoCAD session is tested against a stand-in for AutoCAD's COM interface; a run against the GUI needs a signed-in AutoCAD licence. Readability checks cover text height, and plot layout still needs a human eye. The evidence so far is 12 tasks on two agents. What's missing is tracked in [docs/limitations-roadmap.md](docs/limitations-roadmap.md).
+AgentCAD is early. 3D parts are new and not yet measured with agents; they can't be turned into 2D drawings yet. DWG needs AutoCAD on the machine. The industry libraries cover common P&ID, GD&T and ISO fastener content, not a full catalogue. The live AutoCAD session is tested against a stand-in for AutoCAD's COM interface; a run against the GUI needs a signed-in AutoCAD licence. Readability checks cover text height, and plot layout still needs a human eye. The evidence so far is 12 tasks on two agents. What's missing is tracked in [docs/limitations-roadmap.md](docs/limitations-roadmap.md).
 
 ## Documentation
 
@@ -124,6 +125,7 @@ Most in-depth documents are in Chinese.
 | [docs/tutorial.md](docs/tutorial.md) | Step-by-step tutorial: generate, validate, revise, roll back, DWG, connecting agents |
 | [docs/architecture.md](docs/architecture.md) | Architecture, data model, transactions, error envelope |
 | [docs/operations.md](docs/operations.md) | Reference for every operation (generated from code) |
+| [docs/part-3d.md](docs/part-3d.md) | 3D parametric parts: FreeCAD backend, operations, selectors, validation |
 | [docs/comparison-claude-code.md](docs/comparison-claude-code.md) | Claude Code: AgentCAD vs. writing code, before and after the compact catalog |
 | [docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md), [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md) | Codex: the same comparison |
 | [docs/trials-report.md](docs/trials-report.md) | Classic drafting tasks and 96 real AutoCAD sample drawings |

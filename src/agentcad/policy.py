@@ -36,7 +36,7 @@ class Policy:
 
     # --- paths -------------------------------------------------------------
     def resolve(self, path: str | os.PathLike, *, must_exist: bool = False,
-                suffixes: tuple[str, ...] | None = None) -> Path:
+                suffixes: tuple[str, ...] | None = None, hint_suffix: str = "") -> Path:
         if path is None or str(path).strip() == "":
             raise input_error("MISSING_PATH", "A file path is required")
         p = Path(path)
@@ -50,7 +50,7 @@ class Policy:
         if STATE_DIR in p.relative_to(self.root).parts:
             raise policy_error("PATH_RESERVED", f"{path} is inside the runtime state directory {STATE_DIR}/")
         if suffixes and p.suffix.lower() not in suffixes:
-            raise input_error("BAD_EXTENSION", f"{path}: expected one of {list(suffixes)}")
+            raise input_error("BAD_EXTENSION", f"{path}: expected one of {list(suffixes)}{hint_suffix}")
         if must_exist and not p.is_file():
             from .errors import file_error
             raise file_error("FILE_NOT_FOUND", f"{path} does not exist", hint="Create it first with create_drawing")

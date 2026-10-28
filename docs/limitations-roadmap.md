@@ -9,6 +9,8 @@
 | pypdf ≥4（实测 6.21） | BSD-3 | PDF 文字提取 | |
 | Pillow（可选 `[preview]`） | MIT-CMU | SVG 导出（ezdxf drawing 插件需要） | 未安装时返回 `dependency/DEPENDENCY_MISSING` |
 
+| FreeCAD 1.1（可选，实测 1.1.4） | LGPL-2.1+ | 三维参数化零件（`.FCStd`）的几何内核 | 独立进程运行（`backends/freecad.py`），不链接；见 [part-3d.md](part-3d.md) |
+
 核心不依赖 AutoCAD、ODA、FreeCAD，也不调用任何模型 API。**可选**：安装了 AutoCAD 时（自动发现，或设置 `AGENTCAD_ACCORECONSOLE`），可以启用 DWG 导入/导出和 AutoCAD AUDIT（`backends/autocad.py`，通过无头的 accoreconsole 运行）。
 
 ## 已知限制
@@ -33,7 +35,11 @@
 16. **版面与制图规范不检查**：标注互相重叠、文字压线、轴类的台阶/倒角轮廓线等，验证器发现不了，需要出图目视检查（`examples/trials/render_png.py`）。
 17. **字体**：新图默认 `gbenor.shx` + `gbcbig.shx`。没有安装这两个字体的 CAD 软件会做字体替换。
 
+19. **三维零件**（2026-10-29）：一个零件一个 Body，没有装配；不能从三维生成二维工程图；不能渲染图片给 Agent 看；还没有用 Agent 做过三维对比实验。详见 [part-3d.md](part-3d.md)。
+
 ## 路线图
+
+- **三维**：从模型投影出二维工程图（DXF，接现有标注和出图）；渲染视图供 Agent 目视检查；装配；用 CADBench / BenchCAD 测 Agent。
 
 - **实测暴露的问题**（[trials-report.md](trials-report.md)、[comparison-hard-tasks.md](comparison-hard-tasks.md)）：~~读取图纸空间布局~~（已完成）；~~脚本出口~~（已完成，`run_script`）；判断图纸副本与模型是否一致；`modify` 支持标注；标注重叠检测；保留动态块数据。
 - **P1 收尾**：两线角度标注创建、HATCH、MLEADER、坐标标注；为 `mirror` 作用于标注/块、开口多段线偏移补测试。

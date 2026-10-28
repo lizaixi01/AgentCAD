@@ -1,0 +1,92 @@
+# 三维参数化零件（FreeCAD 后端）
+
+AgentCAD 用同一组工具处理二维图纸（`.dxf`）和三维零件（`.FCStd`）。路径以 `.FCStd` 结尾时，`create_drawing`、
+`apply_operations`、`read_drawing`、`inspect_entities`、`validate_drawing`、`get_diff`、`export_drawing`、
+`rollback`、`list_checkpoints`、`history`、`recover` 都按三维零件处理。检查点、journal、写锁、原子提交和结果信封
+都与图纸共用。
+
+## 为什么用 FreeCAD
+
+- 产出原生 `.FCStd`：一个 PartDesign Body，特征树（Sketch → Pad/Pocket/Hole/Fillet…）完整可编辑，参数改了能重建。
+  CADBench（V3 用 FreeCAD 1.1.0 评分）只接受这种文件：评分器先检查"恰好一个非空 Body、一个实体、全部是原生
+  PartDesign 特征"，不满足直接 0 分。build123d/OCP 这类库能做实体，但存不出特征树。
+- 草图约束用 FreeCAD Sketcher 的联立求解器。
+- FreeCAD 是 LGPL-2.1+，作为**独立进程**运行，AgentCAD 不链接它，核心仍是 MIT、无 FreeCAD 也能用（只是不能做三维）。
+
+## 安装
+
+装 FreeCAD 1.1（实测 1.1.4，OCCT 7.8.1，与 CADBench 官方二进制同一内核版本）。如果不在标准位置，设置
+`AGENTCAD_FREECAD` 为它的安装目录、`bin` 目录、自带的 `python` 或 `freecadcmd`。也认 freecad-validator 用的
+`FREECAD_LIB`。`agentcad mcp-config --write` 会把这两个环境变量写进 MCP 配置。没装时三维工具返回
+`dependency/DEPENDENCY_MISSING`。
+
+## 进程模型
+
+每次调用起一个 FreeCAD 进程（冷启动约 1.5 s，一次调用通常 0.5–1 s 完成）运行 `part/_fc_runner.py`：
+
+1. 零件文件复制进系统临时目录下的短路径作业目录（FreeCAD 存盘时路径超过 Windows 260 字符会失败）；
+2. 在副本上依次执行操作，每步之后重算，有特征出错就整批失败（结构化错误带 `op_index`、FreeCAD 原始信息和提示）；
+3. 存成候选文件，**关闭文档再从磁盘重新打开**、重算、验证（一次进程里完成，验证读的是存下来的文件）；
+4. AgentCAD 再按图纸的流程提交：检查点 → pending → 原子替换 → journal。`strict=true` 时验证不过不提交，候选存进
+   `failed/`。
+
+作业目录只放 `job.json`（数据）和文件副本；调用方的任何字符串都不会成为代码或命令行参数。
+
+## 操作
+
+`list_operations()` 的 `part_operations` 是紧凑索引，`list_operations(category="part")` 给完整 schema。
+完整参数见 [operations.md](operations.md) 的 `part_*` 类别。
+
+| 类别 | 操作 |
+|---|---|
+| part_sketch | `add_sketch`：放在原点平面（plane + offset）、实体的平面上（on_face）或任意 origin + normal |
+| part_feature | `pad` `pocket` `revolve` `groove` `hole`（沉头/埋头/ISO 螺纹）`fillet` `chamfer` `thickness`（抽壳）`linear_pattern` `polar_pattern` `mirror` `primitive`（加/减 box、cylinder…）`loft` `sweep` `helix` |
+| part_edit | `set_parameters`（参数表）`modify_feature`（改已有特征的参数，后续特征跟着重建）`delete_feature` |
+
+草图形状：rectangle、circle、polygon/polyline（点可带 bulge，和二维多段线一样）、regular_polygon、slot、line、arc、
+point。形状自动完全约束，端点相接的自动加重合约束。
+
+### 参数和表达式
+
+任何 `dim` 类型的值可以是数字（mm）、带单位字符串（`"0.5in"`）或表达式（`"=Params.width * 2"`）。
+`set_parameters` 在名为 `Params` 的电子表格里建参数；之后改参数，所有引用它的草图尺寸、拉伸长度、孔径等都会重算。
+参数名不能是 FreeCAD 的单位或保留字（`t`、`m`、`mm`、`deg`、`pi`）。
+
+### 选择器（拓扑命名问题）
+
+FreeCAD 1.1.4 自带的拓扑命名修复在脚本建模时不可靠：实测改草图宽度后，圆角引用的边变成 `?Edge2`，特征失效。
+所以 AgentCAD 不让 FreeCAD 保存会漂移的引用：
+
+- 草图只附着在原点平面上（`on_face` 也是：解析一次面的位置，存为绝对位置）；
+- 圆角/倒角的边、抽壳的面、`on_face` 的面都以**几何选择器**存在特征上（`AgentCADRef`），每次编辑后按特征顺序
+  逐个重新解析，解析结果再写回 FreeCAD。
+
+边选择器：`"all"`、`"Edge3"`，或对象 `{type, direction, axis, radius|diameter, length, x|y|z, box, face, near, count}`，
+列表表示并集。面选择器：`"top"|"bottom"|"front"|"back"|"left"|"right"`、`"Face2"`，或对象
+`{type, normal, extreme, axis, radius|diameter, inner, x|y|z, box, near, count}`。
+`inspect_entities(filter={"kind": "edges", "selector": {...}})` 能先预览选择器选到哪些边。
+
+## 验证
+
+`validate_drawing` 对零件：FreeCAD 重新打开、重算，然后检查
+
+- 特征错误（`FEATURE_ERROR`，带 FreeCAD 原始信息和提示）；
+- CADBench 的零件约定：恰好一个非空 Body（`NO_BODY`、`EMPTY_BODY`、`MULTIPLE_BODIES`）、一个实体
+  （`NOT_SINGLE_SOLID`，FreeCAD 1.1 本身允许一次 pad 出两个实体）、只有原生 PartDesign 特征
+  （`NON_PARAMETRIC_GEOMETRY`），实现照 freecad-validator 的 integrity gates；
+- B-rep 有效性、Tip 之后的特征（`FEATURES_AFTER_TIP`）、草图冲突/冗余约束。
+
+需求：`bbox {size}`、`volume`/`area {value, rel_tolerance}`、`hole {diameter, count}`（按内圆柱面识别、同轴合并）、
+`hole_count`、`solid_count`、`parameter {name, value}`、`center_of_mass`、`feature_count`。
+
+## 导出
+
+`export_drawing` 对零件支持 `step`（BenchCAD 等按 STEP 评分）、`iges`、`brep`、`stl`、`obj`。
+
+## 已知限制
+
+- 一个零件一个 Body（CADBench 的要求）；多零件装配还没有。
+- 没有从三维生成二维工程图（投影视图 → DXF）；这是下一步，接上之后三维模型能直接出图。
+- 没有渲染图片给 Agent 看（无 GUI 的 FreeCAD 不能离屏渲染）。
+- `on_face` 的草图是绝对定位：面移动时由 AgentCAD 的重新解析跟上，直接用 FreeCAD GUI 改模型则不会跟。
+- 还没有用 Agent 跑过三维任务的对比实验。
