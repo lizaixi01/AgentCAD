@@ -50,7 +50,6 @@ def _live_base(store, path: Path | None = None) -> str | None:
             return json.loads(f.read_text("utf-8")).get("base_sha256")
         except (OSError, ValueError):
             return None
-    from .store import sha256_file
     store.dir.mkdir(parents=True, exist_ok=True)
     f.write_text(json.dumps({"base_sha256": sha256_file(path)}), "utf-8")
     return None
@@ -201,9 +200,10 @@ class Runtime:
                 if app is None:
                     return {"autocad_running": False}
                 p, store = self._drawing(drawing)
-                res = acad_live.Session(app).reload(p)
-                if res.get("reloaded"):
-                    _live_base(store, p)
+                with self._lock(store):
+                    res = acad_live.Session(app).reload(p)
+                    if res.get("reloaded"):
+                        _live_base(store, p)
                 return res
         except AgentCADError as exc:  # never fail a committed change because AutoCAD could not follow
             e = exc.to_dict()
@@ -870,15 +870,23 @@ class Runtime:
             p, store = self._drawing(path)
             rel = self._rel(p)
             if action == "open":
-                was_open = s.find(p) is not None
-                doc = s.open(p)
-                if not was_open or _live_base(store) is None:
-                    _live_base(store, p)
-                return {"drawing": rel, "open_in_autocad": True, **s.describe(doc)}
+                with self._lock(store):
+                    was_open = s.find(p) is not None
+                    doc = s.open(p)
+                    if not was_open:
+                        _live_base(store, p)
+                    # already open (by the user, or earlier): AutoCAD shows what it read then, which this
+                    # runtime cannot know, so an unrecorded base stays unknown and pull asks for reload or force
+                    out = {"drawing": rel, "open_in_autocad": True, **s.describe(doc)}
+                if was_open and _live_base(store) is None:
+                    out["hint"] = ("AutoCAD already had this drawing open, possibly an older version: reload it "
+                                   "before pulling, or pull with force=true to take AutoCAD's version")
+                return out
             if action == "reload":
-                res = s.reload(p, discard)
-                if res.get("reloaded"):
-                    _live_base(store, p)
+                with self._lock(store):  # the recorded base is the file AutoCAD re-read: no commit in between
+                    res = s.reload(p, discard)
+                    if res.get("reloaded"):
+                        _live_base(store, p)
                 return {"drawing": rel, **res}
             if action == "zoom":
                 win = window
@@ -928,11 +936,15 @@ class Runtime:
                         info = store.commit(new, label=label or "autocad_live pull")
                         seq = store.journal({"tool": "autocad_live", "action": "pull", "ok": True, "label": label,
                                              "forced": base != current, "changes": changes, **info})
-                except AgentCADError as exc:
+                except Exception as exc:  # noqa: BLE001 - whatever failed, say where the user's edits are
+                    if not isinstance(exc, AgentCADError):
+                        exc = AgentCADError("INTERNAL_ERROR", f"pull failed: {type(exc).__name__}: {exc}",
+                                            category="internal",
+                                            details={"traceback": traceback.format_exc(limit=8)})
                     exc.details = {**(exc.details or {}), "autocad_copy": self._rel(tmp)}
                     exc.hint = (exc.hint or "") + f" AutoCAD's edits are saved in {self._rel(tmp)}, which is the " \
                                                   "document now open in AutoCAD"
-                    raise
+                    raise exc
                 out = {"drawing": rel, "changed": changed, "changes": changes, "diff_summary": diff["summary"],
                        "layers": diff["layers"], **info}
                 if base != current:
@@ -943,8 +955,10 @@ class Runtime:
                     s.set_view(view)
                     tmp.unlink(missing_ok=True)
                     _live_base(store, p)
-                except AgentCADError as exc:  # the pull is committed; only re-opening failed
-                    out["live"] = {"reopened": False, "error": {"code": exc.code, "message": exc.message},
+                except Exception as exc:  # noqa: BLE001 - the pull is committed; only re-opening failed
+                    e = exc.to_dict() if isinstance(exc, AgentCADError) else {
+                        "code": "AUTOCAD_COM_ERROR", "message": f"{type(exc).__name__}: {exc}"}
+                    out["live"] = {"reopened": False, "error": {k: e[k] for k in ("code", "message") if k in e},
                                    "autocad_copy": self._rel(tmp)}
         if changed:
             out["validation"] = _brief(validate_file(p))

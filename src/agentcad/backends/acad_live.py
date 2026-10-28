@@ -183,8 +183,9 @@ class Session:
     def close(self, doc, discard: bool = False) -> None:
         if not bool(_retry(lambda: doc.Saved)) and not discard:
             raise AgentCADError("AUTOCAD_UNSAVED_CHANGES", f"{_retry(lambda: doc.Name)} has unsaved edits in AutoCAD",
-                                category="policy", hint="Bring them in with autocad_live action='pull', or pass "
-                                                        "discard=true to throw them away")
+                                category="policy", hint="Bring them in with autocad_live action='pull' (it refuses "
+                                                        "with LIVE_CONFLICT if the file changed since AutoCAD read "
+                                                        "it), or pass discard=true to throw them away")
         _retry(lambda: doc.Close(False))
 
     def reload(self, path: Path, discard: bool = False) -> dict[str, Any]:

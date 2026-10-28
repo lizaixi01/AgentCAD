@@ -255,3 +255,43 @@ def test_sync_survives_unexpected_com_errors(ws, plate):
     app.Documents = None  # anything at all going wrong inside AutoCAD
     r = ok(rt.apply_operations(plate, [{"op": "add_point", "location": [1, 1]}]))
     assert r["live"]["reloaded"] is False and "error" in r["live"]
+
+
+def test_drawing_the_user_opened_before_an_agent_change(ws, plate):
+    """Review of PR #5: AutoCAD had the drawing open already; the agent then changed the file. 'open' only
+    activates it, so AutoCAD still shows the old version and a pull must not revert the agent's change."""
+    app = FakeApp()
+    rt = live_rt(ws, app)
+    app.Documents.Open(str(ws / plate), False)  # the user opened it
+    ok(rt.apply_operations(plate, [{"op": "add_circle", "center": [50, 30], "radius": 3}]))
+    r = ok(rt.autocad_live("open", plate))
+    assert "reload" in r["hint"]
+    app.docs[0].user_edit = add_user_line
+    app.docs[0].Saved = False
+    assert rt.autocad_live("pull", plate)["error"]["code"] == "LIVE_CONFLICT"
+    assert ezdxf.readfile(ws / plate).query("CIRCLE[radius==3]")  # the agent's circle is still there
+
+
+def test_unexpected_failure_in_pull_still_reports_autocads_copy(ws, plate, monkeypatch):
+    app = FakeApp()
+    rt = live_rt(ws, app)
+    ok(rt.autocad_live("open", plate))
+    app.docs[0].user_edit = add_user_line
+    app.docs[0].Saved = False
+    monkeypatch.setattr("agentcad.service.diff_docs", lambda *a: {}["boom"])
+    e = rt.autocad_live("pull", plate)["error"]
+    assert e["code"] == "INTERNAL_ERROR" and (ws / e["details"]["autocad_copy"]).is_file()
+
+
+def test_failing_reopen_does_not_fail_a_committed_pull(ws, plate):
+    app = FakeApp()
+    rt = live_rt(ws, app)
+    ok(rt.autocad_live("open", plate))
+    app.docs[0].user_edit = add_user_line
+    app.docs[0].Saved = False
+
+    def broken_open(path, read_only):
+        raise RuntimeError("AutoCAD went away")
+    app.Documents.Open = broken_open
+    r = ok(rt.autocad_live("pull", plate))
+    assert r["changed"] and r["live"]["reopened"] is False and r["journal_seq"]
