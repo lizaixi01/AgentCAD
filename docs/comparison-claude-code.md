@@ -114,7 +114,9 @@ T1–T6 每组各跑 1 次；H1–H6 每组各跑 3 次（H1 每次 5 轮，每�
 
 1. **工具返回确实变短了**：校验调用多的题少得最多（H1 少 17%，H3 少 26%），其它题少 0–12%。
 2. **但费用、耗时、输入 token 没有跟着降**，除 H2 外都在噪声范围内或略升。原因有两个：
-   - **实验环境变了**。这轮 Claude Code 是从 Claude 桌面应用的一个会话里启动的，继承了桌面环境（入口 `claude-desktop`、更多技能和子 Agent、临时目录），同一版本的 Claude Code（2.1.309）下，每个会话第一轮的上下文从约 11.5K token 涨到约 13.1K token。这和 AgentCAD 无关，但每一轮都要重读：H1 每次约 56 轮，多出约 9 万 token，正好抵掉了返回变短省下的部分。
+   - **实验环境变了**。同一版本的 Claude Code（2.1.309）下，每个会话第一轮的上下文从约 11.5K token 涨到约 13.1K token。这和 AgentCAD 无关，但每一轮都要重读：H1 每次约 56 轮，多出约 9 万 token，正好抵掉了返回变短省下的部分。事后用最小会话（只回复 OK）定位了原因：
+     - 主要是 **git 状态**。实验工作区在本仓库里，Claude Code 会把所在仓库的 `git status` 放进每一轮的上下文；这轮运行时主工作区有一百多个未提交的改动（正在归档上一轮的记录）。实测：工作区在一个有 120 个改动文件的仓库里时第一轮 13,377 token，不在仓库里时 11,717 token，相差约 1,660。
+     - 次要的是这轮从 Claude 桌面应用的会话里启动，继承了桌面环境（入口 `claude-desktop`、更多技能和子 Agent），约 300 token。
    - **轮数才是大头**。每一轮都要把系统提示、工具定义和之前所有内容重读一遍，工具返回只是其中一部分。H3 这次 Agent 多调了 24 次 `apply_constraints`（每次 44.7 个调用，上一轮 38.3 个），多出来的轮数比返回变短的影响大。
 3. **H2 便宜了 17%**，输入少 14%：真实图纸上要求多、圆多（84 个孔），精简校验报告省得最明显。
 
@@ -124,6 +126,6 @@ T1–T6 每组各跑 1 次；H1–H6 每组各跑 3 次（H1 每次 5 轮，每�
 
 - `apply_operations` 的返回里已经带了校验结果，但 Agent 仍然习惯在每批操作后再单独调一次 `validate_drawing`（H1 每次运行 10 次左右）。可以在工具说明里写明"返回里已含校验，不必再调"，或在 `apply_operations` 上接受和 `validate_drawing` 相同的 `bounds` / `layout` 参数。
 - 批量出图（H3）给一个"一次调用、逐张执行和校验"的入口。
-- 实验工具在启动 Claude Code 前要清掉桌面会话的环境变量，否则不同批次之间的每轮固定开销不一致（启动器见 [agents.py](../examples/trials/agents.py)）。
+- 实验工具启动 Claude Code 时要关掉 git 上下文（`CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS=1`；实测有 120 个改动的仓库里也回到 11,722 token），并清掉桌面会话的环境变量，否则不同时间跑的批次每轮固定开销不一致（启动器见 [agents.py](../examples/trials/agents.py)）。
 
 原始记录：改前 `runs_cc/v2/`、`hard/runs_cc/v2/A/`；改后 `runs_cc/`、`hard/runs_cc/A/`；评分 `grades_cc_v3.json`、`hard/grades_cc_v3_A.json`。
