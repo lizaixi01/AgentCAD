@@ -1,0 +1,1296 @@
+[
+  {
+    "task": "H1",
+    "rep": 1,
+    "arm": "A",
+    "ok": true,
+    "grade": {
+      "rounds": {
+        "1": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "2": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "3": {
+          "ok": true,
+          "passed": 10,
+          "total": 10,
+          "fails": []
+        },
+        "4": {
+          "ok": true,
+          "passed": 10,
+          "total": 10,
+          "fails": []
+        },
+        "5": {
+          "ok": true,
+          "passed": 11,
+          "total": 11,
+          "fails": []
+        }
+      },
+      "final_ok": true,
+      "rounds_ok": 5,
+      "undo_ok": true
+    },
+    "seconds": 223.59,
+    "calls": 45,
+    "reported_tool_errors": 1,
+    "other_tool_calls": 0,
+    "input_tokens": 1422737,
+    "cached_input_tokens": 1252096,
+    "output_tokens": 4625,
+    "rounds_completed": 5,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H1",
+    "rep": 1,
+    "arm": "B",
+    "ok": false,
+    "grade": {
+      "rounds": {
+        "1": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "2": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "3": {
+          "ok": true,
+          "passed": 10,
+          "total": 10,
+          "fails": []
+        },
+        "4": {
+          "ok": false,
+          "passed": 8,
+          "total": 10,
+          "fails": [
+            "4×Ø10 at 12 from the edges",
+            "hole dimension Ø10 (no stale Ø12)"
+          ]
+        },
+        "5": {
+          "ok": false,
+          "passed": 9,
+          "total": 11,
+          "fails": [
+            "4×Ø10 at 12 from the edges",
+            "hole dimension Ø10 (no stale Ø12)"
+          ]
+        }
+      },
+      "final_ok": false,
+      "rounds_ok": 3,
+      "undo_ok": false
+    },
+    "seconds": 481.21,
+    "calls": 264,
+    "reported_tool_errors": 8,
+    "other_tool_calls": 0,
+    "input_tokens": 2719278,
+    "cached_input_tokens": 2539008,
+    "output_tokens": 11911,
+    "rounds_completed": 5,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H1",
+    "rep": 2,
+    "arm": "A",
+    "ok": true,
+    "grade": {
+      "rounds": {
+        "1": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "2": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "3": {
+          "ok": true,
+          "passed": 10,
+          "total": 10,
+          "fails": []
+        },
+        "4": {
+          "ok": true,
+          "passed": 10,
+          "total": 10,
+          "fails": []
+        },
+        "5": {
+          "ok": true,
+          "passed": 11,
+          "total": 11,
+          "fails": []
+        }
+      },
+      "final_ok": true,
+      "rounds_ok": 5,
+      "undo_ok": true
+    },
+    "seconds": 221.03,
+    "calls": 45,
+    "reported_tool_errors": 1,
+    "other_tool_calls": 0,
+    "input_tokens": 1419970,
+    "cached_input_tokens": 1209216,
+    "output_tokens": 4813,
+    "rounds_completed": 5,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H1",
+    "rep": 2,
+    "arm": "B",
+    "ok": false,
+    "grade": {
+      "rounds": {
+        "1": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "2": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "3": {
+          "ok": true,
+          "passed": 10,
+          "total": 10,
+          "fails": []
+        },
+        "4": {
+          "ok": false,
+          "passed": 8,
+          "total": 10,
+          "fails": [
+            "4×Ø10 at 12 from the edges",
+            "hole dimension Ø10 (no stale Ø12)"
+          ]
+        },
+        "5": {
+          "ok": false,
+          "passed": 9,
+          "total": 11,
+          "fails": [
+            "4×Ø10 at 12 from the edges",
+            "hole dimension Ø10 (no stale Ø12)"
+          ]
+        }
+      },
+      "final_ok": false,
+      "rounds_ok": 3,
+      "undo_ok": false
+    },
+    "seconds": 445.9,
+    "calls": 236,
+    "reported_tool_errors": 8,
+    "other_tool_calls": 0,
+    "input_tokens": 2705203,
+    "cached_input_tokens": 2465920,
+    "output_tokens": 11410,
+    "rounds_completed": 5,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H1",
+    "rep": 3,
+    "arm": "A",
+    "ok": false,
+    "grade": {
+      "rounds": {
+        "1": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "2": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "3": {
+          "ok": true,
+          "passed": 10,
+          "total": 10,
+          "fails": []
+        },
+        "4": {
+          "ok": false,
+          "error": "missing"
+        },
+        "5": {
+          "ok": false,
+          "error": "missing"
+        }
+      },
+      "final_ok": false,
+      "rounds_ok": 3,
+      "undo_ok": false
+    },
+    "seconds": 999.0,
+    "calls": 26,
+    "reported_tool_errors": 1,
+    "other_tool_calls": 0,
+    "input_tokens": 615492,
+    "cached_input_tokens": 550656,
+    "output_tokens": 2030,
+    "rounds_completed": 3,
+    "infrastructure_ok": false
+  },
+  {
+    "task": "H1",
+    "rep": 3,
+    "arm": "B",
+    "ok": false,
+    "grade": {
+      "rounds": {
+        "1": {
+          "ok": false,
+          "passed": 6,
+          "total": 9,
+          "fails": [
+            "outline 150×80 with R5",
+            "4×Ø10 at 12 from the edges",
+            "width dimension 150 (no stale 120)"
+          ]
+        },
+        "2": {
+          "ok": false,
+          "error": "missing"
+        },
+        "3": {
+          "ok": false,
+          "error": "missing"
+        },
+        "4": {
+          "ok": false,
+          "error": "missing"
+        },
+        "5": {
+          "ok": false,
+          "error": "missing"
+        }
+      },
+      "final_ok": false,
+      "rounds_ok": 0,
+      "undo_ok": false
+    },
+    "seconds": 46.81,
+    "calls": 7,
+    "reported_tool_errors": 0,
+    "other_tool_calls": 0,
+    "input_tokens": 0,
+    "cached_input_tokens": 0,
+    "output_tokens": 0,
+    "rounds_completed": 1,
+    "infrastructure_ok": false
+  },
+  {
+    "task": "H4",
+    "rep": 1,
+    "arm": "A",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "standard layers with colour/linetype/lineweight",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "empty junk layers deleted",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "every object colour/linetype/lineweight ByLayer",
+          "cat": "bylayer",
+          "ok": true
+        },
+        {
+          "check": "outline polyline kept, on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "5 holes (duplicate removed), on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "10 centre lines on CENTER; edge duplicates and zero-length lines removed",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "4 dimensions kept (200/100/160/Ø40), on DIM",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "2 texts kept, on TEXT",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "no other objects added",
+          "cat": "objects",
+          "ok": true
+        }
+      ],
+      "fails": []
+    },
+    "seconds": 57.24,
+    "calls": 9,
+    "reported_tool_errors": 0,
+    "other_tool_calls": 0,
+    "input_tokens": 252825,
+    "cached_input_tokens": 215552,
+    "output_tokens": 1363,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H4",
+    "rep": 1,
+    "arm": "B",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "standard layers with colour/linetype/lineweight",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "empty junk layers deleted",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "every object colour/linetype/lineweight ByLayer",
+          "cat": "bylayer",
+          "ok": true
+        },
+        {
+          "check": "outline polyline kept, on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "5 holes (duplicate removed), on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "10 centre lines on CENTER; edge duplicates and zero-length lines removed",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "4 dimensions kept (200/100/160/Ø40), on DIM",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "2 texts kept, on TEXT",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "no other objects added",
+          "cat": "objects",
+          "ok": true
+        }
+      ],
+      "fails": []
+    },
+    "seconds": 104.13,
+    "calls": 141,
+    "reported_tool_errors": 3,
+    "other_tool_calls": 0,
+    "input_tokens": 478509,
+    "cached_input_tokens": 440448,
+    "output_tokens": 3545,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H4",
+    "rep": 2,
+    "arm": "A",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "standard layers with colour/linetype/lineweight",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "empty junk layers deleted",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "every object colour/linetype/lineweight ByLayer",
+          "cat": "bylayer",
+          "ok": true
+        },
+        {
+          "check": "outline polyline kept, on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "5 holes (duplicate removed), on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "10 centre lines on CENTER; edge duplicates and zero-length lines removed",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "4 dimensions kept (200/100/160/Ø40), on DIM",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "2 texts kept, on TEXT",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "no other objects added",
+          "cat": "objects",
+          "ok": true
+        }
+      ],
+      "fails": []
+    },
+    "seconds": 56.69,
+    "calls": 11,
+    "reported_tool_errors": 0,
+    "other_tool_calls": 0,
+    "input_tokens": 314778,
+    "cached_input_tokens": 272000,
+    "output_tokens": 1403,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H4",
+    "rep": 2,
+    "arm": "B",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "standard layers with colour/linetype/lineweight",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "empty junk layers deleted",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "every object colour/linetype/lineweight ByLayer",
+          "cat": "bylayer",
+          "ok": true
+        },
+        {
+          "check": "outline polyline kept, on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "5 holes (duplicate removed), on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "10 centre lines on CENTER; edge duplicates and zero-length lines removed",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "4 dimensions kept (200/100/160/Ø40), on DIM",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "2 texts kept, on TEXT",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "no other objects added",
+          "cat": "objects",
+          "ok": true
+        }
+      ],
+      "fails": []
+    },
+    "seconds": 98.98,
+    "calls": 121,
+    "reported_tool_errors": 4,
+    "other_tool_calls": 0,
+    "input_tokens": 525971,
+    "cached_input_tokens": 482560,
+    "output_tokens": 3235,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H4",
+    "rep": 3,
+    "arm": "A",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "standard layers with colour/linetype/lineweight",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "empty junk layers deleted",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "every object colour/linetype/lineweight ByLayer",
+          "cat": "bylayer",
+          "ok": true
+        },
+        {
+          "check": "outline polyline kept, on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "5 holes (duplicate removed), on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "10 centre lines on CENTER; edge duplicates and zero-length lines removed",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "4 dimensions kept (200/100/160/Ø40), on DIM",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "2 texts kept, on TEXT",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "no other objects added",
+          "cat": "objects",
+          "ok": true
+        }
+      ],
+      "fails": []
+    },
+    "seconds": 63.71,
+    "calls": 11,
+    "reported_tool_errors": 1,
+    "other_tool_calls": 0,
+    "input_tokens": 340426,
+    "cached_input_tokens": 301568,
+    "output_tokens": 1643,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H4",
+    "rep": 3,
+    "arm": "B",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "standard layers with colour/linetype/lineweight",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "empty junk layers deleted",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "every object colour/linetype/lineweight ByLayer",
+          "cat": "bylayer",
+          "ok": true
+        },
+        {
+          "check": "outline polyline kept, on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "5 holes (duplicate removed), on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "10 centre lines on CENTER; edge duplicates and zero-length lines removed",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "4 dimensions kept (200/100/160/Ø40), on DIM",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "2 texts kept, on TEXT",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "no other objects added",
+          "cat": "objects",
+          "ok": true
+        }
+      ],
+      "fails": []
+    },
+    "seconds": 104.97,
+    "calls": 124,
+    "reported_tool_errors": 4,
+    "other_tool_calls": 0,
+    "input_tokens": 530479,
+    "cached_input_tokens": 484992,
+    "output_tokens": 3036,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H5",
+    "rep": 1,
+    "arm": "A",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "part geometry and text unchanged",
+          "cat": "preserve",
+          "ok": true
+        },
+        {
+          "check": "all dimensions are DIMENSION objects on DIM",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "total length 160",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "total height 90",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole diameter Ø14",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole spacing / x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot width 12 (or R6)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot length 40 (or centre distance 28)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "chamfer 10 (C10 / 10×45°)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "dimension text matches the geometry",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "no duplicated dimensions",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "dimension text clear of part lines",
+          "cat": "layout",
+          "ok": true
+        }
+      ],
+      "fails": [],
+      "dim_count": 11
+    },
+    "seconds": 110.6,
+    "calls": 10,
+    "reported_tool_errors": 0,
+    "other_tool_calls": 0,
+    "input_tokens": 349649,
+    "cached_input_tokens": 309632,
+    "output_tokens": 2943,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H5",
+    "rep": 1,
+    "arm": "B",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "part geometry and text unchanged",
+          "cat": "preserve",
+          "ok": true
+        },
+        {
+          "check": "all dimensions are DIMENSION objects on DIM",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "total length 160",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "total height 90",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole diameter Ø14",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole spacing / x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot width 12 (or R6)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot length 40 (or centre distance 28)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "chamfer 10 (C10 / 10×45°)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "dimension text matches the geometry",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "no duplicated dimensions",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "dimension text clear of part lines",
+          "cat": "layout",
+          "ok": true
+        }
+      ],
+      "fails": [],
+      "dim_count": 11
+    },
+    "seconds": 202.88,
+    "calls": 89,
+    "reported_tool_errors": 2,
+    "other_tool_calls": 0,
+    "input_tokens": 840308,
+    "cached_input_tokens": 801152,
+    "output_tokens": 5675,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H5",
+    "rep": 2,
+    "arm": "A",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "part geometry and text unchanged",
+          "cat": "preserve",
+          "ok": true
+        },
+        {
+          "check": "all dimensions are DIMENSION objects on DIM",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "total length 160",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "total height 90",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole diameter Ø14",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole spacing / x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot width 12 (or R6)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot length 40 (or centre distance 28)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "chamfer 10 (C10 / 10×45°)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "dimension text matches the geometry",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "no duplicated dimensions",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "dimension text clear of part lines",
+          "cat": "layout",
+          "ok": true
+        }
+      ],
+      "fails": [],
+      "dim_count": 11
+    },
+    "seconds": 126.49,
+    "calls": 16,
+    "reported_tool_errors": 0,
+    "other_tool_calls": 0,
+    "input_tokens": 428212,
+    "cached_input_tokens": 384768,
+    "output_tokens": 3445,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H5",
+    "rep": 2,
+    "arm": "B",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "part geometry and text unchanged",
+          "cat": "preserve",
+          "ok": true
+        },
+        {
+          "check": "all dimensions are DIMENSION objects on DIM",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "total length 160",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "total height 90",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole diameter Ø14",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole spacing / x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot width 12 (or R6)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot length 40 (or centre distance 28)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "chamfer 10 (C10 / 10×45°)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "dimension text matches the geometry",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "no duplicated dimensions",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "dimension text clear of part lines",
+          "cat": "layout",
+          "ok": true
+        }
+      ],
+      "fails": [],
+      "dim_count": 11
+    },
+    "seconds": 192.52,
+    "calls": 82,
+    "reported_tool_errors": 4,
+    "other_tool_calls": 0,
+    "input_tokens": 798199,
+    "cached_input_tokens": 760192,
+    "output_tokens": 5726,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H5",
+    "rep": 3,
+    "arm": "A",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "part geometry and text unchanged",
+          "cat": "preserve",
+          "ok": true
+        },
+        {
+          "check": "all dimensions are DIMENSION objects on DIM",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "total length 160",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "total height 90",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole diameter Ø14",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole spacing / x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot width 12 (or R6)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot length 40 (or centre distance 28)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "chamfer 10 (C10 / 10×45°)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "dimension text matches the geometry",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "no duplicated dimensions",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "dimension text clear of part lines",
+          "cat": "layout",
+          "ok": true
+        }
+      ],
+      "fails": [],
+      "dim_count": 12
+    },
+    "seconds": 94.53,
+    "calls": 10,
+    "reported_tool_errors": 0,
+    "other_tool_calls": 0,
+    "input_tokens": 316118,
+    "cached_input_tokens": 231808,
+    "output_tokens": 2684,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  },
+  {
+    "task": "H5",
+    "rep": 3,
+    "arm": "B",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "part geometry and text unchanged",
+          "cat": "preserve",
+          "ok": true
+        },
+        {
+          "check": "all dimensions are DIMENSION objects on DIM",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "total length 160",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "total height 90",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole diameter Ø14",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole spacing / x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "hole y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot width 12 (or R6)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot length 40 (or centre distance 28)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot x position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "slot y position",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "chamfer 10 (C10 / 10×45°)",
+          "cat": "required",
+          "ok": true
+        },
+        {
+          "check": "dimension text matches the geometry",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "no duplicated dimensions",
+          "cat": "dimension",
+          "ok": true
+        },
+        {
+          "check": "dimension text clear of part lines",
+          "cat": "layout",
+          "ok": true
+        }
+      ],
+      "fails": [],
+      "dim_count": 11
+    },
+    "seconds": 164.64,
+    "calls": 103,
+    "reported_tool_errors": 5,
+    "other_tool_calls": 0,
+    "input_tokens": 1322944,
+    "cached_input_tokens": 1230336,
+    "output_tokens": 4698,
+    "rounds_completed": 1,
+    "infrastructure_ok": true
+  }
+]
