@@ -102,7 +102,7 @@ The same `Runtime` is available from Python and over HTTP (`agentcad --root work
 | | |
 |---|---|
 | Operations | 55: draw (lines to splines, hatches, polygons), edit (trim, fillet, offset, arrays, break/join, purge), annotate (linear, radial, angular, ordinate dimensions, leaders, tables, title blocks), layers, blocks with attributes, sheets and viewports |
-| Agent tools (MCP) | 21, including `apply_operations`, `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`. `list_operations` returns a compact index and full schemas on request, so it fits in an agent's context |
+| Agent tools (MCP) | 22, including `apply_operations`, `apply_batch` (several drawings in one call), `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`. `list_operations` returns a compact index and full schemas on request, so it fits in an agent's context |
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
 | Tests | 150 automated tests, including 27 cases checked against AutoCAD 2027 behaviour |
