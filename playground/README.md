@@ -4,9 +4,15 @@
 
 ## 方式一：让 Claude 用（推荐）
 
-仓库根目录的 `.mcp.json` 把 AgentCAD 注册成了 MCP 服务器，工作区就是这个 `playground/` 目录。
+先在仓库根目录生成 `.mcp.json`，把 AgentCAD 注册成 MCP 服务器，工作区就是这个 `playground/` 目录：
 
-1. 在 Claude 桌面应用里，对 `D:\Projects\AgentCAD` 新开一个 Code 会话（已经打开的会话不会加载新的 MCP 服务器）。
+```powershell
+.venv\Scripts\agentcad.exe --root playground mcp-config --write
+```
+
+macOS/Linux 用 `.venv/bin/agentcad`。`.mcp.json` 里是本机路径，不进 git。
+
+1. 在 Claude 桌面应用里，对仓库目录新开一个 Code 会话（已经打开的会话不会加载新的 MCP 服务器）。
 2. 第一次使用时，应用会询问是否启用项目里的 MCP 服务器 `agentcad`，选允许。
 3. 直接用中文提要求，例如：
    - "画一块 200×100 的安装板，四角 R8，四个 Ø12 安装孔距边 15，中间一个 Ø40 孔，标好尺寸，保存为 plate.dxf"

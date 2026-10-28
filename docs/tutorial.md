@@ -383,25 +383,25 @@ AutoCAD 会自动发现。找不到时，把环境变量 `AGENTCAD_ACCORECONSOLE
 
 Runtime 本身不理解自然语言，理解和规划由 Agent 完成。接入后，你直接用中文告诉 Agent 要画什么。
 
+MCP 配置里要写解释器和工作区的绝对路径。这两个路径因机器而异，因系统而异：Windows 是 `.venv/Scripts/python.exe`，macOS/Linux 是 `.venv/bin/python`。所以配置不手写，用 `mcp-config` 命令按当前 venv 生成。`--root` 指定的就是 Agent 的工作区。
+
 ### Claude Code
 
-```bash
-claude mcp add agentcad --env AGENTCAD_ROOT=D:/Projects/AgentCAD/work -- D:/Projects/AgentCAD/.venv/Scripts/python.exe -m agentcad.mcp_server
+```powershell
+.venv\Scripts\agentcad.exe --root playground mcp-config --write
 ```
+
+这条命令在当前目录写入 `.mcp.json`，文件里原有的其它服务器会保留。之后在仓库里新开一个 Claude Code 会话即可。`.mcp.json` 不进 git。挪动了仓库或重建了 venv，就重新运行一次。
 
 ### Codex CLI
 
-在 `~/.codex/config.toml` 中加入：
-
-```toml
-[mcp_servers.agentcad]
-command = "D:/Projects/AgentCAD/.venv/Scripts/python.exe"
-args = ["-m", "agentcad.mcp_server"]
-env = { AGENTCAD_ROOT = "D:/Projects/AgentCAD/work" }
-default_tools_approval_mode = "approve"
+```powershell
+.venv\Scripts\agentcad.exe --root playground mcp-config --client codex --write
 ```
 
-最后一行不能省：在 `approval_policy="never"` 下，没有它所有工具调用都会被拒绝。
+这条命令向 `~/.codex/config.toml` 追加 `[mcp_servers.agentcad]` 表。表里带 `default_tools_approval_mode = "approve"`，这一行不能省：在 `approval_policy="never"` 下，没有它所有工具调用都会被拒绝。
+
+去掉 `--write` 就只打印配置，不写文件。`--read-only`、`--allow-scripts` 也会写进生成的配置。
 
 接入后可以这样说：
 

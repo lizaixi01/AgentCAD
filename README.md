@@ -54,23 +54,21 @@ uv venv .venv --python 3.12
 uv pip install --python .venv -e ".[dev]"
 ```
 
-**Connect Claude Code** (paths are yours):
+**Connect Claude Code.** This writes `.mcp.json` in the repository root. The file points at your venv's interpreter and your `playground/` folder, so it works wherever you cloned and on any OS. Open a new Claude Code session in the repository afterwards.
 
 ```bash
-claude mcp add agentcad --env AGENTCAD_ROOT=/path/to/AgentCAD/playground -- /path/to/AgentCAD/.venv/bin/python -m agentcad.mcp_server
+.venv/bin/agentcad --root playground mcp-config --write
 ```
 
-On Windows the interpreter is `.venv\Scripts\python.exe`. The repository also ships a `.mcp.json` for this checkout; edit its two paths if you cloned somewhere else.
+On Windows the command is `.venv\Scripts\agentcad.exe`. `.mcp.json` is not committed: it holds paths for your machine only. Run the command again if you move the checkout or recreate the venv.
 
-**Connect Codex** (`~/.codex/config.toml`):
+**Connect Codex.** This appends an `[mcp_servers.agentcad]` table to `~/.codex/config.toml`. The table includes `default_tools_approval_mode = "approve"`; without it, Codex rejects every tool call under `approval_policy="never"`.
 
-```toml
-[mcp_servers.agentcad]
-command = "/path/to/AgentCAD/.venv/bin/python"
-args = ["-m", "agentcad.mcp_server"]
-env = { AGENTCAD_ROOT = "/path/to/AgentCAD/playground" }
-default_tools_approval_mode = "approve"
+```bash
+.venv/bin/agentcad --root playground mcp-config --client codex --write
 ```
+
+Leave out `--write` to just print the config. `--read-only` and `--allow-scripts` go into the generated config as well.
 
 **Then just ask:**
 

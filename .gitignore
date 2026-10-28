@@ -30,3 +30,6 @@ examples/trials/**/T7_real_dwg.stderr.log
 examples/trials/**/T7_real_dwg__*.png
 examples/trials/hard/**/H2_r*.jsonl
 examples/trials/hard/**/H2_r*.stderr.log
+
+# MCP client config holds this checkout's absolute paths; generate it with `agentcad --root playground mcp-config --write`
+.mcp.json

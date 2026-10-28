@@ -110,6 +110,51 @@ def test_mcp_stdio_with_official_client(ws):
     assert out["metrics"]["tool_calls"] == 9 and out["metrics"]["model_calls"] == 0
 
 
+async def _mcp_from_config(entry: dict, cwd: Path) -> dict:
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+    params = StdioServerParameters(command=entry["command"], args=entry["args"],
+                                   env={**os.environ, **entry["env"]}, cwd=cwd)
+    async with stdio_client(params) as (r, w):
+        async with ClientSession(r, w) as s:
+            await s.initialize()
+            res = await s.call_tool("create_drawing", {"path": "c.dxf", "units": "mm"})
+            return json.loads(res.content[0].text)
+
+
+def test_mcp_config_launches_server(ws):
+    """The generated config starts the server from any cwd, with no hand-edited paths."""
+    root = ws / "工作 区"
+    root.mkdir()
+    other = ws / "elsewhere"
+    other.mkdir()
+    target = ws / ".mcp.json"
+    target.write_text(json.dumps({"mcpServers": {"other": {"command": "x"}}}), "utf-8")
+    code, r = cli(root, "mcp-config", "--write", str(target))
+    assert code == 0 and r["written"] == str(target.resolve())
+    servers = json.loads(target.read_text("utf-8"))["mcpServers"]
+    assert set(servers) == {"other", "agentcad"}
+    entry = servers["agentcad"]
+    assert Path(entry["command"]).samefile(PY) and Path(entry["env"]["AGENTCAD_ROOT"]) == root.resolve()
+    out = anyio.run(_mcp_from_config, entry, other)
+    assert out["ok"] and (root / "c.dxf").is_file() and not (other / "c.dxf").exists()
+
+    tomllib = pytest.importorskip("tomllib")
+    toml = ws / "config.toml"
+    toml.write_text('model = "x"\n', "utf-8")
+    code, r = cli(root, "--read-only", "mcp-config", "--client", "codex", "--write", str(toml))
+    assert code == 0
+    cfg = tomllib.loads(toml.read_text("utf-8"))
+    assert cfg["model"] == "x"
+    codex = cfg["mcp_servers"]["agentcad"]
+    assert codex["command"] == entry["command"] and codex["env"]["AGENTCAD_READ_ONLY"] == "1"
+    assert codex["default_tools_approval_mode"] == "approve"
+    code, r = cli(root, "mcp-config", "--client", "codex", "--write", str(toml))
+    assert code == 2 and r["error"]["code"] == "SERVER_EXISTS"
+    code, r = cli(ws / "missing", "mcp-config")
+    assert code == 2 and r["error"]["code"] == "ROOT_NOT_FOUND"
+
+
 def test_http_api(ws):
     from http.server import ThreadingHTTPServer
     from agentcad.http_api import make_handler

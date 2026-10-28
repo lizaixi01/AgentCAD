@@ -1,9 +1,0 @@
-{
-  "mcpServers": {
-    "agentcad": {
-      "command": "D:/Projects/AgentCAD/.venv/Scripts/python.exe",
-      "args": ["-m", "agentcad.mcp_server"],
-      "env": {"AGENTCAD_ROOT": "D:/Projects/AgentCAD/playground", "PYTHONIOENCODING": "utf-8"}
-    }
-  }
-}

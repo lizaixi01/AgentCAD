@@ -114,6 +114,12 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("ops", help="Operation index; --op/--category/--detail for JSON schemas"); s.add_argument("--category"); s.add_argument("--op", action="append", help="Full schema of this op (repeatable)"); s.add_argument("--detail", action="store_true")
     sub.add_parser("mcp", help="Run the MCP server on stdio")
+    s = sub.add_parser("mcp-config", help="Print (or --write) an MCP client config for this interpreter and --root")
+    s.add_argument("--client", choices=("claude", "codex"), default="claude")
+    s.add_argument("--name", default="agentcad", help="Server name in the config")
+    s.add_argument("--write", nargs="?", const="", metavar="PATH",
+                   help="Write it: claude merges into PATH (default ./.mcp.json), keeping other servers; "
+                        "codex appends to PATH (default ~/.codex/config.toml)")
     s = sub.add_parser("serve", help="Run the HTTP JSON API"); s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8765)
     return ap
@@ -134,6 +140,13 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         from .http_api import serve
         serve(policy, a.host, a.port)
         return {"ok": True}, 0
+    if a.cmd == "mcp-config":
+        from .errors import AgentCADError
+        from .mcp_config import mcp_config
+        try:
+            return mcp_config(policy, a.client, a.name, a.write), 0
+        except AgentCADError as exc:
+            return {"ok": False, "error": exc.to_dict()}, EXIT.get(exc.category, 5)
     rt = Runtime(policy)
     c = a.cmd
     if c == "create":
