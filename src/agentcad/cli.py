@@ -118,6 +118,13 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("import", help="Import a DWG as DXF (optional AutoCAD backend)")
     s.add_argument("source"); s.add_argument("output"); s.add_argument("--overwrite", action="store_true")
+    s = sub.add_parser("live", help="Work with a running AutoCAD: status | open | reload | pull | zoom | command")
+    s.add_argument("action", choices=["status", "open", "reload", "pull", "zoom", "command"])
+    s.add_argument("path", nargs="?"); s.add_argument("--start", action="store_true", help="open: launch AutoCAD")
+    s.add_argument("--discard", action="store_true", help="reload: drop unsaved edits made in AutoCAD")
+    s.add_argument("--id", action="append", dest="ids", help="zoom: entity id or tag:<name> (repeatable)")
+    s.add_argument("--command", help="command: the command line to send"); s.add_argument("--label")
+
     s = sub.add_parser("acad-audit", help="Run AutoCAD's AUDIT on a drawing (optional AutoCAD backend)")
     s.add_argument("path")
 
@@ -221,6 +228,9 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
                               a.orientation, a.monochrome)
     elif c == "import":
         r = rt.import_drawing(a.source, a.output, a.overwrite)
+    elif c == "live":
+        r = rt.autocad_live(a.action, a.path, start=a.start, discard=a.discard, ids=a.ids, command=a.command,
+                            label=a.label)
     elif c == "acad-audit":
         r = rt.autocad_audit(a.path)
     elif c == "ops":
