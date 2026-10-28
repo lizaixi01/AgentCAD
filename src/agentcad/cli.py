@@ -118,6 +118,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("import", help="Import a DWG as DXF (optional AutoCAD backend)")
     s.add_argument("source"); s.add_argument("output"); s.add_argument("--overwrite", action="store_true")
+    s = sub.add_parser("library", help="Industry libraries: index, an item's dimensions, or a drawing's parts list")
+    s.add_argument("item", nargs="?"); s.add_argument("--size"); s.add_argument("--drawing")
+
     s = sub.add_parser("acad-audit", help="Run AutoCAD's AUDIT on a drawing (optional AutoCAD backend)")
     s.add_argument("path")
 
@@ -221,6 +224,8 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
                               a.orientation, a.monochrome)
     elif c == "import":
         r = rt.import_drawing(a.source, a.output, a.overwrite)
+    elif c == "library":
+        r = rt.standard_library(a.item, a.size, a.drawing)
     elif c == "acad-audit":
         r = rt.autocad_audit(a.path)
     elif c == "ops":

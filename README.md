@@ -101,17 +101,18 @@ The same `Runtime` is available from Python and over HTTP (`agentcad --root work
 
 | | |
 |---|---|
-| Operations | 55: draw (lines to splines, hatches, polygons), edit (trim, fillet, offset, arrays, break/join, purge), annotate (linear, radial, angular, ordinate dimensions, leaders, tables, title blocks), layers, blocks with attributes, sheets and viewports |
-| Agent tools (MCP) | 21, including `apply_operations`, `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`. `list_operations` returns a compact index and full schemas on request, so it fits in an agent's context |
+| Operations | 62: draw (lines to splines, hatches, polygons), edit (trim, fillet, offset, arrays, break/join, purge), annotate (linear, radial, angular, ordinate dimensions, leaders, tables, title blocks), layers, blocks with attributes, sheets and viewports, and industry libraries |
+| Industry libraries | P&ID (ISO 10628 / ISA-5.1): 24 symbols, process and signal lines; a valve placed on a pipe cuts the pipe itself. GD&T (ISO 1101): feature control frames with all 14 characteristics, modifiers and datums, datum feature and surface texture symbols. ISO parts: bolts, nuts, washers, cap screws (M3–M24) and 60xx/62xx/63xx bearings, clearance, tapped and counterbored holes. One op each, sized to the annotation scale; `standard_library` looks up sizes and lists a drawing's parts |
+| Agent tools (MCP) | 22, including `apply_operations`, `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`. `list_operations` returns a compact index and full schemas on request, so it fits in an agent's context |
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | 150 automated tests, including 27 cases checked against AutoCAD 2027 behaviour |
+| Tests | 178 automated tests, including 27 cases checked against AutoCAD 2027 behaviour |
 
 Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial software.
 
 ## Where it stands
 
-AgentCAD is early. It is 2D only. DWG needs AutoCAD on the machine. It can't print to PDF yet, can't drive a live AutoCAD session, and has no industry libraries (P&ID, GD&T, standard parts). Readability checks cover text height, and plot layout still needs a human eye. The evidence so far is 12 tasks on two agents. What's missing is tracked in [docs/limitations-roadmap.md](docs/limitations-roadmap.md).
+AgentCAD is early. It is 2D only. DWG needs AutoCAD on the machine. The industry libraries cover common P&ID, GD&T and ISO fastener content, not a full catalogue. Readability checks cover text height, and plot layout still needs a human eye. The evidence so far is 12 tasks on two agents. What's missing is tracked in [docs/limitations-roadmap.md](docs/limitations-roadmap.md).
 
 ## Documentation
 
