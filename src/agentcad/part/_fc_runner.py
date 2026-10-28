@@ -1801,11 +1801,17 @@ def action_export(job):
 
 
 def readback(path, ref=None):
-    """Read an exported B-rep file back with Part.read and compare it with the part's shape."""
+    """Read an exported B-rep file back with Part.read and compare it with the part's shape.
+
+    IGES comes back as faces, never a solid (also when written in BRep mode, probed on 1.1.4), so for IGES the
+    solid count is not compared; validity, volume (OCC integrates the closed faces) and size still are."""
     got = Part.read(path)
     out = {k: v for k, v in shape_summary(got).items() if k in ("valid", "solids", "volume", "size", "bbox")}
+    iges = Path(path).suffix.lower() in (".iges", ".igs")
+    if iges:
+        out["note"] = "IGES stores faces, not solids: compared by volume and size"
     if ref is not None:
-        out["matches"] = bool(out["valid"] and out["solids"] == len(ref.Solids)
+        out["matches"] = bool(out["valid"] and (iges or out["solids"] == len(ref.Solids))
                               and abs(got.Volume - ref.Volume) <= 1e-6 * max(1.0, abs(ref.Volume))
                               and all(abs(a - b) <= 1e-4 for a, b in zip(out["size"], shape_summary(ref)["size"])))
     return out
@@ -1882,26 +1888,13 @@ def render_view(sh, d, size, fit, ss=2):
     shade = 0.28 + 0.72 * np.abs(nrm @ light)
     base = np.array(FACE_RGB, float)
     for t, sv in zip(T, shade):
-        x, y, z = X[t], Y[t], Z[t]
-        x0, x1 = max(int(np.floor(x.min())), 0), min(int(np.ceil(x.max())), n - 1)
-        y0, y1 = max(int(np.floor(y.min())), 0), min(int(np.ceil(y.max())), n - 1)
-        if x0 > x1 or y0 > y1:
+        hit = _scanline(X[t], Y[t], Z[t], n)
+        if hit is None:
             continue
-        area = (x[1] - x[0]) * (y[2] - y[0]) - (x[2] - x[0]) * (y[1] - y[0])
-        if abs(area) < 1e-12:
-            continue
-        gx, gy = np.meshgrid(np.arange(x0, x1 + 1) + 0.5, np.arange(y0, y1 + 1) + 0.5)
-        w0 = ((x[1] - gx) * (y[2] - gy) - (x[2] - gx) * (y[1] - gy)) / area
-        w1 = ((x[2] - gx) * (y[0] - gy) - (x[0] - gx) * (y[2] - gy)) / area
-        w2 = 1 - w0 - w1
-        inside = (w0 >= -1e-9) & (w1 >= -1e-9) & (w2 >= -1e-9)
-        if not inside.any():
-            continue
-        zz = w0 * z[0] + w1 * z[1] + w2 * z[2]
-        sub = zb[y0:y1 + 1, x0:x1 + 1]
-        win = inside & (zz > sub)
-        sub[win] = zz[win]
-        img[y0:y1 + 1, x0:x1 + 1][win] = base * sv
+        rows, cols, zz = hit
+        win = zz > zb[rows, cols]
+        zb[rows[win], cols[win]] = zz[win]
+        img[rows[win], cols[win]] = base * sv
     eps = 2.5 * ss / k  # depth slack: an edge on a visible face is drawn, one behind the solid is not
     for e in sh.Edges:
         if _is_seam(sh, e):  # a cylinder's parametric seam is not an edge anyone would draw
@@ -1926,12 +1919,49 @@ def render_view(sh, d, size, fit, ss=2):
     return img
 
 
+def _scanline(x, y, z, n):
+    """Pixels (row, column, depth) whose centres a screen-space triangle covers. Each row's covered span comes
+    from the triangle's edges, so the cost follows the covered area, not the bounding box: tessellated planar
+    faces are long thin triangles whose boxes are mostly empty."""
+    import numpy as np
+    area = (x[1] - x[0]) * (y[2] - y[0]) - (x[2] - x[0]) * (y[1] - y[0])
+    if abs(area) < 1e-12:
+        return None
+    r0, r1 = max(int(np.ceil(y.min() - 0.5)), 0), min(int(np.floor(y.max() - 0.5)), n - 1)
+    if r0 > r1:
+        return None
+    rr = np.arange(r0, r1 + 1)
+    yc = rr + 0.5
+    lo = np.full(len(rr), np.inf)
+    hi = np.full(len(rr), -np.inf)
+    for i, j in ((0, 1), (1, 2), (2, 0)):
+        if y[i] == y[j]:
+            continue
+        m = (yc >= min(y[i], y[j])) & (yc <= max(y[i], y[j]))
+        xi = x[i] + (yc[m] - y[i]) * (x[j] - x[i]) / (y[j] - y[i])
+        lo[m] = np.minimum(lo[m], xi)
+        hi[m] = np.maximum(hi[m], xi)
+    ok = lo <= hi
+    c0 = np.clip(np.ceil(lo[ok] - 0.5), 0, n).astype(int)
+    c1 = np.clip(np.floor(hi[ok] - 0.5), -1, n - 1).astype(int)
+    cnt = np.maximum(c1 - c0 + 1, 0)
+    total = int(cnt.sum())
+    if not total:
+        return None
+    rows = np.repeat(rr[ok], cnt)
+    cols = np.repeat(c0, cnt) + np.arange(total) - np.repeat(np.cumsum(cnt) - cnt, cnt)
+    # depth is linear in screen x and y over the triangle (parallel projection)
+    A = np.array([[x[0], y[0], 1.0], [x[1], y[1], 1.0], [x[2], y[2], 1.0]])
+    a, b, c = np.linalg.solve(A, z)
+    return rows, cols, a * (cols + 0.5) + b * (rows + 0.5) + c
+
+
 def _downsample(img, ss):
     n = img.shape[0] // ss
     return img.reshape(n, ss, n, ss, 3).mean(axis=(1, 3))
 
 
-def _save_png(arr, path, labels=None):
+def _save_png(arr, path, labels=None, cell=512):
     import numpy as np
     a = np.clip(arr, 0, 255).astype("uint8")
     try:
@@ -1951,8 +1981,13 @@ def _save_png(arr, path, labels=None):
     im = Image.fromarray(a, "RGB")
     if labels:
         dr = ImageDraw.Draw(im)
+        try:  # scalable default font (Pillow >= 10.1): about 1/22 of a cell
+            from PIL import ImageFont
+            font = ImageFont.load_default(size=max(12, cell // 22))
+        except (TypeError, OSError, ImportError):
+            font = None
         for (x, y), text in labels:
-            dr.text((x + 6, y + 4), text, fill=(90, 90, 90))
+            dr.text((x + cell // 64 + 4, y + cell // 96 + 2), text, fill=(60, 60, 60), font=font)
     im.save(path)
 
 
@@ -1986,7 +2021,7 @@ def action_render(job):
             labels.append(((c * size, r * size), names[i]))
         sheet[:, [c * size for c in range(1, cols)]] = 200  # cell borders
         sheet[[r * size for r in range(1, rows)], :] = 200
-        _save_png(sheet, job["output"], labels)
+        _save_png(sheet, job["output"], labels, size)
         grid = [rows, cols]
     else:
         _save_png(imgs[0], job["output"])

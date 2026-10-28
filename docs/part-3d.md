@@ -88,12 +88,21 @@ Body 不是恰好一个有效实体（或有特征出错）时拒绝导出（`NO
 ## 预览图
 
 `export_drawing(part.FCStd, out.png, "png", views=[...], image_size=512, fit="view")` 给 Agent 看它做出的实体：
-着色、平行投影、画出可见的 B-rep 边（不画圆柱面的参数接缝），零件包围盒居中并撑满画面（`fit="view"` 每个视图各自撑满；
-`"uniform"` 所有视图同一比例，按包围盒对角线）。`views` 是视图名（iso、front、back、right、left、top、bottom、
-iso_back、iso_bottom）或从零件指向相机的方向 `[x, y, z]`；多个视图拼成一张带标签的网格（≤4 个为 2 列）。
+着色、平行投影、画出可见的 B-rep 边（不画圆柱面的参数接缝）。
 
-无 GUI 的 FreeCAD 不能离屏渲染，所以预览在 runner 里自己光栅化：OCC 三角化 → numpy z-buffer → 平面着色（光源靠近视线方向）
-→ 2 倍超采样。用 FreeCAD 自带的 numpy 和 PIL；纯 `FREECAD_LIB` 解释器没有 PIL 时用 zlib 直接写 PNG（不带标签）。
+- **视图方向**：`views` 的每一项是视图名或向量 `[x, y, z]`，表示**从零件指向相机的方向**（相机位置），相机看向零件中心。
+  视图名：`front` = `[0,-1,0]`（从 −Y 看，+X 向右、+Z 向上），`back` = `[0,1,0]`，`right` = `[1,0,0]`（+Y 向右），
+  `left` = `[-1,0,0]`，`top` = `[0,0,1]`（+X 向右、+Y 向上），`bottom` = `[0,0,-1]`，`iso` = `[1,-1,1]`，
+  `iso_back` = `[-1,1,1]`，`iso_bottom` = `[1,-1,-1]`。屏幕向上取 +Z（看向 ±Z 时取 +Y）。
+- **取景**：零件包围盒的中心放在画面中心。`fit="view"`（默认）：包围盒在该视图的投影撑满画面的 90%，所以每个视图、
+  每个零件各自缩放，图上**不带固定比例**，不能用像素量尺寸（尺寸看 `read_drawing` 或 `validate_drawing`）。
+  `fit="uniform"`：所有视图用同一比例（包围盒对角线 = 画面的 90%），视图之间可比大小。
+- 多个视图拼成一张带标签的网格（≤4 个为 2 列，最多 9 个）。
+- 预览**不要求**零件可导出：Body 有多个实体或特征出错时照样渲染当前的形状（导出 STEP 会拒绝），方便看清哪里出了问题。
+
+无 GUI 的 FreeCAD 不能离屏渲染，所以预览在 runner 里自己光栅化：OCC 三角化 → 逐三角形扫描线填充的 numpy z-buffer →
+平面着色（光源靠近视线方向）→ 2 倍超采样。1024 px 四视图约 2.5 s（另加 FreeCAD 启动约 1.5 s）。用 FreeCAD 自带的
+numpy 和 PIL；纯 `FREECAD_LIB` 解释器没有 PIL 时用 zlib 直接写 PNG（不带标签）。
 
 ## 已知限制
 

@@ -323,6 +323,12 @@ def test_step_export_reads_back_as_the_part(rt, ws, plate):
     assert s["valid"] and s["solids"] == 1
     assert s["volume"] == pytest.approx(_plate_volume(6), rel=1e-6)
     assert s["bbox"] == [[0.0, 0.0, 0.0], [80.0, 50.0, 6.0]]
+    # BREP keeps the solid; IGES holds faces only, so its readback compares volume and size
+    e = ok(rt.export_drawing("plate.FCStd", "plate.brep", "brep"))
+    assert e["readback"]["solids"] == 1 and e["readback"]["matches"]
+    e = ok(rt.export_drawing("plate.FCStd", "plate.igs", "iges"))
+    assert e["readback"]["matches"] and e["readback"]["solids"] == 0 and "IGES" in e["readback"]["note"]
+    assert e["readback"]["volume"] == pytest.approx(_plate_volume(6), rel=1e-6)
 
 
 @needs_freecad
@@ -334,6 +340,9 @@ def test_export_refuses_a_part_that_is_not_one_solid(rt, ws):
     r = rt.export_drawing("two.FCStd", "two.step", "step")
     assert not r["ok"] and r["error"]["code"] == "NOT_EXPORTABLE" and r["error"]["category"] == "geometry"
     assert not (ws / "two.step").exists()
+    # the preview still renders, to show what went wrong
+    r = ok(rt.export_drawing("two.FCStd", "two.png", "png", views=["top"], image_size=64))
+    assert r["shape"]["solids"] == 2 and (ws / "two.png").stat().st_size > 0
 
 
 @needs_freecad
