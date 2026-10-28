@@ -188,12 +188,23 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         return rt.recover(path)
 
     @mcp.tool()
-    def export_drawing(path: Path_, output: str, format: Literal["dxf", "svg", "json", "dwg"] = "dxf",  # noqa: A002
+    def export_drawing(path: Path_, output: str, format: Literal["dxf", "svg", "json", "pdf", "dwg"] = "dxf",  # noqa: A002
                        dxf_version: Literal["R12", "R2000", "R2004", "R2007", "R2010", "R2013", "R2018"] | None = None,
-                       overwrite: bool = False) -> dict:
-        """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, or DWG (needs the optional
-        AutoCAD backend; dxf_version then selects the DWG release; the DWG is read back and validated)."""
-        return rt.export_drawing(path, output, format, dxf_version, overwrite)
+                       overwrite: bool = False,
+                       layout: Annotated[str | None, Field(description="pdf: 'Model', a paper layout or '*'; default "
+                                                          "every paper layout with content, else Model")] = None,
+                       paper: Annotated[Literal["A0", "A1", "A2", "A3", "A4", "auto"] | None,
+                                        Field(description="pdf, model space: sheet size")] = None,
+                       scale: Annotated[float | None, Field(gt=0, description="pdf, model space: paper mm per "
+                                                            "drawing unit (0.5 = 1:2); default largest standard "
+                                                            "scale that fits")] = None,
+                       orientation: Literal["auto", "landscape", "portrait"] = "auto",
+                       monochrome: bool = False) -> dict:
+        """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, PDF (plotted without
+        external software: one page per layout, paper layouts 1:1 on their sheet, vector output, reports scale and
+        too-small printed text), or DWG (optional AutoCAD backend; dxf_version selects the DWG release)."""
+        return rt.export_drawing(path, output, format, dxf_version, overwrite, layout, paper, scale, orientation,
+                                 monochrome)
 
     @mcp.tool()
     def import_drawing(source: Annotated[str, Field(description="DWG file in the workspace")], output: Path_,

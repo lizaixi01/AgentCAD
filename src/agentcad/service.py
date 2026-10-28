@@ -30,6 +30,7 @@ from .policy import Policy
 from .store import DrawingStore, finalize, read_dxf, now
 from .units import UNITS, normalize_unit, unit_from_insunits
 from .validate import validate_file
+from .validate.checks import MIN_PRINTED_TEXT
 
 DXF_VERSIONS = {"R12": "AC1009", "R2000": "AC1015", "R2004": "AC1018", "R2007": "AC1021", "R2010": "AC1024",
                 "R2013": "AC1027", "R2018": "AC1032"}
@@ -299,8 +300,9 @@ class Runtime:
             if dry_run:
                 return {"drawing": self._rel(p), "dry_run": True, "would_change": _changes(res),
                         "results": res["results"]}
-            tmp_report = self._validate_doc(doc, requirements)
-            if strict and not tmp_report["passed"]:
+            # without strict the pre-commit report is unused; the file is validated once, after the commit
+            tmp_report = self._validate_doc(doc, requirements) if strict else None
+            if tmp_report is not None and not tmp_report["passed"]:
                 fail = self._save_failure(store, doc, "strict-validation")
                 store.journal({"tool": "apply_operations", "ok": False, "label": label, "operations": operations,
                                "error": {"code": "VALIDATION_FAILED"}, "failure_snapshot": fail})
@@ -354,8 +356,8 @@ class Runtime:
                    "result": res.get("result"), "stdout": res.get("stdout"), "script_seconds": res.get("seconds")}
             if dry_run:
                 return {**out, "dry_run": True, "diff": {k: diff[k] for k in ("added", "deleted", "modified")}}
-            tmp_report = self._validate_doc(doc, requirements)
-            if strict and not tmp_report["passed"]:
+            tmp_report = self._validate_doc(doc, requirements) if strict else None
+            if tmp_report is not None and not tmp_report["passed"]:
                 fail = self._save_failure(store, doc, "strict-validation")
                 store.journal({"tool": "run_script", "ok": False, "label": label, "code": code,
                                "error": {"code": "VALIDATION_FAILED"}, "failure_snapshot": fail})
@@ -650,15 +652,23 @@ class Runtime:
 
     @tool
     def export_drawing(self, path: str, output: str, format: str = "dxf",  # noqa: A002
-                       dxf_version: str | None = None, overwrite: bool = False) -> dict[str, Any]:
-        """Export to dxf (optionally another DXF version, incl. R12 via ezdxf.addons.r12export), svg, json, or
-        dwg (optional AutoCAD backend; ``dxf_version`` then selects the DWG release, default 2018)."""
+                       dxf_version: str | None = None, overwrite: bool = False, layout: str | None = None,
+                       paper: str | None = None, scale: float | None = None, orientation: str = "auto",
+                       monochrome: bool = False) -> dict[str, Any]:
+        """Export to dxf (optionally another DXF version, incl. R12 via ezdxf.addons.r12export), svg, json,
+        pdf, or dwg (optional AutoCAD backend; ``dxf_version`` then selects the DWG release, default 2018).
+
+        pdf (plot.py, no external software): ``layout`` 'Model', a paper layout, or '*' for every paper layout
+        (default: every paper layout with content, else model space), one page each. Paper layouts print 1:1 on
+        their page setup; model space at ``scale`` (paper mm per drawing unit) or the largest standard scale that
+        fits ``paper`` (A0-A4 or 'auto')."""
         self.policy.check_write()
         p, store = self._drawing(path)
         fmt = format.lower()
-        suffix = {"dxf": ".dxf", "svg": ".svg", "json": ".json", "dwg": ".dwg"}.get(fmt)
+        suffix = {"dxf": ".dxf", "svg": ".svg", "json": ".json", "dwg": ".dwg", "pdf": ".pdf"}.get(fmt)
         if suffix is None:
-            raise input_error("UNSUPPORTED_FORMAT", f"Unsupported export format {format!r}", hint="dxf | svg | json | dwg")
+            raise input_error("UNSUPPORTED_FORMAT", f"Unsupported export format {format!r}",
+                              hint="dxf | svg | json | pdf | dwg")
         out = self.policy.resolve(output, suffixes=(suffix,))
         if out.exists() and not overwrite:
             raise input_error("FILE_EXISTS", f"{output} exists", hint="overwrite=true")
@@ -683,6 +693,25 @@ class Runtime:
                     "readback": {"readable": rb["readable"], "entities": rb.get("recognized", {}).get("entity_count"),
                                  "source_entities": src_n, "issues": rb["issues"][:20]}}
         doc = store.load()
+        if fmt == "pdf":
+            from . import plot
+            if scale is not None and scale <= 0:
+                raise input_error("INVALID_VALUE", "scale must be > 0", hint="paper mm per drawing unit, 0.5 = 1:2")
+            if orientation not in ("auto", "landscape", "portrait"):
+                raise input_error("INVALID_ENUM", "orientation must be auto | landscape | portrait")
+            res = plot.plot_pdf(doc, out, _plot_layouts(doc, layout), paper=paper, orientation=orientation,
+                                scale=scale, monochrome=monochrome, title=p.stem)
+            warn = [i for i in validate_file(p)["issues"] if i["code"] == "PRINTED_TEXT_TOO_SMALL"]
+            small = _min_model_text(doc) if any(pg["layout"] == "Model" for pg in res["pages"]) else None
+            for pg in res["pages"]:
+                if small and pg["layout"] == "Model" and small * pg["scale"] < MIN_PRINTED_TEXT - 1e-9:
+                    warn.append({"code": "PRINTED_TEXT_TOO_SMALL", "severity": "warning", "layout": "Model",
+                                 "message": f"At {pg['scale_text']} the smallest model text prints "
+                                            f"{small * pg['scale']:.2f} mm high (minimum {MIN_PRINTED_TEXT} mm)",
+                                 "hint": "Plot at a larger scale or paper, or enlarge the text"})
+            store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": "pdf"})
+            return {"drawing": self._rel(p), "output": self._rel(out), "format": "pdf", **res,
+                    **({"warnings": warn[:20]} if warn else {})}
         finalize(doc)
         out.parent.mkdir(parents=True, exist_ok=True)
         if fmt == "dxf":
@@ -796,6 +825,27 @@ def clean_r12(path: Path) -> None:
         if s.upper() not in used:
             doc.styles.remove(s)
     doc.saveas(path)
+
+
+def _plot_layouts(doc, layout: str | None) -> list[str]:
+    paper = [n for n in doc.layouts.names_in_taborder() if not is_model(n)]
+    if layout is None:
+        used = [n for n in paper if any(e.dxftype() != "VIEWPORT" or e.dxf.get("id", 1) != 1
+                                        for e in doc.layouts.get(n))]
+        return used or ["Model"]
+    if layout == "*":
+        return paper or ["Model"]
+    if is_model(layout):
+        return ["Model"]
+    if layout not in doc.layouts:
+        raise input_error("LAYOUT_NOT_FOUND", f"No layout named {layout!r}", hint=f"Layouts: {['Model', *paper]}")
+    return [layout]
+
+
+def _min_model_text(doc) -> float | None:
+    from .validate.checks import _model_text_heights
+    hs = [h for _, _, h, _ in _model_text_heights(doc) if h > 0]
+    return min(hs) if hs else None
 
 
 def _changes(res: dict[str, Any]) -> dict[str, Any]:
