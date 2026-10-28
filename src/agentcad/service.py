@@ -168,10 +168,43 @@ class Runtime:
 
     # --- tools ------------------------------------------------------------------------------------
     @tool
-    def list_operations(self, category: str | None = None) -> dict[str, Any]:
-        ops = [o for o in catalog() if category is None or o["category"] == category]
-        return {"operations": ops, "count": len(ops), "constraint_types": {"check": sorted(CHECK_TYPES),
-                                                                          "enforce": sorted(ENFORCE_TYPES)}}
+    def list_operations(self, category: str | None = None, ops: list[str] | None = None,
+                        detail: bool = False) -> dict[str, Any]:
+        """Default: a compact index (name, category, one-line summary, parameter names; * = required), ~9K chars.
+        Full JSON schemas for the ops named in 'ops', for one 'category', or for everything with detail=true.
+        The full catalog is ~90K chars, more than Claude Code accepts in one tool result: 34 of 36 sessions in the
+        Claude Code trials failed on their first list_operations call (docs/comparison-claude-code.md)."""
+        from .ops import REGISTRY
+        from .ops.registry import COMMON_ALL, COMMON_DRAW
+        constraints = {"check": sorted(CHECK_TYPES), "enforce": sorted(ENFORCE_TYPES)}
+        cats = sorted({d.category for d in REGISTRY.values()})
+        if category is not None and category not in cats:
+            raise input_error("UNKNOWN_CATEGORY", f"No operation category {category!r}", hint=f"Categories: {cats}")
+        if ops:
+            unknown = [o for o in ops if o not in REGISTRY]
+            if unknown:
+                raise input_error("UNKNOWN_OPERATION", f"Unknown operation(s) {unknown}",
+                                  hint=f"Operations: {sorted(REGISTRY)}")
+            full = [REGISTRY[o].schema() for o in ops if category is None or REGISTRY[o].category == category]
+            return {"operations": full, "count": len(full), "detail": True, "constraint_types": constraints}
+        if detail or category is not None:
+            full = [o for o in catalog() if category is None or o["category"] == category]
+            return {"operations": full, "count": len(full), "detail": True, "constraint_types": constraints}
+        index = [{"op": d.name, "category": d.category, "summary": d.description.split(". ")[0].rstrip("."),
+                  "params": [k + ("*" if p.required else "") for k, p in d.params.items()],
+                  **({"draw_params": True} if d.common_draw else {})}
+                 for d in (REGISTRY[k] for k in sorted(REGISTRY))]
+        common = {"layout": "'Model' (default) or a paper-space layout name", "layer": "layer name, created if missing",
+                  "color": "ACI color, 256 = BYLAYER", "linetype": "e.g. CONTINUOUS, CENTER, DASHED",
+                  "lineweight": "1/100 mm, -1 = BYLAYER", "tag": "name for later reference as 'tag:<name>'",
+                  "if_tag_exists": "error | skip | replace"}
+        return {"operations": index, "count": len(index), "detail": False, "categories": cats,
+                "common_params": {"all_ops": sorted(COMMON_ALL), "draw_params": sorted(COMMON_DRAW),
+                                  "meaning": common},
+                "constraint_types": constraints,
+                "hint": "Parameters marked * are required. Ops with draw_params also take layer, color, linetype, "
+                        "lineweight, tag, if_tag_exists; every op takes layout. For types, units, defaults and "
+                        "limits call list_operations(ops=[...]) or list_operations(category=...)."}
 
     @tool
     def create_drawing(self, path: str, units: str = "mm", template: str = "mechanical", dxf_version: str = "R2010",

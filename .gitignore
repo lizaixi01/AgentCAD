@@ -13,3 +13,14 @@ examples/trials/round1/ws/T7_real_dwg/
 examples/trials/hard/ws/A/H2_*/
 examples/trials/hard/snapshots/B/H2_*/
 examples/trials/hard/v1/ws/
+
+# Hands-on sandbox for trying AgentCAD (see playground/README.md)
+playground/*
+!playground/README.md
+# Claude Code rerun: Autodesk-sample-derived files, and per-run MCP configs
+examples/trials/hard/ws_cc/A/H2_*/
+examples/trials/hard/snapshots_cc/B/H2_*/
+examples/trials/hard/runs_cc/_mcp/
+examples/trials/runs_cc/_mcp/
+examples/trials/runs_cc_code/_mcp/
+examples/trials/hard/ws_cc/A_v1/H2_*/

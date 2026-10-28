@@ -8,6 +8,7 @@ Usage:  python examples/trials/run_trials.py [T1 T2 ...] [--jobs 3] [--effort hi
 --arm code: the comparison arm. Codex writes and runs Python with plain ezdxf (an env without AgentCAD, given by
   --python), in a workspace outside the repository (--code-root) so it cannot find AgentCAD either. Streams go to
   examples/trials/runs_code/<task>.jsonl.
+--agent claude: Claude Code instead of Codex (see agents.py); workspaces ws_cc/, logs runs_cc/ and runs_cc_code/.
 """
 from __future__ import annotations
 
@@ -21,8 +22,10 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+from agents import command  # noqa: E402
+
 REPO = HERE.parents[1]
-PY = REPO / ".venv" / "Scripts" / "python.exe"
 SAMPLE_DWG = Path(r"D:\Apps\AutoCAD\AutoCAD 2027\Sample\Mechanical Sample\Mechanical - Multileaders.dwg")
 
 
@@ -56,42 +59,24 @@ def setup(task: str, ws: Path) -> None:
         shutil.copyfile(SAMPLE_DWG, ws / "sample.dwg")
 
 
-def mcp_cmd(root: str, effort: str) -> list[str]:
-    return [
-        "codex", "exec", "--skip-git-repo-check", "-s", "read-only", "--json",
-        "-C", root,
-        "-c", f'model_reasoning_effort="{effort}"',
-        "-c", f'mcp_servers.agentcad.command="{PY.as_posix()}"',
-        "-c", 'mcp_servers.agentcad.args=["-m","agentcad.mcp_server"]',
-        "-c", f'mcp_servers.agentcad.env={{AGENTCAD_ROOT="{root}"}}',
-        "-c", "mcp_servers.agentcad.default_tools_approval_mode=\"approve\"",
-        "-c", "mcp_servers.agentcad.tool_timeout_sec=300",
-        "-",
-    ]
-
-
-def code_cmd(root: str, effort: str) -> list[str]:
-    return ["codex", "exec", "--skip-git-repo-check", "-s", "workspace-write", "--json", "-C", root,
-            "-c", f'model_reasoning_effort="{effort}"', "-"]
-
-
-def run(task: str, effort: str, arm: str = "mcp", code_root: Path | None = None, python: str = "") -> dict:
+def run(task: str, effort: str, arm: str = "mcp", code_root: Path | None = None, python: str = "",
+        agent: str = "codex") -> dict:
+    sfx = "_cc" if agent == "claude" else ""
     pre = "_preamble.md" if arm == "mcp" else "_preamble_code.md"
     prompt = (HERE / "tasks" / pre).read_text(encoding="utf-8").replace("%PYTHON%", python) + \
         (HERE / "tasks" / f"{task}.md").read_text(encoding="utf-8")
-    ws = (HERE / "ws" / task) if arm == "mcp" else (code_root / task)
+    ws = (HERE / f"ws{sfx}" / task) if arm == "mcp" else (code_root / task)
     if ws.exists():
         shutil.rmtree(ws)
     ws.mkdir(parents=True)
     setup(task, ws)
-    runs = HERE / ("runs" if arm == "mcp" else "runs_code")
+    runs = HERE / (f"runs{sfx}" if arm == "mcp" else f"runs{sfx}_code")
     runs.mkdir(exist_ok=True)
-    root = ws.as_posix()
-    cmd = mcp_cmd(root, effort) if arm == "mcp" else code_cmd(root, effort)
+    cmd = command(agent, arm, ws.as_posix(), effort, runs / "_mcp", python)
     t0 = time.time()
     with open(runs / f"{task}.jsonl", "wb") as out, open(runs / f"{task}.stderr.log", "wb") as err:
         p = subprocess.run(cmd, input=prompt.encode("utf-8"), stdout=out, stderr=err,
-                           shell=False, timeout=3600)
+                           shell=False, timeout=3600, cwd=ws)
     return {"task": task, "arm": arm, "exit": p.returncode, "seconds": round(time.time() - t0, 1)}
 
 
@@ -103,13 +88,14 @@ def main() -> None:
     ap.add_argument("--arm", choices=["mcp", "code"], default="mcp")
     ap.add_argument("--code-root", type=Path, help="Workspace parent for --arm code (outside the repository)")
     ap.add_argument("--python", default="", help="Interpreter with plain ezdxf for --arm code")
+    ap.add_argument("--agent", choices=["codex", "claude"], default="codex")
     a = ap.parse_args()
     if a.arm == "code" and (a.code_root is None or not a.python):
         ap.error("--arm code needs --code-root and --python")
     names = a.tasks or sorted(p.stem for p in (HERE / "tasks").glob("T*.md"))
     names = [n for t in names for n in sorted(p.stem for p in (HERE / "tasks").glob(f"{t}*.md"))]
     with ThreadPoolExecutor(a.jobs) as ex:
-        for r in ex.map(lambda t: run(t, a.effort, a.arm, a.code_root, a.python), names):
+        for r in ex.map(lambda t: run(t, a.effort, a.arm, a.code_root, a.python, a.agent), names):
             print(json.dumps(r, ensure_ascii=False), flush=True)
 
 

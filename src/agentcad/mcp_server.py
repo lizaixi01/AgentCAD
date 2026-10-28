@@ -12,8 +12,9 @@ from .policy import Policy
 from .service import Runtime
 
 INSTRUCTIONS = """AgentCAD: headless 2D CAD runtime over DXF files.
-Workflow: list_operations (catalog) -> create_drawing or draw_from_spec -> apply_operations (batch many ops in one
-call; ops can reference entities created earlier in the batch as "$<index>", tagged entities as "tag:<name>") ->
+Workflow: list_operations (compact index; ops=[...] gives full schemas) -> create_drawing or draw_from_spec ->
+apply_operations (batch many ops in one call; ops can reference entities created earlier in the batch as
+"$<index>", tagged entities as "tag:<name>") ->
 validate_drawing (independent re-read of the file) -> get_diff / rollback as needed.
 Coordinates are [x, y] in drawing units; lengths may be strings with units ("8mm"). Angles are degrees CCW.
 Every result has ok + structured error {code, category, message, entities, retryable, hint, partial_changes}.
@@ -30,9 +31,13 @@ def build_server(policy: Policy | None = None) -> FastMCP:
     mcp = FastMCP("agentcad", instructions=INSTRUCTIONS)
 
     @mcp.tool()
-    def list_operations(category: Annotated[str | None, Field(description="draw|edit|annotate|layer|block")] = None) -> dict:
-        """Catalog of every operation usable in apply_operations, with JSON schemas (types, units, limits)."""
-        return rt.list_operations(category)
+    def list_operations(category: Annotated[str | None, Field(description="draw|edit|annotate|layer|block|layout: "
+                                                                           "full schemas for that category")] = None,
+                        ops: Annotated[list[str] | None, Field(description="Op names: full schemas for just these")] = None,
+                        detail: Annotated[bool, Field(description="Full schemas for every op (~90K chars)")] = False) -> dict:
+        """Operations usable in apply_operations. Without arguments: a compact index (name, category, summary,
+        parameter names, * = required). Get JSON schemas (types, units, defaults, limits) with ops=[...] or category."""
+        return rt.list_operations(category, ops, detail)
 
     @mcp.tool()
     def create_drawing(path: Path_, units: Literal["mm", "cm", "m", "in", "ft"] = "mm",

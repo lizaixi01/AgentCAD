@@ -265,7 +265,8 @@ def main() -> None:
         roots = {"A_agentcad": Path(sys.argv[2]), "B_code": Path(sys.argv[3])}
         tasks = ["T1_flange", "T2_slot_plate", "T3_shaft", "T4_frame", "T5_room", "T6_flange_revise"]
         out = {arm: {t: grade(t, root / t / OUTPUT[t[:2]]) for t in tasks} for arm, root in roots.items()}
-        Path(__file__).with_name("grades.json").write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
+        out_name = sys.argv[4] if len(sys.argv) > 4 else "grades.json"   # e.g. grades_cc.json for Claude Code
+        Path(__file__).with_name(out_name).write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
         for t in tasks:
             for arm in roots:
                 r = out[arm][t]

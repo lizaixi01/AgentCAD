@@ -123,7 +123,7 @@ python examples/run_demo.py
 | [docs/decision-record.md](docs/decision-record.md) | 技术路线决策记录 |
 | [docs/architecture.md](docs/architecture.md) | 架构、数据模型、事务、错误结构、API 信封 |
 | [docs/operations.md](docs/operations.md) | 43 个操作的参数参考（从代码生成） |
-| [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md)、[docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md) | 对比实验：Agent 用 AgentCAD 与 Agent 直接写代码 |
+| [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md)、[docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md)、[docs/comparison-claude-code.md](docs/comparison-claude-code.md) | 对比实验：Agent（Codex、Claude Code）用 AgentCAD 与直接写代码 |
 | [docs/trials-report.md](docs/trials-report.md) | 经典任务实测：Agent 实际绘图、AutoCAD 出图复核、96 张真实图纸，以及据此修复的问题 |
 | [docs/acceptance-report.md](docs/acceptance-report.md) | 验收测试 A–H 结果与证据、性能指标、兼容性观察 |
 | [docs/coverage.md](docs/coverage.md) | 功能覆盖清单（四类状态） |

@@ -1,0 +1,20 @@
+{"arm": "B", "task": "H2", "rep": 2, "rounds": [{"exit": 0, "seconds": 173.7}], "converted_back": true, "seconds": 173.7}
+{"arm": "A", "task": "H2", "rep": 2, "rounds": [{"exit": 0, "seconds": 191.8}], "seconds": 191.8}
+{"arm": "B", "task": "H3", "rep": 2, "rounds": [{"exit": 0, "seconds": 197.6}], "seconds": 197.6}
+{"arm": "A", "task": "H3", "rep": 2, "rounds": [{"exit": 0, "seconds": 214.3}], "seconds": 214.3}
+{"arm": "A", "task": "H4", "rep": 2, "rounds": [{"exit": 0, "seconds": 59.2}], "seconds": 59.2}
+{"arm": "B", "task": "H4", "rep": 2, "rounds": [{"exit": 0, "seconds": 94.7}], "seconds": 94.7}
+{"arm": "A", "task": "H5", "rep": 2, "rounds": [{"exit": 0, "seconds": 105.7}], "seconds": 105.7}
+{"arm": "A", "task": "H6", "rep": 2, "rounds": [{"exit": 0, "seconds": 86.0}], "seconds": 86.0}
+{"arm": "B", "task": "H5", "rep": 2, "rounds": [{"exit": 0, "seconds": 139.5}], "seconds": 139.5}
+{"arm": "B", "task": "H6", "rep": 2, "rounds": [{"exit": 0, "seconds": 101.9}], "seconds": 101.9}
+{"arm": "A", "task": "H2", "rep": 3, "rounds": [{"exit": 0, "seconds": 217.3}], "seconds": 217.3}
+{"arm": "B", "task": "H3", "rep": 3, "rounds": [{"exit": 0, "seconds": 175.3}], "seconds": 175.3}
+{"arm": "A", "task": "H4", "rep": 3, "rounds": [{"exit": 0, "seconds": 79.4}], "seconds": 79.4}
+{"arm": "A", "task": "H3", "rep": 3, "rounds": [{"exit": 0, "seconds": 250.0}], "seconds": 250.0}
+{"arm": "B", "task": "H4", "rep": 3, "rounds": [{"exit": 0, "seconds": 105.9}], "seconds": 105.9}
+{"arm": "B", "task": "H2", "rep": 3, "rounds": [{"exit": 0, "seconds": 360.4}], "converted_back": true, "seconds": 360.4}
+{"arm": "A", "task": "H5", "rep": 3, "rounds": [{"exit": 0, "seconds": 114.7}], "seconds": 114.7}
+{"arm": "A", "task": "H6", "rep": 3, "rounds": [{"exit": 0, "seconds": 65.7}], "seconds": 65.7}
+{"arm": "B", "task": "H5", "rep": 3, "rounds": [{"exit": 0, "seconds": 147.5}], "seconds": 147.5}
+{"arm": "B", "task": "H6", "rep": 3, "rounds": [{"exit": 0, "seconds": 94.4}], "seconds": 94.4}

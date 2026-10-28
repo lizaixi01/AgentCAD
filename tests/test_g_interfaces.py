@@ -143,3 +143,25 @@ def test_interfaces_share_one_implementation():
         text = (src / adapter).read_text("utf-8")
         assert "import ezdxf" not in text and "from ezdxf" not in text
         assert "from .ops" not in text and "engine" not in text
+
+
+def test_operation_catalog_is_compact_by_default(tmp_path):
+    """The full catalog (~90K chars) is over Claude Code's tool-result limit: 34 of 36 Claude Code sessions failed
+    their first list_operations call. The default is an index; schemas come per op or per category."""
+    from agentcad.ops import REGISTRY
+    from agentcad.policy import Policy
+    from agentcad.service import Runtime
+    rt = Runtime(Policy(root=tmp_path))
+    r = rt.list_operations()
+    assert r["ok"] and not r["detail"] and r["count"] == len(REGISTRY)
+    assert len(json.dumps(r, ensure_ascii=False)) < 20000
+    circle = next(o for o in r["operations"] if o["op"] == "add_circle")
+    assert circle["category"] == "draw" and "center*" in circle["params"] and circle["draw_params"]
+    assert set(r["common_params"]["meaning"]) >= {"layout", "layer", "tag"}
+    s = rt.list_operations(ops=["add_circle", "add_viewport"])
+    assert [o["op"] for o in s["operations"]] == ["add_circle", "add_viewport"]
+    assert "properties" in s["operations"][0]["params"]
+    assert {o["category"] for o in rt.list_operations(category="layout")["operations"]} == {"layout"}
+    assert rt.list_operations(detail=True)["count"] == len(REGISTRY)
+    assert rt.list_operations(ops=["no_such_op"])["error"]["code"] == "UNKNOWN_OPERATION"
+    assert rt.list_operations(category="nope")["error"]["code"] == "UNKNOWN_CATEGORY"

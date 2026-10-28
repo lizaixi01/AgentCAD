@@ -112,7 +112,7 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("acad-audit", help="Run AutoCAD's AUDIT on a drawing (optional AutoCAD backend)")
     s.add_argument("path")
 
-    s = sub.add_parser("ops", help="Operation catalog with JSON schemas"); s.add_argument("--category")
+    s = sub.add_parser("ops", help="Operation index; --op/--category/--detail for JSON schemas"); s.add_argument("--category"); s.add_argument("--op", action="append", help="Full schema of this op (repeatable)"); s.add_argument("--detail", action="store_true")
     sub.add_parser("mcp", help="Run the MCP server on stdio")
     s = sub.add_parser("serve", help="Run the HTTP JSON API"); s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8765)
@@ -201,7 +201,7 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
     elif c == "acad-audit":
         r = rt.autocad_audit(a.path)
     elif c == "ops":
-        r = rt.list_operations(a.category)
+        r = rt.list_operations(a.category, a.op, a.detail)
     else:  # pragma: no cover
         _die(f"unknown command {c}")
     if not r["ok"]:

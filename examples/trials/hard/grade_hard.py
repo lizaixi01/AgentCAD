@@ -1,9 +1,10 @@
 """Neutral grading of the hard tasks (plain ezdxf plus AutoCAD only for DWG->DXF conversion and AUDIT).
 
-    python examples/trials/hard/grade_hard.py <A workspaces> <B workspaces> [task ...]   (run from PowerShell/cmd)
+    python examples/trials/hard/grade_hard.py [--agent claude] <A workspaces> <B workspaces> [task ...]
 
 Writes examples/trials/hard/grades.json (or grades_<tasks>.json when tasks are given) and prints one line per
-(task, arm, rep). H4-H6 are graded by grade_hard2.py.
+(task, arm, rep). H4-H6 are graded by grade_hard2.py. --agent claude grades the Claude Code runs (runs_cc/,
+snapshots_cc/) into grades_cc*.json. Run from PowerShell/cmd: it starts AutoCAD for H2.
 """
 from __future__ import annotations
 
@@ -26,6 +27,8 @@ from grade_hard2 import grade_h4, grade_h5, grade_h6  # noqa: E402
 
 SAMPLE = Path(r"D:\Apps\AutoCAD\AutoCAD 2027\Sample\Sheet Sets\Manufacturing\VW252-02-0142.dwg")
 JOBS = Path(tempfile.mkdtemp(prefix="gradehard"))
+SFX = ""                                  # "_cc" for the Claude Code runs (--agent claude)
+RUNS, SNAPS = HERE / "runs", HERE / "snapshots"
 
 
 # --- H1 ---------------------------------------------------------------------------------------------
@@ -116,7 +119,7 @@ def grade_h2(ws: Path, ref: Path) -> dict:
     if (ws / "part.dwg").is_file():
         src, orig = ws / "part.dwg", SAMPLE
     else:  # arm B worked on the DXF that AutoCAD converted for it
-        src, orig = ws / "part.dxf", HERE / "snapshots" / "B" / ws.name / "part_given.dxf"
+        src, orig = ws / "part.dxf", SNAPS / "B" / ws.name / "part_given.dxf"
     out = {"part_dwg_untouched": src.is_file() and orig.is_file() and
            hashlib.sha256(src.read_bytes()).hexdigest() == hashlib.sha256(orig.read_bytes()).hexdigest()}
     dwg = ws / "part_rev.dwg"
@@ -216,7 +219,7 @@ def grade_h3(ws: Path, final: str) -> dict:
 
 
 def cost(arm: str, task: str, rep: int) -> dict:
-    logs = sorted((HERE / "runs" / arm).glob(f"{task}_r{rep}*.jsonl"))
+    logs = sorted((RUNS / arm).glob(f"{task}_r{rep}*.jsonl"))
     tot = {"calls": 0, "shell": 0, "tool_errors": 0, "input_tokens": 0, "cached": 0, "output_tokens": 0}
     finals = []
     for p in logs:
@@ -234,13 +237,18 @@ def cost(arm: str, task: str, rep: int) -> dict:
 
 
 def main() -> None:
+    global SFX, RUNS, SNAPS
     sys.stdout.reconfigure(encoding="utf-8")
-    roots = {"A": Path(sys.argv[1]), "B": Path(sys.argv[2])}
-    only = set(sys.argv[3:])
+    args = sys.argv[1:]
+    if args[:2] == ["--agent", "claude"]:
+        SFX, args = "_cc", args[2:]
+        RUNS, SNAPS = HERE / "runs_cc", HERE / "snapshots_cc"
+    roots = {"A": Path(args[0]), "B": Path(args[1])}
+    only = set(args[2:])
     ref = JOBS / "reference.dxf"
     if not only or "H2" in only:
         dwg_to_dxf(SAMPLE, ref)
-    summary = [s for f in sorted((HERE / "runs").glob("summary_*.json"))
+    summary = [s for f in sorted(RUNS.glob("summary_*.json"))
                for s in json.loads(f.read_text(encoding="utf-8")) if not only or s["task"] in only]
     secs = {(s["arm"], s["task"], s["rep"]): s["seconds"] for s in summary}
     out = []
@@ -248,7 +256,7 @@ def main() -> None:
         ws = roots[arm] / f"{task}_r{rep}"
         c = cost(arm, task, rep)
         if task == "H1":
-            g = grade_h1(ws, HERE / "snapshots" / arm / f"H1_r{rep}")
+            g = grade_h1(ws, SNAPS / arm / f"H1_r{rep}")
             ok = g["final_ok"]
         elif task == "H2":
             g = grade_h2(ws, ref)
@@ -271,7 +279,7 @@ def main() -> None:
                   "fails": {p: f.get("fails", f.get("error")) for p, f in g["files"].items() if not f["ok"]}})
         print(json.dumps({"task": task, "arm": arm, "rep": rep, "ok": ok, "s": row["seconds"], **brief,
                           "cost": row["cost"]}, ensure_ascii=False), flush=True)
-    name = f"grades_{'-'.join(sorted(only))}.json" if only else "grades.json"
+    name = f"grades{SFX}_{'-'.join(sorted(only))}.json" if only else f"grades{SFX}.json"
     (HERE / name).write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 
 
