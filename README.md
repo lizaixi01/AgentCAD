@@ -1,159 +1,137 @@
-# AgentCAD Runtime
+# AgentCAD — Claude Code for CAD
 
-面向 AI Agent 的无 GUI 二维 CAD 执行环境。外部 Agent（Claude Code、Codex 等）通过 **CLI / MCP / HTTP / Python API** 直接创建、读取、修改和验证 DXF 工程图；Runtime 负责确定性的 CAD 操作、事务与回滚、操作记录，以及**独立于生成过程的几何验证**。自然语言理解和规划由外部 Agent 负责，Runtime 本身不调用任何模型（`model_calls = 0`）。
+**We're building AgentCAD to disrupt AutoCAD.**
 
-- 核心不依赖 AutoCAD 或任何商业软件；底层使用 [ezdxf](https://ezdxf.mozman.de/)（MIT）。**装有 AutoCAD 时**，可选后端会通过无头的 accoreconsole 提供 DWG 导入/导出和 AutoCAD AUDIT
-- 四种接口共用同一个 `Runtime` 服务层，适配层里没有 CAD 逻辑（有测试保证）
-- 136 个自动化测试全部通过（[docs/test-results.txt](docs/test-results.txt)），覆盖验收测试 A–H、安全策略，以及与 AutoCAD 2027 实际行为逐项比对的 27 个差分用例
-- AutoCAD 2027 实机验证：所有交付 DXF AUDIT 0 个错误；DWG 往返后规格与标签完整保留（[docs/research/autocad-observations.md](docs/research/autocad-observations.md)）
-- 经典任务实测：法兰、长圆孔板、阶梯轴、A3 图框、建筑平面、改图、真实 DWG 共 7 个任务由 Codex 只通过 MCP 完成，并用 AutoCAD 出图目视复核；96 张 AutoCAD 样例图纸全部可导入和编辑（[docs/trials-report.md](docs/trials-report.md)）
-- 真实外部 Agent 验证：Codex CLI 只通过 MCP 完成了绘图、校验、按错误修正、修改和 diff（[docs/acceptance-report.md](docs/acceptance-report.md#测试-g外部-agent-接入)）
+Traditional CAD software was built for humans to click, drag, and draw. AgentCAD is CAD infrastructure built for AI agents.
 
-## 安装
+Connect Claude Code, Codex, or any agent through MCP or the CLI. Describe what you want, and the agent creates, edits, validates, and exports real engineering drawings (DXF, and DWG when AutoCAD is installed).
+
+No clicking. No GUI. Just natural language, code, and engineering.
+
+**CAD built for agents, not humans.**
+
+<p align="center">
+  <img src="examples/trials/hard/png/H6/A_ops/H6_r2.png" alt="A3 sheet made by Claude Code through AgentCAD: frame, title block and a 1:2 viewport onto a dimensioned base plate" width="49%">
+  <img src="examples/trials/hard/png/H5/A/H5_r1__part.png" alt="Bracket plate dimensioned by an agent through AgentCAD: overall size, hole spacing, slot and chamfer" width="49%">
+</p>
+<p align="center"><sub>Both drawings were made by an agent through AgentCAD and plotted by AutoCAD 2027. Left: "make an A3 sheet with a 1:2 viewport". Right: "dimension this part so the shop can make it".</sub></p>
+
+---
+
+## Your agent can already write code. It still can't do CAD.
+
+Ask an agent to edit a drawing today and it writes a throwaway script against a DXF library. That works until it doesn't: the script overwrites the file, there is no undo, nobody checks the result, and the next session has no idea what the last one changed.
+
+AgentCAD gives the agent a CAD runtime instead of a blank Python file:
+
+- **Operations, not scripts.** 55 typed operations (draw, edit, annotate, layers, blocks, sheets and viewports), each with a JSON schema. Batches are atomic: if one step fails, the file is untouched.
+- **Every change is reversible.** Checkpoints before every edit, a diff of what changed, and a durable journal, so a new session can see and undo what an earlier one did.
+- **Checked by something other than the agent.** An independent validator re-reads the file from disk and reports problems as structured errors the agent can act on: geometry that doesn't close, dimensions that disagree with the part, text that will print too small, sheets it didn't check.
+- **Real drawings, not just new ones.** Paper-space layouts, title blocks with attributes, DWG import/export and AutoCAD AUDIT through an optional headless AutoCAD backend.
+- **Safe by default.** Workspace sandbox, read-only mode, operation allow-lists. An escape hatch for custom ezdxf scripts exists, runs as a transaction, and is off unless you turn it on.
+
+## Does it work? We measured it.
+
+We gave two agents the same 12 drafting tasks, from a flange drawing to editing a real AutoCAD sample DWG, five rounds of revisions with an undo, a batch of 12 drawings, cleaning up a supplier's drawing, dimensioning a part and making a print sheet. One arm could only use AgentCAD. The other wrote Python with ezdxf. A neutral grader scored the files, and we plotted the results in AutoCAD.
+
+| | Claude Code (Opus 5.5) + AgentCAD | Claude Code writing code | Codex + AgentCAD | Codex writing code |
+|---|---|---|---|---|
+| Runs correct | **24 / 24** | 23 / 24 | **24 / 24** | 24 / 24 |
+| Five-round revision with undo | **4.1 min** | 12.9 min | **6.2 min** | 18.3 min |
+| Edit a real DWG | **2.9 min** | 6.0 min | **3.4 min** | 9.7 min |
+| Make an A3 print sheet | **0.9 min** | 1.7 min | **2.5 min** | 3.6 min |
+
+Time per run, 3 runs per task (median for Claude Code, mean for Codex). The Codex AgentCAD column is after two fixes the experiments called for: the real-DWG task was 0/3 until AgentCAD could see paper-space sheets, and the print-sheet task was 0/3 until it had layout and viewport operations. On most tasks the agent was 1.4–3× faster through AgentCAD. The one miss on the code side was the undo: a fresh session had no record of what it was asked to revert. AgentCAD's journal is what made every undo work.
+
+Where it doesn't win yet, we say so: for a batch of near-identical drawings a single generated script is faster and cheaper, and AgentCAD sessions still read 2× the input tokens of the code arm. Full numbers, logs and graders: [docs/comparison-claude-code.md](docs/comparison-claude-code.md), [docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md), [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md).
+
+## Get started in two minutes
 
 ```bash
+git clone https://github.com/lizaixi01/AgentCAD.git
+cd AgentCAD
 uv venv .venv --python 3.12
-uv pip install --python .venv -e ".[dev]"     # dev 包含 pytest 和 Pillow（SVG 预览用）
+uv pip install --python .venv -e ".[dev]"
 ```
 
-依赖：`ezdxf>=1.3,<2`、`mcp>=1.20,<2`（固定 1.x：mcp 2.x 的 API 不兼容）、`pypdf`；可选 `pillow`（SVG 导出）。
-
-## 30 秒上手（CLI）
-
-完整的分步教程见 [docs/tutorial.md](docs/tutorial.md)。
-
-所有命令都向 stdout 输出一个 JSON 信封。退出码：0 成功，1 验证未通过，2 输入/规格/几何错误，3 文件错误，4 策略拒绝，5 内部错误。
+**Connect Claude Code** (paths are yours):
 
 ```bash
-agentcad --root ./work draw --spec examples/specs/plate_100x60.json --output plate.dxf
+claude mcp add agentcad --env AGENTCAD_ROOT=/path/to/AgentCAD/playground -- /path/to/AgentCAD/.venv/bin/python -m agentcad.mcp_server
 ```
 
-```bash
-agentcad --root ./work validate plate.dxf
-```
+On Windows the interpreter is `.venv\Scripts\python.exe`. The repository also ships a `.mcp.json` for this checkout; edit its two paths if you cloned somewhere else.
 
-```bash
-agentcad --root ./work revise plate.dxf --spec examples/specs/change_width_120.json
-```
-
-```bash
-agentcad --root ./work diff plate.dxf
-```
-
-其他命令：`create`、`inspect`、`entities`、`apply`（批量操作）、`constraints`、`extract` / `from-doc`（技术文档）、`rollback`、`checkpoints`、`history`、`recover`、`export`（dxf/R12/svg/json，装有 AutoCAD 时还支持 dwg）、`import`（DWG → DXF，需要 AutoCAD）、`acad-audit`（需要 AutoCAD）、`ops`（操作目录）、`mcp`、`serve`。退出码 6 表示可选依赖缺失。`agentcad <cmd> --help` 查看参数。
-
-批量操作示例（一次调用、原子执行，可用 `"$0"` 引用本批第 0 步创建的实体，用 `"tag:<name>"` 引用带标签的实体）：
-
-```bash
-agentcad --root ./work create part.dxf --units mm
-```
-
-```bash
-agentcad --root ./work apply part.dxf --ops-file examples/specs/ops_example.json
-```
-
-注意：如果对一张由规格生成的图纸（如 `plate.dxf`）追加规格之外的几何，`validate` 默认按图纸内存储的规格核对，会如实报告偏差（例如多出一个孔时 `hole_count` 期望 4、实际 5）。这时要么用 `revise` 修改规格，要么用 `--requirements` / `--no-stored-spec` 指定要核对的内容。
-
-## MCP 接入
-
-服务器：`python -m agentcad.mcp_server`（stdio）。环境变量：`AGENTCAD_ROOT`（工作区沙箱，所有路径必须在其中）、`AGENTCAD_READ_ONLY=1`、`AGENTCAD_ALLOWED_OPS=add_line,add_circle,...`。
-
-**Claude Code**（项目级）：
-
-```bash
-claude mcp add agentcad --env AGENTCAD_ROOT=D:/Projects/AgentCAD/work -- D:/Projects/AgentCAD/.venv/Scripts/python.exe -m agentcad.mcp_server
-```
-
-**Codex CLI**（`~/.codex/config.toml`，与实测配置一致）：
+**Connect Codex** (`~/.codex/config.toml`):
 
 ```toml
 [mcp_servers.agentcad]
-command = "D:/Projects/AgentCAD/.venv/Scripts/python.exe"
+command = "/path/to/AgentCAD/.venv/bin/python"
 args = ["-m", "agentcad.mcp_server"]
-env = { AGENTCAD_ROOT = "D:/Projects/AgentCAD/work" }
-default_tools_approval_mode = "approve"   # 否则在 approval_policy="never" 下所有工具调用都会被拒绝（实测）
+env = { AGENTCAD_ROOT = "/path/to/AgentCAD/playground" }
+default_tools_approval_mode = "approve"
 ```
 
-MCP 工具：`create_drawing`、`read_drawing`、`inspect_entities`、`apply_operations`、`apply_constraints`、`validate_drawing`、`revise_from_document`、`get_diff`、`rollback`、`export_drawing`，另有 `list_operations`、`draw_from_spec`、`revise_drawing`、`extract_requirements`、`list_checkpoints`、`history`、`recover`、`get_metrics`，以及需要 AutoCAD 的 `import_drawing`、`autocad_audit`，和默认关闭的 `run_script`（对操作目录覆盖不到的编辑，提交一段 ezdxf 脚本，在独立进程中运行并按事务提交；用 `AGENTCAD_ALLOW_SCRIPTS=1` 开启）。所有操作都能用 `layout` 参数作用于打印用的图纸空间布局。
+**Then just ask:**
 
-## AutoCAD 后端（可选）
+> Draw a 200×100 mounting plate with R8 corners, four Ø12 holes 15 mm from the edges and a Ø40 hole in the middle. Dimension it, save it as plate.dxf, check it, and export plate.svg.
 
-装有 AutoCAD 时，后端会从注册表或 `C:\Program Files\Autodesk` 自动发现 accoreconsole；也可以设置 `AGENTCAD_ACCORECONSOLE`。
+> Make the plate 240 wide and keep the holes 15 mm from the edges. Tell me what changed.
+
+> Undo that.
+
+> Make an A3 sheet for plate.dxf with a 1:2 viewport and drawing number MP-240 in the title block.
+
+More prompts to try: [playground/README.md](playground/README.md).
+
+## Prefer the command line?
+
+Every tool is also a CLI command that prints one JSON envelope:
 
 ```bash
-agentcad --root ./work export plate.dxf plate.dwg
+agentcad --root ./work create part.dxf --units mm
+agentcad --root ./work apply part.dxf --ops-file ops.json
+agentcad --root ./work validate part.dxf
+agentcad --root ./work diff part.dxf
+agentcad --root ./work rollback part.dxf
+agentcad --root ./work export part.dxf part.svg
 ```
 
-```bash
-agentcad --root ./work acad-audit plate.dxf
-```
+The same `Runtime` is available from Python and over HTTP (`agentcad --root work serve`, then `POST /v1/<tool>`). All four interfaces share one service layer.
 
-导出 DWG 后，后端会让 AutoCAD 把它读回，再交给独立验证器检查。后端只在 ASCII 作业目录中运行固定内容的脚本，不修改 AutoCAD 的任何持久设置，也不执行调用方提供的命令。
+## What's inside
 
-## Python API / HTTP
-
-```python
-from agentcad.service import Runtime
-from agentcad.policy import Policy
-
-rt = Runtime(Policy(root="work"))
-r = rt.draw_from_spec({"kind": "plate", "units": "mm", "width": 100, "height": 60,
-                       "holes": [{"pattern": "corners", "diameter": 8, "edge_offset": 10}]}, "plate.dxf")
-assert r["ok"] and r["validation"]["passed"]
-```
-
-HTTP：`agentcad --root work serve --port 8765`，然后 `POST /v1/<tool>`，请求体是该工具的关键字参数；`GET /v1/tools` 列出工具。
-
-## 端到端演示
-
-```bash
-python examples/run_demo.py
-```
-
-演示会在 `examples/output/` 生成 A/B/C/E 场景的 DXF、SVG、验证报告、diff 和文档溯源报告（详见 [docs/acceptance-report.md](docs/acceptance-report.md)）。`examples/lo_render/` 里是 LibreOffice 独立导入这些 DXF 后的渲染结果。
-
-## 文档
-
-| 文档 | 内容 |
+| | |
 |---|---|
-| [docs/tutorial.md](docs/tutorial.md) | **操作教程**：从生成、校验、修订、回滚到 DWG 与 Agent 接入，每步附实测输出 |
-| [docs/audit/existing-projects.md](docs/audit/existing-projects.md) | 现有项目审计（实际安装运行、commit、许可证） |
-| [docs/research/autocad-dxf-research.md](docs/research/autocad-dxf-research.md) | AutoCAD API / 命令 / DXF·DWG 研究与 ezdxf 实验 |
-| [docs/research/autocad-observations.md](docs/research/autocad-observations.md) | AutoCAD 2027 实机研究：无头自动化的坑、互操作、被阻塞项的实测、27 个命令差分 |
-| [docs/decision-record.md](docs/decision-record.md) | 技术路线决策记录 |
-| [docs/architecture.md](docs/architecture.md) | 架构、数据模型、事务、错误结构、API 信封 |
-| [docs/operations.md](docs/operations.md) | 43 个操作的参数参考（从代码生成） |
-| [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md)、[docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md)、[docs/comparison-claude-code.md](docs/comparison-claude-code.md) | 对比实验：Agent（Codex、Claude Code）用 AgentCAD 与直接写代码 |
-| [docs/trials-report.md](docs/trials-report.md) | 经典任务实测：Agent 实际绘图、AutoCAD 出图复核、96 张真实图纸，以及据此修复的问题 |
-| [docs/acceptance-report.md](docs/acceptance-report.md) | 验收测试 A–H 结果与证据、性能指标、兼容性观察 |
-| [docs/coverage.md](docs/coverage.md) | 功能覆盖清单（四类状态） |
-| [docs/limitations-roadmap.md](docs/limitations-roadmap.md) | 已知限制、依赖、后续路线图 |
+| Operations | 55: draw (lines to splines, hatches, polygons), edit (trim, fillet, offset, arrays, break/join, purge), annotate (linear, radial, angular, ordinate dimensions, leaders, tables, title blocks), layers, blocks with attributes, sheets and viewports |
+| Agent tools (MCP) | 21, including `apply_operations`, `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`. `list_operations` returns a compact index and full schemas on request, so it fits in an agent's context |
+| Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
+| File formats | DXF R12–R2018, SVG and JSON export. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
+| Tests | 150 automated tests, including 27 cases checked against AutoCAD 2027 behaviour |
 
-## 目录结构
+Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial software.
 
-```
-src/agentcad/
-  service.py        统一业务 API（Runtime），CLI/MCP/HTTP 都调用它
-  engine.py         事务式批量执行（预校验 → 内存执行 → 原子提交；spec 修订的就地协调）
-  ops/              操作注册表：draw / edit / annotate / structure（类型化参数，同时生成 JSON Schema）
-  validate/         独立验证器：features（从文件识别轮廓/孔/标注）、checks（通用完整性）、requirements
-  constraints.py    约束检查（15 类）与顺序直接强制（12 类，非联立求解）
-  spec.py           零件规格 → 操作计划 + 需求（两者都只从规格推导）
-  docspec.py        技术文档（PDF/TXT/MD）→ 带来源的结构化规格；缺失/矛盾检测；Agent 引文校验
-  store.py          安全读写、检查点、journal、提交副本、崩溃恢复
-  policy.py         沙箱路径、只读、操作白名单、预算
-  backends/autocad.py  可选 AutoCAD 后端（accoreconsole）：DWG 导入/导出、AUDIT；唯一会启动外部进程的模块
-  cli.py  mcp_server.py  http_api.py   适配层
-tests/              验收测试 A–H、约束、安全、AutoCAD 差分（golden）与实机测试
-research/autocad/   AutoCAD 研究脚本：无头驱动、打开/往返、R12 二分定位、被阻塞项、命令 oracle
-examples/           演示脚本与输出、Codex 实测记录
-scripts/gen_docs.py 从代码生成操作文档和操作×测试矩阵
-```
+## Where it stands
 
-## 运行测试
+AgentCAD is early. It is 2D only. DWG needs AutoCAD on the machine. It can't print to PDF yet, can't drive a live AutoCAD session, and has no industry libraries (P&ID, GD&T, standard parts). Readability checks cover text height, and plot layout still needs a human eye. The evidence so far is 12 tasks on two agents. What's missing is tracked in [docs/limitations-roadmap.md](docs/limitations-roadmap.md).
 
-```bash
-python -m pytest tests
-```
+## Documentation
 
-（在本机沙箱下需要 `--basetemp` 指向可写目录，见 [docs/test-results.txt](docs/test-results.txt) 的运行参数。）
+Most in-depth documents are in Chinese.
+
+| | |
+|---|---|
+| [docs/tutorial.md](docs/tutorial.md) | Step-by-step tutorial: generate, validate, revise, roll back, DWG, connecting agents |
+| [docs/architecture.md](docs/architecture.md) | Architecture, data model, transactions, error envelope |
+| [docs/operations.md](docs/operations.md) | Reference for every operation (generated from code) |
+| [docs/comparison-claude-code.md](docs/comparison-claude-code.md) | Claude Code: AgentCAD vs. writing code, before and after the compact catalog |
+| [docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md), [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md) | Codex: the same comparison |
+| [docs/trials-report.md](docs/trials-report.md) | Classic drafting tasks and 96 real AutoCAD sample drawings |
+| [docs/acceptance-report.md](docs/acceptance-report.md) | Acceptance tests and evidence |
+| [docs/limitations-roadmap.md](docs/limitations-roadmap.md) | Known limitations and roadmap |
+
+Run logs and graded results for the experiments are in `examples/trials/`. Logs of the tasks that use Autodesk sample drawings (T7, H2) are not published, because the drawings are not ours to redistribute.
+
+## License
+
+MIT
