@@ -1,0 +1,700 @@
+{
+ "A_agentcad": {
+  "T1_flange": {
+   "file": "examples\\trials\\ws_cc\\T1_flange\\flange.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "outer circle Ø150",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "bore Ø60",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "6×Ø12 on PCD 110, first on top",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "PCD Ø110 as centre line",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "horizontal + vertical centre lines",
+     "cat": "geometry",
+     "ok": true
+    }
+   ],
+   "dims": {
+    "Ø150": "dim",
+    "Ø60": "dim",
+    "Ø110": "dim",
+    "6×Ø12": "dim"
+   },
+   "geometry": "5/5",
+   "other": "0/0",
+   "dim_summary": {
+    "dim": 4,
+    "text-only": 0,
+    "missing": 0
+   }
+  },
+  "T2_slot_plate": {
+   "file": "examples\\trials\\ws_cc\\T2_slot_plate\\slot_plate.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "outline 160×100",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "four R8 corners",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "slot 30×10 at (40,50)",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "slot 30×10 at (120,50)",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "Ø20 hole at centre",
+     "cat": "geometry",
+     "ok": true
+    }
+   ],
+   "dims": {
+    "160": "dim",
+    "100": "dim",
+    "R8": "dim",
+    "30": "dim",
+    "10": "dim",
+    "80": "dim",
+    "Ø20": "dim"
+   },
+   "geometry": "5/5",
+   "other": "0/0",
+   "dim_summary": {
+    "dim": 7,
+    "text-only": 0,
+    "missing": 0
+   }
+  },
+  "T3_shaft": {
+   "file": "examples\\trials\\ws_cc\\T3_shaft\\shaft.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "Ø30 sections",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "Ø40 section",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "shoulders at 50 / 130",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "C2 chamfers both ends",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "end faces",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "axis as centre line",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "visible edge lines across the diameter",
+     "cat": "convention",
+     "ok": true
+    }
+   ],
+   "dims": {
+    "Ø30": "dim",
+    "Ø40": "dim",
+    "50": "dim",
+    "80": "dim",
+    "70": "dim",
+    "200": "dim"
+   },
+   "geometry": "6/6",
+   "other": "1/1",
+   "dim_summary": {
+    "dim": 6,
+    "text-only": 0,
+    "missing": 0
+   }
+  },
+  "T4_frame": {
+   "file": "examples\\trials\\ws_cc\\T4_frame\\frame_a3.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "outer frame 420×297",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "inner frame 25/10/10/10",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "title block text 法兰盘",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "title block text FL-001",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "title block text Q235",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "title block text 1:1",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 序号",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 名称",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 数量",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 材料",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 螺栓",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text M10",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 8.8",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "title block at lower-right of inner frame",
+     "cat": "convention",
+     "ok": true
+    },
+    {
+     "check": "BOM directly above title block",
+     "cat": "convention",
+     "ok": true
+    }
+   ],
+   "dims": {},
+   "geometry": "2/2",
+   "other": "13/13",
+   "dim_summary": {
+    "dim": 0,
+    "text-only": 0,
+    "missing": 0
+   }
+  },
+  "T5_room": {
+   "file": "examples\\trials\\ws_cc\\T5_room\\room.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "axes 6000×4000 as centre lines",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "outer wall lines (axis +120)",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "inner wall lines (axis -120)",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "door opening 900, centred, jambs closed",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "window opening 1500, centred, jambs closed",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "window as 4 parallel lines (found 4)",
+     "cat": "geometry",
+     "ok": true
+    }
+   ],
+   "dims": {
+    "6000": "dim",
+    "4000": "dim",
+    "900": "dim",
+    "1500": "dim"
+   },
+   "geometry": "6/6",
+   "other": "0/0",
+   "dim_summary": {
+    "dim": 4,
+    "text-only": 0,
+    "missing": 0
+   }
+  },
+  "T6_flange_revise": {
+   "file": "examples\\trials\\ws_cc\\T6_flange_revise\\flange.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "Ø150 / Ø60 kept",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "8×Ø12 on PCD 115, first on top",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "old 6 holes removed",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "PCD centre line now Ø115",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "no stale 6×Ø12 / Ø110 dimension left",
+     "cat": "annotation",
+     "ok": true
+    }
+   ],
+   "dims": {
+    "8×Ø12": "dim",
+    "Ø115": "dim",
+    "Ø150": "dim",
+    "Ø60": "dim"
+   },
+   "geometry": "4/4",
+   "other": "1/1",
+   "dim_summary": {
+    "dim": 4,
+    "text-only": 0,
+    "missing": 0
+   }
+  }
+ },
+ "B_code": {
+  "T1_flange": {
+   "file": "examples\\trials\\ws_code_cc\\T1_flange\\flange.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "outer circle Ø150",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "bore Ø60",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "6×Ø12 on PCD 110, first on top",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "PCD Ø110 as centre line",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "horizontal + vertical centre lines",
+     "cat": "geometry",
+     "ok": true
+    }
+   ],
+   "dims": {
+    "Ø150": "dim",
+    "Ø60": "dim",
+    "Ø110": "dim",
+    "6×Ø12": "dim"
+   },
+   "geometry": "5/5",
+   "other": "0/0",
+   "dim_summary": {
+    "dim": 4,
+    "text-only": 0,
+    "missing": 0
+   }
+  },
+  "T2_slot_plate": {
+   "file": "examples\\trials\\ws_code_cc\\T2_slot_plate\\slot_plate.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "outline 160×100",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "four R8 corners",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "slot 30×10 at (40,50)",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "slot 30×10 at (120,50)",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "Ø20 hole at centre",
+     "cat": "geometry",
+     "ok": true
+    }
+   ],
+   "dims": {
+    "160": "dim",
+    "100": "dim",
+    "R8": "dim",
+    "30": "dim",
+    "10": "dim",
+    "80": "dim",
+    "Ø20": "dim"
+   },
+   "geometry": "5/5",
+   "other": "0/0",
+   "dim_summary": {
+    "dim": 7,
+    "text-only": 0,
+    "missing": 0
+   }
+  },
+  "T3_shaft": {
+   "file": "examples\\trials\\ws_code_cc\\T3_shaft\\shaft.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "Ø30 sections",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "Ø40 section",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "shoulders at 50 / 130",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "C2 chamfers both ends",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "end faces",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "axis as centre line",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "visible edge lines across the diameter",
+     "cat": "convention",
+     "ok": true
+    }
+   ],
+   "dims": {
+    "Ø30": "dim",
+    "Ø40": "dim",
+    "50": "dim",
+    "80": "dim",
+    "70": "dim",
+    "200": "dim"
+   },
+   "geometry": "6/6",
+   "other": "1/1",
+   "dim_summary": {
+    "dim": 6,
+    "text-only": 0,
+    "missing": 0
+   }
+  },
+  "T4_frame": {
+   "file": "examples\\trials\\ws_code_cc\\T4_frame\\frame_a3.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "outer frame 420×297",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "inner frame 25/10/10/10",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "title block text 法兰盘",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "title block text FL-001",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "title block text Q235",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "title block text 1:1",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 序号",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 名称",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 数量",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 材料",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 螺栓",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text M10",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "BOM text 8.8",
+     "cat": "annotation",
+     "ok": true
+    },
+    {
+     "check": "title block at lower-right of inner frame",
+     "cat": "convention",
+     "ok": true
+    },
+    {
+     "check": "BOM directly above title block",
+     "cat": "convention",
+     "ok": true
+    }
+   ],
+   "dims": {},
+   "geometry": "2/2",
+   "other": "13/13",
+   "dim_summary": {
+    "dim": 0,
+    "text-only": 0,
+    "missing": 0
+   }
+  },
+  "T5_room": {
+   "file": "examples\\trials\\ws_code_cc\\T5_room\\room.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "axes 6000×4000 as centre lines",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "outer wall lines (axis +120)",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "inner wall lines (axis -120)",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "door opening 900, centred, jambs closed",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "window opening 1500, centred, jambs closed",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "window as 4 parallel lines (found 4)",
+     "cat": "geometry",
+     "ok": true
+    }
+   ],
+   "dims": {
+    "6000": "dim",
+    "4000": "dim",
+    "900": "dim",
+    "1500": "dim"
+   },
+   "geometry": "6/6",
+   "other": "0/0",
+   "dim_summary": {
+    "dim": 4,
+    "text-only": 0,
+    "missing": 0
+   }
+  },
+  "T6_flange_revise": {
+   "file": "examples\\trials\\ws_code_cc\\T6_flange_revise\\flange.dxf",
+   "exists": true,
+   "readable": true,
+   "insunits": 4,
+   "ezdxf_audit_errors": 0,
+   "checks": [
+    {
+     "check": "Ø150 / Ø60 kept",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "8×Ø12 on PCD 115, first on top",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "old 6 holes removed",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "PCD centre line now Ø115",
+     "cat": "geometry",
+     "ok": true
+    },
+    {
+     "check": "no stale 6×Ø12 / Ø110 dimension left",
+     "cat": "annotation",
+     "ok": true
+    }
+   ],
+   "dims": {
+    "8×Ø12": "dim",
+    "Ø115": "dim",
+    "Ø150": "dim",
+    "Ø60": "dim"
+   },
+   "geometry": "4/4",
+   "other": "1/1",
+   "dim_summary": {
+    "dim": 4,
+    "text-only": 0,
+    "missing": 0
+   }
+  }
+ }
+}
