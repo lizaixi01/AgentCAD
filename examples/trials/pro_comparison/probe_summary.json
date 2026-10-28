@@ -1,0 +1,34 @@
+{
+  "fixture": "one LINE; identical source bytes copied to separate workspaces",
+  "agentcad_batch_failure": {
+    "reported_failure": true,
+    "original_bytes_unchanged": true
+  },
+  "pro_batch_stop": {
+    "on_error_argument_omitted": true,
+    "observed_mode": "stop",
+    "reported_failure": true,
+    "first_step_retained_after_save": true,
+    "atomicity": "none"
+  },
+  "pro_batch_rollback": {
+    "reported_failure": true,
+    "original_geometry_restored": true,
+    "rollback_verified_by_server": true
+  },
+  "agentcad_restart": {
+    "moved_before_restart": true,
+    "native_rollback_restored": true
+  },
+  "pro_restart": {
+    "moved_before_restart": true,
+    "native_undo_restored": false,
+    "undo_message": "Nothing to undo — this is the oldest state in the history."
+  },
+  "workspace_boundary": {
+    "agentcad_rejected": true,
+    "pro_rejected": true
+  },
+  "repetitions": 2,
+  "second_run_same_observed_outcomes": true
+}

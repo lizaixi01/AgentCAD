@@ -1,0 +1,132 @@
+[
+  {
+    "task": "H1",
+    "rep": 3,
+    "arm": "A",
+    "ok": true,
+    "grade": {
+      "rounds": {
+        "1": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "2": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "3": {
+          "ok": true,
+          "passed": 10,
+          "total": 10,
+          "fails": []
+        },
+        "4": {
+          "ok": true,
+          "passed": 10,
+          "total": 10,
+          "fails": []
+        },
+        "5": {
+          "ok": true,
+          "passed": 11,
+          "total": 11,
+          "fails": []
+        }
+      },
+      "final_ok": true,
+      "rounds_ok": 5,
+      "undo_ok": true
+    },
+    "seconds": 235.96,
+    "calls": 46,
+    "reported_tool_errors": 1,
+    "other_tool_calls": 0,
+    "input_tokens": 1541785,
+    "cached_input_tokens": 1340544,
+    "output_tokens": 5136,
+    "rounds_attempted": 5,
+    "rounds_completed": 5,
+    "round_statuses": [
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
+  },
+  {
+    "task": "H1",
+    "rep": 3,
+    "arm": "B",
+    "ok": false,
+    "grade": {
+      "rounds": {
+        "1": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "2": {
+          "ok": true,
+          "passed": 9,
+          "total": 9,
+          "fails": []
+        },
+        "3": {
+          "ok": true,
+          "passed": 10,
+          "total": 10,
+          "fails": []
+        },
+        "4": {
+          "ok": false,
+          "passed": 8,
+          "total": 10,
+          "fails": [
+            "4×Ø10 at 12 from the edges",
+            "hole dimension Ø10 (no stale Ø12)"
+          ]
+        },
+        "5": {
+          "ok": false,
+          "passed": 9,
+          "total": 11,
+          "fails": [
+            "4×Ø10 at 12 from the edges",
+            "hole dimension Ø10 (no stale Ø12)"
+          ]
+        }
+      },
+      "final_ok": false,
+      "rounds_ok": 3,
+      "undo_ok": false
+    },
+    "seconds": 473.59,
+    "calls": 239,
+    "reported_tool_errors": 13,
+    "other_tool_calls": 0,
+    "input_tokens": 2751334,
+    "cached_input_tokens": 2546816,
+    "output_tokens": 12319,
+    "rounds_attempted": 5,
+    "rounds_completed": 5,
+    "round_statuses": [
+      "completed",
+      "completed",
+      "completed",
+      "completed",
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": false
+  }
+]
