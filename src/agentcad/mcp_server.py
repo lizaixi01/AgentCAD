@@ -21,7 +21,8 @@ Every result has ok + structured error {code, category, message, entities, retry
 A failed batch never modifies the file (partial_changes=false).
 Real drawings often have paper-space layouts (printed sheets, read_drawing.layouts) with their own copy of the part:
 edit and validate them too, using the 'layout' parameter. New sheets: create_layout, then add_viewport.
-run_script (if enabled) covers edits no op can express."""
+run_script (if enabled) covers edits no op can express.
+If the user works in AutoCAD next to you, autocad_live shows your drawing there and pulls their edits back."""
 
 Path_ = Annotated[str, Field(description="Drawing path (.dxf), relative to the workspace root")]
 
@@ -217,6 +218,23 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         """Open the drawing in AutoCAD headlessly and run AUDIT (no fixes): AutoCAD's own verdict on the file.
         Needs the optional AutoCAD backend; returns a dependency error otherwise."""
         return rt.autocad_audit(path)
+
+    @mcp.tool()
+    def autocad_live(action: Annotated[Literal["status", "open", "reload", "pull", "zoom", "command"],
+                                       Field(description="status: AutoCAD running? open drawings. open: show the "
+                                             "drawing in AutoCAD (start=true launches it). reload: re-open after "
+                                             "your changes. pull: commit the user's edits made in AutoCAD. zoom: "
+                                             "show ids or a window. command: send a command line (policy-gated)")],
+                     path: Annotated[str | None, Field(description="Drawing path (.dxf); all actions but status")] = None,
+                     start: bool = False,
+                     discard: Annotated[bool, Field(description="reload: drop unsaved edits made in AutoCAD")] = False,
+                     ids: Annotated[list[str] | None, Field(description="zoom: entity ids or 'tag:<name>'")] = None,
+                     window: Annotated[list[list[float]] | None, Field(description="zoom: [[x0,y0],[x1,y1]]")] = None,
+                     command: str | None = None, label: str | None = None) -> dict:
+        """Work alongside the user's running AutoCAD (Windows, optional). You keep editing with apply_operations;
+        AutoCAD shows the result (servers started with AGENTCAD_LIVE_SYNC=1 reload it after every change, see
+        'live' in results). Edits the user makes in AutoCAD come back with pull, as a normal checkpointed change."""
+        return rt.autocad_live(action, path, start, discard, window, ids, command, label)
 
     @mcp.tool()
     def get_metrics() -> dict:

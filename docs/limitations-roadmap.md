@@ -39,3 +39,12 @@
 - **P1 收尾**：两线角度标注创建、HATCH、MLEADER、坐标标注；为 `mirror` 作用于标注/块、开口多段线偏移补测试。
 - **P2**：更多零件族（法兰、L 形支架、长圆孔、孔阵列图案）；ISO/ANSI 标注样式与图层标准模板；块属性模板库；批量处理多图纸的工具；增量读取（按 handle 范围或修改时间）；规格修订时检测"手工修改过的标签实体"并要求确认。
 - **P3**：不依赖 AutoCAD 的 DWG 方案（ODA File Converter，许可证由用户自行确认）；为 mirror 作用于标注/椭圆、HATCH 等补充 AutoCAD 差分用例；联立约束求解（可评估 SolveSpace 求解库，GPL，需要隔离）；3D 与参数化建模。
+
+## 实时 AutoCAD 会话（2026-10-29）
+
+`autocad_live`（`backends/acad_live.py`）通过 COM 连接用户正在运行的 AutoCAD（Windows，需要 pywin32，`pip install agentcad[live]`）：打开图纸、在每次修改后重新载入（`AGENTCAD_LIVE_SYNC=1`）、缩放到实体，以及用 `pull` 把用户在 AutoCAD 里的修改作为一次普通变更提交（检查点、日志、差异、验证）。限制：
+
+- 自动化测试用的是模拟 COM 对象。本机 AutoCAD 2027 的 GUI 启动后停在 Autodesk 许可证/登录界面，COM 调用被拒绝（`RPC_E_CALL_REJECTED`），所以还没有在真实 GUI 上跑通；遇到这种情况返回 `AUTOCAD_BUSY`，提示用户先处理 AutoCAD 中的对话框。
+- AutoCAD 2027 只注册了带版本号的 ProgID（`AutoCAD.Application.26`），后端会从注册表中查找；可用 `AGENTCAD_ACAD_PROGID` 指定。
+- `pull` 期间 AutoCAD 中的文档会先另存为临时 DXF，再关闭并从提交后的文件重新打开（保留视图）。AutoCAD 中未保存的修改不会被 `reload` 丢弃，除非显式传 `discard=true`。
+- `command` 发送原始命令行，默认关闭（`AGENTCAD_ALLOW_LIVE_COMMANDS=1` 开启），其效果只在 AutoCAD 中，需要 `pull` 才会进入图纸。
