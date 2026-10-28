@@ -69,7 +69,8 @@ if (-not $Dir) { $Dir = Join-Path (Split-Path $repo -Parent) "$(Split-Path $repo
 $path = Join-Path $Dir $Name
 $branch = "agent/$Name"
 
-Invoke-Checked "git fetch" { git -C $repo fetch -q origin }
+# --prune: a branch already deleted on GitHub must not leave a stale origin/<branch> for -Remove to delete.
+Invoke-Checked "git fetch" { git -C $repo fetch -q --prune origin }
 
 if ($Remove) {
     # Check before deleting anything, so a refusal leaves the worktree and branches as they were.
