@@ -43,7 +43,7 @@ def test_plate_generated_and_independently_verified(rt, ws, plate):
 
 
 def test_runtime_validator_report(rt, plate):
-    v = ok(rt.validate_drawing(plate))["validation"]
+    v = ok(rt.validate_drawing(plate, detail=True))["validation"]
     assert v["requirements_source"] == "stored_part_spec"
     assert v["passed"], v["issues"]
     ids = {r["id"]: r for r in v["requirements"]}

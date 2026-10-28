@@ -54,7 +54,7 @@ def test_hole_position_violation(rt, ws, plate):
 
 def test_requirement_fields_are_not_silently_ignored(rt, plate):
     """Found with a real agent (Codex) sending fields the validator did not know."""
-    v = ok(rt.validate_drawing(plate, requirements=[
+    v = ok(rt.validate_drawing(plate, detail=True, requirements=[
         {"type": "outline", "width": 100, "height": 60, "layer": "OUTLINE", "corner": [0, 0], "closed": True},
         {"type": "dimension", "kind": "linear", "value": 60, "tag": "dim.width"},
         {"type": "dimension", "kind": "linear", "value": 60, "tag": "dim.height"}]))["validation"]
@@ -108,5 +108,5 @@ def test_failed_batch_leaves_file_unchanged_and_is_journaled(rt, ws, blank):
     assert not r["ok"]
     assert r["error"]["op_index"] == 2 and r["error"]["partial_changes"] is False
     assert (ws / blank).read_bytes() == before
-    hist = ok(rt.history(blank))["records"]
+    hist = ok(rt.history(blank, detail=True))["records"]
     assert hist[-1]["ok"] is False and hist[-1]["error"]["op_index"] == 2 and hist[-1]["file_unchanged"]

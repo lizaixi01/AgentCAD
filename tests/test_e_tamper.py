@@ -20,7 +20,7 @@ def tagged(doc, tag):
 
 
 def results(rt, plate):
-    v = ok(rt.validate_drawing(plate))["validation"]
+    v = ok(rt.validate_drawing(plate, detail=True))["validation"]
     return v, {r["id"]: r for r in v["requirements"]}
 
 

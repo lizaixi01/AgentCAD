@@ -52,7 +52,7 @@ def test_journal_traceability(rt, ws):
     ok(rt.create_drawing("j.dxf"))
     ok(rt.apply_operations("j.dxf", PLAN, label="base"))
     ok(rt.apply_operations("j.dxf", [{"op": "move", "target": "tag:bore", "delta": [5, 0]}], label="shift"))
-    recs = ok(rt.history("j.dxf"))["records"]
+    recs = ok(rt.history("j.dxf", detail=True))["records"]
     assert [r["tool"] for r in recs] == ["create_drawing", "apply_operations", "apply_operations"]
     assert recs[1]["operations"] == PLAN and recs[2]["label"] == "shift"
     for r in recs:

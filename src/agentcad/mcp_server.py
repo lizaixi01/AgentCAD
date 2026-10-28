@@ -115,11 +115,15 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                          bounds: Annotated[list[list[float]] | None, Field(description="[[x0,y0],[x1,y1]]")] = None,
                          tolerance: float = 1e-6,
                          layout: Annotated[str | None, Field(description="Check this paper-space sheet instead of "
-                                                                "model space")] = None) -> dict:
+                                                                "model space")] = None,
+                         detail: Annotated[bool, Field(description="Full report: expected/actual of passed "
+                                                       "requirements, every recognized circle and dimension")] = False
+                         ) -> dict:
         """Independent validator: re-reads the DXF from disk and checks integrity (duplicates, degenerate geometry,
-        dimension consistency, bounds) and requirements (expected / actual / deviation / tolerance). It reports
-        layouts it did not check (LAYOUT_NOT_VALIDATED, 'coverage'); dimension values are compared as displayed."""
-        return rt.validate_drawing(path, requirements, True, bounds, tolerance, None, layout)
+        dimension consistency, bounds) and requirements (failed ones with expected / actual / deviation /
+        tolerance). It reports layouts it did not check (LAYOUT_NOT_VALIDATED, 'coverage'); dimension values are
+        compared as displayed. Compact by default; detail=true for everything."""
+        return rt.validate_drawing(path, requirements, True, bounds, tolerance, None, layout, detail)
 
     @mcp.tool()
     def draw_from_spec(spec: Annotated[dict[str, Any], Field(description="{kind:'plate', units, width, height, holes:"
@@ -153,9 +157,11 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         return rt.revise_from_document(document, output, facts, overrides, overwrite)
 
     @mcp.tool()
-    def get_diff(path: Path_, against: Annotated[str, Field(description="'previous', a checkpoint id 'cp-0003' or another .dxf")] = "previous") -> dict:
-        """Entity-level diff (added / deleted / modified fields) between the drawing and a checkpoint or file."""
-        return rt.get_diff(path, against)
+    def get_diff(path: Path_, against: Annotated[str, Field(description="'previous', a checkpoint id 'cp-0003' or another .dxf")] = "previous",
+                 detail: Annotated[bool, Field(description="Full geometry of added/deleted entities")] = False) -> dict:
+        """Entity-level diff between the drawing and a checkpoint or file: modified entities with old/new values of
+        each changed field; added/deleted entities by id/type/layer/tag (detail=true for their geometry)."""
+        return rt.get_diff(path, against, detail)
 
     @mcp.tool()
     def rollback(path: Path_, checkpoint: Annotated[str | None, Field(description="Checkpoint id; default latest")] = None) -> dict:
@@ -168,9 +174,13 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         return rt.list_checkpoints(path)
 
     @mcp.tool()
-    def history(path: Path_, limit: int = 50) -> dict:
-        """Operation journal (inputs, results, versions, hashes) for reproducibility."""
-        return rt.history(path, limit)
+    def history(path: Path_, limit: int = 50,
+                seq: Annotated[list[int] | None, Field(description="Return these records in full (operations with "
+                                                       "parameters, scripts, errors)")] = None,
+                detail: Annotated[bool, Field(description="Every record in full")] = False) -> dict:
+        """Operation journal, one line per record (tool, label, op names, change counts, checkpoint_before).
+        seq=[...] gives full records, e.g. to see the parameters an earlier round used."""
+        return rt.history(path, limit, detail, seq)
 
     @mcp.tool()
     def recover(path: Path_) -> dict:

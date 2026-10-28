@@ -242,7 +242,7 @@ def test_stretch(rt, ws, blank):
     xs = sorted(p[0] for p in by_tag(doc, "r").get_points("xy"))
     assert xs == [0, 0, 120, 120]
     assert by_tag(doc, "h").dxf.center.x == A(110) and by_tag(doc, "h0").dxf.center.x == A(10)
-    v = ok(rt.validate_drawing(blank, requirements=[{"type": "dimension", "value": 120}]))["validation"]
+    v = ok(rt.validate_drawing(blank, detail=True, requirements=[{"type": "dimension", "value": 120}]))["validation"]
     assert v["requirements"][0]["status"] == "pass"
     assert err(apply(rt, blank, [{"op": "stretch", "window": [[0, 0]], "delta": [1, 0]}]))["code"] == "INVALID_WINDOW"
 

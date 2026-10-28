@@ -73,6 +73,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--bounds", help="x0,y0,x1,y1"); s.add_argument("--tolerance", type=float, default=1e-6)
     s.add_argument("--no-stored-spec", action="store_true"); s.add_argument("--contour-layers")
     s.add_argument("--layout", help="Validate this paper-space layout instead of model space")
+    s.add_argument("--detail", action="store_true", help="Full report (every requirement, circle and dimension)")
 
     s = sub.add_parser("draw", help="Generate a drawing from a part spec / plan")
     s.add_argument("--spec", required=True, help="Spec JSON file"); s.add_argument("--output", required=True)
@@ -95,12 +96,16 @@ def build_parser() -> argparse.ArgumentParser:
 
     s = sub.add_parser("diff", help="Structured diff against a checkpoint or another drawing")
     s.add_argument("path"); s.add_argument("--against", default="previous")
+    s.add_argument("--detail", action="store_true", help="Full geometry of added/deleted entities")
 
     s = sub.add_parser("rollback", help="Restore a checkpoint (default latest)")
     s.add_argument("path"); s.add_argument("--checkpoint")
 
-    for name, hlp in (("checkpoints", "List checkpoints"), ("history", "Show the operation journal"),
-                      ("recover", "Recover from a crash / corrupted file")):
+    s = sub.add_parser("history", help="Show the operation journal (one line per record)"); s.add_argument("path")
+    s.add_argument("--detail", action="store_true", help="Full records")
+    s.add_argument("--seq", type=int, action="append", help="Full record with this sequence number (repeatable)")
+
+    for name, hlp in (("checkpoints", "List checkpoints"), ("recover", "Recover from a crash / corrupted file")):
         s = sub.add_parser(name, help=hlp); s.add_argument("path")
 
     s = sub.add_parser("export", help="Export to dxf (other version, incl. R12) / svg / json")
@@ -180,7 +185,7 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         r = rt.validate_drawing(a.path, requirements=_json_arg(a.requirements, a.requirements_file, "requirements"),
                                 use_stored_spec=not a.no_stored_spec, bounds=bounds, tolerance=a.tolerance,
                                 contour_layers=a.contour_layers.split(",") if a.contour_layers else None,
-                                layout=a.layout)
+                                layout=a.layout, detail=a.detail)
     elif c == "draw":
         r = rt.draw_from_spec(_json_arg(None, a.spec, "spec"), a.output, overwrite=a.overwrite, dxf_version=a.dxf_version)
     elif c == "revise":
@@ -197,13 +202,13 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         r = rt.revise_from_document(a.document, a.output, _json_arg(None, a.facts_file, "facts"),
                                     _json_arg(None, a.overrides_file, "overrides"), overwrite=a.overwrite)
     elif c == "diff":
-        r = rt.get_diff(a.path, a.against)
+        r = rt.get_diff(a.path, a.against, a.detail)
     elif c == "rollback":
         r = rt.rollback(a.path, a.checkpoint)
     elif c == "checkpoints":
         r = rt.list_checkpoints(a.path)
     elif c == "history":
-        r = rt.history(a.path)
+        r = rt.history(a.path, detail=a.detail, seq=a.seq)
     elif c == "recover":
         r = rt.recover(a.path)
     elif c == "export":

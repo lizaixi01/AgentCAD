@@ -35,7 +35,7 @@ def test_negative_z_extrusion_is_read_in_wcs(rt, ws):
     arc = next(e for e in ents if e["type"] == "ARC")
     assert circle["center"] == [90.0, 10.0]
     assert (arc["center"], arc["start_angle"], arc["end_angle"]) == ([50.0, 30.0], 90.0, 180.0)
-    v = ok(rt.validate_drawing(name, requirements=[{"type": "hole", "center": [90, 10], "diameter": 8}]))["validation"]
+    v = ok(rt.validate_drawing(name, detail=True, requirements=[{"type": "hole", "center": [90, 10], "diameter": 8}]))["validation"]
     assert v["requirements"][0]["status"] == "pass"
     # editing works in WCS terms: offset the -Z circle outward, trim the -Z arc
     ok(rt.apply_operations(name, [{"op": "offset", "target": circle["id"], "distance": 1, "side_point": [200, 10]},
@@ -77,7 +77,7 @@ def test_angular_dimension_stores_radians(rt, ws, blank):
     from conftest import by_tag
     d = by_tag(reread(ws, blank), "a")
     assert d.dxf.actual_measurement == A(math.pi / 2)
-    v = ok(rt.validate_drawing(blank, requirements=[{"type": "dimension", "kind": "angular", "value": 90}]))["validation"]
+    v = ok(rt.validate_drawing(blank, detail=True, requirements=[{"type": "dimension", "kind": "angular", "value": 90}]))["validation"]
     assert v["requirements"][0]["status"] == "pass" and "DIMENSION_STALE" not in {i["code"] for i in v["issues"]}
 
 

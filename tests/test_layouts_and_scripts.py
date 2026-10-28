@@ -43,7 +43,7 @@ def test_read_inspect_and_validate_see_the_sheet(rt, ws):
     warn = [i for i in v["issues"] if i["code"] == "LAYOUT_NOT_VALIDATED"]
     assert len(warn) == 1 and warn[0]["details"]["layout"] == SHEET and v["coverage"]["checked_layout"] == "Model"
     # the sheet itself: its dimension is compared as displayed (2.5 * 2 * dimlfac 2 = Ø10)
-    v = ok(rt.validate_drawing(name, layout=SHEET, requirements=[
+    v = ok(rt.validate_drawing(name, detail=True, layout=SHEET, requirements=[
         {"type": "dimension", "kind": "diameter", "value": 10}, {"type": "text", "contains": "TITLE"}]))["validation"]
     assert [r["status"] for r in v["requirements"]] == ["pass", "pass"]
     assert any(i["code"] == "LAYOUT_NOT_VALIDATED" and i["details"]["layout"] == "Model" for i in v["issues"])
@@ -79,7 +79,7 @@ def test_dimensions_on_a_sheet_show_true_size(rt, ws):
     name, h = sheet_drawing(ws)
     r = ok(rt.apply_operations(name, [{"op": "add_diameter_dim", "target": h, "length_factor": 2, "layout": SHEET}]))
     new = r["changes"]["added"][0]
-    v = ok(rt.validate_drawing(name, layout=SHEET, requirements=[
+    v = ok(rt.validate_drawing(name, detail=True, layout=SHEET, requirements=[
         {"type": "dimension", "kind": "diameter", "value": 10}]))["validation"]
     assert v["requirements"][0]["status"] == "pass"
     # change an existing dimension: text, height and length factor; the block is re-rendered
@@ -124,7 +124,7 @@ def test_script_is_a_transaction(srt, ws):
     r = ok(srt.run_script(name, SCRIPT, label="scale holes"))
     assert r["checkpoint_before"] and r["validation"]["passed"]
     assert reread(ws, name).entitydb[h].dxf.radius == A(3)
-    hist = ok(srt.history(name))["records"][-1]
+    hist = ok(srt.history(name, detail=True))["records"][-1]
     assert hist["tool"] == "run_script" and "radius *= 1.2" in hist["code"] and hist["code_sha256"]
     ok(srt.rollback(name))
     assert reread(ws, name).entitydb[h].dxf.radius == A(2.5)

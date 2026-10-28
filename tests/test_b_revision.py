@@ -46,7 +46,7 @@ def test_revise_width_keeps_edge_distance(rt, ws, plate):
     assert width_dim["changes"]["measurement"] == {"old": 100.0, "new": 120.0}
 
     # 5. everything passes independent validation (requirements re-derived from the new spec)
-    v = ok(rt.validate_drawing(plate))["validation"]
+    v = ok(rt.validate_drawing(plate, detail=True))["validation"]
     assert v["passed"], v
     req = {x["id"]: x for x in v["requirements"]}
     assert req["outline"]["actual"] == {"width": 120.0, "height": 60.0}
@@ -61,7 +61,7 @@ def test_revision_is_idempotent_and_reversible(rt, ws, plate):
     assert r["changes"] == {"added": [], "modified": [], "deleted": []}
     assert snapshot(ws, plate) == snap
     ok(rt.rollback(plate, "cp-0001"))  # back to the original 100 mm
-    v = ok(rt.validate_drawing(plate))["validation"]
+    v = ok(rt.validate_drawing(plate, detail=True))["validation"]
     assert {x["id"]: x for x in v["requirements"]}["outline"]["actual"]["width"] == 100.0
 
 

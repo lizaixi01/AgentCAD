@@ -305,7 +305,8 @@ class Runtime:
                 store.journal({"tool": "apply_operations", "ok": False, "label": label, "operations": operations,
                                "error": {"code": "VALIDATION_FAILED"}, "failure_snapshot": fail})
                 raise AgentCADError("VALIDATION_FAILED", "Post-operation validation failed; nothing was saved",
-                                    category="validation", details={"validation": tmp_report, "failure_snapshot": fail},
+                                    category="validation",
+                                    details={"validation": compact_report(tmp_report), "failure_snapshot": fail},
                                     hint="Inspect validation.issues; fix the operations and retry")
             info = store.commit(doc, label=label or "apply_operations")
             seq = store.journal({"tool": "apply_operations", "ok": True, "label": label, "operations": operations,
@@ -359,7 +360,8 @@ class Runtime:
                 store.journal({"tool": "run_script", "ok": False, "label": label, "code": code,
                                "error": {"code": "VALIDATION_FAILED"}, "failure_snapshot": fail})
                 raise AgentCADError("VALIDATION_FAILED", "Validation of the script's result failed; nothing was saved",
-                                    category="validation", details={"validation": tmp_report, "failure_snapshot": fail},
+                                    category="validation",
+                                    details={"validation": compact_report(tmp_report), "failure_snapshot": fail},
                                     hint="Inspect validation.issues; fix the script and retry")
             info = store.commit(doc, label=label or "run_script")
             seq = store.journal({"tool": "run_script", "ok": True, "label": label, "code": code,
@@ -378,10 +380,12 @@ class Runtime:
     @tool
     def validate_drawing(self, path: str, requirements: list[dict] | None = None, use_stored_spec: bool = True,
                          bounds: list | None = None, tolerance: float = 1e-6,
-                         contour_layers: list[str] | None = None, layout: str | None = None) -> dict[str, Any]:
+                         contour_layers: list[str] | None = None, layout: str | None = None,
+                         detail: bool = False) -> dict[str, Any]:
         """Independent validation: re-reads the file from disk. If the drawing carries a part spec and no
         explicit requirements are given, requirements are re-derived from that spec (not from the plan).
-        ``layout``: check a paper-space sheet instead of model space (the stored spec describes model space)."""
+        ``layout``: check a paper-space sheet instead of model space (the stored spec describes model space).
+        ``detail``: the full report (see compact_report for the default)."""
         p, store = self._drawing(path)
         reqs = requirements
         source = "explicit" if requirements else None
@@ -399,7 +403,7 @@ class Runtime:
                                layout=layout)
         report["file"] = self._rel(p)
         report["requirements_source"] = source
-        return {"drawing": self._rel(p), "validation": report}
+        return {"drawing": self._rel(p), "validation": report if detail else compact_report(report)}
 
     @tool
     def apply_constraints(self, path: str, constraints: list[dict], mode: str = "check",
@@ -553,8 +557,10 @@ class Runtime:
                 "validation": res["validation"], "journal_seq": res["journal_seq"]}
 
     @tool
-    def get_diff(self, path: str, against: str = "previous") -> dict[str, Any]:
-        """Diff the drawing against 'previous' (latest checkpoint), a checkpoint id, or another .dxf path."""
+    def get_diff(self, path: str, against: str = "previous", detail: bool = False) -> dict[str, Any]:
+        """Diff the drawing against 'previous' (latest checkpoint), a checkpoint id, or another .dxf path.
+        Modified entities always list their changed fields (old/new); added and deleted entities are listed by
+        id/type/layer/tag unless ``detail`` asks for their full geometry."""
         p, store = self._drawing(path)
         cur = store.load()
         if against == "previous":
@@ -570,7 +576,11 @@ class Runtime:
             other_path = self.policy.resolve(against, must_exist=True, suffixes=(".dxf",))
             label = self._rel(other_path)
         old = read_dxf(other_path, self.policy)
-        return {"drawing": self._rel(p), "against": label, **diff_docs(old, cur)}
+        diff = diff_docs(old, cur)
+        if not detail:
+            for k in ("added", "deleted"):
+                diff[k] = [{f: e[f] for f in ("id", "type", "layer", "tag", "layout") if f in e} for e in diff[k]]
+        return {"drawing": self._rel(p), "against": label, **diff}
 
     @tool
     def rollback(self, path: str, checkpoint: str | None = None) -> dict[str, Any]:
@@ -592,10 +602,19 @@ class Runtime:
         return {"drawing": self._rel(p), "checkpoints": store.list_checkpoints()}
 
     @tool
-    def history(self, path: str, limit: int = 50) -> dict[str, Any]:
+    def history(self, path: str, limit: int = 50, detail: bool = False, seq: list[int] | None = None) -> dict[str, Any]:
+        """Operation journal, oldest first. By default one line per record (what ran, what changed, checkpoint);
+        ``seq`` returns those records in full (operations with their parameters, scripts, errors), ``detail`` all."""
         p, store = self._drawing(path, must_exist=False)
+        if seq:
+            want = set(seq)
+            recs = [r for r in store.read_journal() if r.get("seq") in want]
+            return {"drawing": self._rel(p), "records": recs}
         recs = store.read_journal(limit)
-        return {"drawing": self._rel(p), "records": recs}
+        if detail:
+            return {"drawing": self._rel(p), "records": recs}
+        return {"drawing": self._rel(p), "records": [_journal_line(r) for r in recs],
+                "detail_hint": "seq=[n, ...]: those records in full (operation parameters, script, error)"}
 
     @tool
     def recover(self, path: str) -> dict[str, Any]:
@@ -783,9 +802,81 @@ def _changes(res: dict[str, Any]) -> dict[str, Any]:
     return {"added": res["added"], "modified": res["modified"], "deleted": res["deleted"]}
 
 
+def _journal_line(r: dict[str, Any]) -> dict[str, Any]:
+    """A journal record without its payload: what ran, the outcome, change counts and the checkpoint."""
+    line = {k: r[k] for k in ("seq", "ts", "tool", "ok", "label", "checkpoint_before") if r.get(k) is not None}
+    ops = r.get("operations") or r.get("plan")
+    if ops:
+        counts: dict[str, int] = {}
+        for o in ops:
+            name = o.get("op", "?") if isinstance(o, dict) else "?"
+            counts[name] = counts.get(name, 0) + 1
+        line["ops"] = [f"{n} x{c}" if c > 1 else n for n, c in counts.items()]
+    for k in ("changes_requested", "checkpoint"):
+        if k in r:
+            line[k] = r[k]
+    ch = r.get("changes")
+    if isinstance(ch, dict):
+        line["changes"] = {k: len(v) for k, v in ch.items() if isinstance(v, list)}
+    err = r.get("error")
+    if isinstance(err, dict):
+        line["error"] = {k: err[k] for k in ("code", "message", "op_index", "op") if k in err}
+    if r.get("tool") == "run_script":
+        line["script_lines"] = len(str(r.get("code", "")).splitlines())
+    return line
+
+
+MAX_ISSUES = 50
+
+
+def _requirements(reqs: list[dict[str, Any]], out: dict[str, Any]) -> None:
+    """Failed requirements in full, passed ones by id only. A passed requirement that carries warnings (fields the
+    validator ignored) stays listed, without expected/actual."""
+    out["requirements"] = [r if r["status"] != "pass" else {k: r[k] for k in ("id", "type", "status", "warnings")}
+                           for r in reqs if r["status"] != "pass" or r.get("warnings")]
+    out["requirements_passed"] = [r["id"] for r in reqs if r["status"] == "pass"]
+
+
+def _issues(report: dict[str, Any], out: dict[str, Any]) -> None:
+    out["issues"] = report["issues"][:MAX_ISSUES]
+    if len(report["issues"]) > MAX_ISSUES:
+        out["issues_omitted"] = len(report["issues"]) - MAX_ISSUES
+
+
 def _brief(report: dict[str, Any]) -> dict[str, Any]:
-    return {"passed": report["passed"], "summary": report["summary"], "issues": report["issues"][:50],
-            "requirements": report["requirements"]}
+    out = {"passed": report["passed"], "summary": report["summary"]}
+    _issues(report, out)
+    _requirements(report["requirements"], out)
+    return out
+
+
+def compact_report(report: dict[str, Any]) -> dict[str, Any]:
+    """validate_drawing without detail: verdict, issues, failed requirements and counts of what was recognized.
+    The full report repeats expected/actual for every passed requirement and lists every circle and dimension,
+    which made validate_drawing a third of all tool output in the Claude Code trials."""
+    out = {k: report[k] for k in ("file", "readable", "passed", "summary") if k in report}
+    _issues(report, out)
+    _requirements(report["requirements"], out)
+    if "coverage" in report:
+        out["coverage"] = {"checked_layout": report["coverage"]["checked_layout"],
+                           "unchecked_layouts": [u["layout"] for u in report["coverage"]["unchecked_layouts"]]}
+    rec = report.get("recognized")
+    if rec:
+        diam: dict[str, int] = {}
+        for c in rec["circles"]:
+            k = f"{c['diameter']:g}"
+            diam[k] = diam.get(k, 0) + 1
+        kinds: dict[str, int] = {}
+        for d in rec["dimensions"]:
+            kinds[d["kind"]] = kinds.get(d["kind"], 0) + 1
+        out["recognized"] = {"outline": rec["outline"] and {"size": rec["outline"]["size"], "bbox": rec["outline"]["bbox"]},
+                             "circles": {"count": len(rec["circles"]), "by_diameter": diam},
+                             "dimensions": {"count": len(rec["dimensions"]), "by_kind": kinds},
+                             "closed_contours": rec["closed_contours"], "entity_count": rec["entity_count"]}
+    if "requirements_source" in report:
+        out["requirements_source"] = report["requirements_source"]
+    out["detail_hint"] = "detail=true: expected/actual of passed requirements, each circle and dimension"
+    return out
 
 
 def diff_docs(old, new) -> dict[str, Any]:
