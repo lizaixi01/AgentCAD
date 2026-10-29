@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentCAD Viewer</title>
+<style>
+:root {
+  --bg: #f4f5f7; --panel: #ffffff; --ink: #1d2330; --muted: #6b7280; --line: #e2e5ea;
+  --accent: #2563eb; --ok: #16a34a; --bad: #dc2626; --warn: #ea580c; --sel: #e8efff; --canvas: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #14171c; --panel: #1b1f26; --ink: #e6e8ec; --muted: #9aa1ad; --line: #2b313b;
+          --accent: #5b8cff; --sel: #243049; --canvas: #20242c; }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--bg); color: var(--ink); font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif;
+       display: grid; grid-template-rows: 44px 1fr; grid-template-columns: 240px 1fr 320px; }
+header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 0 14px;
+         background: var(--panel); border-bottom: 1px solid var(--line); }
+header h1 { font-size: 14px; margin: 0; font-weight: 600; }
+header .path { color: var(--muted); font-family: ui-monospace, Consolas, monospace; overflow: hidden;
+               text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+.dot.live { background: var(--ok); box-shadow: 0 0 0 3px rgba(22,163,74,.2); }
+.dot.off { background: var(--bad); }
+label.tog { display: flex; align-items: center; gap: 5px; color: var(--muted); white-space: nowrap; cursor: pointer; }
+aside { background: var(--panel); overflow: auto; min-height: 0; }
+#files { border-right: 1px solid var(--line); }
+#side { border-left: 1px solid var(--line); display: flex; flex-direction: column; }
+h2 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); margin: 12px 12px 6px; }
+ul { list-style: none; margin: 0; padding: 0; }
+#files li { padding: 6px 12px; cursor: pointer; display: flex; gap: 8px; align-items: center;
+            font-family: ui-monospace, Consolas, monospace; font-size: 12px; word-break: break-all; }
+#files li:hover { background: var(--sel); }
+#files li.sel { background: var(--sel); font-weight: 600; }
+.kind { font: 600 9px system-ui; padding: 1px 4px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); }
+.ping { width: 6px; height: 6px; border-radius: 50%; background: var(--warn); margin-left: auto; flex: none; }
+main { position: relative; overflow: hidden; background: var(--canvas); min-width: 0; min-height: 0; }
+#stage, #three { position: absolute; inset: 0; }
+#stage svg { width: 100%; height: 100%; display: block; cursor: grab; }
+#stage svg.drag { cursor: grabbing; }
+#png { position: absolute; inset: 0; margin: auto; max-width: 100%; max-height: 100%; }
+#empty { position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); text-align: center; padding: 20px; }
+#bar { position: absolute; left: 10px; top: 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; z-index: 2; }
+.chip { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 3px 9px; font-size: 12px;
+        color: var(--ink); cursor: pointer; user-select: none; }
+.chip.off { opacity: .45; text-decoration: line-through; }
+.badge { background: var(--accent); color: #fff; border-radius: 10px; padding: 2px 8px; font-size: 11px; }
+.badge.old { background: var(--warn); }
+#legend { position: absolute; right: 10px; bottom: 10px; background: var(--panel); border: 1px solid var(--line);
+          border-radius: 6px; padding: 5px 9px; font-size: 11px; display: flex; gap: 10px; z-index: 2; }
+#legend i { display: inline-block; width: 10px; height: 3px; vertical-align: middle; margin-right: 4px; }
+#flash { position: absolute; right: 10px; top: 10px; background: var(--ok); color: #fff; border-radius: 4px;
+         padding: 4px 10px; font-size: 12px; opacity: 0; transition: opacity .4s; z-index: 2; pointer-events: none; }
+#flash.on { opacity: 1; transition: none; }
+#busy { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); color: var(--muted); font-size: 12px; z-index: 2; }
+#timeline { flex: 1; overflow: auto; min-height: 120px; }
+#timeline li { padding: 7px 12px; border-bottom: 1px solid var(--line); cursor: pointer; }
+#timeline li:hover { background: var(--sel); }
+#timeline li.sel { background: var(--sel); box-shadow: inset 3px 0 var(--accent); }
+#timeline li.na { cursor: default; opacity: .6; }
+#timeline .t { display: flex; gap: 6px; align-items: baseline; }
+#timeline .seq { color: var(--muted); font-family: ui-monospace, Consolas, monospace; font-size: 11px; }
+#timeline .tool { font-weight: 600; }
+#timeline .when { margin-left: auto; color: var(--muted); font-size: 11px; }
+#timeline .ops { color: var(--muted); font-family: ui-monospace, Consolas, monospace; font-size: 11px; word-break: break-word; }
+#timeline .err { color: var(--bad); font-size: 12px; }
+#diff { border-top: 1px solid var(--line); max-height: 45%; overflow: auto; padding-bottom: 10px; }
+#diff .row { padding: 1px 12px; font-family: ui-monospace, Consolas, monospace; font-size: 11px; word-break: break-word; }
+.add { color: var(--ok); } .mod { color: var(--warn); } .del { color: var(--bad); }
+.muted { color: var(--muted); padding: 2px 12px; word-break: break-word; }
+@media (max-width: 900px) {
+  body { grid-template-columns: 1fr; grid-template-rows: 44px 140px 55vh auto; }
+  #files { border-right: 0; border-bottom: 1px solid var(--line); }
+  #side { border-left: 0; }
+}
+</style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+</script>
+</head>
+<body>
+<header>
+  <h1>AgentCAD</h1><span id="conn" class="dot" title="change feed"></span>
+  <span class="path" id="title">no drawing selected</span>
+  <label class="tog" title="Switch to whichever drawing an agent changes"><input type="checkbox" id="follow" checked> follow agent</label>
+  <label class="tog" title="Colour what the shown version changed"><input type="checkbox" id="hl" checked> highlight changes</label>
+</header>
+<aside id="files"><h2>Drawings &amp; parts</h2><ul id="list"></ul></aside>
+<main>
+  <div id="stage"></div><div id="three"></div><img id="png" alt="" hidden>
+  <div id="empty">Waiting for a drawing.<br>Create or edit one with AgentCAD and it shows up here.</div>
+  <div id="bar"></div>
+  <div id="legend" hidden><span><i style="background:#16a34a"></i>added</span><span><i style="background:#ea580c"></i>modified</span><span><i style="background:#b8bcc4"></i>unchanged</span></div>
+  <div id="flash">updated</div><div id="busy"></div>
+</main>
+<aside id="side">
+  <h2>Timeline</h2><ul id="timeline"></ul>
+  <div id="diff"></div>
+</aside>
+<script type="module">
+const $ = (id) => document.getElementById(id);
+const S = { drawings: [], path: null, tl: null, version: null, hidden: new Set(), layersFor: null,
+            ping: new Set(), three: null, renderSeq: 0 };
+const api = (p, q = {}) => fetch(p + "?" + new URLSearchParams(q)).then(async (r) => {
+  const ct = r.headers.get("content-type") || "";
+  if (!r.ok) { const e = ct.includes("json") ? (await r.json()).error : { message: r.statusText }; throw e; }
+  return ct.includes("json") ? r.json() : r.text();
+});
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const isPart = (p) => /\.fcstd$/i.test(p || "");
+const busy = (t) => { $("busy").textContent = t || ""; };
+
+// ---- drawings list -------------------------------------------------------------------------------
+async function loadList() {
+  const r = await api("/api/drawings");
+  S.drawings = r.drawings.map((d) => d.path);
+  const ul = $("list"); ul.innerHTML = "";
+  for (const d of r.drawings) {
+    const li = document.createElement("li");
+    li.className = d.path === S.path ? "sel" : "";
+    li.innerHTML = `<span class="kind">${d.kind === "part" ? "3D" : "2D"}</span><span>${esc(d.path)}</span>` +
+                   (S.ping.has(d.path) ? '<span class="ping"></span>' : "");
+    li.onclick = () => { location.hash = encodeURIComponent(d.path); };
+    ul.appendChild(li);
+  }
+  if (!S.path && S.drawings.length && !location.hash) location.hash = encodeURIComponent(S.drawings[0]);
+}
+
+function select(path) {
+  if (!path || path === S.path) return;
+  S.path = path; S.version = null; S.hidden = new Set(); S.layersFor = null; S.ping.delete(path);
+  $("title").textContent = path;
+  resetView();
+  loadList(); refresh(true);
+}
+window.addEventListener("hashchange", () => select(decodeURIComponent(location.hash.slice(1))));
+
+// ---- timeline ------------------------------------------------------------------------------------
+async function loadTimeline() {
+  S.tl = await api("/api/timeline", { path: S.path });
+  const ul = $("timeline"); ul.innerHTML = "";
+  const live = document.createElement("li");
+  live.className = S.version ? "" : "sel";
+  live.innerHTML = `<div class="t"><span class="badge">LIVE</span><span class="tool">current file</span></div>` +
+    (S.tl.modified_outside_runtime ? '<div class="err">changed outside AgentCAD since the last commit</div>' : "");
+  live.onclick = () => { S.version = null; refresh(false); };
+  ul.appendChild(live);
+  for (const r of [...S.tl.records].reverse()) {
+    const li = document.createElement("li");
+    const pick = r.version && r.available;
+    li.className = (pick ? "" : "na ") + (S.version && r.version === S.version ? "sel" : "");
+    const ops = r.ops ? r.ops.join(", ") : r.label || "";
+    const ch = r.changes ? Object.entries(r.changes).map(([k, n]) => `${k} ${n}`).join(" · ") : "";
+    const when = r.ts ? new Date(r.ts).toLocaleTimeString() : "";
+    li.innerHTML = `<div class="t"><span class="seq">#${r.seq}</span><span class="tool">${esc(r.tool)}</span>` +
+      `${r.ok ? "" : '<span class="del">failed</span>'}<span class="when">${esc(when)}</span></div>` +
+      (r.label && r.ops ? `<div>${esc(r.label)}</div>` : "") +
+      (ops ? `<div class="ops">${esc(ops)}</div>` : "") + (ch ? `<div class="ops">${esc(ch)}</div>` : "") +
+      (r.error ? `<div class="err">${esc(r.error.code)}: ${esc(r.error.message)}</div>` : "") +
+      (r.version && !r.available ? '<div class="muted" style="padding:0">version no longer stored</div>' : "");
+    if (pick) li.onclick = () => { S.version = r.version === S.tl.current ? null : r.version; refresh(false); };
+    ul.appendChild(li);
+  }
+}
+
+// ---- diff panel ----------------------------------------------------------------------------------
+async function loadDiff(v) {
+  const box = $("diff");
+  box.innerHTML = `<h2>Changes in this version</h2><div class="muted">${isPart(S.path) ? "comparing with FreeCAD…" : "…"}</div>`;
+  let d;
+  try { d = await api("/api/diff", { path: S.path, v: v || "current" }); }
+  catch (e) { box.innerHTML = `<h2>Changes in this version</h2><div class="muted">${esc(e.message)}</div>`; return; }
+  if (S.shown !== v) return;
+  const rows = [];
+  const ent = (e) => `${e.id} ${e.type}${e.layer ? " @" + e.layer : ""}${e.tag ? " tag:" + e.tag : ""}`;
+  if (d.note) rows.push(`<div class="muted">${esc(d.note)}</div>`);
+  for (const e of (d.added || []).slice(0, 60)) rows.push(`<div class="row add">+ ${esc(ent(e))}</div>`);
+  for (const e of (d.modified || []).slice(0, 60)) {
+    const f = Object.keys(e.changes || e.changed || {}).join(", ");
+    rows.push(`<div class="row mod">~ ${esc(e.id)} ${esc(e.type)}${f ? " (" + esc(f) + ")" : ""}</div>`);
+  }
+  for (const e of (d.deleted || []).slice(0, 60)) rows.push(`<div class="row del">− ${esc(ent(e))}</div>`);
+  for (const [k, c] of Object.entries(d.parameters || {}))
+    rows.push(`<div class="row mod">param ${esc(k)}: ${esc(c.old)} → ${esc(c.new)}</div>`);
+  for (const [k, c] of Object.entries(d.shape || {}))
+    rows.push(`<div class="row mod">${esc(k)}: ${esc(JSON.stringify(c.old))} → ${esc(JSON.stringify(c.new))}</div>`);
+  if (d.layers) {
+    for (const l of d.layers.added || []) rows.push(`<div class="row add">+ layer ${esc(l)}</div>`);
+    for (const l of d.layers.deleted || []) rows.push(`<div class="row del">− layer ${esc(l)}</div>`);
+  }
+  if (!rows.length) rows.push('<div class="muted">no changes</div>');
+  const s = d.summary ? ` <span style="text-transform:none">(+${d.summary.added} ~${d.summary.modified} −${d.summary.deleted})</span>` : "";
+  box.innerHTML = `<h2>Changes in this version${s}</h2>` + rows.join("");
+}
+
+// ---- rendering -----------------------------------------------------------------------------------
+function resetView() {
+  $("stage").innerHTML = ""; $("bar").innerHTML = ""; $("png").hidden = true; $("legend").hidden = true;
+  S.view = null; S.baseVB = null;
+  if (S.three) { S.three.dispose(); S.three = null; }
+}
+
+async function refresh(full) {
+  if (!S.path) return;
+  const seq = ++S.renderSeq;
+  try { await loadTimeline(); } catch (e) {
+    if (e.code === "FILE_NOT_FOUND") { $("empty").hidden = false; $("empty").textContent = S.path + " was removed"; return; }
+  }
+  if (seq !== S.renderSeq) return;
+  const v = S.version;
+  S.shown = v;
+  $("empty").hidden = true;
+  loadDiff(v);
+  if (isPart(S.path)) await render3d(v, seq); else await render2d(v, seq, full);
+}
+
+async function render2d(v, seq) {
+  const hl = $("hl").checked;
+  busy("rendering…");
+  let text;
+  try {
+    text = await api("/api/svg", { path: S.path, v: v || "current", diff: hl ? 1 : 0, hide: [...S.hidden].join(",") });
+  } catch (e) { busy(e.message); return; }
+  if (seq !== S.renderSeq) return;
+  busy("");
+  const doc = new DOMParser().parseFromString(text, "image/svg+xml");
+  const svg = doc.documentElement;
+  svg.querySelectorAll("script, foreignObject").forEach((n) => n.remove());
+  svg.removeAttribute("width"); svg.removeAttribute("height");
+  svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
+  const base = svg.getAttribute("viewBox");
+  if (S.view && S.baseVB === base) svg.setAttribute("viewBox", S.view.join(" "));
+  else { S.baseVB = base; S.view = base.split(/\s+/).map(Number); }
+  const stage = $("stage"); stage.innerHTML = ""; stage.appendChild(document.importNode(svg, true));
+  panZoom(stage.firstChild);
+  $("legend").hidden = !hl;
+  if (S.layersFor !== (v || S.tl.current)) loadLayers(v);
+}
+
+async function loadLayers(v) {
+  const r = await api("/api/layers", { path: S.path, v: v || "current" });
+  S.layersFor = r.version;
+  const bar = $("bar"); bar.innerHTML = "";
+  if (S.version) bar.insertAdjacentHTML("beforeend", '<span class="badge old">viewing an earlier version</span>');
+  for (const l of r.layers.filter((l) => l.entities > 0)) {
+    const c = document.createElement("span");
+    c.className = "chip" + (S.hidden.has(l.name) ? " off" : "");
+    c.textContent = `${l.name} ${l.entities}`;
+    c.title = "show / hide layer";
+    c.onclick = () => { S.hidden.has(l.name) ? S.hidden.delete(l.name) : S.hidden.add(l.name); S.layersFor = null; refresh(false); };
+    bar.appendChild(c);
+  }
+}
+
+function panZoom(svg) {
+  const set = () => svg.setAttribute("viewBox", S.view.join(" "));
+  const pt = (e) => { const r = svg.getBoundingClientRect(); const k = Math.max(S.view[2] / r.width, S.view[3] / r.height);
+    const ox = (r.width * k - S.view[2]) / 2, oy = (r.height * k - S.view[3]) / 2;
+    return [S.view[0] - ox + (e.clientX - r.left) * k, S.view[1] - oy + (e.clientY - r.top) * k, k]; };
+  svg.addEventListener("wheel", (e) => {
+    e.preventDefault();
+    const [x, y] = pt(e); const f = Math.exp(e.deltaY * 0.0015);
+    S.view = [x - (x - S.view[0]) * f, y - (y - S.view[1]) * f, S.view[2] * f, S.view[3] * f]; set();
+  }, { passive: false });
+  let drag = null;
+  svg.addEventListener("pointerdown", (e) => { drag = [e.clientX, e.clientY, ...S.view]; svg.setPointerCapture(e.pointerId); svg.classList.add("drag"); });
+  svg.addEventListener("pointermove", (e) => {
+    if (!drag) return; const k = pt(e)[2];
+    S.view = [drag[2] - (e.clientX - drag[0]) * k, drag[3] - (e.clientY - drag[1]) * k, drag[4], drag[5]]; set();
+  });
+  svg.addEventListener("pointerup", () => { drag = null; svg.classList.remove("drag"); });
+  svg.addEventListener("dblclick", () => { S.view = S.baseVB.split(/\s+/).map(Number); set(); });
+}
+
+let THREE = null, Orbit = null, Utils = null;
+async function three() {
+  if (THREE === null) {
+    try {
+      THREE = await import("three");
+      Orbit = (await import("three/addons/controls/OrbitControls.js")).OrbitControls;
+      Utils = await import("three/addons/utils/BufferGeometryUtils.js");
+    } catch (e) { THREE = false; }
+  }
+  return THREE;
+}
+
+async function render3d(v, seq) {
+  $("bar").innerHTML = S.version ? '<span class="badge old">viewing an earlier version</span>' : "";
+  $("legend").hidden = true;
+  busy("meshing with FreeCAD…");
+  const T = await three();
+  if (!T) {  // no WebGL library (offline): the shaded preview grid
+    const img = $("png"); img.hidden = false;
+    img.onload = () => busy(""); img.onerror = () => busy("preview failed");
+    img.src = "/api/png?" + new URLSearchParams({ path: S.path, v: v || S.tl.current });
+    return;
+  }
+  let m;
+  try { m = await api("/api/mesh", { path: S.path, v: v || S.tl.current }); }
+  catch (e) { busy(e.message); return; }
+  if (seq !== S.renderSeq) return;
+  busy("");
+  if (!S.three) S.three = makeScene(T);
+  S.three.show(m);
+}
+
+function makeScene(T) {
+  const el = $("three");
+  const renderer = new T.WebGLRenderer({ antialias: true, alpha: true });
+  renderer.setPixelRatio(window.devicePixelRatio);
+  el.appendChild(renderer.domElement);
+  const scene = new T.Scene();
+  const camera = new T.PerspectiveCamera(35, 1, 0.1, 1e6);
+  camera.up.set(0, 0, 1);
+  scene.add(new T.HemisphereLight(0xffffff, 0x8890a0, 1.6));
+  const sun = new T.DirectionalLight(0xffffff, 1.6); scene.add(sun);
+  const controls = new Orbit(camera, renderer.domElement);
+  controls.enableDamping = true;
+  const group = new T.Group(); scene.add(group);
+  let framed = 0, raf = 0;
+  const size = () => { const r = el.getBoundingClientRect(); renderer.setSize(r.width, r.height, false);
+    renderer.domElement.style.width = "100%"; renderer.domElement.style.height = "100%";
+    camera.aspect = r.width / Math.max(r.height, 1); camera.updateProjectionMatrix(); };
+  const ro = new ResizeObserver(size); ro.observe(el); size();
+  const loop = () => { raf = requestAnimationFrame(loop); controls.update(); sun.position.copy(camera.position); renderer.render(scene, camera); };
+  loop();
+  function show(m) {
+    group.clear();
+    let g = new T.BufferGeometry();
+    g.setAttribute("position", new T.Float32BufferAttribute(m.positions, 3));
+    g.setIndex(m.indices);
+    g = Utils.toCreasedNormals(g, Math.PI / 6);
+    group.add(new T.Mesh(g, new T.MeshStandardMaterial({ color: 0x9fb3cf, metalness: 0.1, roughness: 0.6,
+      polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })));
+    const seg = [];
+    for (const e of m.edges) for (let i = 0; i + 5 < e.length; i += 3) seg.push(e[i], e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
+    const lg = new T.BufferGeometry(); lg.setAttribute("position", new T.Float32BufferAttribute(seg, 3));
+    group.add(new T.LineSegments(lg, new T.LineBasicMaterial({ color: 0x1d2330 })));
+    // keep the user's camera across updates unless the part grew or shrank a lot
+    const r = new T.Box3().setFromObject(group).getSize(new T.Vector3()).length() || 1;
+    if (!framed || r > framed * 1.2 || r < framed / 1.2) fit();
+  }
+  function fit() {
+    const box = new T.Box3().setFromObject(group), c = box.getCenter(new T.Vector3()), r = box.getSize(new T.Vector3()).length() || 1;
+    controls.target.copy(c);
+    camera.position.copy(c).add(new T.Vector3(1, -1.3, 0.9).normalize().multiplyScalar(r * 1.6));
+    camera.near = r / 100; camera.far = r * 100; camera.updateProjectionMatrix();
+    framed = r;
+  }
+  renderer.domElement.addEventListener("dblclick", fit);
+  return { show, dispose() { cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); el.innerHTML = ""; } };
+}
+
+// ---- live feed -----------------------------------------------------------------------------------
+function flash(t) { const f = $("flash"); f.textContent = t; f.classList.add("on"); setTimeout(() => f.classList.remove("on"), 900); }
+function connect() {
+  const es = new EventSource("/api/events");
+  es.onopen = () => { $("conn").className = "dot live"; };
+  es.onerror = () => { $("conn").className = "dot off"; };
+  es.onmessage = (msg) => {
+    const ev = JSON.parse(msg.data);
+    if (ev.kind !== "changed") loadList();
+    if (ev.drawing === S.path) {
+      if (ev.kind === "removed") { refresh(false); return; }
+      flash(S.version ? "new version (viewing an older one)" : "updated");
+      refresh(false);
+    } else if (ev.kind !== "removed" && $("follow").checked) {
+      location.hash = encodeURIComponent(ev.drawing);
+    } else if (ev.kind !== "removed") { S.ping.add(ev.drawing); loadList(); }
+  };
+}
+$("hl").onchange = () => refresh(false);
+await loadList();
+select(decodeURIComponent(location.hash.slice(1)));
+connect();
+</script>
+</body>
+</html>
