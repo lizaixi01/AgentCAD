@@ -262,3 +262,59 @@ def test_part_mesh_png_and_diff(rt, ws, viewer):
     code, ctype, png = get(viewer, "/api/png", path="plate.FCStd")
     assert code == 200 and png[:8] == b"\x89PNG\r\n\x1a\n"
     assert files_state(ws) == before
+
+
+# --- commits are never blocked by the viewer -------------------------------------------------------------------
+
+@pytest.mark.skipif(os.name != "nt", reason="POSIX rename never fails on an open target")
+def test_store_waits_out_a_reader(tmp_path):
+    """The hazard: on Windows, os.replace onto a file another handle has open fails. replace_file retries."""
+    from agentcad.store import replace_file
+    target, new = tmp_path / "a.dxf", tmp_path / "b.tmp"
+    target.write_bytes(b"old")
+    new.write_bytes(b"new")
+    f = open(target, "rb")
+    with pytest.raises(PermissionError):
+        os.replace(new, target)
+    threading.Timer(0.2, f.close).start()  # a reader that finishes after 0.2 s
+    replace_file(new, target)
+    assert target.read_bytes() == b"new"
+    f2 = open(target, "rb")  # a reader that never lets go: the commit fails after the timeout, as before
+    try:
+        new.write_bytes(b"newer")
+        with pytest.raises(PermissionError):
+            replace_file(new, target, timeout=0.1)
+    finally:
+        f2.close()
+
+
+def test_commits_succeed_while_the_viewer_reads(rt, ws, blank, workspace):
+    """Agents work next to the viewer: hammer the viewer's read paths while the runtime commits 60 times."""
+    stop = threading.Event()
+    reads, errors = [0], []
+
+    def hammer():
+        while not stop.is_set():
+            try:
+                tl = workspace.timeline(blank)
+                workspace.snapshot(blank, None)
+                for r in tl["records"][-3:]:
+                    if r.get("version") and r["available"]:
+                        workspace.snapshot(blank, r["version"])
+                reads[0] += 1
+            except Exception as exc:  # noqa: BLE001  the viewer may lose a race; the agent must not
+                if "VERSION" not in str(getattr(exc, "code", "")):
+                    errors.append(repr(exc))
+
+    threads = [threading.Thread(target=hammer, daemon=True) for _ in range(3)]
+    for t in threads:
+        t.start()
+    try:
+        for i in range(60):
+            line(rt, blank, [0, i], [100, i])  # ok() fails the test on any commit error
+    finally:
+        stop.set()
+        for t in threads:
+            t.join(10)
+    assert reads[0] > 20, reads
+    assert not errors, errors[:3]

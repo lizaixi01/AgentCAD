@@ -50,6 +50,21 @@ EMPTY_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><re
              'fill="#9aa1ad">nothing to show</text></svg>')
 
 
+def _retry(fn):
+    """Windows refuses to open a file while the store is replacing it (PermissionError); that lasts milliseconds,
+    so the viewer's reads try again instead of failing the request."""
+    def wrapper(*args, **kwargs):
+        deadline = time.monotonic() + 2.0
+        while True:
+            try:
+                return fn(*args, **kwargs)
+            except PermissionError:
+                if time.monotonic() >= deadline:
+                    raise
+                time.sleep(0.01)
+    return wrapper
+
+
 def _is_part(rel: str) -> bool:
     return rel.lower().endswith(".fcstd")
 
@@ -121,6 +136,7 @@ class Workspace:
             out[cur] = st.path
         return out
 
+    @_retry
     def timeline(self, rel: str) -> dict[str, Any]:
         from .service import _journal_line
         st = self.store(rel)
@@ -142,6 +158,7 @@ class Workspace:
                 "modified_outside_runtime": bool(cur and st.head().get("sha256") and cur != st.head()["sha256"]),
                 "records": records}
 
+    @_retry
     def snapshot(self, rel: str, version: str | None) -> tuple[str, Path]:
         """(sha, cached copy) of a version; None or 'current' = the file as it is now. The copy lives outside the
         workspace and is never changed, so parsing it cannot race a commit."""
@@ -260,6 +277,7 @@ class Workspace:
         except ValueError:  # nothing visible (a new drawing, or every layer hidden)
             return EMPTY_SVG
 
+    @_retry
     def before(self, rel: str, sha: str) -> str | None:
         """The version the last commit that produced ``sha`` started from (None for a creation)."""
         st = self.store(rel)

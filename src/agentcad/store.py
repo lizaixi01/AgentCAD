@@ -20,6 +20,7 @@ import json
 import os
 import platform
 import shutil
+import time
 from pathlib import Path
 from typing import Any, Callable
 
@@ -43,6 +44,23 @@ def sha256_file(p: Path) -> str:
 
 def now() -> str:
     return _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="milliseconds")
+
+
+def replace_file(src: Path, dst: Path, timeout: float = 2.0) -> None:
+    """``os.replace`` that waits out readers. On Windows a file another process has open (the live viewer, an
+    antivirus scan, the search indexer, Explorer's preview) cannot be replaced, even with delete sharing; those
+    reads are short, so retry for up to ``timeout`` seconds before giving up."""
+    deadline = time.monotonic() + timeout
+    delay = 0.005
+    while True:
+        try:
+            os.replace(src, dst)
+            return
+        except PermissionError:
+            if os.name != "nt" or time.monotonic() >= deadline:
+                raise
+            time.sleep(delay)
+            delay = min(delay * 2, 0.1)
 
 
 def read_dxf(path: Path, policy: Policy) -> Drawing:
@@ -120,7 +138,7 @@ class DrawingStore:
         self.dir.mkdir(parents=True, exist_ok=True)
         tmp = self.head_path.with_suffix(".tmp")
         tmp.write_text(json.dumps(head, indent=1), "utf-8")
-        os.replace(tmp, self.head_path)
+        replace_file(tmp, self.head_path)
 
     def journal(self, record: dict[str, Any]) -> int:
         self.dir.mkdir(parents=True, exist_ok=True)
@@ -195,12 +213,12 @@ class DrawingStore:
             f.write(data)
             f.flush()
             os.fsync(f.fileno())
-        os.replace(tmp, self.path)
+        replace_file(tmp, self.path)
         digest = hashlib.sha256(data).hexdigest()
         # exact copy of the committed state, so crash recovery loses nothing
         ctmp = self.committed_path.with_suffix(".tmp")
         ctmp.write_bytes(data)
-        os.replace(ctmp, self.committed_path)
+        replace_file(ctmp, self.committed_path)
         head = self.head()
         head["pending"] = None
         head["sha256"] = digest
@@ -220,7 +238,7 @@ class DrawingStore:
                 before = None  # never checkpoint a corrupt file
         tmp = self.path.with_name(self.path.name + ".agentcad-tmp")
         shutil.copy2(src, tmp)
-        os.replace(tmp, self.path)
+        replace_file(tmp, self.path)
         shutil.copy2(self.path, self.committed_path)
         head = self.head()
         head["pending"] = None

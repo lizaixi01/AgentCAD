@@ -58,8 +58,11 @@ Ctrl+C 退出。只监听 `127.0.0.1`（`--host` 可改，不建议对外开放�
 - **只读**：查看器用 `read_only` 策略，不加写锁、不写 journal、不调用会写文件的工具（三维网格用 runner 新增的
   `mesh` 动作，在 FreeCAD 作业目录里完成，不经过 `export_drawing`）。唯一写到根目录下的是 `.agentcad/viewer.json`。
   测试 `test_viewer_never_writes_the_workspace` 检查请求所有版本前后工作区文件的哈希不变。
-- **已知限制**：Windows 上一个文件被打开读取时不能被 `os.replace` 替换。查看器只在文件变了之后读一次、一次读完，
-  窗口在毫秒级；如果 Agent 恰好在这几毫秒内再次提交，那次提交会报文件错误（可重试）。
+- **不会让 Agent 的提交失败**：Windows 上一个文件被任何进程打开着（查看器、杀毒软件、搜索索引、资源管理器预览），
+  就不能被 `os.replace` 替换，加 `FILE_SHARE_DELETE` 共享也不行（实测）。所以存储层的原子替换（图纸、`committed.*`、
+  `head.json`）遇到这种 `PermissionError` 会退避重试，最多 2 s（`store.replace_file`）；查看器读文件只要几毫秒。
+  反过来，查看器读到正在被替换的文件时也重试，不报错。测试 `test_commits_succeed_while_the_viewer_reads` 用三个线程
+  不停读，同时提交 60 次，每次提交都必须成功。
 
 ## HTTP 接口
 
