@@ -1,0 +1,266 @@
+{
+  "date": "2026-10-29",
+  "environment": "Windows; AutoCAD 2027 Chinese Education; pywin32; Python Runtime API",
+  "base_commit": "fc403a1c3b2192f298fcadba95d649a78945576d",
+  "tested_source_sha256": {
+    "src/agentcad/backends/acad_live.py": "3e5ac5487eaa6217de61af7afdc15005f995dd717e160c54d2430a6c464bfcd3",
+    "src/agentcad/service.py": "78b862f1154f568779720173e71c6a724aa96abd7059629a84b4100b931da5e3"
+  },
+  "scope": "Fix verification on DXFs previously converted by AutoCAD from the two native DWGs; no model/Pro rerun",
+  "timing": "Wall time of apply_operations including validation and COM reload; excludes GUI start, DWG conversion, model thinking and independent GUI readback",
+  "formal_runs": [
+    {
+      "case": "bearing",
+      "round": 1,
+      "local_run": "flow-5/bearing",
+      "native_sha256": "30332bc54795e88968bfd642fe695d579d5792bbd839618de7a74a609b4b02dd",
+      "reference_dxf_sha256": "7cba3f4ab2508010db5b507f889ddcfa5de7b772392d256f33ef1e91a9409821",
+      "passed": true,
+      "checks": {
+        "opened_readonly": true,
+        "edit_sync_1": true,
+        "edit_sync_2": true,
+        "edit_sync_3": true,
+        "view_preserved": true,
+        "gui_edit_pulled": true,
+        "unsaved_edits_and_conflict_preserved": true,
+        "force_pull_checkpoint_and_rollback": true
+      },
+      "source_files_unchanged": true,
+      "edit_and_sync_seconds": [
+        5.3232,
+        4.6678,
+        4.7522
+      ],
+      "flow_seconds_including_cleanup": 37.69
+    },
+    {
+      "case": "plate",
+      "round": 1,
+      "local_run": "flow-5/plate",
+      "native_sha256": "5852f8d05e69921cb758e420ff89ab6a57a8d3ed6d563e6c81dbd738f5066bd7",
+      "reference_dxf_sha256": "a13513a59990191f47be70006b0aa66d860c05bd6e3c4a21c96843a04985d782",
+      "passed": true,
+      "checks": {
+        "opened_readonly": true,
+        "edit_sync_1": true,
+        "edit_sync_2": true,
+        "edit_sync_3": true,
+        "view_preserved": true,
+        "gui_edit_pulled": true,
+        "unsaved_edits_and_conflict_preserved": true,
+        "force_pull_checkpoint_and_rollback": true
+      },
+      "source_files_unchanged": true,
+      "edit_and_sync_seconds": [
+        5.3186,
+        5.2792,
+        4.6815
+      ],
+      "flow_seconds_including_cleanup": 36.6
+    },
+    {
+      "case": "bearing",
+      "round": 2,
+      "local_run": "flow-6/bearing",
+      "native_sha256": "30332bc54795e88968bfd642fe695d579d5792bbd839618de7a74a609b4b02dd",
+      "reference_dxf_sha256": "7cba3f4ab2508010db5b507f889ddcfa5de7b772392d256f33ef1e91a9409821",
+      "passed": true,
+      "checks": {
+        "opened_readonly": true,
+        "custom_view_before_edits": true,
+        "edit_sync_1": true,
+        "edit_sync_2": true,
+        "edit_sync_3": true,
+        "view_preserved": true,
+        "gui_edit_pulled": true,
+        "unsaved_edits_and_conflict_preserved": true,
+        "force_pull_checkpoint_and_rollback": true
+      },
+      "source_files_unchanged": true,
+      "edit_and_sync_seconds": [
+        5.4901,
+        4.5869,
+        4.9337
+      ],
+      "flow_seconds_including_cleanup": 34.45
+    },
+    {
+      "case": "plate",
+      "round": 2,
+      "local_run": "flow-6/plate",
+      "native_sha256": "5852f8d05e69921cb758e420ff89ab6a57a8d3ed6d563e6c81dbd738f5066bd7",
+      "reference_dxf_sha256": "a13513a59990191f47be70006b0aa66d860c05bd6e3c4a21c96843a04985d782",
+      "passed": true,
+      "checks": {
+        "opened_readonly": true,
+        "custom_view_before_edits": true,
+        "edit_sync_1": true,
+        "edit_sync_2": true,
+        "edit_sync_3": true,
+        "view_preserved": true,
+        "gui_edit_pulled": true,
+        "unsaved_edits_and_conflict_preserved": true,
+        "force_pull_checkpoint_and_rollback": true
+      },
+      "source_files_unchanged": true,
+      "edit_and_sync_seconds": [
+        4.3756,
+        4.5686,
+        4.5609
+      ],
+      "flow_seconds_including_cleanup": 35.57
+    }
+  ],
+  "edit_and_sync_seconds": {
+    "count": 12,
+    "min": 4.3756,
+    "median": 4.7168,
+    "max": 5.4901
+  },
+  "same_build_write_open_controls": [
+    {
+      "case": "bearing",
+      "passed": true,
+      "checks": {
+        "write_open_lock_reproduced_without_changing_file": true,
+        "same_edit_succeeded_after_explicit_reload": true
+      },
+      "events": [
+        {
+          "action": "activate_existing_writable",
+          "seconds": 0.1189,
+          "ok": true,
+          "error": null,
+          "reloaded": null
+        },
+        {
+          "action": "write_open_edit",
+          "seconds": 2.3115,
+          "ok": false,
+          "error": "FILE_BUSY",
+          "reloaded": null
+        },
+        {
+          "action": "explicit_reload",
+          "seconds": 3.9885,
+          "ok": true,
+          "error": null,
+          "reloaded": null
+        },
+        {
+          "action": "readonly_edit",
+          "seconds": 4.1911,
+          "ok": true,
+          "error": null,
+          "reloaded": true
+        }
+      ]
+    },
+    {
+      "case": "plate",
+      "passed": true,
+      "checks": {
+        "write_open_lock_reproduced_without_changing_file": true,
+        "same_edit_succeeded_after_explicit_reload": true
+      },
+      "events": [
+        {
+          "action": "activate_existing_writable",
+          "seconds": 0.1012,
+          "ok": true,
+          "error": null,
+          "reloaded": null
+        },
+        {
+          "action": "write_open_edit",
+          "seconds": 2.3593,
+          "ok": false,
+          "error": "FILE_BUSY",
+          "reloaded": null
+        },
+        {
+          "action": "explicit_reload",
+          "seconds": 4.9043,
+          "ok": true,
+          "error": null,
+          "reloaded": null
+        },
+        {
+          "action": "readonly_edit",
+          "seconds": 3.892,
+          "ok": true,
+          "error": null,
+          "reloaded": true
+        }
+      ]
+    }
+  ],
+  "dwg_export_readback_and_audit": [
+    {
+      "round": 1,
+      "case": "bearing",
+      "readable": true,
+      "audit_errors": 0,
+      "edit_content_readback": true,
+      "source_unchanged": true,
+      "seconds": 17.4535,
+      "dwg_header": "AC1032"
+    },
+    {
+      "round": 1,
+      "case": "plate",
+      "readable": true,
+      "audit_errors": 0,
+      "edit_content_readback": true,
+      "source_unchanged": true,
+      "seconds": 12.3783,
+      "dwg_header": "AC1032"
+    },
+    {
+      "round": 2,
+      "case": "bearing",
+      "readable": true,
+      "audit_errors": 0,
+      "edit_content_readback": true,
+      "source_unchanged": true,
+      "seconds": 12.6415,
+      "dwg_header": "AC1032"
+    },
+    {
+      "round": 2,
+      "case": "plate",
+      "readable": true,
+      "audit_errors": 0,
+      "edit_content_readback": true,
+      "source_unchanged": true,
+      "seconds": 12.9044,
+      "dwg_header": "AC1032"
+    }
+  ],
+  "development_attempts": [
+    {
+      "local_run": "flow-1/bearing",
+      "outcome": "COM proxy disconnected in verification driver; not a completed regression run"
+    },
+    {
+      "local_run": "flow-2/bearing",
+      "outcome": "COM connection unavailable in verification driver; not a completed regression run"
+    },
+    {
+      "local_run": "flow-3/bearing",
+      "outcome": "Driver assertion expected DBMOD 16; reference drawing returned 24; fix extended"
+    },
+    {
+      "local_run": "flow-4/bearing",
+      "outcome": "Second automatic reload refused paper-space view; fix extended"
+    }
+  ],
+  "limits": [
+    "Four regression flows after development fixes; not an estimate of population reliability",
+    "Only tested AutoCAD 2027 and two Autodesk samples; original drawings/derivatives/logs retained locally",
+    "View restoration preserves center and size; not a full camera/window/multiple-viewport snapshot",
+    "Existing write-open documents still need an explicit reload or pull; no silent close",
+    "Previous AgentCAD/Pro comparison measurements are unchanged"
+  ]
+}
