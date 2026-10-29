@@ -11,7 +11,7 @@ agentcad --root playground viewer --port 9000
 ```
 
 Windows 上是 `.venv\Scripts\agentcad.exe`。启动后打印一行 JSON（`{"ok": true, "viewer": "http://127.0.0.1:8770/", ...}`），
-Ctrl+C 退出。只监听 `127.0.0.1`（`--host` 可改，不建议对外开放：页面不鉴权）。三维零件要用 FreeCAD 出网格，
+Ctrl+C 退出。只监听 `127.0.0.1`，并且只回应 Host 头是 `127.0.0.1`、`localhost` 或 `[::1]` 的请求（其他返回 403 `HOST_NOT_ALLOWED`），挡住 DNS 重绑定：别的网站把自己的域名解析到 127.0.0.1 后，读不到图纸。页面不鉴权，所以 `--host` 设成非回环地址要同时加 `--allow-remote`（否则 `REMOTE_NOT_ALLOWED`，退出码 4），加了之后也不再检查 Host。三维零件要用 FreeCAD 出网格，
 启动查看器的环境里同样要设 `AGENTCAD_FREECAD`（见 [part-3d.md](part-3d.md)）。端口被占用时返回 `PORT_IN_USE`，退出码 2。
 
 ### 在 Claude 桌面应用里打开
@@ -24,7 +24,7 @@ Ctrl+C 退出。只监听 `127.0.0.1`（`--host` 可改，不建议对外开放�
 
 查看器运行时会写 `<root>/.agentcad/viewer.json`（地址和进程号），退出时删掉。这期间 `create_drawing` 的结果里多一个
 `viewer_url`（如 `http://127.0.0.1:8770/#parts/plate.dxf`），Agent 可以把它转给用户。判断依据是端口真的能连上，
-查看器崩溃留下的旧文件不会产生链接。
+查看器崩溃留下的旧文件不会产生链接；文件里的地址不是回环地址（`127.0.0.1`、`localhost`、`::1`）时也不用，Runtime 不会去连别的主机。`create_drawing` 不加载 HTTP 服务器的代码。
 
 ## 页面
 
@@ -34,7 +34,7 @@ Ctrl+C 退出。只监听 `127.0.0.1`（`--host` 可改，不建议对外开放�
   - 二维图纸：ezdxf 渲染的 SVG（和 `export_drawing(..., "svg")` 同一个渲染器），滚轮缩放、拖动平移、双击复位。
     顶部是图层开关（只列有实体的图层），隐藏图层不会改变取景。
   - 三维零件：three.js 显示 FreeCAD 三角化的实体和 B-rep 边，左键旋转、右键平移、滚轮缩放、双击复位。零件更新时
-    保持视角，尺寸变化超过 20% 才重新取景。three.js 从 jsDelivr CDN 加载；离线时退回到四视图 PNG 预览
+    保持视角，尺寸变化超过 20% 才重新取景。three.js 0.160.0 从 jsDelivr CDN 加载，import map 带 SRI 哈希（浏览器校验内容）；离线时退回到四视图 PNG 预览
     （同 `export_drawing(..., "png")` 的渲染器）。
   - **highlight changes**（默认开）：二维图把这一版改动的实体着色，新增绿色、修改橙色、其余灰色。
 - **右栏**：
@@ -61,6 +61,7 @@ Ctrl+C 退出。只监听 `127.0.0.1`（`--host` 可改，不建议对外开放�
 - **不会让 Agent 的提交失败**：Windows 上一个文件被任何进程打开着（查看器、杀毒软件、搜索索引、资源管理器预览），
   就不能被 `os.replace` 替换，加 `FILE_SHARE_DELETE` 共享也不行（实测）。所以存储层的原子替换（图纸、`committed.*`、
   `head.json`）遇到这种 `PermissionError` 会退避重试，最多 2 s（`store.replace_file`）；查看器读文件只要几毫秒。
+  2 s 后还被占着：图纸还没替换就返回 `FILE_BUSY`（`retryable=true`，文件不变）；图纸已经替换、只是 `head.json` 写不进去，返回 `FILE_BUSY`（`partial_changes=true`、`details.state="applied_not_recorded"`），提示不要重做、调 `recover`，它会把这次提交补记进 journal（见 [architecture.md](architecture.md)）。
   反过来，查看器读到正在被替换的文件时也重试，不报错。测试 `test_commits_succeed_while_the_viewer_reads` 用三个线程
   不停读，同时提交 60 次，每次提交都必须成功。
 

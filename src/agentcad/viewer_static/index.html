@@ -80,7 +80,11 @@ main { position: relative; overflow: hidden; background: var(--canvas); min-widt
 </style>
 <script type="importmap">
 { "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" } }
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" },
+  "integrity": {
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js": "sha384-61S/Nu32S3E5+n+KpCOTb2eRYps6fVKm+9Gz1QBvSePFthb46f063Aa/qe/lykFZ",
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js": "sha384-qlO/ZugKPxAQUAvTlQoo0QECzxJIJySZmCF/DHdb2Xn/hHndFwX/vfUAC9Hbk6LP",
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js": "sha384-jHGXS4+FuVOBnZkNme2ury3Ccg5DWDLYK22xX/WGdZCZsjRM4J+3n6Qc4CXx1Hjf" } }
 </script>
 </head>
 <body>
@@ -348,7 +352,10 @@ function makeScene(T) {
   function fit() {
     const box = new T.Box3().setFromObject(group), c = box.getCenter(new T.Vector3()), r = box.getSize(new T.Vector3()).length() || 1;
     controls.target.copy(c);
-    camera.position.copy(c).add(new T.Vector3(1, -1.3, 0.9).normalize().multiplyScalar(r * 1.6));
+    // the bounding sphere (radius r/2) fits the narrower of the two fields of view, with a 25 % margin
+    const half = Math.PI / 360 * camera.fov, hHalf = Math.atan(Math.tan(half) * camera.aspect);
+    const dist = (r / 2) / Math.sin(Math.min(half, hHalf)) * 1.25;
+    camera.position.copy(c).add(new T.Vector3(1, -1.3, 0.9).normalize().multiplyScalar(dist));
     camera.near = r / 100; camera.far = r * 100; camera.updateProjectionMatrix();
     framed = r;
   }

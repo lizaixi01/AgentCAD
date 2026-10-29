@@ -782,14 +782,23 @@ class Runtime:
 
     @tool
     def recover(self, path: str) -> dict[str, Any]:
-        """Crash recovery: if the file is unreadable, or an interrupted transaction left it inconsistent, restore
-        the most recent checkpoint whose content is a valid DXF (or FreeCAD file, for a part)."""
+        """Crash recovery. A commit interrupted after its pending marker (e.g. FILE_BUSY with partial_changes) is
+        settled first: recorded if its content is in the file, dropped if not. Otherwise, if the file is unreadable
+        or an older marker left it inconsistent, restore the most recent checkpoint whose content is a valid DXF (or
+        FreeCAD file, for a part)."""
         p, store = self._drawing(path, must_exist=False, part_ok=True)
         st = store.status()
         needed = (not st["exists"]) or (not st["readable"]) or bool(st["pending_transaction"])
         if not needed:
             return {"drawing": self._rel(p), "recovered": False, "status": st}
         self.policy.check_write()
+        if st["exists"] and st["readable"] and st["pending_transaction"]:
+            with self._lock(store):  # an interrupted commit in the file is recorded, an unstarted one dropped
+                settled = store.settle_pending(from_status=st)
+            if settled:
+                done, seq = settled
+                return {"drawing": self._rel(p), "recovered": True, "pending_commit": done["outcome"],
+                        "label": done["pending"]["label"], "sha256": done["sha256"], "journal_seq": seq}
         from .store import sha256_file
         candidates = []
         if store.committed_path.is_file() and sha256_file(store.committed_path) == st["committed_sha256"]:

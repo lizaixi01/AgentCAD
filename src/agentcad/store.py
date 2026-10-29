@@ -46,11 +46,25 @@ def now() -> str:
     return _dt.datetime.now(_dt.timezone.utc).isoformat(timespec="milliseconds")
 
 
-def replace_file(src: Path, dst: Path, timeout: float = 2.0) -> None:
+REPLACE_TIMEOUT = 2.0  # seconds replace_file waits out a reader; tests lower it
+
+
+def busy_error(path: Path, *, applied: bool, **kw: Any) -> AgentCADError:
+    """A file the store must replace stayed open in another process. ``applied``: the drawing itself was already
+    replaced (the change is in the file), so the call must not be repeated."""
+    if applied:
+        return file_error("FILE_BUSY", f"{path.name} stayed open in another process; the change was saved to the "
+                          "drawing but not recorded", retryable=False, partial_changes=True,
+                          hint="Do not repeat the operations: call recover to record the change", **kw)
+    return file_error("FILE_BUSY", f"{path.name} stayed open in another process; nothing was changed",
+                      retryable=True, hint="Retry when the other program has closed the file", **kw)
+
+
+def replace_file(src: Path, dst: Path, timeout: float | None = None) -> None:
     """``os.replace`` that waits out readers. On Windows a file another process has open (the live viewer, an
     antivirus scan, the search indexer, Explorer's preview) cannot be replaced, even with delete sharing; those
     reads are short, so retry for up to ``timeout`` seconds before giving up."""
-    deadline = time.monotonic() + timeout
+    deadline = time.monotonic() + (REPLACE_TIMEOUT if timeout is None else timeout)
     delay = 0.005
     while True:
         try:
@@ -140,16 +154,36 @@ class DrawingStore:
         tmp.write_text(json.dumps(head, indent=1), "utf-8")
         replace_file(tmp, self.head_path)
 
+    def _last_journal_seq(self) -> int:
+        """seq of the journal's last record, read from the file's tail (the record is appended before head.json
+        is updated, so head's seq can lag behind it)."""
+        try:
+            with open(self.journal_path, "rb") as f:
+                f.seek(0, os.SEEK_END)
+                f.seek(max(0, f.tell() - 65536))
+                lines = f.read().splitlines()
+        except OSError:
+            return 0
+        for raw in reversed(lines):
+            try:
+                return int(json.loads(raw)["seq"])
+            except (ValueError, KeyError, TypeError):
+                continue
+        return 0
+
     def journal(self, record: dict[str, Any]) -> int:
         self.dir.mkdir(parents=True, exist_ok=True)
         head = self.head()
-        seq = head["seq"] + 1
+        seq = max(head["seq"], self._last_journal_seq()) + 1
         head["seq"] = seq
         record = {"seq": seq, "ts": now(), "drawing": self.path.relative_to(self.policy.root).as_posix(),
                   "versions": VERSIONS, **record}
         with open(self.journal_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
-        self._write_head(head)
+        try:
+            self._write_head(head)
+        except PermissionError:  # the record is written; the next journal call takes its seq from the file
+            pass
         return seq
 
     def read_journal(self, limit: int | None = None) -> list[dict[str, Any]]:
@@ -203,27 +237,87 @@ class DrawingStore:
         existed = self.path.is_file()
         if existed and not overwrite_ok:
             raise input_error("FILE_EXISTS", f"{self.path.name} already exists", hint="Pass overwrite=true")
-        cid = self.checkpoint(f"before {label}") if existed else None
-        head = self.head()
-        head["pending"] = {"label": label, "checkpoint": cid, "ts": now()}
-        self._write_head(head)
+        digest = hashlib.sha256(data).hexdigest()
+        try:  # until the drawing is replaced, a busy file means nothing changed
+            self.settle_pending()
+            cid = self.checkpoint(f"before {label}") if existed else None
+            head = self.head()
+            # the target sha lets recover tell whether the drawing was replaced before the commit was interrupted
+            head["pending"] = {"label": label, "checkpoint": cid, "ts": now(), "sha256": digest}
+            self._write_head(head)
+        except PermissionError:
+            raise busy_error(self.head_path, applied=False)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.path.with_name(self.path.name + ".agentcad-tmp")
         with open(tmp, "wb") as f:
             f.write(data)
             f.flush()
             os.fsync(f.fileno())
-        replace_file(tmp, self.path)
-        digest = hashlib.sha256(data).hexdigest()
+        try:
+            replace_file(tmp, self.path)
+        except PermissionError:
+            tmp.unlink(missing_ok=True)
+            try:  # the file is unchanged: drop the marker so status and recover see a clean state
+                head["pending"] = None
+                self._write_head(head)
+            except PermissionError:
+                pass  # recover clears a marker whose target content is not in the file
+            raise busy_error(self.path, applied=False)
+        # From here the drawing holds the change: the commit has happened and must not be reported as failed.
+        warnings = []
         # exact copy of the committed state, so crash recovery loses nothing
         ctmp = self.committed_path.with_suffix(".tmp")
         ctmp.write_bytes(data)
-        replace_file(ctmp, self.committed_path)
+        try:
+            replace_file(ctmp, self.committed_path)
+        except PermissionError:
+            ctmp.unlink(missing_ok=True)
+            warnings.append(f"{self.committed_path.name} was busy and still holds the previous version; recover "
+                            "falls back to checkpoints until the next commit refreshes it")
         head = self.head()
         head["pending"] = None
         head["sha256"] = digest
+        try:
+            self._write_head(head)
+        except PermissionError:
+            raise busy_error(self.head_path, applied=True, details={"state": "applied_not_recorded",
+                                                                    "sha256": digest, "checkpoint_before": cid})
+        return {"checkpoint_before": cid, "sha256": digest, "bytes": len(data),
+                **({"warnings": warnings} if warnings else {})}
+
+    def settle_pending(self, **record: Any) -> tuple[dict[str, Any], int] | None:
+        """``finish_pending`` and journal the outcome: an interrupted commit that reached the file gets its record
+        (a ``recover`` record with ``completed_commit``), so a later commit never absorbs it unrecorded."""
+        done = self.finish_pending()
+        if done is None:
+            return None
+        rec = {"tool": "recover", "ok": True, **record, **done}
+        if done["outcome"] == "completed":
+            rec["completed_commit"] = done["pending"]["label"]
+            rec["checkpoint_before"] = done["pending"].get("checkpoint")
+        return done, self.journal(rec)
+
+    def finish_pending(self) -> dict[str, Any] | None:
+        """Settle a commit that was interrupted after its pending marker was written. If the drawing holds the
+        marker's target content, the commit happened: record it. If it still holds the last committed content, the
+        drawing was never replaced: clear the marker. None when neither holds, or the marker has no target sha
+        (written before markers carried one): then restore a checkpoint as before."""
+        head = self.head()
+        pend = head.get("pending")
+        if not pend or not pend.get("sha256") or not self.path.is_file():
+            return None
+        actual = sha256_file(self.path)
+        if actual == pend["sha256"]:
+            shutil.copy2(self.path, self.committed_path)
+            head["sha256"] = actual
+            outcome = "completed"
+        elif actual == head.get("sha256"):
+            outcome = "discarded"
+        else:
+            return None
+        head["pending"] = None
         self._write_head(head)
-        return {"checkpoint_before": cid, "sha256": digest, "bytes": len(data)}
+        return {"pending": pend, "outcome": outcome, "sha256": actual}
 
     def restore(self, cid: str, *, label: str) -> dict[str, Any]:
         """Restore checkpoint ``cid`` ("committed" = the exact last committed state)."""

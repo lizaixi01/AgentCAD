@@ -29,7 +29,7 @@ import threading
 import time
 import uuid
 from collections import OrderedDict
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -43,11 +43,22 @@ SUFFIXES = (".dxf", ".fcstd")
 SKIP_DIRS = {STATE_DIR, ".git", ".venv", "venv", "node_modules", "__pycache__", ".claude"}
 MAX_FILES = 2000
 ROUTES = {"/api/timeline", "/api/layers", "/api/diff", "/api/svg", "/api/mesh", "/api/png"}
-INFO_FILE = "viewer.json"  # <root>/.agentcad/viewer.json: where a running viewer listens (see viewer_url)
+INFO_FILE = "viewer.json"
+LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})  # <root>/.agentcad/viewer.json: where a running viewer listens (see viewer_url)
 COLORS = {"added": "#16a34a", "modified": "#ea580c", "other": "#b8bcc4"}
 EMPTY_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><rect width="1000" height="600" '
              'fill="#ffffff"/><text x="500" y="300" text-anchor="middle" font-family="sans-serif" font-size="24" '
              'fill="#9aa1ad">nothing to show</text></svg>')
+
+
+def _host_name(host: str | None) -> str | None:
+    """Host header without the port: 'localhost:8770' -> 'localhost', '[::1]:8770' -> '::1'."""
+    if not host:
+        return None
+    try:
+        return urlparse(f"//{host}").hostname
+    except ValueError:
+        return None
 
 
 def _retry(fn):
@@ -83,6 +94,7 @@ class Workspace:
         self._guard = threading.Lock()
 
     # --- discovery ----------------------------------------------------------------------------
+    @_retry
     def list_drawings(self) -> list[str]:
         out: list[str] = []
         root = self.policy.root
@@ -172,19 +184,15 @@ class Workspace:
             raise input_error("VERSION_NOT_FOUND", f"{rel} has no stored version {version[:12]}",
                               hint="Older versions exist only as checkpoints")
         dst = self.cache / f"{version}{st.ext}"
-        if not dst.is_file():
-            tmp = dst.with_name(f"{dst.name}.{uuid.uuid4().hex[:8]}.tmp")
-            data = have[version].read_bytes()  # one short read: the store may replace the file next
-            if hashlib.sha256(data).hexdigest() != version:
-                raise AgentCADError("VERSION_CHANGED", f"{rel} changed while it was read", category="file",
-                                    retryable=True)
-            tmp.write_bytes(data)
-            try:
+        with self._guard if not dst.is_file() else nullcontext():  # created once: a cached copy is never replaced
+            if not dst.is_file():
+                data = have[version].read_bytes()  # one short read: the store may replace the file next
+                if hashlib.sha256(data).hexdigest() != version:
+                    raise AgentCADError("VERSION_CHANGED", f"{rel} changed while it was read", category="file",
+                                        retryable=True)
+                tmp = dst.with_name(f"{dst.name}.{uuid.uuid4().hex[:8]}.tmp")
+                tmp.write_bytes(data)
                 os.replace(tmp, dst)
-            except PermissionError:  # Windows: another request cached it first and is reading it
-                tmp.unlink(missing_ok=True)
-                if not dst.is_file():
-                    raise
         return version, dst
 
     def _memo(self, key: tuple, fn):
@@ -211,6 +219,7 @@ class Workspace:
         sha, f = self.snapshot(rel, version)
         return sha, read_dxf(f, self.policy)
 
+    @_retry
     def layers(self, rel: str, version: str | None) -> dict[str, Any]:
         sha, doc = self._doc(rel, version)
         counts: dict[str, int] = {}
@@ -234,6 +243,7 @@ class Workspace:
         return {"summary": d["summary"], "added": brief["added"], "deleted": brief["deleted"],
                 "modified": d["modified"], "layers": d["layers"]}
 
+    @_retry
     def svg(self, rel: str, version: str | None, diff: bool = False, hide: tuple[str, ...] = ()) -> str:
         sha, _ = self.snapshot(rel, version)
         before = self.before(rel, sha) if diff else None
@@ -287,6 +297,7 @@ class Workspace:
                 return cps.get(r.get("checkpoint_before")) if r.get("checkpoint_before") else None
         return None
 
+    @_retry
     def diff(self, rel: str, version: str | None) -> dict[str, Any]:
         sha, _ = self.snapshot(rel, version)
         before = self.before(rel, sha)
@@ -318,6 +329,7 @@ class Workspace:
         src = self.snapshot(rel, sha)[1]
         return self._memo(("summary", sha), lambda: self._fc({"action": "summary", "detail": True}, src)["summary"])
 
+    @_retry
     def mesh(self, rel: str, version: str | None) -> Path:
         sha, src = self.snapshot(rel, version)
         out = self.cache / f"{sha}.mesh.json"
@@ -325,6 +337,7 @@ class Workspace:
             self._memo(("mesh", sha), lambda: self._fc({"action": "mesh"}, src, out))
         return out
 
+    @_retry
     def png(self, rel: str, version: str | None) -> Path:
         sha, src = self.snapshot(rel, version)
         out = self.cache / f"{sha}.png"
@@ -407,7 +420,11 @@ class ChangeFeed:
         self._stop.set()
 
 
-def make_handler(ws: Workspace, feed: ChangeFeed):
+def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] | None = LOOPBACK):
+    """``allowed_hosts``: host names the Host header may carry (None = any). A page on another site can point its
+    own name at 127.0.0.1 (DNS rebinding); its requests then carry that name, and are refused."""
+    from http.server import BaseHTTPRequestHandler
+
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
 
@@ -424,6 +441,9 @@ def make_handler(ws: Workspace, feed: ChangeFeed):
                        "application/json; charset=utf-8")
 
         def do_GET(self):  # noqa: N802
+            if allowed_hosts is not None and _host_name(self.headers.get("Host")) not in allowed_hosts:
+                return self._json({"ok": False, "error": {"code": "HOST_NOT_ALLOWED", "category": "policy",
+                                                          "message": "The viewer answers only on localhost"}}, 403)
             u = urlparse(self.path)
             q = {k: v[-1] for k, v in parse_qs(u.query).items()}
             path, v = q.get("path", ""), q.get("v")
@@ -497,11 +517,18 @@ class Viewer:
     """The server and its change feed; ``start`` runs it in the background (tests), ``serve`` blocks."""
 
     def __init__(self, policy: Policy, host: str = "127.0.0.1", port: int = 8770, interval: float = 0.4,
+                 allow_remote: bool = False,
                  cache_dir: Path | None = None) -> None:
         policy.read_only = True  # the viewer never writes a drawing
         self.ws = Workspace(policy, cache_dir)
         self.feed = ChangeFeed(self.ws, interval)
-        self.httpd = ThreadingHTTPServer((host, port), make_handler(self.ws, self.feed))
+        from http.server import ThreadingHTTPServer
+        if host not in LOOPBACK and not allow_remote:
+            raise AgentCADError("REMOTE_NOT_ALLOWED", f"--host {host} would expose the workspace to the network",
+                                category="policy", hint="The page has no authentication. Pass --allow-remote if "
+                                                        "you mean it")
+        self.httpd = ThreadingHTTPServer((host, port), make_handler(self.ws, self.feed,
+                                                                    None if allow_remote else LOOPBACK))
         self.httpd.daemon_threads = True
         h, p = self.httpd.server_address[:2]
         self.url = f"http://{'127.0.0.1' if h in ('0.0.0.0', '') else h}:{p}/"
@@ -547,6 +574,8 @@ def viewer_url(policy: Policy, drawing: str) -> str | None:
     try:
         url = json.loads((policy.state_dir() / INFO_FILE).read_text("utf-8"))["url"]
         u = urlparse(url)
+        if u.scheme != "http" or u.hostname not in LOOPBACK or not u.port:
+            return None  # an edited or foreign file must not make the runtime connect elsewhere
         with socket.create_connection((u.hostname, u.port), timeout=0.2):
             pass
     except (OSError, ValueError, KeyError, TypeError):

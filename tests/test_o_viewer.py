@@ -298,6 +298,8 @@ def test_commits_succeed_while_the_viewer_reads(rt, ws, blank, workspace):
             try:
                 tl = workspace.timeline(blank)
                 workspace.snapshot(blank, None)
+                workspace.diff(blank, None)  # every read the page makes, not just the snapshot (review N3)
+                workspace.layers(blank, None)
                 for r in tl["records"][-3:]:
                     if r.get("version") and r["available"]:
                         workspace.snapshot(blank, r["version"])
@@ -318,3 +320,66 @@ def test_commits_succeed_while_the_viewer_reads(rt, ws, blank, workspace):
             t.join(10)
     assert reads[0] > 20, reads
     assert not errors, errors[:3]
+
+
+# --- reachable only from this machine -----------------------------------------------------------------------------
+
+def raw_get(srv: Viewer, route: str, host: str) -> int:
+    import http.client
+    port = int(srv.url.rstrip("/").rsplit(":", 1)[1])
+    c = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+    c.putrequest("GET", route, skip_host=True)
+    c.putheader("Host", host)
+    c.endheaders()
+    code = c.getresponse().status
+    c.close()
+    return code
+
+
+def test_foreign_host_header_is_refused(blank, viewer):
+    """DNS rebinding: a page on evil.example resolves its name to 127.0.0.1; its requests say Host: evil.example."""
+    port = viewer.url.rstrip("/").rsplit(":", 1)[1]
+    assert raw_get(viewer, "/api/drawings", f"evil.example:{port}") == 403
+    assert raw_get(viewer, "/", "evil.example") == 403
+    assert raw_get(viewer, "/api/drawings", "") == 403
+    for h in (f"127.0.0.1:{port}", f"localhost:{port}", "localhost"):
+        assert raw_get(viewer, "/api/drawings", h) == 200, h
+
+
+def test_non_loopback_host_needs_allow_remote(ws):
+    from agentcad.cli import run
+    from agentcad.errors import AgentCADError
+    with pytest.raises(AgentCADError) as e:
+        Viewer(Policy(root=ws), host="0.0.0.0", port=0)
+    assert e.value.code == "REMOTE_NOT_ALLOWED"
+    r, code = run(["--root", str(ws), "viewer", "--host", "0.0.0.0", "--port", "0"])
+    assert code == 4 and r["error"]["code"] == "REMOTE_NOT_ALLOWED"
+
+
+def test_viewer_url_trusts_only_loopback(rt, ws):
+    from agentcad.viewer import viewer_url
+    info = ws / ".agentcad" / "viewer.json"
+    info.parent.mkdir(parents=True, exist_ok=True)
+    srv = socket.socket()
+    srv.bind(("127.0.0.1", 0))
+    srv.listen()
+    port = srv.getsockname()[1]
+    try:
+        for url in (f"http://example.com:{port}/", f"http://10.0.0.1:{port}/", f"file://127.0.0.1:{port}/",
+                    "http://127.0.0.1/"):
+            info.write_text(json.dumps({"url": url}), "utf-8")
+            assert viewer_url(rt.policy, "a.dxf") is None, url
+        info.write_text(json.dumps({"url": f"http://127.0.0.1:{port}/"}), "utf-8")
+        assert viewer_url(rt.policy, "a.dxf") == f"http://127.0.0.1:{port}/#a.dxf"
+    finally:
+        srv.close()
+
+
+def test_create_drawing_does_not_load_the_http_server(ws):
+    import subprocess
+    import sys
+    code = ("import sys; from agentcad.policy import Policy; from agentcad.service import Runtime; "
+            f"assert Runtime(Policy(root={str(ws)!r})).create_drawing('a.dxf')['ok']; "
+            "print('http.server' in sys.modules)")
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=120)
+    assert out.stdout.strip() == "False", out.stderr

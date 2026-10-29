@@ -143,6 +143,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--port", type=int, default=8765)
     s = sub.add_parser("viewer", help="Live web viewer of the root's drawings and parts (read-only)")
     s.add_argument("--host", default="127.0.0.1"); s.add_argument("--port", type=int, default=8770)
+    s.add_argument("--allow-remote", action="store_true",
+                   help="Allow a non-loopback --host and any Host header (the page has no authentication)")
     return ap
 
 
@@ -162,9 +164,12 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         serve(policy, a.host, a.port)
         return {"ok": True}, 0
     if a.cmd == "viewer":
+        from .errors import AgentCADError
         from .viewer import Viewer
         try:
-            Viewer(policy, a.host, a.port).serve()
+            Viewer(policy, a.host, a.port, allow_remote=a.allow_remote).serve()
+        except AgentCADError as exc:
+            return {"ok": False, "error": exc.to_dict()}, EXIT.get(exc.category, 5)
         except OSError as exc:
             return {"ok": False, "error": {"code": "PORT_IN_USE", "category": "input",
                                            "message": f"Cannot listen on {a.host}:{a.port}: {exc}",
