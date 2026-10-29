@@ -53,6 +53,17 @@ def test_part_ops_by_name_without_a_category(rt):
         assert "edges" in r["conventions"]
     err = rt.list_operations(ops=["pad", "no_such_op"])["error"]
     assert err["code"] == "UNKNOWN_OPERATION" and "part operations" in err["hint"]
+    err = rt.list_operations(ops=["pad"], category="draw")["error"]  # a part op under a 2D category
+    assert err["code"] == "UNKNOWN_OPERATION" and "'pad': 'part'" in err["hint"]
+    err = rt.list_operations(ops=["add_line"], category="annotate")["error"]  # a 2D op under another category
+    assert err["code"] == "UNKNOWN_OPERATION" and "'add_line': 'draw'" in err["hint"]
+
+
+def test_instructions_name_the_client_prefix():
+    """Claude Code lists the tools as mcp__agentcad__<name>; at medium effort Opus called the bare names the
+    instructions use in 90 of 100 BenchCAD tasks, and every such call failed ("No such tool available")."""
+    from agentcad.mcp_server import INSTRUCTIONS
+    assert "mcp__agentcad__list_operations" in INSTRUCTIONS and "may list them" in INSTRUCTIONS
 
 
 def test_part_schemas_share_their_conventions(rt):
