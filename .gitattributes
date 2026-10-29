@@ -3,3 +3,5 @@
 *.dxf -text
 *.svg -text
 *.dwg binary
+docs/comparison-native-dwg.md export-ignore
+docs/assets/native-dwg-times.svg export-ignore
