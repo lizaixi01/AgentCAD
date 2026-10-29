@@ -690,6 +690,14 @@ def _server(host: str):
 
     class Server(ThreadingHTTPServer):
         address_family = _socket.AF_INET6 if ":" in host else _socket.AF_INET
+        # On Windows SO_REUSEADDR lets a second socket bind a port that is already listening: a viewer of another
+        # root would then answer on "our" port. Bind exclusively there, so a busy port fails and the next is tried.
+        allow_reuse_address = os.name != "nt"
+
+        def server_bind(self):
+            if os.name == "nt" and hasattr(_socket, "SO_EXCLUSIVEADDRUSE"):
+                self.socket.setsockopt(_socket.SOL_SOCKET, _socket.SO_EXCLUSIVEADDRUSE, 1)
+            super().server_bind()
 
         def handle_error(self, request, client_address):
             import sys
@@ -771,6 +779,9 @@ def start_background(policy: Policy) -> Viewer | None:
             continue
         except Exception:  # noqa: BLE001 - a viewer is a convenience; never fail the agent's call
             return None
+        if not serves_root(v.url, policy):  # the port answers for someone else: never hand out that link
+            v.stop()
+            continue
         atexit.register(v.stop)
         if os.environ.get("AGENTCAD_VIEWER_OPEN", "").strip().lower() in {"1", "true", "yes", "on"}:
             try:
@@ -782,13 +793,12 @@ def start_background(policy: Policy) -> Viewer | None:
     return None
 
 
-def viewer_url(policy: Policy, drawing: str) -> str | None:
-    """The page showing ``drawing`` if a viewer is serving this root (its port answers), else None."""
+def serves_root(url: str, policy: Policy) -> bool:
+    """True if ``url`` is a loopback viewer whose /api/ping answers with this policy's root."""
     try:
-        url = json.loads((policy.state_dir() / INFO_FILE).read_text("utf-8"))["url"]
         u = urlparse(url)
         if u.scheme != "http" or u.hostname not in LOOPBACK or not u.port:
-            return None  # an edited or foreign file must not make the runtime connect elsewhere
+            return False  # an edited or foreign file must not make the runtime connect elsewhere
         with socket.create_connection((u.hostname, u.port), timeout=0.2) as c:
             c.settimeout(1.0)
             host = f"[{u.hostname}]" if ":" in u.hostname else u.hostname
@@ -797,10 +807,18 @@ def viewer_url(policy: Policy, drawing: str) -> str | None:
             while chunk := c.recv(4096):
                 raw += chunk
                 if len(raw) > 65536:
-                    return None
+                    return False
         body = json.loads(raw.split(b"\r\n\r\n", 1)[1])
-        if Path(body["root"]).resolve() != policy.root:
-            return None  # a viewer of another root left its file here, or the port was reused
+        # a viewer of another root left its file here, or another viewer answers on this port
+        return Path(body["root"]).resolve() == policy.root
     except (OSError, ValueError, KeyError, TypeError, IndexError):
+        return False
+
+
+def viewer_url(policy: Policy, drawing: str) -> str | None:
+    """The page showing ``drawing`` if a viewer is serving this root (its port answers), else None."""
+    try:
+        url = json.loads((policy.state_dir() / INFO_FILE).read_text("utf-8"))["url"]
+    except (OSError, ValueError, KeyError, TypeError):
         return None
-    return f"{url}#{drawing}"
+    return f"{url}#{drawing}" if isinstance(url, str) and serves_root(url, policy) else None

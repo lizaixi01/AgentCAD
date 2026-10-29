@@ -266,3 +266,71 @@ def test_part_export_and_thumbnail(rt, ws, viewer):
     assert code == 200 and headers["Content-Type"] == "image/png" and png[:8] == b"\x89PNG\r\n\x1a\n"
     page = get(viewer, "/api/export", path="p.FCStd")[2].decode("utf-8")
     assert '"image": "data:image/png;base64,' in page and str(ws) not in page
+
+
+# --- ports: a viewer never answers for another workspace ------------------------------------------------------
+
+def test_a_busy_port_is_not_shared(tmp_path_factory, cache):
+    a, b = tmp_path_factory.mktemp("root-a"), tmp_path_factory.mktemp("root-b")
+    va = Viewer(Policy(root=a), port=0, cache_dir=cache).start()
+    try:
+        port = int(va.url.rsplit(":", 1)[1].strip("/"))
+        with pytest.raises(OSError):
+            Viewer(Policy(root=b), port=port, cache_dir=cache)
+    finally:
+        va.stop()
+
+
+def test_two_roots_get_their_own_viewer(tmp_path_factory, monkeypatch):
+    """Two MCP servers on two workspaces (two agents, two worktrees) start at the same port: each link must show
+    its own workspace."""
+    from agentcad.viewer import serves_root
+    monkeypatch.setenv("AGENTCAD_VIEWER", "1")
+    monkeypatch.delenv("AGENTCAD_VIEWER_PORT", raising=False)
+    monkeypatch.delenv("AGENTCAD_VIEWER_OPEN", raising=False)
+    roots = [tmp_path_factory.mktemp("root-a"), tmp_path_factory.mktemp("root-b")]
+    rts = [Runtime(Policy(root=r), auto_viewer=True) for r in roots]
+    try:
+        urls = [ok(rt.apply_operations("x.dxf", OPS[:1], create={"units": "mm"}))["viewer_url"] for rt in rts]
+        assert urls[0].split("#")[0] != urls[1].split("#")[0]
+        for root, url in zip(roots, urls):
+            with urllib.request.urlopen(url.split("#")[0] + "api/ping", timeout=10) as resp:
+                assert Path(json.loads(resp.read())["root"]) == root.resolve()
+        assert not serves_root(urls[0].split("#")[0], Policy(root=roots[1]))
+    finally:
+        for rt in rts:
+            if rt._viewer:
+                rt._viewer.stop()
+
+
+# --- escaping: names, texts, notes and errors are data, never markup ------------------------------------------
+
+XSS = '<img src=x onerror="window.__xss=1"></script><script>window.__xss=2</script>'
+
+
+def test_markup_in_names_texts_notes_and_errors_is_escaped(rt, ws, viewer):
+    name = "a'b&c.dxf"  # what a file name may hold (Windows forbids < > / in names)
+    ok(rt.apply_operations(name, [{"op": "add_text", "text": XSS, "insert": [0, 0], "height": 5, "layer": "TEXT"},
+                                  {"op": "add_line", "start": [0, 0], "end": [50, 0], "layer": "OUTLINE"}],
+                           create={"units": "mm"}, label=XSS))
+    layer = rt.apply_operations(name, [{"op": "create_layer", "name": XSS}])  # DXF may refuse such a name
+    assert not rt.apply_operations(name, [{"op": XSS}])["ok"]  # the error message repeats the op name
+    if layer["ok"]:
+        ok(rt.apply_operations(name, [{"op": "add_line", "start": [0, 5], "end": [9, 5], "layer": XSS}]))
+    tl = json.loads(get(viewer, "/api/timeline", path=name)[2])
+    assert any(r.get("label") == XSS for r in tl["records"])
+    assert any("<img" in r["error"]["message"] for r in tl["records"] if not r["ok"])  # as data, for esc()
+    # API data is JSON (never sniffed as HTML) and the SVG holds the text as escaped character data
+    code, headers, _ = get(viewer, "/api/timeline", path=name)
+    assert headers["Content-Type"].startswith("application/json") and headers["X-Content-Type-Options"] == "nosniff"
+    svg = get(viewer, "/api/svg", path=name)[2].decode("utf-8")
+    assert "<img" not in svg and "<script" not in svg
+    acts = json.loads(get(viewer, "/api/activity")[2])["events"]
+    assert any(e.get("state") == "error" and "<img" in json.dumps(e, ensure_ascii=False) for e in acts)
+    # the export: the payload appears only JSON-escaped, the page has exactly its own three scripts
+    page = get(viewer, "/api/export", path=name)[2].decode("utf-8")
+    assert "<img src=x" not in page and "<script>window" not in page  # each "<" of the data is \u003c in JSON
+    assert page.count("<script") == 3 and page.count("</script>") == 3
+    data = json.loads(re.search(r'<script id="data" type="application/json">(.*?)</script>', page, re.S).group(1))
+    assert data["name"] == name and any(h.get("label") == XSS for h in data["history"])
+    assert any(not h["ok"] and "<img" in h["error"]["message"] for h in data["history"])

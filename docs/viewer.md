@@ -11,7 +11,7 @@ Agent 改图纸或零件时，人可以在浏览器里实时看到它在变：�
 后台线程，MCP 服务器退出它就退出）。之后每个改了文件的结果都带 `viewer_url`（如 `http://127.0.0.1:8770/#plate.dxf`），
 MCP 的说明（instructions）要求 Agent 第一次改文件时把这个链接告诉用户。用户点开链接就能看。
 
-- 端口：8770 起找空闲的（8770–8779，都占用就随便一个），`AGENTCAD_VIEWER_PORT` 可以指定。
+- 端口：8770 起找空闲的（8770–8779，都占用就随便一个），`AGENTCAD_VIEWER_PORT` 可以指定。Windows 上独占绑定端口（`SO_EXCLUSIVEADDRUSE`，不用 `SO_REUSEADDR`：后者允许第二个进程绑定已在监听的端口），所以别的工作区的查看器占着 8770 时会换下一个端口。交出 `viewer_url` 之前，Runtime 每次都向它发 `GET /api/ping`，确认回答的查看器服务的正是这个根目录（测试 `test_two_roots_get_their_own_viewer`）。
 - 同一个根目录已经有查看器在跑（另一个 Agent 的 MCP 服务器，或手动启动的），就用它，不再启动第二个。
 - `AGENTCAD_VIEWER=0`：不自动启动（`viewer_url` 只在别处已有查看器时出现）。
 - `AGENTCAD_VIEWER_OPEN=1`：启动时顺便在默认浏览器里打开。默认不弹窗。
@@ -120,6 +120,7 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。三维零
 - 嵌套调用（`apply_operations(create=...)` 里的 `create_drawing`）不单独报告；`dry_run` 和只读 Runtime 不写。
 - **不会让提交失败**：写一行是一次追加，任何异常都吞掉（测试 `test_progress_never_fails_a_commit` 把日志换成目录，提交照常成功）。
   文件超过 512 KB 时，下一次调用开始前改名为 `activity.jsonl.1`；改名失败（Windows 上正被读）就继续追加。
+  几个进程（两个 Agent）同时追加时，Windows 上的追加不保证原子，偶尔两行会交错；读的一方跳过解析不了的行，最多少显示一步进度。
 
 ## 工作方式
 

@@ -250,9 +250,12 @@ class Runtime:
             drawing = next((j["path"] for j in env["jobs"] if j.get("ok")), "")
         drawing = drawing or ""
         try:
-            from .viewer import viewer_url
-            if self._viewer is not None:
-                return f"{self._viewer.url}#{drawing}"
+            from .viewer import serves_root, viewer_url
+            if self._viewer is not None:  # ours, but check it is still the one answering on its port
+                if serves_root(self._viewer.url, self.policy):
+                    return f"{self._viewer.url}#{drawing}"
+                self._viewer.stop()
+                self._viewer = None
             url = viewer_url(self.policy, drawing)
             if url or not self.auto_viewer or time.monotonic() < self._viewer_retry:
                 return url

@@ -107,12 +107,13 @@ footer { color: var(--muted); font-size: 14px; text-align: center; }
     if (r.shown) li.className = "shown";
     const ch = r.changes || {};
     const pills = r.ok ? [["a", "+", ch.added], ["m", "~", ch.modified], ["d", "−", ch.deleted]].filter((x) => x[2])
-      .map((x) => `<span class="pill ${x[0]}">${x[1]}${x[2]}</span>`).join("") : "";
-    const sub = ["#" + r.seq, r.ts ? new Date(r.ts).toLocaleString(L === "zh" ? "zh-CN" : undefined) : ""];
-    if (r.shown) sub.push(t("shownVersion"));
+      .map((x) => `<span class="pill ${x[0]}">${x[1]}${esc(x[2])}</span>`).join("") : "";
+    // every piece is escaped here; the only markup is the span built around the (escaped) failure text
+    const sub = ["#" + r.seq, r.ts ? new Date(r.ts).toLocaleString(L === "zh" ? "zh-CN" : undefined) : ""]
+      .concat(r.shown ? [t("shownVersion")] : []).filter(Boolean).map(esc);
     if (!r.ok) sub.push(`<span class="bad">${esc(t("failed"))}${r.error ? ": " + esc(r.error.message || r.error.code) : ""}</span>`);
     li.innerHTML = `<span class="fi ${r.ok ? "" : "bad"}">${r.ok ? "✓" : "!"}</span><div><div class="ft">${esc(F.summary({ tool: r.tool, steps: r.steps, drawing: D.name }, L))}${pills}</div>` +
-      (r.label ? `<div class="fs">${esc(r.label)}</div>` : "") + `<div class="fs">${sub.filter(Boolean).map((s) => s.startsWith("<span") ? s : esc(s)).join(" · ")}</div></div>`;
+      (r.label ? `<div class="fs">${esc(r.label)}</div>` : "") + `<div class="fs">${sub.join(" · ")}</div></div>`;
     ol.appendChild(li);
   }
   $("foot").textContent = t("madeWith");

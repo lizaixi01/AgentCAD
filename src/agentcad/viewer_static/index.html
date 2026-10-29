@@ -524,8 +524,8 @@ function renderTimeline() {
     const when = r.ts ? new Date(r.ts).toLocaleTimeString(LANG === "zh" ? "zh-CN" : undefined, { hour: "2-digit", minute: "2-digit" }) : "";
     const ch = r.changes || {};
     const pills = r.ok ? [["a", "+", ch.added], ["m", "~", ch.modified], ["d", "−", ch.deleted]].filter((x) => x[2])
-      .map((x) => `<span class="pill ${x[0]}">${x[1]}${x[2]}</span>`).join("") : "";
-    const sub = [`<span class="seq">#${r.seq}</span>`, esc(when)];
+      .map((x) => `<span class="pill ${x[0]}">${x[1]}${esc(x[2])}</span>`).join("") : "";
+    const sub = [`<span class="seq">#${esc(r.seq)}</span>`, esc(when)];
     if (!r.ok) sub.push(`<span class="badbit">${esc(t("failed"))}${r.error ? ": " + esc(r.error.message || r.error.code) : ""}</span>`);
     if (r.version && !r.available) sub.push(esc(t("notStored")));
     li.innerHTML = `<span class="fi ${r.ok ? "ok" : "bad"}">${r.ok ? ICON.done : ICON.error}</span><div><div class="ft">${esc(text)}` +
