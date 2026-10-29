@@ -97,6 +97,10 @@ agentcad --root ./work export part.dxf part.svg
 
 The same `Runtime` is available from Python and over HTTP (`agentcad --root work serve`, then `POST /v1/<tool>`). All four interfaces share one service layer.
 
+## Watch the agent work
+
+`agentcad --root ./work viewer` serves a live, read-only view of the workspace at `http://127.0.0.1:8770/`. Drawings and 3D parts update as the agent commits, with a timeline of every change: click one to see that version and what it changed. It works with any agent, because it only reads the files. See [docs/viewer.md](docs/viewer.md).
+
 ## What's inside
 
 | | |
@@ -108,7 +112,7 @@ The same `Runtime` is available from Python and over HTTP (`agentcad --root work
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
 | 3D parts | Parametric FreeCAD parts (`.FCStd`) through the same tools: sketches, pad, pocket, revolve, holes, fillets, chamfers, shells, patterns, lofts, sweeps, helices, driven by named parameters. Edge and face selections survive edits. STEP/STL export and shaded PNG previews. Needs FreeCAD 1.1 (optional) — see [docs/part-3d.md](docs/part-3d.md) |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | 255 automated tests, including 27 cases checked against AutoCAD 2027 behaviour and 29 3D-part tests (23 of them build parts in FreeCAD 1.1) |
+| Tests | 269 automated tests, including 27 cases checked against AutoCAD 2027 behaviour and 29 3D-part tests (23 of them build parts in FreeCAD 1.1) |
 
 Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial software.
 
@@ -126,6 +130,7 @@ Most in-depth documents are in Chinese.
 | [docs/architecture.md](docs/architecture.md) | Architecture, data model, transactions, error envelope |
 | [docs/operations.md](docs/operations.md) | Reference for every operation (generated from code) |
 | [docs/part-3d.md](docs/part-3d.md) | 3D parametric parts: FreeCAD backend, operations, selectors, validation |
+| [docs/viewer.md](docs/viewer.md) | Live viewer: watch drawings and parts change in the browser, timeline, diffs |
 | [docs/comparison-claude-code.md](docs/comparison-claude-code.md) | Claude Code: AgentCAD vs. writing code, before and after the compact catalog |
 | [docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md), [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md) | Codex: the same comparison |
 | [docs/trials-report.md](docs/trials-report.md) | Classic drafting tasks and 96 real AutoCAD sample drawings |

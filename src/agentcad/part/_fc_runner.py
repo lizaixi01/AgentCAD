@@ -2032,8 +2032,29 @@ def action_render(job):
     return {"views": names, "grid": grid, "cell_size": size, "fit": fit, "shape": shape_summary(body.Shape)}
 
 
+def action_mesh(job):
+    """Triangles and B-rep edges of the body for the live viewer (viewer.py), written as JSON to ``output``.
+    Like previews, it does not require an exportable part: a broken body is shown as it is."""
+    doc = App.openDocument(job["input"])
+    doc.recompute()
+    body = next((o for o in doc.Objects if o.TypeId == "PartDesign::Body" and not o.Shape.isNull()), None)
+    if body is None:
+        raise OpError("NO_SOLID", "Nothing to show: the part has no solid", category="geometry")
+    sh = body.Shape
+    span = max(sh.BoundBox.DiagonalLength, 1e-9)
+    pts, tris = sh.tessellate(span / 600)
+    edges = []
+    for e in sh.Edges:
+        if not _is_seam(sh, e):
+            edges.append([round(c, 5) for q in e.discretize(Deflection=span / 1000) for c in (q.x, q.y, q.z)])
+    data = {"positions": [round(c, 5) for p in pts for c in (p.x, p.y, p.z)],
+            "indices": [i for t in tris for i in t], "edges": edges}
+    Path(job["output"]).write_text(json.dumps(data, separators=(",", ":")), "utf-8")
+    return {"triangles": len(tris), "edges": len(edges), "shape": shape_summary(sh), "broken": broken(doc)}
+
+
 ACTIONS = {"apply": action_apply, "summary": action_summary, "validate": action_validate,
-           "read_shape": action_read_shape, "render": action_render,
+           "read_shape": action_read_shape, "render": action_render, "mesh": action_mesh,
            "topology": action_topology, "export": action_export}
 
 

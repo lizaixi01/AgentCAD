@@ -76,6 +76,11 @@ def tool(fn):
         if (env["ok"] and name in LIVE_SYNC_TOOLS and self.policy.live_sync and env.get("drawing")
                 and not env.get("dry_run")):
             env["live"] = self._live_sync(env["drawing"])
+        if env["ok"] and name == "create_drawing":
+            from .viewer import viewer_url
+            url = viewer_url(self.policy, env["drawing"])
+            if url:
+                env["viewer_url"] = url
         env["metrics"] = {"duration_ms": round((time.perf_counter() - t0) * 1000, 2), "input_bytes": in_bytes,
                           "output_bytes": len(json.dumps(env, default=str))}
         self.metrics.append({"tool": name, "ok": env["ok"], **env["metrics"]})
