@@ -145,31 +145,111 @@ def test_bad_config_left_alone(home):
     assert st["claude-desktop"]["status"] == "added" and not res.ok
 
 
-def test_claude_code_uses_cli_when_present(home, monkeypatch):
-    monkeypatch.setattr(install.shutil, "which", lambda name, *a, **k: "/bin/claude" if name == "claude" else None)
+def _fake_claude(script: list[int]):
+    """A runner standing in for the claude CLI: return codes from `script` in order (0 once it runs out)."""
     calls: list[list[str]] = []
 
     def runner(cmd):
         calls.append(cmd)
-        return subprocess.CompletedProcess(cmd, 1 if cmd[2] == "remove" else 0, "", "")
+        code = script.pop(0) if script else 0
+        return subprocess.CompletedProcess(cmd, code, "", "boom" if code else "")
+    return calls, runner
 
+
+def test_claude_code_uses_cli_when_present(home, monkeypatch):
+    monkeypatch.setattr(install.shutil, "which", lambda name, *a, **k: "/bin/claude" if name == "claude" else None)
+    calls, runner = _fake_claude([])
     dry = install.setup(["claude-code"], dry_run=True, runner=runner)
     assert calls == [] and dry.clients[0]["status"] == "would run"
-    res = install.setup(["claude-code"], runner=runner, freecad=None)
-    assert res.clients[0]["status"] == "registered"
-    assert calls[0] == ["/bin/claude", "mcp", "remove", "agentcad", "--scope", "user"]
-    add = calls[1]
+
+    res = install.setup(["claude-code"], runner=runner)  # not registered yet: one add
+    assert res.clients[0]["status"] == "registered" and len(calls) == 1
+    add = calls[0]
     assert add[:6] == ["/bin/claude", "mcp", "add", "agentcad", "--scope", "user"]
     assert f"AGENTCAD_ROOT={(home / 'AgentCAD').resolve().as_posix()}" in add
     assert add[add.index("--") + 1:] == [res.entry["command"], "-m", "agentcad.mcp_server"]
     assert not (home / "AgentCAD" / ".mcp.json").exists()
-    failing = install.setup(["claude-code"], runner=lambda cmd: subprocess.CompletedProcess(cmd, 1, "", "boom"))
-    assert failing.clients[0]["status"] == "error" and failing.clients[0]["message"] == "boom"
-    # Claude Code stored it (as it does in ~/.claude.json): a second run leaves it alone
-    (home / ".claude.json").write_text(chr(0xFEFF) + json.dumps({"mcpServers": {"agentcad": {"type": "stdio", **res.entry}}}),
-                                       "utf-8")
-    calls.clear()
+
+    # an older registration (as Claude Code stores it in ~/.claude.json, saved with a BOM)
+    old = {"type": "stdio", "command": "/old/python", "args": ["-m", "agentcad.mcp_server"], "env": {"A": "1"}}
+    (home / ".claude.json").write_text(chr(0xFEFF) + json.dumps({"mcpServers": {"agentcad": old}}), "utf-8")
+    calls, runner = _fake_claude([1])  # add fails (exists), then remove + add
+    assert install.setup(["claude-code"], runner=runner).clients[0]["status"] == "registered"
+    assert [c[2] for c in calls] == ["add", "remove", "add"]
+
+    calls, runner = _fake_claude([1, 0, 1])  # the new add fails twice: the old entry is put back
+    rec = install.setup(["claude-code"], runner=runner).clients[0]
+    assert rec["status"] == "error" and "restored" in rec["message"]
+    assert [c[2] for c in calls] == ["add", "remove", "add", "add"]
+    assert calls[-1][calls[-1].index("--") + 1:] == ["/old/python", "-m", "agentcad.mcp_server"] and "A=1" in calls[-1]
+
+    (home / ".claude.json").write_text(json.dumps({"mcpServers": {"agentcad": {"type": "stdio", **res.entry}}}), "utf-8")
+    calls, runner = _fake_claude([])
     assert install.setup(["claude-code"], runner=runner).clients[0]["status"] == "unchanged" and calls == []
+
+
+def test_claude_cmd_shim_never_gets_cmd_metacharacters(home, monkeypatch, tmp_path):
+    """npm's claude.cmd runs through cmd.exe: a root like R&D would be cut at '&'. Setup writes .mcp.json instead."""
+    monkeypatch.setattr(install.shutil, "which",
+                        lambda name, *a, **k: "C:/npm/claude.cmd" if name == "claude" else None)
+    calls, runner = _fake_claude([])
+    root = tmp_path / "R&D 100%"
+    res = install.setup(["claude-code"], root, runner=runner)
+    rec = res.clients[0]
+    assert calls == [] and rec["status"] == "added" and "cmd.exe" in rec["message"] and "commands" not in rec
+    entry = json.loads((root / ".mcp.json").read_text("utf-8"))["mcpServers"]["agentcad"]
+    assert entry["env"]["AGENTCAD_ROOT"] == root.resolve().as_posix()
+    assert "Open Claude Code in" in install.render_setup(res)
+    assert install.cmd_unsafe(["C:/npm/claude.CMD", "-e", "X=a^b"]) == "X=a^b"
+    assert install.cmd_unsafe(["/bin/claude", "-e", "X=a&b"]) is None  # a real executable gets argv as is
+    # a plain folder name goes through claude.cmd as usual
+    safe = install.setup(["claude-code"], tmp_path / "plain", runner=runner)
+    assert safe.clients[0]["status"] == "registered" and calls[0][0] == "C:/npm/claude.cmd"
+
+
+@pytest.mark.parametrize("existing", [
+    '[mcp_servers]\nagentcad = { command = "old", args = [] }\nother = { command = "y" }\n',
+    '[mcp_servers]\nagentcad.command = "old"\nagentcad.env.A = "1"\nother.command = "y"\n',
+    'mcp_servers.agentcad.command = "old"\nmcp_servers.other.command = "y"\n',
+    '[mcp_servers."agentcad"]\ncommand = "old"\n\n[mcp_servers.other]\ncommand = "y"\n',
+])
+def test_codex_other_spellings_replaced(home, existing):
+    path = _paths(home)["codex"]
+    path.parent.mkdir(parents=True)
+    path.write_text('model = "gpt"\n' + existing, "utf-8")
+    res = install.setup(["codex"])
+    assert res.clients[0]["status"] == "updated", res.clients
+    cfg = tomllib.loads(path.read_text("utf-8"))
+    assert cfg["model"] == "gpt" and cfg["mcp_servers"]["other"]["command"] == "y"
+    assert Path(cfg["mcp_servers"]["agentcad"]["command"]).samefile(PY)
+    assert install.setup(["codex"]).clients[0]["status"] == "unchanged"
+
+
+def test_codex_invalid_toml_left_alone(home):
+    path = _paths(home)["codex"]
+    path.parent.mkdir(parents=True)
+    path.write_text('model = "gpt"\nmodel = "twice"\n', "utf-8")
+    rec = install.setup(["codex"]).clients[0]
+    assert rec["status"] == "error" and "not valid TOML" in rec["message"]
+    assert path.read_text("utf-8") == 'model = "gpt"\nmodel = "twice"\n'
+
+
+def test_codex_never_writes_invalid_toml(home, monkeypatch):
+    path = _paths(home)["codex"]
+    path.parent.mkdir(parents=True)
+    path.write_text('[mcp_servers.agentcad]\ncommand = "old"\n', "utf-8")
+    monkeypatch.setattr(install, "_drop_toml_table", lambda text, name: (text, True))  # a removal that misses
+    rec = install.setup(["codex"]).clients[0]
+    assert rec["status"] == "error" and path.read_text("utf-8") == '[mcp_servers.agentcad]\ncommand = "old"\n'
+
+
+def test_doctor_reads_codex_config_with_bom(home):
+    install.setup(["codex"])
+    path = _paths(home)["codex"]
+    path.write_text(chr(0xFEFF) + path.read_text("utf-8"), "utf-8")
+    by = {c["name"]: c for c in install.doctor()["checks"]}
+    assert by["Codex config"]["status"] == "ok", by["Codex config"]
+    assert install.setup(["codex"]).clients[0]["status"] in ("unchanged", "updated")
 
 
 def test_uvx_launcher(home):
@@ -192,6 +272,13 @@ def test_ephemeral_detection(monkeypatch):
     assert install._is_ephemeral(Path("/home/u/.local/pipx/.cache/abc"))
     assert not install._is_ephemeral(Path("/home/u/.local/share/uv/tools/agentcad-runtime"))
     assert not install._is_ephemeral(Path("/home/u/.local/pipx/venvs/agentcad-runtime"))
+    # current pipx (platformdirs); the Windows one was seen on this machine, macOS/Linux are from pipx's docs
+    assert install._is_ephemeral(Path("C:/Users/u/AppData/Local/pipx/pipx/Cache/5b42f0104222437"))
+    assert install._is_ephemeral(Path("/Users/u/Library/Caches/pipx/5b42f0104222437"))
+    assert install._is_ephemeral(Path("/home/u/.cache/pipx/5b42f0104222437"))
+    assert not install._is_ephemeral(Path("C:/Users/u/AppData/Local/pipx/pipx/venvs/agentcad-runtime"))
+    assert not install._is_ephemeral(Path("/Users/u/Library/Application Support/pipx/venvs/agentcad-runtime"))
+    assert not install._is_ephemeral(Path("/home/u/.local/share/pipx/venvs/agentcad-runtime"))
     assert install.choose_launcher("auto", {"ephemeral": True}) == "uvx"
     assert install.choose_launcher("auto", {"ephemeral": False}) == "python"
     assert install.choose_launcher("uvx", {"ephemeral": False}) == "uvx"

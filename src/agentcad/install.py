@@ -71,10 +71,14 @@ def install_info() -> dict[str, Any]:
 
 
 def _is_ephemeral(prefix: Path) -> bool:
-    """True inside a throw-away environment (uvx / ``uv tool run`` cache, ``pipx run`` cache): its interpreter path
-    may vanish when the cache is cleaned, so a client config must not point at it."""
+    """True inside a throw-away environment, whose interpreter may vanish when the cache is cleaned, so a client
+    config must not point at it: uvx / ``uv tool run`` (<uv cache>/archive-v0/<id>, checked on Windows) and
+    ``pipx run`` (Windows %LOCALAPPDATA%\\pipx\\pipx\\Cache\\<id>, checked; macOS ~/Library/Caches/pipx/<id>, Linux
+    ~/.cache/pipx/<id>, older pipx or PIPX_HOME <home>/.cache/<id>: not run on macOS/Linux)."""
     parts = [p.lower() for p in prefix.parts]
-    return "archive-v0" in parts or ("pipx" in " ".join(parts) and ".cache" in parts)
+    if "archive-v0" in parts:
+        return True
+    return any("pipx" in p for p in parts) and any(p in (".cache", "cache", "caches") for p in parts)
 
 
 def launcher_command(launcher: str, source: str | None = None) -> tuple[str, list[str]]:
@@ -201,15 +205,24 @@ _HEADER = re.compile(r"^\s*\[\[?\s*([^\]]+?)\s*\]\]?\s*(#.*)?$")
 
 
 def _drop_toml_table(text: str, name: str) -> tuple[str, bool]:
-    """Remove [mcp_servers.<name>] and its sub-tables ([mcp_servers.<name>.env], ...)."""
-    keys = {f"mcp_servers.{name}", f'mcp_servers."{name}"'}
-    out, skipping, found = [], False, False
+    """Remove every definition of mcp_servers.<name>: its [table] and sub-tables ([mcp_servers.<name>.env]), an
+    inline ``<name> = {...}`` or dotted ``<name>.key = ...`` under [mcp_servers], and top-level dotted
+    ``mcp_servers.<name>... = ...`` keys. (Inline tables are one line in TOML 1.0.)"""
+    names = (name, f'"{name}"', f"'{name}'")
+    tables = {f"mcp_servers.{n}" for n in names}
+    out, table, skipping, found = [], "", False, False
     for line in text.splitlines(keepends=True):
         m = _HEADER.match(line)
         if m:
-            key = m.group(1).replace(" ", "")
-            skipping = key in keys or any(key.startswith(k + ".") for k in keys)
+            table = m.group(1).replace(" ", "")
+            skipping = table in tables or any(table.startswith(k + ".") for k in tables)
             found = found or skipping
+        elif not skipping and "=" in line:
+            key = "".join(line.split("=", 1)[0].split())
+            if (table == "mcp_servers" and any(key == n or key.startswith(n + ".") for n in names)) or \
+                    (table == "" and any(key == k or key.startswith(k + ".") for k in tables)):
+                found = True
+                continue
         if not skipping:
             out.append(line)
     return "".join(out), found
@@ -223,25 +236,80 @@ def codex_table(name: str, entry: dict[str, Any], launcher: str) -> str:
     return toml
 
 
+def _parse_toml(text: str, path: Path, what: str) -> dict[str, Any] | None:
+    try:
+        import tomllib  # type: ignore[import-not-found]
+    except ImportError:  # Python 3.10: no TOML parser in the standard library
+        return None
+    try:
+        return tomllib.loads(text)
+    except ValueError as exc:
+        raise input_error("BAD_CONFIG", f"{path} {what} is not valid TOML: {exc}",
+                          hint="Fix or move that file, then run setup again")
+
+
 def write_codex_config(path: Path, name: str, table: str, dry_run: bool = False) -> str:
+    """Replace this server's entry and keep everything else. Both the old and the new file must parse (Python
+    3.11+): an invalid file is left alone, and an invalid result is never written."""
     text = path.read_text("utf-8-sig") if path.is_file() else ""
+    _parse_toml(text, path, "as it is")
     rest, found = _drop_toml_table(text, name)
-    if found and table.strip() in text:
-        return "unchanged"
     rest = rest.rstrip("\n")
     new = (rest + "\n\n" if rest else "") + table
+    if new == text:
+        return "unchanged"
+    parsed = _parse_toml(new, path, "after the change")
+    want = _parse_toml(table, path, "entry")
+    if parsed is not None and want is not None and parsed["mcp_servers"][name] != want["mcp_servers"][name]:
+        raise input_error("BAD_CONFIG", f"{path}: could not replace mcp_servers.{name} cleanly",
+                          hint=f"Delete the {name} entry from that file, then run setup again")
     if not dry_run:
         _write(path, new)
     return "updated" if found else "added"
 
 
 def claude_cli_commands(name: str, entry: dict[str, Any]) -> list[list[str]]:
-    """``claude mcp`` calls that (re)register the server for the user: remove (may fail: not there), then add."""
+    """``claude mcp`` calls that register the server for the user: add; if it is already there, remove + add."""
     claude = shutil.which("claude") or "claude"
+    return [_claude_add(claude, name, entry), [claude, "mcp", "remove", name, "--scope", "user"]]
+
+
+def _claude_add(claude: str, name: str, entry: dict[str, Any]) -> list[str]:
     add = [claude, "mcp", "add", name, "--scope", "user"]
-    for k, v in entry["env"].items():
+    for k, v in (entry.get("env") or {}).items():
         add += ["-e", f"{k}={v}"]
-    return [[claude, "mcp", "remove", name, "--scope", "user"], add + ["--", entry["command"], *entry["args"]]]
+    return add + ["--", entry["command"], *(entry.get("args") or [])]
+
+
+CMD_META = set('&|<>^%"!')
+
+
+def cmd_unsafe(cmd: list[str]) -> str | None:
+    """Windows runs a .cmd / .bat (npm's claude.cmd) through cmd.exe, which interprets these characters even in a
+    list-form call with shell=False. Returns the first argument that has one, or None."""
+    if Path(cmd[0]).suffix.lower() not in (".cmd", ".bat"):
+        return None
+    return next((a for a in cmd[1:] if CMD_META & set(a)), None)
+
+
+def _register_with_claude(name: str, entry: dict[str, Any], run: Runner) -> dict[str, Any]:
+    """Register via ``claude mcp``. The previous registration is removed only after a first add fails (it exists),
+    and put back when the second add fails too."""
+    add, remove = claude_cli_commands(name, entry)
+    if run(add).returncode == 0:
+        return {"status": "registered"}
+    old = _claude_user_entry(name)
+    run(remove)
+    p = run(add)
+    if p.returncode == 0:
+        return {"status": "registered"}
+    msg = (p.stderr or p.stdout).strip()[:500]
+    if old is not None:
+        back = _claude_add(add[0], name, old)
+        restored = cmd_unsafe(back) is None and run(back).returncode == 0
+        msg += (" (your previous agentcad registration was restored)" if restored else
+                " (your previous agentcad registration was removed and could not be restored)")
+    return {"status": "error", "message": msg}
 
 
 def _claude_user_entry(name: str) -> dict[str, Any] | None:
@@ -340,20 +408,21 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
     for client in clients:
         rec: dict[str, Any] = {"client": client, "label": LABELS[client]}
         try:
-            if client == "claude-code" and shutil.which("claude"):
-                cmds = claude_cli_commands(name, entry)
+            cmds = claude_cli_commands(name, entry) if client == "claude-code" and shutil.which("claude") else None
+            bad = cmd_unsafe(cmds[0]) if cmds else None
+            if bad:
+                cmds = None
+                rec["message"] = (f"{shutil.which('claude')} runs through cmd.exe, which would garble {bad!r}, so "
+                                  "this wrote .mcp.json instead. A folder name without & | < > ^ % \" ! lets setup "
+                                  "use claude mcp add.")
+            if cmds:
                 rec.update(target="claude mcp (user scope)", commands=cmds)
                 if _claude_user_entry(name) == entry:
                     rec["status"] = "unchanged"
                 elif dry_run:
                     rec["status"] = "would run"
                 else:
-                    run(cmds[0])  # fails harmlessly when it is not registered yet
-                    p = run(cmds[1])
-                    if p.returncode != 0:
-                        rec.update(status="error", message=(p.stderr or p.stdout).strip()[:500])
-                    else:
-                        rec["status"] = "registered"
+                    rec.update(_register_with_claude(name, entry, run))
             else:
                 path = config_path(client, root_path)
                 rec["target"] = str(path)
@@ -451,9 +520,9 @@ def _client_entry(client: str, root: Path) -> tuple[str | None, dict[str, Any] |
             return None, None
         try:
             import tomllib  # type: ignore[import-not-found]
-            data = tomllib.loads(path.read_text("utf-8"))
+            data = tomllib.loads(path.read_text("utf-8-sig"))
         except ImportError:  # Python 3.10: only say whether the table is there
-            return (str(path), {}) if f"[mcp_servers.{NAME}]" in path.read_text("utf-8") else (None, None)
+            return (str(path), {}) if f"[mcp_servers.{NAME}]" in path.read_text("utf-8-sig") else (None, None)
         except ValueError:
             return str(path) + " (not valid TOML)", None
         e = (data.get("mcp_servers") or {}).get(NAME)
