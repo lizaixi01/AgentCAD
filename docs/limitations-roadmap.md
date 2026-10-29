@@ -7,7 +7,7 @@
 | ezdxf ≥1.3,<2（实测 1.4.5） | MIT | DXF 读写、标注渲染、范围计算 | 核心依赖 |
 | mcp ≥1.20,<2（实测 1.30.0） | MIT | MCP 服务器 | 2.x API 不兼容，故固定 1.x |
 | pypdf ≥4（实测 6.21） | BSD-3 | PDF 文字提取 | |
-| Pillow（可选 `[preview]`） | MIT-CMU | SVG 导出（ezdxf drawing 插件需要） | 未安装时返回 `dependency/DEPENDENCY_MISSING` |
+| Pillow ≥10 | MIT-CMU | SVG 导出（ezdxf drawing 插件需要）、图片预览 | 核心依赖（uvx/pipx 直接安装也能导出 SVG）；`[preview]` extra 保留以兼容旧命令 |
 
 | FreeCAD 1.1（可选，实测 1.1.4） | LGPL-2.1+ | 三维参数化零件（`.FCStd`）的几何内核 | 独立进程运行（`backends/freecad.py`），不链接；见 [part-3d.md](part-3d.md) |
 

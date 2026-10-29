@@ -67,6 +67,33 @@ def test_concurrent_writer_lock(rt, ws, blank):
     ok(rt.apply_operations(blank, [{"op": "add_point", "location": [0, 0]}]))
 
 
+def _install_imports(source: str) -> set[str]:
+    """Names a module takes from agentcad.install; '*' when it imports the module itself."""
+    import ast
+    got: set[str] = set()
+    for node in ast.walk(ast.parse(source)):
+        if isinstance(node, ast.ImportFrom):
+            mod = node.module or ""
+            if mod.split(".")[-1] == "install" and (node.level or mod.startswith("agentcad")):
+                got |= {a.name for a in node.names}  # from .install / from agentcad.install import x
+            elif (node.level and not mod) or mod == "agentcad":
+                got |= {"*" for a in node.names if a.name == "install"}  # from . import install
+        elif isinstance(node, ast.Import):
+            got |= {"*" for a in node.names if a.name == "agentcad.install"}
+    return got
+
+
+def test_install_import_guard_catches_every_form():
+    assert _install_imports("from .install import ensure_workspace") == {"ensure_workspace"}
+    nested = "def f():" + chr(10) + "    from .install import ensure_workspace, setup"
+    assert _install_imports(nested) == {"ensure_workspace", "setup"}
+    assert _install_imports("from . import install") == {"*"}
+    assert _install_imports("from agentcad import install as i") == {"*"}
+    assert _install_imports("import agentcad.install") == {"*"}
+    assert _install_imports("from agentcad.install import doctor") == {"doctor"}
+    assert _install_imports("from .ops import install_thing" + chr(10) + "import installer") == set()
+
+
 def test_no_shell_or_arbitrary_execution_surface():
     """Operations are a closed registry; nothing maps agent input to system commands. The one exception is the
     opt-in run_script tool: off by default, statically checked, run in a separate process without a shell."""
@@ -74,7 +101,8 @@ def test_no_shell_or_arbitrary_execution_surface():
     import agentcad
     from pathlib import Path
     pkg = Path(agentcad.__file__).parent
-    launchers = {pkg / "backends" / "autocad.py", pkg / "backends" / "freecad.py", pkg / "scripting.py"}
+    launchers = {pkg / "backends" / "autocad.py", pkg / "backends" / "freecad.py", pkg / "scripting.py",
+                 pkg / "install.py"}
     for f in pkg.rglob("*.py"):
         text = f.read_text("utf-8")
         assert "os.system" not in text and "eval(" not in text, f
@@ -89,6 +117,14 @@ def test_no_shell_or_arbitrary_execution_surface():
     assert "shell=False" in fc and "shell=True" not in fc and "timeout=TIMEOUT" in fc
     scripting = (pkg / "scripting.py").read_text("utf-8")
     assert "shell=False" in scripting and "shell=True" not in scripting and "timeout=timeout" in scripting
+    # install.py runs only the user's own 'claude mcp' CLI, from 'agentcad setup'. Modules that serve tools may
+    # import nothing from it but ensure_workspace.
+    inst = (pkg / "install.py").read_text("utf-8")
+    assert "shell=False" in inst and "shell=True" not in inst and "cmd_unsafe(" in inst
+    for f in pkg.rglob("*.py"):
+        if f.name in ("cli.py", "install.py"):
+            continue
+        assert _install_imports(f.read_text("utf-8")) <= {"ensure_workspace"}, f
     assert "check_script(code)" in (pkg / "service.py").read_text("utf-8")
     assert Policy(root=Path.cwd()).allow_scripts in (False,) or __import__("os").environ.get("AGENTCAD_ALLOW_SCRIPTS")
     assert all(callable(d.fn) for d in REGISTRY.values())
