@@ -43,7 +43,8 @@ def build_parser() -> argparse.ArgumentParser:
                                    "and 'doctor' use ~/AgentCAD instead of the current folder); all paths must be "
                                    "inside it")
     ap.add_argument("--read-only", action="store_true", help="Refuse every modification")
-    ap.add_argument("--allow-scripts", action="store_true", help="Enable the 'script' command (agent-written ezdxf scripts)")
+    ap.add_argument("--allow-scripts", action="store_true", help="Enable the 'script' command (agent-written ezdxf "
+                                                                 "scripts; CadQuery / FreeCAD scripts for 3D parts)")
     ap.add_argument("--compact", action="store_true", help="Single-line JSON output")
     sub = ap.add_subparsers(dest="cmd", required=True)
 

@@ -32,9 +32,12 @@ BANNED_ATTRS = {"saveas", "save", "readfile", "readzip", "write", "write_text", 
 RUNNER = Path(__file__).with_name("_script_runner.py")
 CQ_RUNNER = Path(__file__).parent / "part" / "_cq_runner.py"
 
-# 3D part scripts (run_script on a .FCStd): the program builds a solid and sets ``result``. CadQuery runs in this
-# interpreter's own child process (cadquery is the optional extra agentcad-runtime[cadquery]); FreeCAD scripts run in
-# the FreeCAD runner. Neither may read, write, import or export files: the runtime stores the solid itself.
+# 3D part scripts (run_script on a .FCStd): the program builds a solid and sets ``result``; the runtime stores it.
+# Each runs in a process of its own: CadQuery in a child of this interpreter (cadquery is the optional extra
+# agentcad-runtime[cadquery]), FreeCAD Part code in a FreeCAD process with no document open. The names below reject
+# the usual ways of reading, writing, importing or exporting files and of reaching FreeCAD's documents and settings.
+# They are not complete (numpy and OCP offer more ways): like the 2D check, this guards against mistakes; the
+# boundary is that scripts are off unless the policy allows them.
 _DATA = {"math", "cmath", "itertools", "functools", "collections", "re", "statistics", "fractions", "decimal",
          "operator", "copy", "typing", "dataclasses", "enum"}
 _FILE_ATTRS = {"save", "saveas", "saveAs", "write", "write_text", "write_bytes", "read_text", "read_bytes", "unlink",
@@ -42,16 +45,21 @@ _FILE_ATTRS = {"save", "saveas", "saveAs", "write", "write_text", "write_bytes",
                "exportStl", "exportBrep", "exportBin", "exportBinary", "exportSvg", "exportDXF", "exportIges",
                "importStep", "importBrep", "importStl", "importDXF", "importBin", "importBinary", "importSvg", "read",
                "readfile", "open", "load", "dump", "loadtxt", "savetxt", "fromfile", "tofile",
+               # numpy and OCP file access and native code
+               "savez", "savez_compressed", "genfromtxt", "fromregex", "memmap", "DataSource", "ctypeslib", "ctypes",
+               "load_library", "Write", "Read", "Write_s", "Read_s",
                # FreeCAD: documents and settings belong to the runtime, not to the script
                "openDocument", "newDocument", "closeDocument", "getDocument", "listDocuments", "ActiveDocument",
-               "loadFile", "ParamGet"}
+               "activeDocument", "setActiveDocument", "loadFile", "ParamGet",
+               # cadquery.vis opens a window and would wait for it until the time limit
+               "vis"}
 LANGUAGES: dict[str, dict] = {
     "ezdxf": {"imports": ALLOWED_IMPORTS, "attrs": BANNED_ATTRS,
               "hint": "Scripts get the drawing as `doc` (and `msp`); edit it in place, do not open, save or import "
                       "other files."},
     "cadquery": {"imports": _DATA | {"cadquery", "numpy"}, "attrs": _FILE_ATTRS,
                  "hint": "Build the part with CadQuery (`cq` is imported) and set `result` to a cq.Workplane or "
-                         "Shape; do not import, export or open files."},
+                         "Shape (show_object(x) also works); do not import, export or open files."},
     "freecad": {"imports": _DATA | {"Part", "FreeCAD", "numpy"}, "attrs": _FILE_ATTRS,
                 "hint": "Build the part with FreeCAD's Part module (`Part`, `App`, `Vector` are given) and set "
                         "`result` to a Part.Shape; do not open, save or export documents or files."},

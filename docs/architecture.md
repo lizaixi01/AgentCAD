@@ -115,5 +115,5 @@ ezdxf (DXF 内核)                 part/* → backends/freecad → FreeCAD 进�
 - 覆盖需要 `overwrite=true`，被覆盖的文件会先建检查点；导出目标不能是源文件。
 - 只读模式；操作白名单；批次操作数、实体总数、单批新增实体数都有预算；删除超过 50 个实体需要 `confirm_large`。
 - 每张图纸有写锁，返回 `retryable` 错误。
-- 代码中没有 `os.system`、`eval`。`exec` 只出现在可选脚本工具的子进程入口 `_script_runner.py`、`part/_cq_runner.py` 和 FreeCAD 作业脚本 `part/_fc_runner.py`（只执行 `run_script` 的 FreeCAD Part 脚本）中；`run_script` 默认关闭（`AGENTCAD_ALLOW_SCRIPTS=1` 或 CLI `--allow-scripts` 才开启），脚本先过静态检查，再在独立进程中运行。这些检查用来防止误操作，不是安全沙箱：只对你愿意让它以你的身份运行 Python 的 Agent 开启。`subprocess` 只出现在 `scripting.py`（启动脚本子进程）和可选的 `backends/autocad.py` 中：可执行文件来自配置或自动发现，不经 shell（`shell=False`），有超时；作业脚本只包含固定文件名，不含调用方字符串；不修改宿主 AutoCAD 的持久设置。这些约束都有测试扫描。Agent 的输入只能落到封闭的操作注册表上。
+- 代码中没有 `os.system`、`eval`。`exec` 只出现在可选脚本工具的子进程入口 `_script_runner.py`、`part/_cq_runner.py` 和 FreeCAD 作业脚本 `part/_fc_runner.py`（只在单独的、没有打开文档的 FreeCAD 进程里执行 `run_script` 的 FreeCAD Part 脚本）中，每个文件恰好一处（测试按所在函数固定）；`run_script` 默认关闭（`AGENTCAD_ALLOW_SCRIPTS=1` 或 CLI `--allow-scripts` 才开启），脚本先过静态检查，再在独立进程中运行。这些检查用来防止误操作，不是安全沙箱：只对你愿意让它以你的身份运行 Python 的 Agent 开启。`subprocess` 只出现在 `scripting.py`（启动脚本子进程）和可选的 `backends/autocad.py` 中：可执行文件来自配置或自动发现，不经 shell（`shell=False`），有超时；作业脚本只包含固定文件名，不含调用方字符串；不修改宿主 AutoCAD 的持久设置。这些约束都有测试扫描。Agent 的输入只能落到封闭的操作注册表上。
 - HTTP 默认只绑定 127.0.0.1，请求体限制 8 MB。

@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import importlib.util
 import shutil
+import time
 import uuid
 import zipfile
 from pathlib import Path
@@ -68,8 +69,9 @@ def _jobs(rt: "Runtime") -> Path:
 
 
 def _run(rt: "Runtime", job: dict[str, Any], inputs: dict[str, Path] | None = None,
-         outputs: dict[str, Path] | None = None, on_progress=None, timeout: float | None = None) -> dict[str, Any]:
-    res = freecad.run(job, inputs, outputs, on_progress, timeout)
+         outputs: dict[str, Path] | None = None, on_progress=None, timeout: float | None = None,
+         workdir: Path | None = None) -> dict[str, Any]:
+    res = freecad.run(job, inputs, outputs, on_progress, timeout, workdir)
     if not res.get("ok"):
         e = res.get("error") or {}
         cat = e.get("category", "internal")
@@ -213,16 +215,36 @@ def _script_error(res: dict[str, Any]) -> AgentCADError:
                          hint=res.get("hint") or "Nothing was saved; fix the script and run it again")
 
 
+def _freecad_script(rt: "Runtime", code: str, job_dir: Path, brep: Path, timeout: float) -> dict[str, Any]:
+    """Run a FreeCAD Part script in a FreeCAD process of its own (no document open), working in ``job_dir``;
+    its solid is written to ``brep``."""
+    from .. import scripting
+    t0 = time.perf_counter()
+    try:
+        res = _run(rt, {"action": "script_solid", "code": code,
+                        "allowed_imports": sorted(scripting.LANGUAGES["freecad"]["imports"])},
+                   outputs={"output": brep}, timeout=timeout, workdir=job_dir / "freecad")
+    except AgentCADError as exc:
+        if exc.code == "FREECAD_TIMEOUT":
+            raise AgentCADError("SCRIPT_TIMEOUT", f"The script ran longer than {timeout:g} s (FreeCAD's start "
+                                "included) and was stopped", category="input",
+                                hint="Simplify the script, or raise AGENTCAD_SCRIPT_TIMEOUT")
+        raise
+    res["seconds"] = round(time.perf_counter() - t0, 3)
+    return res
+
+
 def run_script(rt: "Runtime", path: str, code: str, language: str | None, keep_features: bool, dry_run: bool,
                requirements: list[dict] | None, strict: bool, label: str | None) -> dict[str, Any]:
     """Build the part's solid with a CadQuery (default) or FreeCAD Part script, as one transaction.
 
-    CadQuery runs in a child process of AgentCAD's own interpreter (FreeCAD's Python cannot import it), with a job
-    folder in the workspace's state directory as working directory and the policy's time limit; the solid comes
-    back as BREP (OpenCASCADE's native format, exact). The FreeCAD runner makes it the Body's BaseFeature, rebuilds
-    kept features on it, saves a candidate, re-opens and validates it, and AgentCAD commits it like a batch
-    (checkpoint, journal with the full script, rollback). A FreeCAD script runs in the FreeCAD runner itself.
-    A missing part is created (mm); script numbers are in the part's unit."""
+    The script runs in a process of its own, with a job folder in the workspace's state directory as working
+    directory and the policy's time limit: CadQuery in a child of AgentCAD's own interpreter (FreeCAD's Python
+    cannot import it), a FreeCAD script in a FreeCAD process with no document open. Only its solid comes back, as
+    BREP (OpenCASCADE's native format, exact). A second FreeCAD job makes it the Body's BaseFeature, rebuilds kept
+    features on it, saves a candidate, re-opens and validates it, and AgentCAD commits it like a batch (checkpoint,
+    journal with the full script, rollback). A missing part is created (mm); script numbers are in the part's
+    unit, and the result reports the solid in mm, like validation.shape."""
     from .. import scripting
     rt.policy.check_scripts_allowed()
     if not dry_run:
@@ -242,7 +264,7 @@ def run_script(rt: "Runtime", path: str, code: str, language: str | None, keep_f
               **({"label": label} if label else {})}
     timeout = rt.policy.script_timeout
     cand = _candidate(rt)
-    job_dir = _jobs(rt) / f"cq-{uuid.uuid4().hex[:12]}"
+    job_dir = _jobs(rt) / f"script-{uuid.uuid4().hex[:12]}"
     fail = {"tool": "run_script", "kind": "part", "ok": False, "label": label, "language": lang, "code": code,
             "code_sha256": sha}
     try:
@@ -255,34 +277,24 @@ def run_script(rt: "Runtime", path: str, code: str, language: str | None, keep_f
             if new:
                 job.update(input=None, units="mm")
             script: dict[str, Any] = {"language": lang}
-            fc_timeout = None
+            brep = job_dir / "result.brep"
             try:
                 if lang == "cadquery":
                     res = scripting.run_cadquery(code, job_dir, timeout)
                     if not res.get("ok"):
                         raise _script_error(res)
-                    inputs["base_brep"] = job_dir / "result.brep"
-                    script.update(seconds=res.get("seconds"),
-                                  solid={k: res[k] for k in ("volume", "size", "fused") if k in res})
-                    if res.get("stdout"):
-                        script["stdout"] = res["stdout"]
                 else:
-                    base.update(code=code, allowed_imports=sorted(scripting.LANGUAGES["freecad"]["imports"]))
-                    fc_timeout = timeout + 60  # the script, plus FreeCAD's start, rebuild, save and validation
-                try:
-                    out = _run(rt, job, inputs=inputs or None, outputs={"output": cand}, timeout=fc_timeout)
-                except AgentCADError as exc:
-                    if fc_timeout is not None and exc.code == "FREECAD_TIMEOUT":
-                        raise AgentCADError("SCRIPT_TIMEOUT", f"The script did not finish within {fc_timeout:g} s "
-                                            "(FreeCAD included) and was stopped", category="input",
-                                            hint="Simplify the script, or raise AGENTCAD_SCRIPT_TIMEOUT")
-                    raise
+                    res = _freecad_script(rt, code, job_dir, brep, timeout)
+                script["seconds"] = res.get("seconds")
+                if res.get("stdout"):
+                    script["stdout"] = res["stdout"]
+                inputs["base_brep"] = brep
+                out = _run(rt, job, inputs=inputs, outputs={"output": cand})
             except AgentCADError as exc:
                 store.journal({**fail, "error": exc.to_dict(), "file_unchanged": True})
                 raise
             based = out.get("base") or {}
-            if based.get("stdout"):
-                script["stdout"] = based["stdout"]
+            script["solid"] = {**based.get("solid", {}), **({"fused": True} if res.get("fused") else {})}
             report = out["report"]
             result = {"drawing": rt._rel(p), "changes": out["changes"], "script": script,
                       **({"features_kept": based["features_kept"]} if based.get("features_kept") else {}),
@@ -398,6 +410,11 @@ def _export_compare(rt: "Runtime", p: Path, store: DrawingStore, out: Path, view
     views = views or ["iso"]
     if not isinstance(views, list) or not 1 <= len(views) <= 9:
         raise input_error("BAD_VIEW", "views: a list of 1 to 9 views")
+    cell = 256 if image_size is None else image_size
+    if isinstance(cell, bool) or not isinstance(cell, (int, float)) or cell != int(cell) or not 64 <= cell <= 1024:
+        raise input_error("OUT_OF_RANGE", f"image_size {image_size!r}: with a reference, 64..1024 pixels per cell",
+                          hint="Each reference cell is compared at 1024 px at most; 256 (the default) is plenty")
+    cell = int(cell)
     ref = rt.policy.resolve(reference, must_exist=True, suffixes=compare.IMAGE_SUFFIXES)
     cells = compare.load_reference(ref, len(views))
     size = int(min(1024, max(128, max(cells[0][0].shape[:2]))))  # render at about the reference's resolution
@@ -411,8 +428,7 @@ def _export_compare(rt: "Runtime", p: Path, store: DrawingStore, out: Path, view
         results, rows, mode = compare.compare_views(cells, names, renders)
         labels = [[f"reference: {n}", "ours (aligned)",
                    f"diff  IoU {r['iou']:.3f}" if r["iou"] is not None else "diff"] for n, r in zip(names, results)]
-        cell = int(image_size or 256)
-        grid = compare.save_sheet(rows, labels, tmp.with_suffix(".png"), cell)
+        grid, cell = compare.save_sheet(rows, labels, tmp.with_suffix(".png"), cell)
         shutil.move(str(tmp.with_suffix(".png")), out)
     finally:
         tmp.with_suffix(".npz").unlink(missing_ok=True)

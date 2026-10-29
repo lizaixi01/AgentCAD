@@ -113,7 +113,8 @@ def _wait_reporting(p, log: Path, deadline: float, on_progress) -> None:
 
 
 def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
-        outputs: dict[str, Path] | None = None, on_progress=None, timeout: float | None = None) -> dict[str, Any]:
+        outputs: dict[str, Path] | None = None, on_progress=None, timeout: float | None = None,
+        workdir: Path | None = None) -> dict[str, Any]:
     """Run one job; return the runner's result dict ({"ok": ...}). Raises only for process-level failures.
 
     ``on_progress(event)``: the runner writes one line per operation to ``progress.jsonl`` in the job folder
@@ -122,11 +123,13 @@ def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
     FreeCAD reads and writes files only inside a short job folder under the system temp directory: deep workspace
     paths exceed Windows' 260-character limit when FreeCAD saves (it failed in pytest's temp folders). ``inputs``
     {job key: file} are copied in; ``outputs`` {job key: destination} are copied out when the job succeeds.
-    ``timeout``: seconds (default AGENTCAD_FREECAD_TIMEOUT, 300).
+    ``timeout``: seconds (default AGENTCAD_FREECAD_TIMEOUT, 300). ``workdir``: use this (new) folder as the job
+    folder and working directory instead, for jobs that save no FreeCAD document (run_script's FreeCAD scripts run
+    in the workspace's state directory); the caller removes it.
     """
     limit = TIMEOUT if timeout is None else timeout
     cmd, extra = require()
-    d = Path(tempfile.gettempdir()) / "agentcad-fc" / uuid.uuid4().hex[:12]
+    d = workdir if workdir is not None else Path(tempfile.gettempdir()) / "agentcad-fc" / uuid.uuid4().hex[:12]
     d.mkdir(parents=True)
     job = dict(job)
     for key, src in (inputs or {}).items():

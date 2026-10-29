@@ -10,6 +10,7 @@ dependencies = [
     "mcp>=1.20,<2",
     "pypdf>=4",
     "pillow>=10",  # SVG export and image previews; a core dependency so a plain uvx/pipx install can do them
+    "numpy",  # comparing previews with reference images (part/compare.py); ezdxf requires it as well
 ]
 
 [project.optional-dependencies]

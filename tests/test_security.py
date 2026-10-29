@@ -94,6 +94,23 @@ def test_install_import_guard_catches_every_form():
     assert _install_imports("from .ops import install_thing" + chr(10) + "import installer") == set()
 
 
+def _exec_sites(text: str) -> list[str]:
+    """The function each exec(...) call of a module sits in ('<module>' at the top level)."""
+    import ast
+    sites: list[str] = []
+
+    def visit(node, where):
+        for child in ast.iter_child_nodes(node):
+            if isinstance(child, (ast.FunctionDef, ast.AsyncFunctionDef)):
+                visit(child, child.name)
+                continue
+            if isinstance(child, ast.Call) and isinstance(child.func, ast.Name) and child.func.id == "exec":
+                sites.append(where)
+            visit(child, where)
+    visit(ast.parse(text), "<module>")
+    return sites
+
+
 def test_no_shell_or_arbitrary_execution_surface():
     """Operations are a closed registry; nothing maps agent input to system commands. The one exception is the
     opt-in run_script tool: off by default, statically checked, run in a separate process without a shell."""
@@ -103,11 +120,16 @@ def test_no_shell_or_arbitrary_execution_surface():
     pkg = Path(agentcad.__file__).parent
     launchers = {pkg / "backends" / "autocad.py", pkg / "backends" / "freecad.py", pkg / "scripting.py",
                  pkg / "install.py"}
+    # the script runners execute an agent's script (run_script, opt-in), each in exactly one place
+    exec_sites = {pkg / "_script_runner.py": ["main"], pkg / "part" / "_cq_runner.py": ["main"],
+                  pkg / "part" / "_fc_runner.py": ["_exec_freecad_script"]}
     for f in pkg.rglob("*.py"):
         text = f.read_text("utf-8")
         assert "os.system" not in text and "eval(" not in text, f
-        if f not in (pkg / "_script_runner.py", pkg / "part" / "_cq_runner.py", pkg / "part" / "_fc_runner.py"):
-            assert "exec(" not in text, f  # the script runners: agent code, opt-in (run_script)
+        assert _exec_sites(text) == exec_sites.get(f, []), f
+        assert text.count("exec(") == len(exec_sites.get(f, [])), f
+        if f in exec_sites:
+            assert 'exec(compile(code, "agent_script.py", "exec"), env)' in text, f
         if f not in launchers:
             assert "subprocess" not in text, f
     # process launchers: fixed executables, no shell
@@ -116,7 +138,9 @@ def test_no_shell_or_arbitrary_execution_surface():
     fc = (pkg / "backends" / "freecad.py").read_text("utf-8")
     assert "shell=False" in fc and "shell=True" not in fc and "timeout=limit" in fc
     scripting = (pkg / "scripting.py").read_text("utf-8")
-    assert "shell=False" in scripting and "shell=True" not in scripting and "timeout=timeout" in scripting
+    # two launchers (ezdxf scripts, CadQuery scripts), each without a shell and with the time limit
+    assert scripting.count("shell=False") == 2 and "shell=True" not in scripting
+    assert scripting.count("timeout=timeout") == 2 and scripting.count("subprocess.run(") == 2
     # install.py runs only the user's own 'claude mcp' CLI, from 'agentcad setup'. Modules that serve tools may
     # import nothing from it but ensure_workspace.
     inst = (pkg / "install.py").read_text("utf-8")
@@ -126,5 +150,6 @@ def test_no_shell_or_arbitrary_execution_surface():
             continue
         assert _install_imports(f.read_text("utf-8")) <= {"ensure_workspace"}, f
     assert "check_script(code)" in (pkg / "service.py").read_text("utf-8")
+    assert "scripting.check_script(code, lang)" in (pkg / "part" / "service.py").read_text("utf-8")
     assert Policy(root=Path.cwd()).allow_scripts in (False,) or __import__("os").environ.get("AGENTCAD_ALLOW_SCRIPTS")
     assert all(callable(d.fn) for d in REGISTRY.values())

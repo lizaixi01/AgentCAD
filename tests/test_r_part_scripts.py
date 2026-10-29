@@ -6,6 +6,13 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
+import shutil
+import subprocess
+import tempfile
+import time
+import zipfile
+from pathlib import Path
 
 import numpy as np
 import pytest
@@ -47,8 +54,9 @@ def journal(ws):
 
 # --- policy and static checks (no FreeCAD needed) ------------------------------------------------------------
 
-def test_part_scripts_are_off_by_default(rt, ws):
-    e = rt.run_script("p.FCStd", BLOCK)["error"]
+@pytest.mark.parametrize("language", [None, "cadquery", "freecad"])
+def test_part_scripts_are_off_by_default(rt, ws, language):
+    e = rt.run_script("p.FCStd", "result = Part.makeBox(1, 1, 1)", language=language)["error"]
     assert e["code"] == "SCRIPTS_DISABLED" and e["category"] == "policy"
     assert not (ws / "p.FCStd").exists()
 
@@ -63,11 +71,28 @@ def test_part_scripts_are_off_by_default(rt, ws):
     ("import os\nresult = None", "import of 'os'"),
     ("result = open('x.txt')", "'open'"),
     ("import subprocess", "'subprocess'"),
+    ("import numpy as np\nnp.savez('x.npz', a=1)", "'savez'"),
+    ("import numpy as np\nm = np.memmap('x.bin', mode='w+', shape=(4,))", "'memmap'"),
+    ("from cadquery.vis import show", "cadquery.vis"),
 ])
 def test_part_scripts_are_checked_before_running(srt, ws, code, why):
     e = srt.run_script("p.FCStd", code)["error"]
     assert e["code"] == "SCRIPT_REJECTED" and why in e["message"], e
     assert "result" in e["hint"] and not (ws / "p.FCStd").exists()
+
+
+@pytest.mark.parametrize("code, why", [
+    ("doc = App.activeDocument()", "'activeDocument'"),
+    ("doc = FreeCAD.ActiveDocument", "'ActiveDocument'"),
+    ("App.setActiveDocument('Part')", "'setActiveDocument'"),
+    ("App.ParamGet('User parameter:BaseApp')", "'ParamGet'"),
+    ("result = Part.read('x.brep')", "'read'"),
+    ("Part.makeBox(1, 1, 1).exportStep('x.step')", "'exportStep'"),
+])
+def test_freecad_scripts_are_checked_before_running(srt, ws, code, why):
+    e = srt.run_script("p.FCStd", code, language="freecad")["error"]
+    assert e["code"] == "SCRIPT_REJECTED" and why in e["message"], e
+    assert not (ws / "p.FCStd").exists()
 
 
 def test_script_languages(srt, ws):
@@ -78,8 +103,6 @@ def test_script_languages(srt, ws):
     assert e["code"] == "BAD_LANGUAGE"
     e = srt.run_script("d.dxf", "x = 1", keep_features=True)["error"]
     assert e["code"] == "UNKNOWN_PARAM"
-    e = srt.run_script("p.FCStd", "result = Part.read('x.brep')", language="freecad")["error"]
-    assert e["code"] == "SCRIPT_REJECTED" and "'read'" in e["message"]
 
 
 # --- CadQuery scripts ----------------------------------------------------------------------------------------
@@ -161,10 +184,13 @@ def test_cadquery_script_timeout(ws):
 
 @needs_freecad
 def test_freecad_part_script(srt, ws):
-    """language='freecad': Part code run by the FreeCAD runner; numbers are in the part's unit, like ops."""
+    """language='freecad': Part code run by a FreeCAD process of its own; numbers are in the part's unit, like
+    ops, and the result reports the solid in mm, like validation."""
     ok(srt.create_drawing("in.FCStd", units="in"))
     r = ok(srt.run_script("in.FCStd", "result = Part.makeBox(1, 2, 3)", language="freecad"))
     assert shape(r)["size"] == [25.4, 50.8, 76.2] and r["script"]["language"] == "freecad"
+    assert r["script"]["solid"]["size"] == [25.4, 50.8, 76.2] and r["script"]["solid"]["unit"] == "mm"
+    assert not list((ws / ".agentcad" / "freecad").glob("script-*"))  # its working folder is removed
     before = sha256_file(ws / "in.FCStd")
     e = srt.run_script("in.FCStd", "x = 1\nresult = Part.makeBox(1, 1, -1)", language="freecad")["error"]
     assert e["code"] == "SCRIPT_FAILED" and e["details"]["script_lines"][-1].startswith("line 2:")
@@ -175,6 +201,70 @@ def test_freecad_part_script(srt, ws):
     assert sha256_file(ws / "in.FCStd") == before
     r = ok(srt.apply_operations("in.FCStd", [{"op": "chamfer", "edges": "all", "size": 0.1}]))
     assert shape(r)["volume"] < 25.4 ** 3 * 6
+
+
+@needs_freecad
+def test_freecad_script_cannot_reach_the_part(srt, ws):
+    """The script runs where no document is open: Part.show adds its shape to a document of that process only."""
+    r = ok(srt.run_script("s.FCStd", "result = Part.makeBox(10, 20, 30)\nPart.show(result)", language="freecad"))
+    assert r["validation"]["passed"] and [i["code"] for i in r["validation"]["issues"]] == ["SCRIPT_BASE_SOLID"]
+    read = ok(srt.read_drawing("s.FCStd"))
+    assert "outside_bodies" not in read and read["bodies"][0]["shape"]["size"] == [10.0, 20.0, 30.0]
+
+
+def add_stray_shape(part):
+    """Add a Part::Feature outside the Body with FreeCAD itself, as a hand edit in FreeCAD would."""
+    cmd, extra = freecad.require()
+    with tempfile.TemporaryDirectory() as td:  # FreeCAD saves in a short folder (Windows path limit)
+        work = Path(td) / "p.FCStd"
+        shutil.copy2(part, work)
+        script = Path(td) / "stray.py"
+        script.write_text(
+            "import os, sys\n"
+            "for lib in filter(None, os.environ.get('AGENTCAD_FREECAD_LIB', '').split(os.pathsep)):\n"
+            "    sys.path.insert(0, lib)\n"
+            "import FreeCAD as App, Part\n"
+            "doc = App.openDocument(os.environ['STRAY_PART'])\n"
+            "doc.addObject('Part::Feature', 'Stray').Shape = Part.makeBox(1, 1, 1)\n"
+            "doc.recompute()\n"
+            "doc.save()\n", "utf-8")
+        subprocess.run(cmd + [str(script)], env={**os.environ, **extra, "STRAY_PART": str(work)}, check=True,
+                       timeout=180, capture_output=True)
+        shutil.copy2(work, part)
+
+
+@needs_freecad
+def test_validation_flags_geometry_outside_the_body(rt, ws):
+    ok(rt.apply_operations("p.FCStd", [{"op": "primitive", "kind": "box",
+                                        "dims": {"length": 10, "width": 10, "height": 10}}], create={"units": "mm"}))
+    add_stray_shape(ws / "p.FCStd")
+    v = ok(rt.validate_drawing("p.FCStd"))["validation"]
+    stray = [i for i in v["issues"] if i["code"] == "GEOMETRY_OUTSIDE_BODY"]
+    assert not v["passed"] and stray and stray[0]["severity"] == "error" and stray[0]["entities"] == ["Stray"]
+
+
+@needs_freecad
+def test_failed_or_unsaved_part_scripts_change_nothing(srt, ws):
+    """dry_run on a missing part writes nothing; strict with a failing requirement, and kept features that no
+    longer fit the new solid, leave the part as it was; the script's base is not an editable feature."""
+    box = "result = Part.makeBox(40, 20, 10)"
+    r = ok(srt.run_script("p.FCStd", box, language="freecad", dry_run=True))
+    assert r["dry_run"] and shape(r)["size"] == [40.0, 20.0, 10.0] and not (ws / "p.FCStd").exists()
+    ok(srt.run_script("p.FCStd", box, language="freecad"))
+    ok(srt.apply_operations("p.FCStd", [{"op": "fillet", "edges": VERTICAL, "radius": 4}]))
+    before = sha256_file(ws / "p.FCStd")
+    e = srt.run_script("p.FCStd", box.replace("40, 20", "40, 21"), language="freecad", strict=True,
+                       requirements=[{"type": "bbox", "size": [40, 20, 10]}])["error"]
+    assert e["code"] == "VALIDATION_FAILED"
+    e = srt.run_script("p.FCStd", "result = Part.makeBox(5, 5, 10)", language="freecad", keep_features=True)["error"]
+    assert e["code"] == "FEATURE_FAILED" and "Fillet" in e["entities"]
+    for op, code in (({"op": "modify_feature", "feature": "ScriptSolid", "set": {"length": 5}}, "NOT_EDITABLE"),
+                     ({"op": "modify_feature", "feature": "BaseFeature", "set": {"length": 5}}, "NOT_EDITABLE"),
+                     ({"op": "delete_feature", "feature": "ScriptSolid"}, "NOT_A_FEATURE"),
+                     ({"op": "delete_feature", "feature": "BaseFeature"}, "NOT_A_FEATURE")):
+        e = srt.apply_operations("p.FCStd", [op])["error"]
+        assert e["code"] == code and "run_script" in e["message"], (op, e)
+    assert sha256_file(ws / "p.FCStd") == before
 
 
 # --- reference images: silhouettes, alignment, IoU (no FreeCAD) ------------------------------------------------
@@ -241,6 +331,70 @@ def test_reference_grid_layout(tmp_path):
     with pytest.raises(AgentCADError) as exc:
         compare.load_reference(tmp_path / "bad.png", 1)
     assert exc.value.code == "BAD_REFERENCE"
+
+
+def test_large_references_are_scaled_down_and_fast(tmp_path):
+    """A 3072 px sheet (reviewed: 79 s for one view before) is scaled to 1024 px cells first; the silhouettes of all
+    four cells then take well under a second."""
+    big = Image.new("RGB", (3072, 3072), (255, 255, 255))
+    for c in range(2):
+        for r in range(2):
+            big.paste(draw(L_SHAPE, (1536, 1536), 18.0, (200, 200), (90, 100, 120)), (c * 1536, r * 1536))
+    big.save(tmp_path / "big.png")
+    t0 = time.perf_counter()
+    cells = compare.load_reference(tmp_path / "big.png", 4)
+    masks = [compare.silhouette(rgb, a)[0] for rgb, a in cells]
+    assert time.perf_counter() - t0 < 10
+    assert [c[0].shape for c in cells] == [(1024, 1024, 3)] * 4
+    truth = np.asarray(draw(L_SHAPE, (1024, 1024), 12.0, (133, 133), (0, 0, 0))).max(axis=2) < 128
+    assert all(compare.iou(m, truth) > 0.97 for m in masks)
+
+
+@pytest.mark.parametrize("size, n, why", [
+    ((6000, 5000), 1, "megapixels"),     # 30 MP: refused from the header, before decoding
+    ((40000, 16), 1, "8:1"),             # a 2 KB file whose sheet would have needed gigabytes
+    ((16, 4000), 4, "too small"),
+])
+def test_reference_limits(tmp_path, size, n, why):
+    Image.new("1", size, 1).save(tmp_path / "ref.png")
+    t0 = time.perf_counter()
+    with pytest.raises(AgentCADError) as exc:
+        compare.load_reference(tmp_path / "ref.png", n)
+    assert exc.value.code == "BAD_REFERENCE" and why in exc.value.message and time.perf_counter() - t0 < 2
+
+
+def test_compare_sheet_stays_bounded(tmp_path):
+    rows = [[np.full((128, 1024, 3), 255, np.uint8)] * 3 for _ in range(9)]  # nine 8:1 cells
+    grid, cell = compare.save_sheet(rows, [["a", "b", "c"]] * 9, tmp_path / "s.png", 1024)
+    w, h = Image.open(tmp_path / "s.png").size
+    assert grid == [9, 3] and cell < 1024 and w <= compare.SHEET_MAX_SIDE and h <= compare.SHEET_MAX_SIDE
+    assert w * h <= compare.SHEET_MAX_PIXELS
+
+
+def fake_part(path):
+    """Enough of a .FCStd for the checks made before FreeCAD starts."""
+    with zipfile.ZipFile(path, "w") as z:
+        z.writestr("Document.xml", "<Document/>")
+
+
+@pytest.mark.parametrize("kw, code", [
+    ({"image_size": 5000}, "OUT_OF_RANGE"),
+    ({"image_size": 10}, "OUT_OF_RANGE"),
+    ({"image_size": True}, "OUT_OF_RANGE"),
+    ({"reference": "../outside.png"}, "PATH_OUTSIDE_WORKSPACE"),
+    ({"reference": "big.png"}, "BAD_REFERENCE"),
+    ({"fit": "uniform"}, "UNKNOWN_PARAM"),
+])
+def test_compare_arguments_are_checked_before_rendering(rt, ws, kw, code):
+    """Checked by the runtime itself (the MCP schema is not the only caller), before FreeCAD is started."""
+    fake_part(ws / "p.FCStd")
+    Image.new("RGB", (256, 256), (255, 255, 255)).save(ws / "ref.png")
+    if kw.get("reference") == "big.png":
+        Image.new("1", (8000, 8000), 1).save(ws / "big.png")
+    args = {"views": ["top"], "reference": "ref.png", **kw}
+    e = rt.export_drawing("p.FCStd", "cmp.png", "png", **args)["error"]
+    assert e["code"] == code, e
+    assert not (ws / "cmp.png").exists()
 
 
 # --- reference images with a real part -------------------------------------------------------------------------

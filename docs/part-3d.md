@@ -86,7 +86,8 @@ apply_operations("part.FCStd", [{"op": "fillet", "edges": {"type": "line", "dire
 - **语言**：`language="cadquery"`（默认）：程序把 `result` 设成 `cq.Workplane`、`Shape` 或 `Assembly`（`cq` 已导入，
   也认 `show_object(x)`）；`language="freecad"`：FreeCAD Part 代码（给了 `Part`、`App`、`Vector`），`result` 是
   `Part.Shape`。`result` 里的多个实体会先合并；合并后仍是分开的几块就报 `NOT_SINGLE_SOLID`。数字按零件单位
-  （英寸零件里 `box(1, 1, 1)` 是 25.4 mm 的立方体）。零件不存在时按 mm 新建。
+  （英寸零件里 `box(1, 1, 1)` 是 25.4 mm 的立方体）；结果里 `script.solid` 的体积和尺寸按 mm 报告（`unit: "mm"`），
+  和 `validation.shape` 一样。零件不存在时按 mm 新建。
 - **实体存在哪**：脚本的实体放进 Body 外的一个 `Part::Feature`（`ScriptSolid`，脚本全文和 sha256 也存在它的
   `AgentCADScript` 属性里），作为 Body 的 `BaseFeature`；FreeCAD 在 Body 开头放一个 `PartDesign::FeatureBase`。
   之后的 `fillet`、`hole`、`pocket`、`on_face` 草图、`set_parameters` 驱动的尺寸都建在它上面，选择器照常每次重新解析。
@@ -102,16 +103,24 @@ apply_operations("part.FCStd", [{"op": "fillet", "edges": {"type": "line", "dire
 - **验证**：基体来自脚本时 `validate_drawing` 报一条警告 `SCRIPT_BASE_SOLID`，不是错误：导出 STEP/STL 没问题，
   但要求原生特征树的评分器（CADBench）会拒收。
 
-**进程模型**：CadQuery 装不进 FreeCAD 的 Python（OCP 与 FreeCAD 各带一份 OCCT），所以 CadQuery 脚本在 AgentCAD
-自己解释器的子进程里运行（`python -I part/_cq_runner.py <作业目录>`，不经 shell，`AGENTCAD_SCRIPT_TIMEOUT` 限时，
-默认 60 s，含 CadQuery 启动的约 3–4 s；工作目录是工作区状态目录 `.agentcad/freecad/` 下的作业目录），实体写成
-BREP 交给 FreeCAD 进程导入。BREP 是 OCCT 自己的格式，两边都用 OCCT，几何原样过去，不像 STEP 要经过一次翻译。
-FreeCAD 脚本直接在 FreeCAD 进程里运行（限时为脚本限时 + 60 s）。
+**进程模型**：脚本从不和正在编辑的零件在同一个进程里运行。
 
-**安全**：和二维脚本同一套策略：默认关闭（`AGENTCAD_ALLOW_SCRIPTS=1` 或 CLI `--allow-scripts` 开启）；先做静态检查
-（只能导入 cadquery / FreeCAD Part、numpy 和标准数学/数据模块；不能打开、导入、导出或保存文件，不能用
-`cq.exporters`/`importers`、`exportStep` 一类方法，不能 eval/exec/getattr/双下划线访问），运行时只给精简的内置函数和
-同一份导入白名单。这些检查防的是误操作，不是安全沙箱：只对你愿意让它以你的身份运行 Python 的 Agent 开启。
+- CadQuery 装不进 FreeCAD 的 Python（OCP 与 FreeCAD 各带一份 OCCT），所以 CadQuery 脚本在 AgentCAD 自己解释器的
+  子进程里运行（`python -I part/_cq_runner.py <作业目录>`）。
+- FreeCAD 脚本在一个单独的 FreeCAD 进程里运行（作业 `script_solid`），这个进程没有打开任何文档：`Part.show(...)`
+  只会在它自己的临时文档里加对象，碰不到零件。
+- 两者都不经 shell，`AGENTCAD_SCRIPT_TIMEOUT` 限时（默认 60 s，含 CadQuery 启动约 3–4 s、FreeCAD 启动约 1.5 s），
+  工作目录是工作区状态目录 `.agentcad/freecad/` 下的作业目录，用完删掉。超时就结束进程，报 `SCRIPT_TIMEOUT`。
+- 脚本进程只交回实体，写成 BREP；再由另一个 FreeCAD 作业把它导入零件、重建、保存和验证。BREP 是 OCCT 自己的格式，
+  两边都用 OCCT，几何原样过去，不像 STEP 要经过一次翻译。
+
+**安全**：和二维脚本同一套策略，真正的边界是**默认关闭**（`AGENTCAD_ALLOW_SCRIPTS=1` 或 CLI `--allow-scripts` 才开启）。
+开启后先做静态检查：只能导入 cadquery / FreeCAD Part、numpy 和标准数学/数据模块；拒绝 eval/exec/getattr/双下划线
+访问，以及常见的读写文件、导入导出和动文档的名字（`open`、`save*`、`read`、`write`、`cq.exporters`/`importers`、
+`export*`/`import*`、numpy 的 `load`/`savez`/`memmap`/`ctypeslib`、OCP 的 `Write`/`Read`、FreeCAD 的
+`ActiveDocument`/`activeDocument`/`openDocument`/`ParamGet` 等）。运行时只给精简的内置函数和同一份导入白名单。
+这份名单**不完整**：numpy、OCP 和 FreeCAD 还有别的途径能读写文件（例如经由 `cq.occ_impl` 拿到的 OCP 写出器、
+`Part.insert`）。所以这些检查防的是误操作，不是安全沙箱：只对你愿意让它以你的身份运行 Python 的 Agent 开启。
 
 ## 验证
 
@@ -121,7 +130,8 @@ FreeCAD 脚本直接在 FreeCAD 进程里运行（限时为脚本限时 + 60 s�
 - CADBench 的零件约定：恰好一个非空 Body（`NO_BODY`、`EMPTY_BODY`、`MULTIPLE_BODIES`）、一个实体
   （`NOT_SINGLE_SOLID`，FreeCAD 1.1 本身允许一次 pad 出两个实体）、只有原生 PartDesign 特征
   （`NON_PARAMETRIC_GEOMETRY`），实现照 freecad-validator 的 integrity gates；
-- B-rep 有效性、Tip 之后的特征（`FEATURES_AFTER_TIP`）、草图冲突/冗余约束。
+- B-rep 有效性、Tip 之后的特征（`FEATURES_AFTER_TIP`）、草图冲突/冗余约束；
+- Body 之外带几何的对象（`GEOMETRY_OUTSIDE_BODY`，错误；脚本基体所在的 `ScriptSolid` 除外）。
 
 需求：`bbox {size}`、`volume`/`area {value, rel_tolerance}`、`hole {diameter, count}`（按内圆柱面识别、同轴合并）、
 `hole_count`、`solid_count`、`parameter {name, value}`、`center_of_mass`、`feature_count {feature_type, count|min}`。零件参数按零件单位报告和比较，几何（体积、尺寸、包围盒）一律按 mm。
@@ -169,6 +179,11 @@ Body 不是恰好一个有效实体（或有特征出错）时拒绝导出（`NO
 每格高 `image_size`（默认 256 px）。结果里 `compare.views[]` 给每个视图的 `iou` 和对齐比例，`mean_iou` 是平均值。
 不传 `reference` 时预览行为不变。比较用 numpy + Pillow 在 AgentCAD 进程里做（`part/compare.py`），FreeCAD 进程
 只返回每个视图的渲染图和轮廓。
+
+**限制**（比较在 AgentCAD/MCP 进程里做，所以有上限）：参考图文件最大 32 MB、最多 2500 万像素（读文件头就检查，
+不先解码）；每格长宽比不超过 8:1；每格先缩到最长边 1024 px 再处理；`image_size` 在这里是 64–1024；输出图每边
+不超过 4096 px、总共不超过 800 万像素（超了就把格子缩小，结果里的 `cell_size` 是实际值）。超限报
+`BAD_REFERENCE` 或 `OUT_OF_RANGE`。形态学运算按行、列分开做，填洞按像素段传播，一格的耗时约为像素数乘滤波半径。
 
 注意包围盒对齐把整体尺寸误差藏起来了：零件整体大一倍，IoU 照样接近 1。尺寸看 `validation.shape`。
 
