@@ -1,5 +1,5 @@
 [project]
-name = "agentcad"
+name = "agentcad-runtime"
 version = "0.1.0"
 description = "Agent-native, headless CAD runtime: 2D drawings (DXF) and 3D parametric parts (FreeCAD), with CLI, MCP and Python API"
 readme = "README.md"

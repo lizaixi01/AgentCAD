@@ -48,7 +48,7 @@
 
 ## 实时 AutoCAD 会话（2026-10-29）
 
-`autocad_live`（`backends/acad_live.py`）通过 COM 连接用户正在运行的 AutoCAD（Windows，需要 pywin32，`pip install agentcad[live]`）：打开图纸、在每次修改后重新载入（`AGENTCAD_LIVE_SYNC=1`）、缩放到实体，以及用 `pull` 把用户在 AutoCAD 里的修改作为一次普通变更提交（检查点、日志、差异、验证）。限制：
+`autocad_live`（`backends/acad_live.py`）通过 COM 连接用户正在运行的 AutoCAD（Windows，需要 pywin32，在 AgentCAD 目录里 `pip install -e ".[live]"`）：打开图纸、在每次修改后重新载入（`AGENTCAD_LIVE_SYNC=1`）、缩放到实体，以及用 `pull` 把用户在 AutoCAD 里的修改作为一次普通变更提交（检查点、日志、差异、验证）。限制：
 
 - 初期 GUI 验证曾停在 Autodesk 许可证/登录界面，COM 调用被拒绝（`RPC_E_CALL_REJECTED`）；遇到这种情况返回 `AUTOCAD_BUSY`，提示用户先处理 AutoCAD 中的对话框。后续已在登录后的 AutoCAD 2027 完成两张原生 DWG 转出 DXF 的实机复核：四套流程、12 次连续编辑同步通过，并覆盖回传、冲突与恢复，见[实验报告](comparison-native-dwg.md#实时编辑文件锁修复复核)。自动化回归仍使用模拟 COM 对象，其他 AutoCAD 版本尚未验证。
 - `open` 新打开的 DXF 使用 AutoCAD 只读模式，避免 Windows 文件锁阻止 AgentCAD 原子替换；GUI 仍能编辑，用 `pull` 回传。用户已经以写入方式打开的文档不会被自动关闭或转换；保存或回传编辑后显式 `reload` 才会转为只读。
