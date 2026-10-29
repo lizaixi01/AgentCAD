@@ -333,7 +333,8 @@ def serve_stdio(policy: Policy | None = None) -> None:
 
 
 def main() -> None:
-    serve_stdio()
+    from .install import ensure_workspace  # $AGENTCAD_ROOT, else ~/AgentCAD (not the client's start folder)
+    serve_stdio(Policy(root=ensure_workspace()))
 
 
 if __name__ == "__main__":
