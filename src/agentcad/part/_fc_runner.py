@@ -522,19 +522,15 @@ def select_faces(shape, sel, name="faces"):
 def _bulge_arc(p1, p2, b):
     """Arc from p1 to p2 with DXF bulge b (tan of a quarter of the included angle, + = counter-clockwise)."""
     chord = p2 - p1
-    c = chord.Length
-    theta = 4 * math.atan(b)
-    r = c / (2 * math.sin(abs(theta) / 2))
-    mid = (p1 + p2) * 0.5
-    nrm = V(-chord.y, chord.x, 0)
-    nrm.normalize()
-    h = r * math.cos(theta / 2) * (1 if b > 0 else -1)
-    sag_dir = nrm * (1 if b > 0 else -1)
-    # the arc's midpoint sits on the side of the chord opposite to the centre for |theta| < 180
-    sag = r - abs(r * math.cos(theta / 2))
-    pm = mid - sag_dir * sag if abs(theta) <= math.pi else mid + sag_dir * (r + abs(h))
-    del h
-    return Part.Arc(p1, pm, p2)
+    left = V(-chord.y, chord.x, 0)
+    left.normalize()
+    # The sagitta is b times half the chord, on the right of p1 -> p2 for a counter-clockwise arc (b > 0) and on
+    # the left for a clockwise one; |b| > 1 (more than half a turn) is the same formula.
+    pm = (p1 + p2) * 0.5 - left * (b * chord.Length / 2)
+    # A three-point arc takes its axis from the points' turning sense, and a sketch keeps arcs counter-clockwise
+    # about +Z: a clockwise one would come out as the other arc of its circle. So a clockwise bulge is built from
+    # p2 back to p1 (the sketch joins arcs by their end points, not their direction).
+    return Part.Arc(p1, pm, p2) if b > 0 else Part.Arc(p2, pm, p1)
 
 
 class SketchBuilder:
@@ -578,7 +574,7 @@ class SketchBuilder:
 
     def chain(self, gids, construction):
         """Coincident constraints between touching end points of the given geometry, then lock every distinct
-        vertex once (arcs also get their radius): fully constrained without redundancy."""
+        vertex once; arcs also get their radius, or a half circle its centre: fully constrained without redundancy."""
         ends = []
         for g in gids:
             geom = self.sk.Geometry[g]

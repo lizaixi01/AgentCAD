@@ -497,3 +497,52 @@ def test_arcs_around_half_a_turn(rt, deg):
             {"type": "line", "start": [10 * math.cos(a), 10 * math.sin(a)], "end": [10, 0]}]},
         {"op": "pad", "sketch": "$0", "length": 1}]))
     assert shape(r)["volume"] == pytest.approx(50 * (a - math.sin(a)), rel=1e-6)
+
+
+@needs_freecad
+@pytest.mark.parametrize("b", [-2, -1, -0.5, 0.5, 1, 2])
+@pytest.mark.parametrize("ang", [0, 45, 210])
+def test_bulge_arcs_any_sign_and_size(rt, b, ang):
+    """A bulge polygon edge is the DXF arc: + counter-clockwise, - clockwise, |b| > 1 more than half a turn. A
+    clockwise arc used to come out as the other arc of its circle and a major arc on the wrong side of its chord,
+    with no error: the segment's area shows which arc was built."""
+    a = math.radians(ang)
+    p1, p2 = [7, -3], [7 + 20 * math.cos(a), -3 + 20 * math.sin(a)]
+    ok(rt.create_drawing("seg.FCStd"))
+    r = ok(rt.apply_operations("seg.FCStd", [
+        {"op": "add_sketch", "plane": "XY", "shapes": [{"type": "polygon", "points": [p1 + [b], p2]}]},
+        {"op": "pad", "sketch": "$0", "length": 1}]))
+    th = 4 * math.atan(abs(b))
+    rad = 20 / (2 * math.sin(th / 2))
+    assert shape(r)["volume"] == pytest.approx(rad * rad / 2 * (th - math.sin(th)), rel=1e-6)
+    # the arc bulges to the right of p1 -> p2 when counter-clockwise, to the left when clockwise
+    side = -1 if b > 0 else 1
+    bb = shape(r)["bbox"]
+    mid = [(p1[0] + p2[0]) / 2 + side * math.sin(-a) * 0.5, (p1[1] + p2[1]) / 2 + side * math.cos(a) * 0.5]
+    assert bb[0][0] - 1e-6 <= mid[0] <= bb[1][0] + 1e-6 and bb[0][1] - 1e-6 <= mid[1] <= bb[1][1] + 1e-6
+
+
+@needs_freecad
+def test_concave_bulge_profile(rt):
+    """A 40 x 20 rectangle whose top edge bows inwards (bulge -0.5 going right to left is clockwise, into the
+    rectangle): the area is the rectangle minus the segment."""
+    ok(rt.create_drawing("c.FCStd"))
+    r = ok(rt.apply_operations("c.FCStd", [
+        {"op": "add_sketch", "plane": "XY", "shapes": [
+            {"type": "polygon", "points": [[0, 0], [40, 0], [40, 20, -0.5], [0, 20]]}]},
+        {"op": "pad", "sketch": "$0", "length": 1}]))
+    th = 4 * math.atan(0.5)
+    rad = 40 / (2 * math.sin(th / 2))
+    assert shape(r)["volume"] == pytest.approx(800 - rad * rad / 2 * (th - math.sin(th)), rel=1e-6)
+
+
+@needs_freecad
+@pytest.mark.parametrize("end", [[30, 0], [21.2132034, 21.2132034]])
+def test_slot(rt, end):
+    """A slot is two half circles and two lines (it failed as over-constrained before half circles were fixed):
+    length 30 between centres, width 8, along X and at 45 degrees."""
+    ok(rt.create_drawing("s.FCStd"))
+    r = ok(rt.apply_operations("s.FCStd", [
+        {"op": "add_sketch", "plane": "XY", "shapes": [{"type": "slot", "start": [0, 0], "end": end, "width": 8}]},
+        {"op": "pad", "sketch": "$0", "length": 2}]))
+    assert shape(r)["volume"] == pytest.approx((30 * 8 + math.pi * 16) * 2, rel=1e-6)
