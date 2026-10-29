@@ -336,7 +336,7 @@ def describe_face(shape, i, f):
         d["inner"] = _is_inner_cyl(f)
     elif k == "sphere":
         d["radius"] = r6(f.Surface.Radius)
-    bb = tight_box(f)
+    bb = f.BoundBox  # the box face selectors test (select_faces): copied into a "box" selector, it selects this face
     d["bbox"] = [[r6(bb.XMin), r6(bb.YMin), r6(bb.ZMin)], [r6(bb.XMax), r6(bb.YMax), r6(bb.ZMax)]]
     return d
 
@@ -1399,9 +1399,10 @@ _BOXES: dict = {}
 
 def tight_box(sh):
     """The exact bounding box. Shape.BoundBox follows B-spline control points: on BenchCAD parts it was up to 85%
-    too wide (twisted drill; coil springs 57%, threads 51%), so every reported size, bbox requirement, preview frame
-    and export check uses this one. It can take a second or two on parts with many B-spline faces, so a job computes
-    it once per shape."""
+    too wide (twisted drill; coil springs 57%, threads 51%), so part and edge sizes, bbox requirements, preview
+    frames and the export check use this one. Face descriptions and face selectors keep BoundBox, so a reported face
+    box still selects its face. It can take a second or two on parts with many B-spline faces, so a job computes it
+    once per shape."""
     key = sh.hashCode()
     hit = _BOXES.get(key)
     if hit is not None and hit[0].isSame(sh):
@@ -2054,19 +2055,22 @@ def readback(path, ref=None):
     """Read an exported B-rep file back with Part.read and compare it with the part's shape.
 
     IGES comes back as faces, never a solid (also when written in BRep mode, probed on 1.1.4), so for IGES the
-    solid count is not compared; validity, volume (OCC integrates the closed faces) and size still are.
+    solid count is not compared; validity, the face count, volume (OCC integrates the closed faces) and size still
+    are.
 
-    Volume is a numerical integral: a part and its own STEP differed by up to 5e-4 of it on swept B-spline solids
-    (BenchCAD runs, where OCC's volume of such a solid was 2% off a fine mesh), so volumes match within 1e-3. A lost
-    or flipped face changes far more. Exact sizes came back within 1e-11 mm."""
+    A lost face shows in the face count: STEP, IGES and BREP round trips kept it on all 23 parts probed (BenchCAD
+    parts, plates, fillets, sphere, torus, cone), however small the face. Volume is a numerical integral: a part and
+    its own STEP differed by up to 5e-4 of it on swept B-spline solids (BenchCAD runs, where OCC's volume of such a
+    solid was 2% off a fine mesh), so volumes match within 1e-3. Exact sizes came back within 1e-11 mm."""
     got = Part.read(path)
-    out = {k: v for k, v in shape_summary(got).items() if k in ("valid", "solids", "volume", "size", "bbox")}
+    out = {k: v for k, v in shape_summary(got).items() if k in ("valid", "solids", "faces", "volume", "size", "bbox")}
     iges = Path(path).suffix.lower() in (".iges", ".igs")
     if iges:
-        out["note"] = "IGES stores faces, not solids: compared by volume and size"
+        out["note"] = "IGES stores faces, not solids: compared by faces, volume and size"
     if ref is not None:
         rb = tight_box(ref)
         out["matches"] = bool(out["valid"] and (iges or out["solids"] == len(ref.Solids))
+                              and out["faces"] == len(ref.Faces)
                               and abs(got.Volume - ref.Volume) <= 1e-3 * max(1.0, abs(ref.Volume))
                               and all(abs(a - b) <= 1e-4 + 1e-6 * rb.DiagonalLength
                                       for a, b in zip(out["size"], (rb.XLength, rb.YLength, rb.ZLength))))
