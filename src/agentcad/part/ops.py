@@ -199,6 +199,75 @@ part_op("delete_feature", "part_edit", "Delete a feature (cascade=true also dele
          "cascade": Param("bool", default=False, description="Delete dependent features too")}, creates=False)
 
 
+# Names agents bring from FreeCAD, CadQuery and other CAD tools, mapped to ours. Only unambiguous ones: an op or
+# parameter that could mean two things is left alone and gets the usual error and hint. From the BenchCAD runs:
+# 15 calls used edit_feature / edit_sketch / set_feature, 11 gave pocket a 'length' (FreeCAD's name for its depth),
+# 42 put modify_feature's new values beside 'set' or in 'params', 5 wrote primitive {shape, radius, ...}.
+OP_ALIASES = {"edit_feature": "modify_feature", "update_feature": "modify_feature", "change_feature": "modify_feature",
+              "set_feature": "modify_feature", "edit_sketch": "modify_feature", "modify_sketch": "modify_feature",
+              "extrude": "pad", "shell": "thickness", "set_parameter": "set_parameters"}
+PARAM_ALIASES = {
+    "pad": {"midplane": "symmetric", "reverse": "reversed"},
+    "pocket": {"length": "depth", "midplane": "symmetric", "reverse": "reversed"},
+    "revolve": {"midplane": "symmetric", "reverse": "reversed"},
+    "groove": {"midplane": "symmetric", "reverse": "reversed"},
+    "primitive": {"shape": "kind", "type": "kind"},
+    "modify_feature": {"params": "set", "changes": "set", "values": "set", "sketch": "feature"},
+}
+# Never moved into modify_feature's 'set': tool arguments and per-op keys that mean something else there
+NOT_SET_KEYS = {"op", "feature", "set", "comment", "body", "tag", "dry_run", "strict", "label", "requirements",
+                "create", "path", "operations"}
+DIM_KEYS = {"length", "width", "height", "radius", "radius1", "radius2", "angle", "sides", "circumradius",
+            "xmin", "xmax", "ymin", "ymax", "zmin", "zmax", "x2min", "x2max", "z2min", "z2max"}
+
+
+def op_params() -> dict[str, list[str]]:
+    """Each part op's parameter names, sent to the FreeCAD runner so modify_feature can check the keys it sets."""
+    return {name: sorted(d.all_params()) for name, d in PART_REGISTRY.items()}
+
+
+def normalize(ops: Any) -> tuple[Any, list[dict[str, Any]]]:
+    """Map the op and parameter names agents commonly use to the canonical ones. Returns the ops to run (and to
+    journal) and a note per op that was rewritten, which the result reports so the agent learns our names."""
+    if not isinstance(ops, list):
+        return ops, []
+    out, notes = [], []
+    for i, raw in enumerate(ops):
+        if not isinstance(raw, dict) or not isinstance(raw.get("op"), str):
+            out.append(raw)
+            continue
+        op = dict(raw)
+        had_set = "set" in op
+        note: dict[str, Any] = {}
+        if op["op"] not in PART_REGISTRY and op["op"] in OP_ALIASES:
+            note["op"] = {op["op"]: OP_ALIASES[op["op"]]}
+            op["op"] = OP_ALIASES[op["op"]]
+        name = op["op"]
+        renamed = {}
+        for old, new in PARAM_ALIASES.get(name, {}).items():
+            if old in op and new not in op:
+                op[new] = op.pop(old)
+                renamed[old] = new
+        if name == "primitive" and "dims" not in op:
+            dims = {k: op.pop(k) for k in list(op) if k in DIM_KEYS}
+            if dims:
+                op["dims"] = dims
+                note["moved_into_dims"] = sorted(dims)
+        if name == "modify_feature" and not had_set and "set" not in op:
+            # new values written beside the feature ({op, feature, length: 12}): only when no 'set' was given, so
+            # a stray key next to an explicit 'set' still fails; the runner checks each key against the feature's op
+            extra = [k for k in op if k not in NOT_SET_KEYS]
+            if extra:
+                op["set"] = {k: op.pop(k) for k in extra}
+                note["moved_into_set"] = sorted(extra)
+        if renamed:
+            note["renamed"] = renamed
+        if note:
+            notes.append({"op_index": i, "as": name, **note})
+        out.append(op)
+    return out, notes
+
+
 def prevalidate(ops: list[Any], policy: Any) -> None:
     """Checks that need no FreeCAD: list shape, known ops, allow-list, parameter names, required values, types."""
     if not isinstance(ops, list):
@@ -212,7 +281,10 @@ def prevalidate(ops: list[Any], policy: Any) -> None:
             raise input_error("INVALID_OP", f"operations[{i}] must be an object with an 'op' field", op_index=i)
         name = raw["op"]
         if name not in PART_REGISTRY:
-            close = difflib.get_close_matches(name, PART_REGISTRY.keys(), n=3)
+            # never suggest deleting something to an agent that asked for another op ('edit_feature' is closest to
+            # 'delete_feature' by spelling)
+            close = [c for c in difflib.get_close_matches(name, PART_REGISTRY.keys(), n=3)
+                     if c != "delete_feature" or name.startswith("del") or any(w in name for w in ("delete", "remove"))]
             raise input_error("UNKNOWN_OP", f"Unknown part operation {name!r}", op_index=i, op=name,
                               hint=f"Did you mean {close}?" if close else
                               "This is a 3D part (.FCStd); list_operations(category='part') lists its operations")
