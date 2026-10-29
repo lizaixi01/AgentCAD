@@ -124,8 +124,9 @@ The control pointed at two gaps in AgentCAD's 3D path, and #26 filled both:
   to the reference silhouette. It returns a match score per view (silhouette IoU) and a diff image.
 
 The **hybrid arm** (`--arm hybrid`) ran the same 100 tasks at medium effort. It used AgentCAD `8f1eeb7` (main after
-#26) with CadQuery 2.8, and had the AgentCAD arm's tools with scripts turned on. Its prompt offers scripts and
-operations alike (`V2C_HYBRID_PROMPT` in `run.py`).
+#26) with CadQuery 2.8, and had the AgentCAD arm's tools with scripts turned on. Its prompt (`V2C_HYBRID_PROMPT`
+in `run.py`) names scripts first and operations as an alternative. AgentCAD's instructions suggest a script when
+only the solid counts, as it does here.
 
 | Medium effort, 100 tasks | Mean IoU | ≥ 0.9 | < 0.5 | Median time | Median input tokens | Cost |
 |---|---|---|---|---|---|---|
@@ -139,37 +140,51 @@ operations alike (`V2C_HYBRID_PROMPT` in `run.py`).
 Paired by task, with 95% bootstrap intervals:
 
 - **Claude now builds better parts through AgentCAD than by writing CadQuery itself.** The hybrid arm leads the
-  code arm by 0.072 (+0.032 to +0.112): it is better on 52 tasks and worse on 28. It leads the operations-only run
-  after #25 by 0.141 (+0.096 to +0.187).
-- **Codex closes about half of its gap, and is still behind.** It trails the code arm by 0.061 (−0.092 to −0.033),
-  where it trailed by 0.107 before. It leads the operations-only run after #24 by 0.046 (+0.023 to +0.067). It is
-  39% faster than writing CadQuery: 180 s vs 294 s median.
-- **Claude pays for it.** For 100 tasks it cost $36.2, 2.3× the code arm's $15.6, and took 9% longer per task.
-  - It took more steps: 22 vs 18 median.
-  - The compare images add input.
-  - Each step carries more context. The first step held 17k tokens against 8k in the code arm, because AgentCAD's
-    24 tool definitions and instructions (about 33k characters) are sent on every step.
+  code arm by 0.072 (+0.032 to +0.112). It is better by more than 0.02 on 52 tasks and worse by more than 0.02 on
+  28. It leads the operations-only run after #25 by 0.141 (+0.096 to +0.187).
+- **Codex closes 43% of its gap, and is still behind.** It trails the code arm by 0.061 (−0.092 to −0.033), where
+  it trailed by 0.107 before. It leads the operations-only run after #24 by 0.046 (+0.023 to +0.067). It takes 39%
+  less time than writing CadQuery: 180 s vs 294 s median.
+- **Claude pays for it.**
+  - Time: its median was 84 s against 77 s. Paired by task it took 1.22× as long (median ratio), and 34% more time
+    in total.
+  - Cost: $36.2 for 100 tasks, 2.3× the code arm's $15.6. Fitting Claude Code's reported costs to its token counts
+    gives $4 per million input tokens, $8 for cache writes, $0.20 for cache reads and $20 for output, with no
+    residual.
+  - At those prices, the $20.6 gap splits into cache writes $12.5, output $4.8 and cache reads $3.3. Cache writes
+    are each turn's new content, such as compare images and tool results. AgentCAD's tool definitions and
+    instructions (about 33k characters) are read back from the cache, so they are part of the $3.3.
+  - It also took more turns: 14 vs 12.5 median.
 - **This arm cannot split the gain.** It adds scripts and the comparison together.
 
 What the logs show:
 
 - **Both agents built every part with a script.** `run_script` ran in all 100 tasks for both agents, while
-  `apply_operations` built a part in only one (Claude). To build a part from images, both prefer code to
-  operations. Operations remain AgentCAD's way to edit a feature tree, which this task does not test.
-- **Both compared every part with the target**: median 5 compare calls per task for Claude, 4 for Codex.
+  `apply_operations` built a part in only one (Claude). That follows the prompt and AgentCAD's instructions, so it
+  does not show what agents choose unprompted. Operations remain AgentCAD's way to edit a feature tree, which this
+  task does not test.
+- **Both compared with the target in every task, but not every submission.**
+  - Compares ran on request: a median of 5 per task for Claude and 4 for Codex (548 compares for 573 scripts, and
+    513 for 551).
+  - 7 of Claude's and 11 of Codex's submitted parts were never compared. A compare counts for a submission when the
+    compared part had the same volume.
 - **The match score is optimistic.**
-  - The last compare averaged 0.93 (Claude) and 0.94 (Codex), against graded IoU of 0.75 and 0.86.
-  - Per task, the two correlate weakly: r = 0.38 and 0.46.
+  - On the 93 Claude and 89 Codex submissions that were compared, the score averaged 0.93 and 0.95, against graded
+    IoU of 0.74 and 0.87.
+  - Per task, the two correlate weakly: r = 0.39 and 0.34.
   - Silhouettes see neither depth nor interior features. The four diagonal views are two pairs of opposite
     cameras whose silhouettes mirror each other, so the score rests on two silhouettes.
-  - Codex's connector faceplate scored 0.96 on compare and 0.32 graded; its U-channel 0.996 and 0.59.
-- **A false export error cost a task.**
+  - Codex's submitted connector faceplate scored 0.97 on compare and 0.32 graded; its U-channel 0.996 and 0.59.
+- **A false export error cost points and features.**
   - The STEP export check refused 20 exports in 3 tasks, 5 runs (`EXPORT_MISMATCH`): a pin with two cross holes, a
     knob and the coil spring. The parts were fine. The check held volumes to 1e-6, below OCC's integration noise, and
     compared FreeCAD's quick bounding boxes, which follow B-spline control points.
-  - On the coil spring, the check refused Codex's export of a part that matched the target at 0.71. Codex spent the
-    rest of the task working around the error, then submitted a simpler spring it had not compared. It scored 0.18,
-    against 0.91 in the code arm.
+  - On the coil spring, both agents spent the rest of the task working around the error and submitted simpler
+    springs. BenchCAD's scorer gives the refused parts 0.39 (Codex) and 0.33 (Claude), and the submissions 0.18 and
+    0.11. Codex's refused part had matched the target at 0.72. Even without the error, Codex would have trailed the
+    code arm's 0.91 on this task.
+  - On the clevis pin, Claude got the export through by leaving out the cross holes, and said so. At 64³ voxels the
+    holes barely count: it still scored 0.995.
   - The same loose box made AgentCAD report sizes more than 1% off for 33 of the 200 final parts: up to 85% for a
     twisted drill, 57% for a coil spring, 51% for a threaded bolt.
   - #29 fixes both.
@@ -183,7 +198,8 @@ Next:
 
 - A comparison that sees inside the outline (shading or depth), so the score tracks the shape and not just its
   silhouettes.
-- Fewer tool definitions on each step of 3D work, to cut Claude's cost.
+- Smaller compare results, to cut Claude's cost. The images and tool results each turn writes to its cache are
+  most of the extra cost.
 
 ## Files
 

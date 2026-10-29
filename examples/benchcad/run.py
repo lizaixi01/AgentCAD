@@ -1,7 +1,7 @@
 """Run prepared BenchCAD tasks through an external agent that builds the part with AgentCAD.
 
-    python examples/benchcad/run.py v2c --agent claude [--arm mcp|code] [--label NAME] [--jobs 3] [--effort high]
-                                        [--ids id1 id2] [--limit N]
+    python examples/benchcad/run.py v2c --agent claude [--arm mcp|code|hybrid] [--label NAME] [--jobs 3]
+                                        [--effort high] [--ids id1 id2] [--limit N]
 
 Each task gets a fresh workspace <ws>/<label>/<suite>/<id>/ outside this repository (the MCP server's
 AGENTCAD_ROOT) holding only the task's input/ files (plus render.py in the code arm). In the AgentCAD arm the agent
@@ -15,6 +15,10 @@ to runs.jsonl beside them. Set AGENTCAD_FREECAD for 3D parts (the MCP server inh
 
 Arm "code" is the control: no AgentCAD. The agent writes CadQuery and runs it with BenchCAD's own interpreter
 (BENCH_PY), and checks its part with render.py, which draws the same four views with BenchCAD's renderer.
+
+Arm "hybrid" is the AgentCAD arm with scripts turned on (AGENTCAD_ALLOW_SCRIPTS): run_script on the part runs
+CadQuery in the MCP server's interpreter, the repository's .venv, which needs agentcad-runtime[cadquery]. Its
+prompt asks for the reference comparison (export_drawing(..., reference="composite.png")).
 """
 from __future__ import annotations
 
@@ -30,7 +34,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "trials"))
-from agents import agent_env, command  # noqa: E402
+from agents import PY, agent_env, command  # noqa: E402
 
 DATA = Path(os.environ.get("BENCHCAD_DATA", r"D:\Projects\bench-data"))
 WS = Path(os.environ.get("BENCHCAD_WS", r"D:\Projects\bench-ws"))
@@ -196,6 +200,8 @@ def main() -> None:
     label = a.label or a.agent
     if not os.environ.get("AGENTCAD_FREECAD") and not os.environ.get("FREECAD_LIB"):
         print("warning: AGENTCAD_FREECAD is not set; 3D parts need FreeCAD", file=sys.stderr)
+    if a.arm == "hybrid" and subprocess.run([str(PY), "-c", "import cadquery"], capture_output=True).returncode:
+        raise SystemExit(f"the hybrid arm needs CadQuery in {PY}: install agentcad-runtime[cadquery] there")
     tasks = sorted(p for p in (DATA / a.suite).iterdir() if (p / "task.json").exists())
     if a.ids:
         tasks = [t for t in tasks if t.name in a.ids]
