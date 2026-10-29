@@ -79,24 +79,31 @@ def _is_ephemeral(prefix: Path) -> bool:
 
 def launcher_command(launcher: str, source: str | None = None) -> tuple[str, list[str]]:
     """(command, args) that starts the MCP server. 'python': this interpreter (a clone, pipx install or
-    ``uv tool install``). 'uvx': uvx fetches the package itself, so it keeps working when caches are cleaned."""
-    if launcher == "uvx":
-        uvx = shutil.which("uvx")
-        cmd = Path(uvx).as_posix() if uvx else "uvx"  # absolute: desktop apps do not see the shell's PATH
-        return cmd, ["--from", source or f"git+{REPO}", "--with", "pillow", "agentcad-mcp"]
+    ``uv tool install``). 'uvx' / 'pipx': they fetch the package themselves, so it keeps working when their caches
+    are cleaned."""
+    src = source or f"git+{REPO}"
+    if launcher in ("uvx", "pipx"):
+        found = shutil.which(launcher)
+        cmd = Path(found).as_posix() if found else launcher  # absolute: desktop apps do not see the shell's PATH
+        return cmd, (["--from", src, "agentcad-mcp"] if launcher == "uvx" else ["run", "--spec", src, "agentcad-mcp"])
     return Path(sys.executable).absolute().as_posix(), ["-m", "agentcad.mcp_server"]
 
 
 def choose_launcher(launcher: str, info: dict[str, Any]) -> str:
     if launcher != "auto":
         return launcher
-    return "uvx" if info["ephemeral"] else "python"
+    if not info["ephemeral"]:
+        return "python"
+    return "pipx" if not shutil.which("uvx") and shutil.which("pipx") else "uvx"
 
 
 def self_command(info: dict[str, Any]) -> str:
     """How the user runs ``agentcad`` again (for 'agentcad doctor' in the next steps)."""
     if info["ephemeral"]:
-        return f"uvx --from {info['source'] or 'git+' + REPO} agentcad"
+        src = info["source"] or "git+" + REPO
+        if not shutil.which("uvx") and shutil.which("pipx"):
+            return f"pipx run --spec {src} agentcad"
+        return f"uvx --from {src} agentcad"
     exe = shutil.which("agentcad")
     here = Path(sys.executable).parent
     if exe and Path(exe).parent.resolve() == here.resolve():
@@ -210,7 +217,7 @@ def _drop_toml_table(text: str, name: str) -> tuple[str, bool]:
 def codex_table(name: str, entry: dict[str, Any], launcher: str) -> str:
     from .mcp_config import codex_toml
     toml = codex_toml(name, entry)
-    if launcher == "uvx":  # the first start downloads the package; Codex's default is 10 s
+    if launcher in ("uvx", "pipx"):  # the first start may download the package; Codex's default is 10 s
         toml = toml.rstrip("\n") + "\nstartup_timeout_sec = 120\n"
     return toml
 
@@ -348,7 +355,8 @@ def render_setup(res: SetupResult) -> str:
     if res.dry_run:
         L += ["Dry run: nothing was written.", ""]
     L.append(f"Workspace (your drawings are saved here): {res.root}")
-    how = "uvx (downloads AgentCAD from GitHub when needed)" if res.launcher == "uvx" else "this Python: " + res.entry["command"]
+    how = (f"{res.launcher} (downloads AgentCAD from GitHub when needed)" if res.launcher in ("uvx", "pipx")
+           else "this Python: " + res.entry["command"])
     L += [f"Server starts with: {how}", ""]
     for c in res.clients:
         line = f"  {c['label']:<15} {c['status']:<16} {c.get('target', '')}"
@@ -467,10 +475,10 @@ def doctor(root: str | os.PathLike | None = None) -> dict[str, Any]:
             add(pkg, "missing", "not importable", f"Reinstall AgentCAD (it brings {pkg})", required=True)
     try:
         import PIL
-        add("Pillow", "ok", f"{PIL.__version__} (image previews)")
+        add("Pillow", "ok", f"{PIL.__version__} (SVG export, image previews)", required=True)
     except ImportError:
-        add("Pillow", "missing", "image previews of some 3D setups need it",
-            "pip install pillow into this Python (uvx: add --with pillow)")
+        add("Pillow", "missing", "SVG export and image previews will not work",
+            "Reinstall AgentCAD (it brings Pillow), or pip install pillow into this Python", required=True)
     ws = workspace_root(root)
     if ws.is_dir() and os.access(ws, os.W_OK):
         add("Workspace", "ok", str(ws))

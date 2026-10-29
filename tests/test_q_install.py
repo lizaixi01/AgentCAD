@@ -172,12 +172,18 @@ def test_uvx_launcher(home):
     res = install.setup(["codex", "claude-desktop"], launcher="uvx", source="git+https://example.org/x@br")
     e = res.entry
     assert Path(e["command"]).stem.lower() == "uvx" or e["command"] == "uvx"
-    assert e["args"] == ["--from", "git+https://example.org/x@br", "--with", "pillow", "agentcad-mcp"]
+    assert e["args"] == ["--from", "git+https://example.org/x@br", "agentcad-mcp"]
     cfg = tomllib.loads(_paths(home)["codex"].read_text("utf-8"))["mcp_servers"]["agentcad"]
     assert cfg["startup_timeout_sec"] == 120 and cfg["args"] == e["args"]
 
 
-def test_ephemeral_detection():
+def test_pipx_launcher(home):
+    res = install.setup(["cursor"], launcher="pipx", source="git+https://example.org/x")
+    assert res.entry["args"] == ["run", "--spec", "git+https://example.org/x", "agentcad-mcp"]
+
+
+def test_ephemeral_detection(monkeypatch):
+    monkeypatch.setattr(install.shutil, "which", lambda name, *a, **k: f"/bin/{name}" if name == "uvx" else None)
     assert install._is_ephemeral(Path("C:/Users/u/AppData/Local/uv/cache/archive-v0/abc"))
     assert install._is_ephemeral(Path("/home/u/.local/pipx/.cache/abc"))
     assert not install._is_ephemeral(Path("/home/u/.local/share/uv/tools/agentcad-runtime"))
@@ -185,6 +191,8 @@ def test_ephemeral_detection():
     assert install.choose_launcher("auto", {"ephemeral": True}) == "uvx"
     assert install.choose_launcher("auto", {"ephemeral": False}) == "python"
     assert install.choose_launcher("uvx", {"ephemeral": False}) == "uvx"
+    monkeypatch.setattr(install.shutil, "which", lambda name, *a, **k: f"/bin/{name}" if name == "pipx" else None)
+    assert install.choose_launcher("auto", {"ephemeral": True}) == "pipx"
 
 
 def test_freecad_option(home, tmp_path):

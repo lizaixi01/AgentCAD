@@ -149,11 +149,11 @@ def build_parser() -> argparse.ArgumentParser:
                    help="Workspace folder for drawings (default: $AGENTCAD_ROOT, else ~/AgentCAD)")
     s.add_argument("--freecad", metavar="PATH", help="FreeCAD 1.1 install folder (or its bin folder / python), if "
                                                      "it is not found automatically")
-    s.add_argument("--launcher", choices=("auto", "uvx", "python"), default="auto",
-                   help="How the app starts the server: uvx (fetches AgentCAD from GitHub) or this Python. auto: uvx "
-                        "when this copy runs from a uvx/pipx cache, else this Python")
-    s.add_argument("--from", dest="source", metavar="SPEC", help="uvx package source (default: where this copy "
-                                                                 "came from, else git+" + REPO_URL + ")")
+    s.add_argument("--launcher", choices=("auto", "uvx", "pipx", "python"), default="auto",
+                   help="How the app starts the server: uvx or pipx (fetch AgentCAD from GitHub) or this Python. "
+                        "auto: uvx (else pipx) when this copy runs from a uvx/pipx cache, else this Python")
+    s.add_argument("--from", dest="source", metavar="SPEC", help="uvx/pipx package source (default: where this "
+                                                                 "copy came from, else git+" + REPO_URL + ")")
     s.add_argument("--name", default="agentcad", help="Server name in the configs")
     s.add_argument("--dry-run", action="store_true", help="Show what would change; write nothing")
     s.add_argument("-y", "--yes", action="store_true", help="Do not ask; configure every app found")
