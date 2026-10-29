@@ -326,10 +326,13 @@ function makeScene(T) {
   const controls = new Orbit(camera, renderer.domElement);
   controls.enableDamping = true;
   const group = new T.Group(); scene.add(group);
-  let framed = 0, raf = 0;
+  let framed = 0, raf = 0, moved = false;
+  controls.addEventListener("start", () => { moved = true; });
+  // a resized canvas (a narrower pane, a phone turned) is re-framed until the user moves the camera themselves
   const size = () => { const r = el.getBoundingClientRect(); renderer.setSize(r.width, r.height, false);
     renderer.domElement.style.width = "100%"; renderer.domElement.style.height = "100%";
-    camera.aspect = r.width / Math.max(r.height, 1); camera.updateProjectionMatrix(); };
+    camera.aspect = r.width / Math.max(r.height, 1); camera.updateProjectionMatrix();
+    if (framed && !moved && r.width > 0 && r.height > 0) fit(); };
   const ro = new ResizeObserver(size); ro.observe(el); size();
   const loop = () => { raf = requestAnimationFrame(loop); controls.update(); sun.position.copy(camera.position); renderer.render(scene, camera); };
   loop();
@@ -357,7 +360,7 @@ function makeScene(T) {
     const dist = (r / 2) / Math.sin(Math.min(half, hHalf)) * 1.25;
     camera.position.copy(c).add(new T.Vector3(1, -1.3, 0.9).normalize().multiplyScalar(dist));
     camera.near = r / 100; camera.far = r * 100; camera.updateProjectionMatrix();
-    framed = r;
+    framed = r; moved = false;
   }
   renderer.domElement.addEventListener("dblclick", fit);
   return { show, dispose() { cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); el.innerHTML = ""; } };

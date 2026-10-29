@@ -43,8 +43,8 @@ SUFFIXES = (".dxf", ".fcstd")
 SKIP_DIRS = {STATE_DIR, ".git", ".venv", "venv", "node_modules", "__pycache__", ".claude"}
 MAX_FILES = 2000
 ROUTES = {"/api/timeline", "/api/layers", "/api/diff", "/api/svg", "/api/mesh", "/api/png"}
-INFO_FILE = "viewer.json"
-LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})  # <root>/.agentcad/viewer.json: where a running viewer listens (see viewer_url)
+INFO_FILE = "viewer.json"  # <root>/.agentcad/viewer.json: where a running viewer listens (see viewer_url)
+LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})
 COLORS = {"added": "#16a34a", "modified": "#ea580c", "other": "#b8bcc4"}
 EMPTY_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><rect width="1000" height="600" '
              'fill="#ffffff"/><text x="500" y="300" text-anchor="middle" font-family="sans-serif" font-size="24" '
@@ -452,6 +452,8 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
             try:
                 if u.path in ("/", "/index.html"):
                     return self._send(200, (STATIC / "index.html").read_bytes(), "text/html; charset=utf-8")
+                if u.path == "/api/ping":
+                    return self._json({"ok": True, "root": str(ws.policy.root)})
                 if u.path == "/api/drawings":
                     return self._json({"ok": True, "root": str(ws.policy.root), "drawings": [
                         {"path": r, "kind": "part" if _is_part(r) else "drawing"} for r in ws.list_drawings()],
@@ -513,6 +515,24 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
     return Handler
 
 
+def _server(host: str):
+    """ThreadingHTTPServer for ``host`` (IPv6 when it is an IPv6 address such as ::1) that does not print a
+    traceback when a client drops the connection (a closed tab, an SSE reconnect)."""
+    import socket as _socket
+    from http.server import ThreadingHTTPServer
+
+    class Server(ThreadingHTTPServer):
+        address_family = _socket.AF_INET6 if ":" in host else _socket.AF_INET
+
+        def handle_error(self, request, client_address):
+            import sys
+            if isinstance(sys.exc_info()[1], (ConnectionError, TimeoutError)):
+                return
+            super().handle_error(request, client_address)
+
+    return Server
+
+
 class Viewer:
     """The server and its change feed; ``start`` runs it in the background (tests), ``serve`` blocks."""
 
@@ -522,16 +542,16 @@ class Viewer:
         policy.read_only = True  # the viewer never writes a drawing
         self.ws = Workspace(policy, cache_dir)
         self.feed = ChangeFeed(self.ws, interval)
-        from http.server import ThreadingHTTPServer
         if host not in LOOPBACK and not allow_remote:
             raise AgentCADError("REMOTE_NOT_ALLOWED", f"--host {host} would expose the workspace to the network",
                                 category="policy", hint="The page has no authentication. Pass --allow-remote if "
                                                         "you mean it")
-        self.httpd = ThreadingHTTPServer((host, port), make_handler(self.ws, self.feed,
-                                                                    None if allow_remote else LOOPBACK))
+        self.httpd = _server(host)((host, port), make_handler(self.ws, self.feed,
+                                                              None if allow_remote else LOOPBACK))
         self.httpd.daemon_threads = True
         h, p = self.httpd.server_address[:2]
-        self.url = f"http://{'127.0.0.1' if h in ('0.0.0.0', '') else h}:{p}/"
+        h = "127.0.0.1" if h in ("0.0.0.0", "") else "::1" if h == "::" else h
+        self.url = f"http://{f'[{h}]' if ':' in h else h}:{p}/"
         self.info_path = policy.state_dir() / INFO_FILE
 
     def _write_info(self) -> None:
@@ -576,8 +596,18 @@ def viewer_url(policy: Policy, drawing: str) -> str | None:
         u = urlparse(url)
         if u.scheme != "http" or u.hostname not in LOOPBACK or not u.port:
             return None  # an edited or foreign file must not make the runtime connect elsewhere
-        with socket.create_connection((u.hostname, u.port), timeout=0.2):
-            pass
-    except (OSError, ValueError, KeyError, TypeError):
+        with socket.create_connection((u.hostname, u.port), timeout=0.2) as c:
+            c.settimeout(1.0)
+            host = f"[{u.hostname}]" if ":" in u.hostname else u.hostname
+            c.sendall(f"GET /api/ping HTTP/1.0\r\nHost: {host}:{u.port}\r\n\r\n".encode())
+            raw = b""
+            while chunk := c.recv(4096):
+                raw += chunk
+                if len(raw) > 65536:
+                    return None
+        body = json.loads(raw.split(b"\r\n\r\n", 1)[1])
+        if Path(body["root"]).resolve() != policy.root:
+            return None  # a viewer of another root left its file here, or the port was reused
+    except (OSError, ValueError, KeyError, TypeError, IndexError):
         return None
     return f"{url}#{drawing}"

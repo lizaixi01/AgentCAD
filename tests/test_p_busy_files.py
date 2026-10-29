@@ -223,3 +223,128 @@ def test_rollback_with_head_busy_after_the_replace_is_settled_by_recover(rt, ws,
     head = s.head()
     assert head["pending"] is None and head["sha256"] == sha256_file(ws / blank) == sha256_file(s.committed_path)
     assert journal(s)[-1]["completed_commit"].startswith("rollback to")
+
+
+# --- review of 80b7b61: B1, B2, N1, N2 ------------------------------------------------------------------------
+
+def hold_head_after(monkeypatch, s: DrawingStore, method: str) -> list:
+    """After ``DrawingStore.<method>`` returns, another process opens head.json (a real handle); close it later."""
+    real = getattr(DrawingStore, method)
+    held = []
+
+    def wrapped(self, *a, **kw):
+        out = real(self, *a, **kw)
+        if self.head_path == s.head_path and not held:
+            held.append(open(self.head_path, "rb"))
+        return out
+
+    monkeypatch.setattr(DrawingStore, method, wrapped)
+    return held
+
+
+def applied_not_recorded(rt, s: DrawingStore, blank, monkeypatch) -> dict:
+    """A commit whose change reached the drawing but whose head update stayed busy."""
+    real = store_mod.replace_file
+    held = []
+
+    def replace(src, dst, timeout=None):
+        real(src, dst, timeout)
+        if dst == s.path and not held:
+            held.append(open(s.head_path, "rb"))
+
+    monkeypatch.setattr(store_mod, "replace_file", replace)
+    try:
+        e = err(rt.apply_operations(blank, LINE))
+    finally:
+        for f in held:
+            f.close()
+        monkeypatch.setattr(store_mod, "replace_file", real)
+    assert e["details"]["state"] == "applied_not_recorded"
+    return e
+
+
+def checkpoints_on_disk_match_head(s: DrawingStore) -> None:
+    listed = [c["id"] for c in s.list_checkpoints()]
+    files = sorted(p.stem for p in s.cp_dir.glob("cp-*"))
+    assert sorted(listed) == files, (listed, files)
+
+
+@pytest.mark.parametrize("call", ["commit", "rollback"])
+def test_b1_head_busy_after_the_checkpoint_keeps_record_and_file_together(rt, ws, blank, monkeypatch, call):
+    """B1: head.json stays busy after the checkpoint was recorded. The abandoned checkpoint stays listed and on
+    disk (never listed without its file), and a literal agent's retry does what it asked."""
+    ok(rt.apply_operations(blank, LINE))
+    s = st(rt, blank)
+    before = sha256_file(ws / blank)
+    held = hold_head_after(monkeypatch, s, "checkpoint")
+    try:
+        e = err(rt.rollback(blank) if call == "rollback" else
+                rt.apply_operations(blank, [{"op": "add_circle", "center": [0, 0], "radius": 5}]))
+    finally:
+        for f in held:
+            f.close()
+    monkeypatch.undo()
+    assert e["code"] == "FILE_BUSY" and e["retryable"] and not e["partial_changes"]
+    assert sha256_file(ws / blank) == before
+    checkpoints_on_disk_match_head(s)
+    if call == "rollback":
+        # the leftover checkpoint is a copy of the unchanged file: the default rollback skips it and undoes the line
+        ok(rt.rollback(blank))
+        assert lines(ws, blank) == 0
+    else:
+        ok(rt.apply_operations(blank, [{"op": "add_circle", "center": [0, 0], "radius": 5}]))
+    checkpoints_on_disk_match_head(s)
+
+
+def test_b2_a_busy_settle_leaves_the_earlier_marker_for_the_retry(rt, ws, blank, monkeypatch):
+    """B2: the next commit cannot settle an applied_not_recorded commit because head.json is busy; the reader
+    leaves right after. The earlier marker must survive, and the retry records it before its own change."""
+    s = st(rt, blank)
+    e = applied_not_recorded(rt, s, blank, monkeypatch)
+    marker = s.head()["pending"]
+    assert marker and marker["sha256"] == e["details"]["sha256"]
+    n_journal = len(journal(s))
+
+    real = DrawingStore.settle_pending
+    calls = []
+
+    def settle(self, **kw):
+        f = open(self.head_path, "rb")  # busy for the settle ...
+        calls.append(1)
+        try:
+            return real(self, **kw)
+        finally:
+            f.close()  # ... and free again before anything else touches head.json
+
+    monkeypatch.setattr(DrawingStore, "settle_pending", settle)
+    e2 = err(rt.apply_operations(blank, [{"op": "add_circle", "center": [0, 0], "radius": 5}]))
+    monkeypatch.undo()
+    assert calls and e2["code"] == "FILE_BUSY" and e2["retryable"] and not e2["partial_changes"]
+    assert s.head()["pending"] == marker  # untouched: still to be settled
+    assert len(journal(s)) == n_journal
+    ok(rt.apply_operations(blank, [{"op": "add_circle", "center": [0, 0], "radius": 5}]))
+    recs = journal(s)
+    assert [r["tool"] for r in recs[-2:]] == ["recover", "apply_operations"]
+    assert recs[-2]["completed_commit"] == "apply_operations" and recs[-2]["sha256"] == e["details"]["sha256"]
+    assert lines(ws, blank) == 1
+
+
+def test_n1_recover_with_head_busy_is_retryable(rt, ws, blank, monkeypatch):
+    s = st(rt, blank)
+    applied_not_recorded(rt, s, blank, monkeypatch)
+    with open(s.head_path, "rb"):
+        e = err(rt.recover(blank))
+    assert e["code"] == "FILE_BUSY" and e["retryable"] and not e["partial_changes"]
+    assert s.head()["pending"] is not None
+    assert ok(rt.recover(blank))["pending_commit"] == "completed"
+
+
+def test_n2_the_recover_record_carries_the_operations(rt, ws, blank, monkeypatch):
+    s = st(rt, blank)
+    e = applied_not_recorded(rt, s, blank, monkeypatch)
+    attempt = journal(s)[-1]
+    assert attempt["ok"] is False and attempt["error"]["code"] == "FILE_BUSY" and attempt["operations"] == LINE
+    ok(rt.recover(blank))
+    rec = journal(s)[-1]
+    assert rec["operations"] == LINE and rec["changes"]["added"] and rec["completed_seq"] == attempt["seq"]
+    assert rec["sha256"] == e["details"]["sha256"]

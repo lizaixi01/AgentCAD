@@ -202,9 +202,14 @@ class DrawingStore:
         head = self.head()
         n = len(head["checkpoints"]) + 1
         cid = f"cp-{n:04d}"
-        shutil.copy2(self.path, self.cp_dir / f"{cid}{self.ext}")
+        cp = self.cp_dir / f"{cid}{self.ext}"
+        shutil.copy2(self.path, cp)
         head["checkpoints"].append({"id": cid, "ts": now(), "label": label, "sha256": sha256_file(self.path)})
-        self._write_head(head)
+        try:
+            self._write_head(head)
+        except PermissionError:
+            cp.unlink(missing_ok=True)  # not recorded: leave no file the next checkpoint would silently replace
+            raise
         return cid
 
     def list_checkpoints(self) -> list[dict[str, Any]]:
@@ -221,15 +226,20 @@ class DrawingStore:
     def load(self) -> Drawing:
         return self.reader(self.path, self.policy)
 
-    def commit(self, doc: Drawing, *, label: str, overwrite_ok: bool = True) -> dict[str, Any]:
+    def commit(self, doc: Drawing, *, label: str, overwrite_ok: bool = True,
+               attempt: dict[str, Any] | None = None) -> dict[str, Any]:
         """Checkpoint the current file, then atomically replace it with ``doc``.
 
         A ``pending`` marker is written to head.json before the replace and
         cleared afterwards; a crash in between is detected by ``recover``.
+        ``attempt``: the journal record the caller writes on success. If the change reaches the file but cannot be
+        recorded (FILE_BUSY, applied_not_recorded), it is journaled as a failed attempt, and settling the commit
+        later copies its payload (operations, changes) into the recover record.
         """
-        return self.commit_bytes(dxf_bytes(doc), label=label, overwrite_ok=overwrite_ok)
+        return self.commit_bytes(dxf_bytes(doc), label=label, overwrite_ok=overwrite_ok, attempt=attempt)
 
-    def commit_bytes(self, data: bytes, *, label: str, overwrite_ok: bool = True) -> dict[str, Any]:
+    def commit_bytes(self, data: bytes, *, label: str, overwrite_ok: bool = True,
+                     attempt: dict[str, Any] | None = None) -> dict[str, Any]:
         """``commit`` for a file already serialised (a 3D part saved by FreeCAD)."""
         self.policy.check_write()
         if len(data) > self.policy.max_file_bytes:
@@ -237,25 +247,31 @@ class DrawingStore:
         existed = self.path.is_file()
         if existed and not overwrite_ok:
             raise input_error("FILE_EXISTS", f"{self.path.name} already exists", hint="Pass overwrite=true")
-        return self._replace_tracked(data, label=label,
+        return self._replace_tracked(data, label=label, attempt=attempt,
                                      checkpoint=lambda: self.checkpoint(f"before {label}") if existed else None)
 
-    def _replace_tracked(self, data: bytes, *, label: str, checkpoint: Callable[[], str | None]) -> dict[str, Any]:
+    def _replace_tracked(self, data: bytes, *, label: str, checkpoint: Callable[[], str | None],
+                         attempt: dict[str, Any] | None = None) -> dict[str, Any]:
         """Replace the drawing with ``data`` as one transaction (commits and restores): settle an earlier
         interrupted transaction, ``checkpoint`` the current file, write the pending marker with the target sha,
         replace, refresh the committed copy, update head. A file another process holds past the retry timeout
         raises FILE_BUSY: retryable while the drawing is untouched, partial_changes once it holds ``data``."""
         digest = hashlib.sha256(data).hexdigest()
-        cid = None
-        try:  # until the drawing is replaced, a busy file means nothing changed
+        try:  # an earlier interrupted transaction is settled first; if head.json is busy it stays as it is
             self.settle_pending()
+        except PermissionError:
+            raise busy_error(self.head_path, applied=False)
+        cid = None
+        # the target sha lets recover tell whether the drawing was replaced before the commit was interrupted
+        marker = {"label": label, "checkpoint": None, "ts": now(), "sha256": digest}
+        try:  # until the drawing is replaced, a busy file means nothing changed
             cid = checkpoint()
+            marker["checkpoint"] = cid
             head = self.head()
-            # the target sha lets recover tell whether the drawing was replaced before the commit was interrupted
-            head["pending"] = {"label": label, "checkpoint": cid, "ts": now(), "sha256": digest}
+            head["pending"] = marker
             self._write_head(head)
         except PermissionError:
-            self._abandon(cid)
+            self._abandon(cid, marker)
             raise busy_error(self.head_path, applied=False)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.path.with_name(self.path.name + ".agentcad-tmp")
@@ -267,7 +283,7 @@ class DrawingStore:
             replace_file(tmp, self.path)
         except PermissionError:
             tmp.unlink(missing_ok=True)
-            self._abandon(cid)
+            self._abandon(cid, marker)
             raise busy_error(self.path, applied=False)
         # From here the drawing holds the change: the commit has happened and must not be reported as failed.
         warnings = []
@@ -286,25 +302,39 @@ class DrawingStore:
         try:
             self._write_head(head)
         except PermissionError:
-            raise busy_error(self.head_path, applied=True, details={"state": "applied_not_recorded",
-                                                                    "sha256": digest, "checkpoint_before": cid})
+            exc = busy_error(self.head_path, applied=True, details={"state": "applied_not_recorded",
+                                                                   "sha256": digest, "checkpoint_before": cid})
+            if attempt is not None:  # the journal needs no head write to take the record
+                self.journal({**attempt, "ok": False, "error": exc.to_dict()})
+            raise exc
         return {"checkpoint_before": cid, "sha256": digest, "bytes": len(data),
                 **({"warnings": warnings} if warnings else {})}
 
-    def _abandon(self, cid: str | None) -> None:
-        """Undo a transaction that stopped before the drawing was replaced: drop its pending marker and the
-        checkpoint it took, so a retry starts from the same state (a retried rollback would otherwise restore that
-        checkpoint, i.e. do nothing). Best effort: head.json may be the busy file; then recover clears the marker,
-        and the extra checkpoint is a harmless copy of the unchanged drawing."""
+    def _abandon(self, cid: str | None, marker: dict[str, Any]) -> None:
+        """Undo a transaction that stopped before the drawing was replaced: drop the checkpoint it took and its
+        pending marker, so a retry starts from the same state (a retried rollback would otherwise restore that
+        checkpoint, i.e. do nothing). Only this transaction's own marker is cleared, never an earlier one that
+        still has to be settled. head.json is rewritten first and the checkpoint file deleted only after that
+        succeeded: if head.json is the busy file, head keeps listing the checkpoint and its file stays (a harmless
+        copy of the unchanged drawing), and the marker stays for recover, which sees the drawing unchanged."""
         try:
             head = self.head()
-            if cid and head["checkpoints"] and head["checkpoints"][-1]["id"] == cid:
-                head["checkpoints"].pop()
-                (self.cp_dir / f"{cid}{self.ext}").unlink(missing_ok=True)
+        except (OSError, ValueError):
+            return
+        drop = bool(cid and head["checkpoints"] and head["checkpoints"][-1]["id"] == cid)
+        mine = head.get("pending") == marker
+        if not (drop or mine):
+            return
+        if drop:
+            head["checkpoints"].pop()
+        if mine:
             head["pending"] = None
+        try:
             self._write_head(head)
-        except (PermissionError, ValueError):
-            pass
+        except PermissionError:
+            return
+        if drop:
+            (self.cp_dir / f"{cid}{self.ext}").unlink(missing_ok=True)
 
     def settle_pending(self, **record: Any) -> tuple[dict[str, Any], int] | None:
         """``finish_pending`` and journal the outcome: an interrupted commit that reached the file gets its record
@@ -316,6 +346,11 @@ class DrawingStore:
         if done["outcome"] == "completed":
             rec["completed_commit"] = done["pending"]["label"]
             rec["checkpoint_before"] = done["pending"].get("checkpoint")
+            for r in reversed(self.read_journal()):  # the attempt journaled when the commit could not be recorded
+                if ((r.get("error") or {}).get("details") or {}).get("sha256") == done["sha256"]:
+                    rec["completed_seq"] = r["seq"]
+                    rec.update({k: r[k] for k in ("operations", "changes", "code") if k in r})
+                    break
         return done, self.journal(rec)
 
     def finish_pending(self) -> dict[str, Any] | None:

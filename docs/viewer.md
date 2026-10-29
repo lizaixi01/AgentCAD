@@ -11,7 +11,7 @@ agentcad --root playground viewer --port 9000
 ```
 
 Windows 上是 `.venv\Scripts\agentcad.exe`。启动后打印一行 JSON（`{"ok": true, "viewer": "http://127.0.0.1:8770/", ...}`），
-Ctrl+C 退出。只监听 `127.0.0.1`，并且只回应 Host 头是 `127.0.0.1`、`localhost` 或 `[::1]` 的请求（其他返回 403 `HOST_NOT_ALLOWED`），挡住 DNS 重绑定：别的网站把自己的域名解析到 127.0.0.1 后，读不到图纸。页面不鉴权，所以 `--host` 设成非回环地址要同时加 `--allow-remote`（否则 `REMOTE_NOT_ALLOWED`，退出码 4），加了之后也不再检查 Host。三维零件要用 FreeCAD 出网格，
+Ctrl+C 退出。只监听 `127.0.0.1`，并且只回应 Host 头是 `127.0.0.1`、`localhost` 或 `[::1]` 的请求（其他返回 403 `HOST_NOT_ALLOWED`），挡住 DNS 重绑定：别的网站把自己的域名解析到 127.0.0.1 后，读不到图纸。页面不鉴权，所以 `--host` 设成非回环地址要同时加 `--allow-remote`（否则 `REMOTE_NOT_ALLOWED`，退出码 4），加了之后也不再检查 Host。`--host ::1` 用 IPv6 监听。三维零件要用 FreeCAD 出网格，
 启动查看器的环境里同样要设 `AGENTCAD_FREECAD`（见 [part-3d.md](part-3d.md)）。端口被占用时返回 `PORT_IN_USE`，退出码 2。
 
 ### 在 Claude 桌面应用里打开
@@ -23,7 +23,7 @@ Ctrl+C 退出。只监听 `127.0.0.1`，并且只回应 Host 头是 `127.0.0.1`�
 ### Agent 怎么告诉用户去哪看
 
 查看器运行时会写 `<root>/.agentcad/viewer.json`（地址和进程号），退出时删掉。这期间 `create_drawing` 的结果里多一个
-`viewer_url`（如 `http://127.0.0.1:8770/#parts/plate.dxf`），Agent 可以把它转给用户。判断依据是端口真的能连上，
+`viewer_url`（如 `http://127.0.0.1:8770/#parts/plate.dxf`），Agent 可以把它转给用户。判断依据是向文件里的地址发一个 `GET /api/ping`，回答的查看器服务的正是这个根目录，
 查看器崩溃留下的旧文件不会产生链接；文件里的地址不是回环地址（`127.0.0.1`、`localhost`、`::1`）时也不用，Runtime 不会去连别的主机。`create_drawing` 不加载 HTTP 服务器的代码。
 
 ## 页面

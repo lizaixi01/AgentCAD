@@ -356,23 +356,52 @@ def test_non_loopback_host_needs_allow_remote(ws):
     assert code == 4 and r["error"]["code"] == "REMOTE_NOT_ALLOWED"
 
 
-def test_viewer_url_trusts_only_loopback(rt, ws):
+def test_viewer_url_trusts_only_a_loopback_viewer_of_this_root(rt, ws, tmp_path_factory, cache):
     from agentcad.viewer import viewer_url
     info = ws / ".agentcad" / "viewer.json"
     info.parent.mkdir(parents=True, exist_ok=True)
-    srv = socket.socket()
-    srv.bind(("127.0.0.1", 0))
-    srv.listen()
-    port = srv.getsockname()[1]
+    other = Viewer(Policy(root=tmp_path_factory.mktemp("other-root")), port=0, cache_dir=cache).start()
+    mute = socket.socket()  # listens, never answers like a viewer
+    mute.bind(("127.0.0.1", 0))
+    mute.listen()
+    port = mute.getsockname()[1]
     try:
         for url in (f"http://example.com:{port}/", f"http://10.0.0.1:{port}/", f"file://127.0.0.1:{port}/",
-                    "http://127.0.0.1/"):
+                    "http://127.0.0.1/", f"http://127.0.0.1:{port}/",  # not a viewer
+                    other.url):  # a viewer, of another root
             info.write_text(json.dumps({"url": url}), "utf-8")
             assert viewer_url(rt.policy, "a.dxf") is None, url
-        info.write_text(json.dumps({"url": f"http://127.0.0.1:{port}/"}), "utf-8")
-        assert viewer_url(rt.policy, "a.dxf") == f"http://127.0.0.1:{port}/#a.dxf"
     finally:
-        srv.close()
+        mute.close()
+        other.stop()
+    mine = Viewer(Policy(root=ws), port=0, cache_dir=cache).start()
+    try:
+        assert viewer_url(rt.policy, "a.dxf") == mine.url + "#a.dxf"
+    finally:
+        mine.stop()
+
+
+def test_viewer_url_probe_leaves_no_traceback(rt, viewer, capfd):
+    """The probe is a real request (GET /api/ping): the viewer has nothing to complain about."""
+    capfd.readouterr()
+    for i in range(3):
+        assert ok(rt.create_drawing(f"t{i}.dxf"))["viewer_url"]
+    import time
+    time.sleep(0.2)
+    assert "Traceback" not in capfd.readouterr().err
+
+
+def test_ipv6_loopback(ws, cache):
+    try:
+        v = Viewer(Policy(root=ws), host="::1", port=0, cache_dir=cache).start()
+    except OSError as exc:  # no IPv6 on this machine
+        pytest.skip(f"IPv6 loopback unavailable: {exc}")
+    try:
+        assert v.url.startswith("http://[::1]:")
+        code, r = get_json(v, "/api/ping")
+        assert code == 200 and Path(r["root"]) == ws.resolve()
+    finally:
+        v.stop()
 
 
 def test_create_drawing_does_not_load_the_http_server(ws):

@@ -28,7 +28,7 @@ from .ops import catalog
 from .ops.annotate import DIMSTYLE, apply_annotation_scale, setup_text_style
 from .part import service as part
 from .policy import Policy
-from .store import DrawingStore, finalize, read_dxf, now, sha256_file
+from .store import DrawingStore, busy_error, finalize, read_dxf, now, sha256_file
 from .units import UNITS, normalize_unit, unit_from_insunits
 from .validate import validate_file
 from .validate.checks import MIN_PRINTED_TEXT
@@ -396,9 +396,9 @@ class Runtime:
                                     category="validation",
                                     details={"validation": compact_report(tmp_report), "failure_snapshot": fail},
                                     hint="Inspect validation.issues; fix the operations and retry")
-            info = store.commit(doc, label=label or "apply_operations")
-            seq = store.journal({"tool": "apply_operations", "ok": True, "label": label, "operations": operations,
-                                 "changes": _changes(res), **info})
+            attempt = {"tool": "apply_operations", "label": label, "operations": operations, "changes": _changes(res)}
+            info = store.commit(doc, label=label or "apply_operations", attempt=attempt)
+            seq = store.journal({**attempt, "ok": True, **info})
         report = validate_file(p, requirements=requirements, bounds=bounds, layout=layout)
         out = {"drawing": self._rel(p), "changes": _changes(res), "results": res["results"],
                "validation": _brief(report), "journal_seq": seq, **info}
@@ -523,10 +523,10 @@ class Runtime:
                                     category="validation",
                                     details={"validation": compact_report(tmp_report), "failure_snapshot": fail},
                                     hint="Inspect validation.issues; fix the script and retry")
-            info = store.commit(doc, label=label or "run_script")
-            seq = store.journal({"tool": "run_script", "ok": True, "label": label, "code": code,
-                                 "code_sha256": hashlib.sha256(code.encode("utf-8")).hexdigest(),
-                                 "changes": changes, "stdout": res.get("stdout"), **info})
+            attempt = {"tool": "run_script", "label": label, "code": code,
+                       "code_sha256": hashlib.sha256(code.encode("utf-8")).hexdigest(), "changes": changes}
+            info = store.commit(doc, label=label or "run_script", attempt=attempt)
+            seq = store.journal({**attempt, "ok": True, "stdout": res.get("stdout"), **info})
         report = validate_file(p, requirements=requirements)
         return {**out, "validation": _brief(report), "journal_seq": seq, **info}
 
@@ -748,13 +748,18 @@ class Runtime:
 
     @tool
     def rollback(self, path: str, checkpoint: str | None = None) -> dict[str, Any]:
-        """Restore a checkpoint (default: the latest). The pre-rollback state is checkpointed too."""
+        """Restore a checkpoint (default: the latest one that differs from the file, so the last change is undone
+        even when a checkpoint of the unchanged file was left behind, e.g. by a FILE_BUSY attempt). The
+        pre-rollback state is checkpointed too."""
         self.policy.check_write()
         p, store = self._drawing(path, must_exist=False, part_ok=True)
         cps = store.list_checkpoints()
         if not cps:
             raise input_error("NO_CHECKPOINT", "Drawing has no checkpoints")
-        cid = checkpoint or cps[-1]["id"]
+        cid = checkpoint
+        if cid is None:
+            cur = sha256_file(p) if p.is_file() else None
+            cid = next((c["id"] for c in reversed(cps) if c.get("sha256") != cur), cps[-1]["id"])
         with self._lock(store):
             info = store.restore(cid, label=f"rollback to {cid}")
             seq = store.journal({"tool": "rollback", "ok": True, "checkpoint": cid, **info})
@@ -794,7 +799,10 @@ class Runtime:
         self.policy.check_write()
         if st["exists"] and st["readable"] and st["pending_transaction"]:
             with self._lock(store):  # an interrupted commit in the file is recorded, an unstarted one dropped
-                settled = store.settle_pending(from_status=st)
+                try:
+                    settled = store.settle_pending(from_status=st)
+                except PermissionError:  # head.json still held by another process: nothing was changed
+                    raise busy_error(store.head_path, applied=False)
             if settled:
                 done, seq = settled
                 return {"drawing": self._rel(p), "recovered": True, "pending_commit": done["outcome"],
