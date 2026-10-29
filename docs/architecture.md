@@ -53,12 +53,13 @@ ezdxf (DXF 内核)                 part/* → backends/freecad → FreeCAD 进�
 2. **预校验**全部操作：操作名（拼写错误时给出相近名称）、白名单、参数类型/范围/单位、未知参数。任何一步失败，整个批次都不执行。
 3. 在内存文档上依次执行。任何一步失败都抛出结构化错误（`op_index`、`partial_changes=false`），内存文档直接丢弃，磁盘文件不变，journal 记录这次失败。
 4. 可选 `strict`：先把候选文档写到临时文件，交给独立验证器检查；不通过就不保存，失败现场写入 `failed/`。
-5. 提交：为旧文件建检查点 → 在 head 中写入 `pending` → 临时文件 fsync 后 `os.replace` → 写提交副本 → 清除 `pending` → 写 journal。
+5. 提交：为旧文件建检查点 → 在 head 中写入 `pending`（带目标内容的 sha256）→ 临时文件 fsync 后 `os.replace` → 写提交副本 → 清除 `pending` → 写 journal。
+   Windows 上目标文件被别的进程打开时 `os.replace` 会失败，所以每次替换最多重试 2 s（`store.replace_file`）。还是失败时（`rollback` 和 `recover` 恢复检查点也走同一个流程，`store._replace_tracked`）：图纸替换之前的任何一步 → `FILE_BUSY`，`retryable=true`，文件不变，这次刚建的检查点也删掉（先改 head.json，改成了才删文件；head.json 本身被占着时检查点留着，文件也留着）。只清这次自己写的 `pending`，前一次没结算的不动；结算前一次时 head.json 被占着，同样返回 `FILE_BUSY`，什么都不改。不带参数的 `rollback` 恢复最近一个和当前文件不同的检查点，所以留下的那个检查点不会让重试变成空操作；提交副本 → 不算失败，结果带 `warnings`；图纸替换之后的 head 更新 → `FILE_BUSY`，`partial_changes=true`、`retryable=false`，改动已在文件里，提示调 `recover`，不要重做。journal 写 head 失败不影响结果，下一条记录的 seq 从 journal 文件末尾接着编。`partial_changes=true` 的那次调用会把它的操作作为一条失败记录写进 journal，结算时 `recover` 记录带上这些操作（`operations`、`changes`、`completed_seq`）。
 6. 从磁盘重新读取，运行验证器，把报告随结果一起返回。
 
 `run_script`（可选，默认关闭）：对操作目录覆盖不到的编辑，Agent 提交一段 ezdxf 脚本。脚本先做静态检查（只允许导入 ezdxf 和标准数学/数据模块；禁止打开或保存文件、eval/exec、getattr、双下划线访问），然后在独立的 Python 进程中（`-I`、不经 shell、有超时）对图纸副本运行。运行结果由 Runtime 严格重读、检查预算、计算 diff，然后按上面第 4–6 步提交：检查点、journal（记录完整脚本和哈希）、校验、`strict`。失败时文件不变，可以 `rollback`。
 
-`recover`：文件不可读、存在 `pending`，或文件丢失时，优先恢复 `committed.dxf`（必须与 head 中的哈希一致），否则回退到最近一个可读的检查点。损坏文件会保留到 `failed/`。
+`recover`：`pending` 带目标 sha256 且文件可读时，先结算这次中断的提交：文件就是目标内容 → 补写提交副本和 head，journal 记一条 `recover`（`completed_commit`，带 `sha256` 和 `checkpoint_before`，时间线把它当作一次提交）；文件还是上次提交的内容 → 只清掉 `pending`。下一次提交开始前也会先这样结算，所以 Agent 没调 `recover` 就接着改，前一次改动也不会无记录地并进去。其余情况（文件不可读、旧格式的 `pending`、文件丢失）优先恢复 `committed.dxf`（必须与 head 中的哈希一致），否则回退到最近一个可读的检查点。损坏文件会保留到 `failed/`。
 
 `revise_drawing`（规格级修订）：把修改合并进存储的规格 → 重新编译 → 以**协调模式**执行。已存在的标签就地更新（handle 不变）；几何相同的实体不动；旧计划里有而新计划里没有的标签被删除；未打标签的实体、用户自加的实体保持不变。
 

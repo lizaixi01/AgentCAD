@@ -2055,7 +2055,7 @@ def action_mesh(job):
     pts, tris = sh.tessellate(span / 600)
     edges = []
     for e in sh.Edges:
-        if not _is_seam(sh, e):
+        if not (e.Degenerated or _is_seam(sh, e)):  # no seams, no sphere or cone poles
             edges.append([round(c, 5) for q in e.discretize(Deflection=span / 1000) for c in (q.x, q.y, q.z)])
     data = {"positions": [round(c, 5) for p in pts for c in (p.x, p.y, p.z)],
             "indices": [i for t in tris for i in t], "edges": edges}

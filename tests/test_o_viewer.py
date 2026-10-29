@@ -298,6 +298,8 @@ def test_commits_succeed_while_the_viewer_reads(rt, ws, blank, workspace):
             try:
                 tl = workspace.timeline(blank)
                 workspace.snapshot(blank, None)
+                workspace.diff(blank, None)  # every read the page makes, not just the snapshot (review N3)
+                workspace.layers(blank, None)
                 for r in tl["records"][-3:]:
                     if r.get("version") and r["available"]:
                         workspace.snapshot(blank, r["version"])
@@ -318,3 +320,109 @@ def test_commits_succeed_while_the_viewer_reads(rt, ws, blank, workspace):
             t.join(10)
     assert reads[0] > 20, reads
     assert not errors, errors[:3]
+
+
+# --- reachable only from this machine -----------------------------------------------------------------------------
+
+def raw_get(srv: Viewer, route: str, host: str) -> int:
+    import http.client
+    port = int(srv.url.rstrip("/").rsplit(":", 1)[1])
+    c = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+    c.putrequest("GET", route, skip_host=True)
+    c.putheader("Host", host)
+    c.endheaders()
+    code = c.getresponse().status
+    c.close()
+    return code
+
+
+def test_foreign_host_header_is_refused(blank, viewer):
+    """DNS rebinding: a page on evil.example resolves its name to 127.0.0.1; its requests say Host: evil.example."""
+    port = viewer.url.rstrip("/").rsplit(":", 1)[1]
+    assert raw_get(viewer, "/api/drawings", f"evil.example:{port}") == 403
+    assert raw_get(viewer, "/", "evil.example") == 403
+    assert raw_get(viewer, "/api/drawings", "") == 403
+    for h in (f"127.0.0.1:{port}", f"localhost:{port}", "localhost"):
+        assert raw_get(viewer, "/api/drawings", h) == 200, h
+
+
+def test_non_loopback_host_needs_allow_remote(ws):
+    from agentcad.cli import run
+    from agentcad.errors import AgentCADError
+    with pytest.raises(AgentCADError) as e:
+        Viewer(Policy(root=ws), host="0.0.0.0", port=0)
+    assert e.value.code == "REMOTE_NOT_ALLOWED"
+    r, code = run(["--root", str(ws), "viewer", "--host", "0.0.0.0", "--port", "0"])
+    assert code == 4 and r["error"]["code"] == "REMOTE_NOT_ALLOWED"
+
+
+def test_viewer_url_trusts_only_a_loopback_viewer_of_this_root(rt, ws, tmp_path_factory, cache):
+    from agentcad.viewer import viewer_url
+    info = ws / ".agentcad" / "viewer.json"
+    info.parent.mkdir(parents=True, exist_ok=True)
+    other = Viewer(Policy(root=tmp_path_factory.mktemp("other-root")), port=0, cache_dir=cache).start()
+    mute = socket.socket()  # listens, never answers like a viewer
+    mute.bind(("127.0.0.1", 0))
+    mute.listen()
+    port = mute.getsockname()[1]
+    try:
+        for url in (f"http://example.com:{port}/", f"http://10.0.0.1:{port}/", f"file://127.0.0.1:{port}/",
+                    "http://127.0.0.1/", f"http://127.0.0.1:{port}/",  # not a viewer
+                    other.url):  # a viewer, of another root
+            info.write_text(json.dumps({"url": url}), "utf-8")
+            assert viewer_url(rt.policy, "a.dxf") is None, url
+    finally:
+        mute.close()
+        other.stop()
+    mine = Viewer(Policy(root=ws), port=0, cache_dir=cache).start()
+    try:
+        assert viewer_url(rt.policy, "a.dxf") == mine.url + "#a.dxf"
+    finally:
+        mine.stop()
+
+
+def test_viewer_url_probe_leaves_no_traceback(rt, viewer, capfd):
+    """The probe is a real request (GET /api/ping): the viewer has nothing to complain about."""
+    capfd.readouterr()
+    for i in range(3):
+        assert ok(rt.create_drawing(f"t{i}.dxf"))["viewer_url"]
+    import time
+    time.sleep(0.2)
+    assert "Traceback" not in capfd.readouterr().err
+
+
+def test_ipv6_loopback(ws, cache):
+    try:
+        v = Viewer(Policy(root=ws), host="::1", port=0, cache_dir=cache).start()
+    except OSError as exc:  # no IPv6 on this machine
+        pytest.skip(f"IPv6 loopback unavailable: {exc}")
+    try:
+        assert v.url.startswith("http://[::1]:")
+        code, r = get_json(v, "/api/ping")
+        assert code == 200 and Path(r["root"]) == ws.resolve()
+    finally:
+        v.stop()
+
+
+def test_create_drawing_does_not_load_the_http_server(ws):
+    import subprocess
+    import sys
+    code = ("import sys; from agentcad.policy import Policy; from agentcad.service import Runtime; "
+            f"assert Runtime(Policy(root={str(ws)!r})).create_drawing('a.dxf')['ok']; "
+            "print('http.server' in sys.modules)")
+    out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=120)
+    assert out.stdout.strip() == "False", out.stderr
+
+
+@needs_freecad
+@pytest.mark.parametrize("extra", [
+    {"op": "primitive", "kind": "sphere", "dims": {"radius": 10}, "position": [0, 0, 40]},
+    {"op": "primitive", "kind": "cone", "dims": {"radius1": 6, "radius2": 0, "height": 12}, "position": [0, 0, 40]},
+])
+def test_mesh_skips_degenerate_edges(rt, workspace, extra):
+    """A sphere's or cone's pole is an edge without a curve: the viewer's mesh leaves it out instead of failing."""
+    ok(rt.create_drawing("knob.FCStd"))
+    ok(rt.apply_operations("knob.FCStd", [
+        {"op": "primitive", "kind": "cylinder", "dims": {"radius": 3, "height": 40}}, extra]))
+    m = json.loads(workspace.mesh("knob.FCStd", None).read_text("utf-8"))
+    assert m["indices"] and all(len(e) >= 6 for e in m["edges"])

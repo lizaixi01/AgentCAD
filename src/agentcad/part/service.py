@@ -167,10 +167,10 @@ def apply(rt: "Runtime", path: str, operations: list[dict], dry_run: bool, requi
                 raise AgentCADError("VALIDATION_FAILED", "Post-operation validation failed; nothing was saved",
                                     category="validation", hint="Inspect validation.issues; fix the operations and retry",
                                     details={"validation": _brief(report), "failure_snapshot": snap})
-            info = store.commit_bytes(cand.read_bytes(), label=label or "apply_operations")
-            seq = store.journal({"tool": "apply_operations", "kind": "part", "ok": True, "label": label,
-                                 "operations": operations, "changes": res["changes"],
-                                 **({"created": {"units": units}} if new else {}), **info})
+            attempt = {"tool": "apply_operations", "kind": "part", "label": label, "operations": operations,
+                       "changes": res["changes"], **({"created": {"units": units}} if new else {})}
+            info = store.commit_bytes(cand.read_bytes(), label=label or "apply_operations", attempt=attempt)
+            seq = store.journal({**attempt, "ok": True, **info})
     finally:
         cand.unlink(missing_ok=True)
     return {"drawing": rt._rel(p), "changes": res["changes"], "results": res["results"],
