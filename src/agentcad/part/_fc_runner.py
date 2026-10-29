@@ -2031,7 +2031,9 @@ def action_render(job):
     if not isinstance(views, list) or not 1 <= len(views) <= 9:
         raise OpError("BAD_VIEW", "views: a list of 1 to 9 views")
     views = [_view(v, f"views[{i}]") for i, v in enumerate(views)]
-    size = int(job.get("size") or 512)
+    # default: 512 px for one view; 256 px per view in a grid, so a 2x2 sheet is 512 x 512, about the size of a
+    # reference image an agent compares it with (a larger sheet costs more image tokens on every later turn)
+    size = int(job.get("size") or (512 if len(views) == 1 else 256))
     if not 64 <= size <= 2048:
         raise OpError("OUT_OF_RANGE", "image_size must be 64..2048 pixels")
     fit = job.get("fit") or "view"
