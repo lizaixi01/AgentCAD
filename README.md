@@ -64,7 +64,7 @@ We also ran a 100-task sample of [BenchCAD](https://arxiv.org/abs/2605.10865)'s 
 | Near-exact (IoU ≥ 0.9) | 27 | **66** |
 | Median time per part | **3.1 min** | 5.8 min |
 
-This is our harness, run by us, so it is not comparable to the BenchCAD leaderboard. On the leaderboard, models write CadQuery code in one shot. Here the agent works in a loop: it renders previews of its part, compares them with the input and fixes what is off. Codex was the better modeller here; Claude often stopped with proportions estimated from pixels. Setup, per-task logs and caveats: [examples/benchcad/README.md](examples/benchcad/README.md).
+This is our harness, run by us, so it is not comparable to the BenchCAD leaderboard. On the leaderboard, models write CadQuery code in one shot. Here the agent works in a loop: it renders previews of its part, compares them with the input and fixes what is off. Codex was the better modeller here. Its lead came mostly from simple parts it rebuilt near-exactly, where Claude stopped with proportions estimated from pixels. Setup, per-task logs and caveats: [examples/benchcad/README.md](examples/benchcad/README.md).
 
 ## Get started in two minutes
 
