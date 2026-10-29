@@ -320,7 +320,7 @@ def describe_edge(shape, i, e):
         d["center"], d["radius"], d["axis"] = v3(e.Curve.Center), r6(e.Curve.Radius), v3(e.Curve.Axis)
         d["closed"] = e.isClosed()
     else:
-        bb = e.BoundBox
+        bb = tight_box(e)
         d["bbox"] = [[r6(bb.XMin), r6(bb.YMin), r6(bb.ZMin)], [r6(bb.XMax), r6(bb.YMax), r6(bb.ZMax)]]
     return d
 
@@ -336,7 +336,7 @@ def describe_face(shape, i, f):
         d["inner"] = _is_inner_cyl(f)
     elif k == "sphere":
         d["radius"] = r6(f.Surface.Radius)
-    bb = f.BoundBox
+    bb = tight_box(f)
     d["bbox"] = [[r6(bb.XMin), r6(bb.YMin), r6(bb.ZMin)], [r6(bb.XMax), r6(bb.YMax), r6(bb.ZMax)]]
     return d
 
@@ -1394,10 +1394,32 @@ def hint_for(msg):
 
 # --- summaries -------------------------------------------------------------------------------------------------
 
+_BOXES: dict = {}
+
+
+def tight_box(sh):
+    """The exact bounding box. Shape.BoundBox follows B-spline control points: on BenchCAD parts it was up to 85%
+    too wide (twisted drill; coil springs 57%, threads 51%), so every reported size, bbox requirement, preview frame
+    and export check uses this one. It can take a second or two on parts with many B-spline faces, so a job computes
+    it once per shape."""
+    key = sh.hashCode()
+    hit = _BOXES.get(key)
+    if hit is not None and hit[0].isSame(sh):
+        return hit[1]
+    try:
+        bb = sh.optimalBoundingBox(False, False)  # from the geometry, not a mesh; without tolerance margins
+    except Exception:  # nothing to bound (a degenerate shape): the plain box
+        bb = None
+    if bb is None or not bb.isValid():
+        bb = sh.BoundBox
+    _BOXES[key] = (sh, bb)
+    return bb
+
+
 def shape_summary(sh):
     if sh is None or sh.isNull():
         return None
-    bb = sh.BoundBox
+    bb = tight_box(sh)
     out = {"valid": sh.isValid(), "solids": len(sh.Solids), "faces": len(sh.Faces), "edges": len(sh.Edges),
            "volume": r6(sh.Volume), "area": r6(sh.Area),
            "bbox": [[r6(bb.XMin), r6(bb.YMin), r6(bb.ZMin)], [r6(bb.XMax), r6(bb.YMax), r6(bb.ZMax)]],
@@ -1912,7 +1934,7 @@ def set_script_base(ctx, base):
         raise OpError("FEATURE_FAILED", f"{first['feature']}: {first['message'] or 'recompute failed'} (rebuilding "
                       "the kept features on the new solid)", category="geometry", hint=hint_for(first["message"]),
                       entities=[b["feature"] for b in bad], details={"broken": bad})
-    bb = solid.BoundBox
+    bb = tight_box(solid)
     return {"object": pf.Name, "solid": {"volume": r6(solid.Volume), "size": [r6(bb.XLength), r6(bb.YLength),
                                                                               r6(bb.ZLength)], "unit": "mm"},
             "features_kept": [o.Name for o in body.Group if o.TypeId != "PartDesign::FeatureBase"]}
@@ -2032,16 +2054,22 @@ def readback(path, ref=None):
     """Read an exported B-rep file back with Part.read and compare it with the part's shape.
 
     IGES comes back as faces, never a solid (also when written in BRep mode, probed on 1.1.4), so for IGES the
-    solid count is not compared; validity, volume (OCC integrates the closed faces) and size still are."""
+    solid count is not compared; validity, volume (OCC integrates the closed faces) and size still are.
+
+    Volume is a numerical integral: a part and its own STEP differed by up to 5e-4 of it on swept B-spline solids
+    (BenchCAD runs, where OCC's volume of such a solid was 2% off a fine mesh), so volumes match within 1e-3. A lost
+    or flipped face changes far more. Exact sizes came back within 1e-11 mm."""
     got = Part.read(path)
     out = {k: v for k, v in shape_summary(got).items() if k in ("valid", "solids", "volume", "size", "bbox")}
     iges = Path(path).suffix.lower() in (".iges", ".igs")
     if iges:
         out["note"] = "IGES stores faces, not solids: compared by volume and size"
     if ref is not None:
+        rb = tight_box(ref)
         out["matches"] = bool(out["valid"] and (iges or out["solids"] == len(ref.Solids))
-                              and abs(got.Volume - ref.Volume) <= 1e-6 * max(1.0, abs(ref.Volume))
-                              and all(abs(a - b) <= 1e-4 for a, b in zip(out["size"], shape_summary(ref)["size"])))
+                              and abs(got.Volume - ref.Volume) <= 1e-3 * max(1.0, abs(ref.Volume))
+                              and all(abs(a - b) <= 1e-4 + 1e-6 * rb.DiagonalLength
+                                      for a, b in zip(out["size"], (rb.XLength, rb.YLength, rb.ZLength))))
     return out
 
 
@@ -2087,7 +2115,7 @@ def render_view(sh, d, size, fit, ss=2, with_mask=False):
     """The shaded image (size * ss pixels square); with_mask, also the silhouette (pixels the solid covers)."""
     import numpy as np
     right, up, fwd = _camera(d)
-    bb = sh.BoundBox
+    bb = tight_box(sh)
     corners = np.array([[x, y, z] for x in (bb.XMin, bb.XMax) for y in (bb.YMin, bb.YMax) for z in (bb.ZMin, bb.ZMax)])
     centre = corners.mean(axis=0)
     if fit == "uniform":  # the same scale in every view: the bounding box's diagonal spans the frame
@@ -2280,7 +2308,7 @@ def action_mesh(job):
     if body is None:
         raise OpError("NO_SOLID", "Nothing to show: the part has no solid", category="geometry")
     sh = body.Shape
-    span = max(sh.BoundBox.DiagonalLength, 1e-9)
+    span = max(tight_box(sh).DiagonalLength, 1e-9)
     pts, tris = sh.tessellate(span / 600)
     edges = []
     for e in sh.Edges:

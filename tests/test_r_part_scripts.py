@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -210,6 +211,41 @@ def test_freecad_script_cannot_reach_the_part(srt, ws):
     assert r["validation"]["passed"] and [i["code"] for i in r["validation"]["issues"]] == ["SCRIPT_BASE_SOLID"]
     read = ok(srt.read_drawing("s.FCStd"))
     assert "outside_bodies" not in read and read["bodies"][0]["shape"]["size"] == [10.0, 20.0, 30.0]
+
+
+SPRING = """
+helix = Part.makeHelix(8, 40, 10)
+e = helix.Edges[0]
+ring = Part.Wire(Part.makeCircle(1.5, e.valueAt(e.FirstParameter), e.tangentAt(e.FirstParameter)))
+result = Part.Wire(helix.Edges).makePipeShell([ring], True, True)
+"""
+
+
+@needs_freecad
+def test_swept_parts_report_their_true_size(srt, ws):
+    """A coil of 1.5 mm wire on radius 10 is 23 mm across. FreeCAD's quick bounding box follows the sweep's B-spline
+    control points (29.2 mm here, 57% too wide on a BenchCAD spring), and sizes, bbox requirements, previews and
+    the export check all used it."""
+    height = 40 + 3 * math.cos(math.atan(8 / (20 * math.pi)))  # the end circles are normal to the helix
+    want = [23, 23, height]
+    r = ok(srt.run_script("spring.FCStd", SPRING, language="freecad",
+                          requirements=[{"type": "bbox", "size": want, "tolerance": 0.01}]))
+    assert r["validation"]["passed"], r["validation"]
+    assert shape(r)["size"] == pytest.approx(want, abs=1e-3)
+    assert r["script"]["solid"]["size"] == pytest.approx(want, abs=1e-3)
+    e = ok(srt.export_drawing("spring.FCStd", "spring.step", "step"))
+    assert e["readback"]["matches"] and e["readback"]["size"] == pytest.approx(want, abs=1e-3)
+
+
+@needs_freecad
+def test_cross_drilled_pin_exports_to_step(srt, ws):
+    """A pin with two cross holes reads back from its STEP with a volume 2.6e-6 off (OCC integrates the volume
+    numerically), which the export check refused as EXPORT_MISMATCH, as it did with parts in BenchCAD runs."""
+    pin = ("pin = Part.makeCylinder(5.5, 50)\nfor z in (4, 46):\n"
+           "    pin = pin.cut(Part.makeCylinder(1, 20, Vector(0, 10, z), Vector(0, -1, 0)))\nresult = pin")
+    ok(srt.run_script("pin.FCStd", pin, language="freecad"))
+    e = ok(srt.export_drawing("pin.FCStd", "pin.step", "step"))
+    assert e["readback"]["matches"] and e["readback"]["size"] == [11.0, 11.0, 50.0]
 
 
 def add_stray_shape(part):
