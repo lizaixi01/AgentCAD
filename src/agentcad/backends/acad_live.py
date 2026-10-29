@@ -9,8 +9,8 @@ the result in AutoCAD and brings the user's edits back:
     zoom    show a region of the drawing
     command send a command line to AutoCAD (policy-gated)
 
-Nothing here changes AutoCAD settings: system variables are only read (VIEWCTR/VIEWSIZE), and documents with
-unsaved edits in the GUI are never closed unless the caller says discard=True.
+Nothing here changes AutoCAD settings: system variables are only read. Unsaved drawing edits are never
+closed unless the caller says discard=True; view/window-only changes in a supported 2D view can be reloaded.
 """
 from __future__ import annotations
 
@@ -151,7 +151,8 @@ class Session:
 
     def describe(self, doc) -> dict[str, Any]:
         return {"name": _retry(lambda: doc.Name), "path": _retry(lambda: doc.FullName),
-                "unsaved_changes": not bool(_retry(lambda: doc.Saved))}
+                "unsaved_changes": not bool(_retry(lambda: doc.Saved)),
+                "read_only": bool(_retry(lambda: doc.ReadOnly))}
 
     def status(self) -> dict[str, Any]:
         active = None
@@ -174,9 +175,14 @@ class Session:
             _retry(lambda: self.app.ZoomCenter(_point(center), size))
 
     def open(self, path: Path):
+        """Open read-only so AutoCAD does not prevent the runtime from atomically replacing the DXF.
+
+        AutoCAD can still edit in memory; ``pull`` saves its version to a temporary DXF before committing it.
+        A document the user already opened is activated as-is, never silently closed or reopened.
+        """
         doc = self.find(path)
         if doc is None:
-            doc = _retry(lambda: self.app.Documents.Open(str(path), False))
+            doc = _retry(lambda: self.app.Documents.Open(str(path), True))
         _retry(lambda: doc.Activate())
         return doc
 
@@ -188,12 +194,29 @@ class Session:
                                                         "it), or pass discard=true to throw them away")
         _retry(lambda: doc.Close(False))
 
+    def _view_only_changes(self, doc) -> bool:
+        """ZoomCenter itself sets Saved=False (DBMOD=16 or 24). Keep the captured 2D center and scale on reload.
+
+        Any database, layer, variable, field or unknown modification still requires pull/discard. Keep rotated,
+        perspective and floating model-space viewports conservative: center/size alone cannot restore them.
+        """
+        try:
+            return (int(_retry(lambda: doc.GetVariable("DBMOD"))) in (8, 16, 24)
+                    and tuple(_retry(lambda: doc.GetVariable("VIEWDIR"))) == (0.0, 0.0, 1.0)
+                    and float(_retry(lambda: doc.GetVariable("VIEWTWIST"))) == 0.0
+                    and int(_retry(lambda: doc.GetVariable("PERSPECTIVE"))) == 0
+                    and int(_retry(lambda: doc.GetVariable("WORLDUCS"))) == 1
+                    and (int(_retry(lambda: doc.GetVariable("TILEMODE"))) == 1
+                         or int(_retry(lambda: doc.GetVariable("CVPORT"))) == 1))
+        except (AgentCADError, TypeError, ValueError):
+            return False
+
     def reload(self, path: Path, discard: bool = False) -> dict[str, Any]:
         doc = self.find(path)
         if doc is None:
             return {"reloaded": False, "open_in_autocad": False}
         view = self.view(doc)
-        self.close(doc, discard)
+        self.close(doc, discard or (view is not None and self._view_only_changes(doc)))
         self.open(path)
         self.set_view(view)
         return {"reloaded": True, "open_in_autocad": True, "view_kept": view is not None}
@@ -207,7 +230,7 @@ class Session:
             raise AgentCADError("NOT_OPEN_IN_AUTOCAD", f"{path.name} is not open in AutoCAD", category="input",
                                 hint="autocad_live action='open' first")
         view = self.view(doc)
-        dirty = not bool(_retry(lambda: doc.Saved))
+        dirty = not bool(_retry(lambda: doc.Saved)) and not (view is not None and self._view_only_changes(doc))
         tmp.parent.mkdir(parents=True, exist_ok=True)
         _retry(lambda: doc.SaveAs(str(tmp), AC2018_DXF))
         return doc, view, dirty

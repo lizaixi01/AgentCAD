@@ -5,6 +5,7 @@ SaveAs, GetVariable, ZoomCenter/ZoomWindow, SendCommand). A real session is exer
 needs a signed-in licence, which a test cannot provide."""
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 
@@ -19,10 +20,20 @@ pytest.importorskip("pythoncom")
 
 
 class FakeDoc:
-    def __init__(self, app: "FakeApp", path: str) -> None:
+    def __init__(self, app: "FakeApp", path: str, read_only: bool = False) -> None:
         self.app, self.FullName, self.Name, self.Saved = app, str(Path(path)), Path(path).name, True
+        self.ReadOnly = read_only
         self.user_edit = None  # simulated GUI edit, applied to what SaveAs writes
         self.content = Path(path).read_bytes()  # like AutoCAD: what was read at open time, not the file later
+
+    @property
+    def Saved(self):
+        return self._saved
+
+    @Saved.setter
+    def Saved(self, value):
+        self._saved = value
+        self.dbmod = 0 if value else 1  # tests marking a user edit default to an object modification
 
     def Activate(self):
         self.app.ActiveDocument = self
@@ -38,10 +49,12 @@ class FakeDoc:
         if self.user_edit:
             self.user_edit(doc)
         doc.saveas(path)
-        self.FullName, self.Name, self.Saved = str(path), Path(path).name, True
+        self.FullName, self.Name, self.Saved, self.ReadOnly = str(path), Path(path).name, True, False
 
     def GetVariable(self, name):
-        return {"VIEWCTR": (1.0, 2.0, 0.0), "VIEWSIZE": 50.0}[name]
+        return {"VIEWCTR": (1.0, 2.0, 0.0), "VIEWSIZE": 50.0, "DBMOD": self.dbmod,
+                "VIEWDIR": (0.0, 0.0, 1.0), "VIEWTWIST": 0.0, "PERSPECTIVE": 0,
+                "WORLDUCS": 1, "TILEMODE": 1, "CVPORT": 2}[name]
 
     def SendCommand(self, text):
         self.app.log.append(("command", text))
@@ -60,7 +73,7 @@ class FakeDocuments:
         return self.app.docs[i]
 
     def Open(self, path, read_only):
-        d = FakeDoc(self.app, path)
+        d = FakeDoc(self.app, path, read_only)
         self.app.docs.append(d)
         self.app.log.append(("open", d.Name))
         return d
@@ -80,6 +93,9 @@ class FakeApp:
 
     def ZoomCenter(self, center, size):
         self.log.append(("zoom_center", tuple(center.value), size))
+        previous = self.ActiveDocument.dbmod
+        self.ActiveDocument.Saved = False
+        self.ActiveDocument.dbmod = previous | 24
 
     def ZoomWindow(self, lo, hi):
         self.log.append(("zoom_window", tuple(lo.value), tuple(hi.value)))
@@ -109,12 +125,93 @@ def test_open_and_status(ws, plate):
     app = FakeApp()
     rt = live_rt(ws, app)
     r = ok(rt.autocad_live("open", plate))
-    assert r["open_in_autocad"] and r["unsaved_changes"] is False
+    assert r["open_in_autocad"] and r["unsaved_changes"] is False and r["read_only"] is True
+    assert "pull" in r["hint"]
     ok(rt.autocad_live("open", plate))  # already open: activated, not opened twice
     assert [x for x in app.log if x[0] == "open"] == [("open", "plate.dxf")]
     st = ok(rt.autocad_live("status"))
     assert st["running"] and st["documents"][0]["drawing"] == "plate.dxf"
     assert rt.autocad_live("open", "../x.dxf")["error"]["code"] == "PATH_OUTSIDE_WORKSPACE"
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows file sharing semantics")
+def test_live_open_allows_atomic_commits_and_preserves_unsaved_gui_edits(ws, plate, monkeypatch):
+    """Write-open holds a Windows lock; the read-only DXF open observed in AutoCAD permits replacement."""
+    import win32con
+    import win32file
+
+    app = FakeApp()
+
+    class LockedDoc(FakeDoc):
+        def __init__(self, app, path, read_only):
+            super().__init__(app, path, read_only)
+            self.handle = None if read_only else win32file.CreateFile(
+                str(path), win32con.GENERIC_READ, win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE,
+                None, win32con.OPEN_EXISTING, win32con.FILE_ATTRIBUTE_NORMAL, None)
+
+        def Close(self, save):
+            if self.handle is not None:
+                self.handle.Close()
+                self.handle = None
+            super().Close(save)
+
+        def SaveAs(self, path, kind):
+            super().SaveAs(path, kind)
+            if self.handle is not None:
+                self.handle.Close()  # AutoCAD changed the open document's path, releasing the original file
+                self.handle = None
+
+    def open_locked(path, read_only):
+        d = LockedDoc(app, path, read_only)
+        app.docs.append(d)
+        app.log.append(("open", d.Name))
+        return d
+
+    monkeypatch.setattr(app.Documents, "Open", open_locked)
+    rt = live_rt(ws, app, live_sync=True)
+    opened = ok(rt.autocad_live("open", plate))
+    assert opened["read_only"] is True and app.docs[0].ReadOnly is True
+    r = ok(rt.apply_operations(plate, [{"op": "add_circle", "center": [50, 30], "diameter": 20}]))
+    assert r["live"]["reloaded"] and app.docs[0].ReadOnly is True
+    assert ezdxf.readfile(ws / plate).modelspace().query("CIRCLE[radius==10]")
+
+    # The GUI may be edited while read-only; an agent commit must not discard those unsaved edits.
+    app.docs[0].user_edit = add_user_line
+    app.docs[0].Saved = False
+    r = ok(rt.apply_operations(plate, [{"op": "add_point", "location": [1, 1]}]))
+    assert r["live"]["error"]["code"] == "AUTOCAD_UNSAVED_CHANGES" and app.docs[0].Saved is False
+    assert rt.autocad_live("pull", plate)["error"]["code"] == "LIVE_CONFLICT"
+    assert app.docs[0].Saved is False
+    ok(rt.autocad_live("pull", plate, force=True))
+    assert app.docs[0].ReadOnly is True
+    assert any(e.dxftype() == "LINE" and e.dxf.end.x == 100 for e in ezdxf.readfile(ws / plate).modelspace())
+    app.docs[0].Close(False)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows file sharing semantics")
+def test_user_write_open_drawing_is_not_silently_closed(ws, plate, monkeypatch):
+    import win32con
+    import win32file
+
+    app = FakeApp()
+    doc = app.Documents.Open(str(ws / plate), False)
+    handle = win32file.CreateFile(str(ws / plate), win32con.GENERIC_READ,
+                                  win32con.FILE_SHARE_READ | win32con.FILE_SHARE_WRITE, None,
+                                  win32con.OPEN_EXISTING, win32con.FILE_ATTRIBUTE_NORMAL, None)
+    monkeypatch.setattr("agentcad.store.REPLACE_TIMEOUT", 0.05)
+    rt = live_rt(ws, app, live_sync=True)
+    try:
+        before = (ws / plate).read_bytes()
+        r = ok(rt.autocad_live("open", plate))
+        assert r["read_only"] is False and "reload" in r["hint"]
+        failed = rt.apply_operations(plate, [{"op": "add_point", "location": [1, 1]}])
+        assert failed["error"]["code"] == "FILE_BUSY" and (ws / plate).read_bytes() == before
+        assert app.docs == [doc] and not doc.ReadOnly
+    finally:
+        handle.Close()
+    assert ok(rt.autocad_live("reload", plate))["reloaded"]
+    assert app.docs[0].ReadOnly is True
+    assert ok(rt.apply_operations(plate, [{"op": "add_point", "location": [1, 1]}]))["live"]["reloaded"]
 
 
 def test_live_sync_reopens_after_each_change_and_keeps_the_view(ws, plate):
@@ -133,6 +230,54 @@ def test_live_sync_reopens_after_each_change_and_keeps_the_view(ws, plate):
     # no sync when the drawing is not open in AutoCAD, and nothing without live_sync
     assert ok(rt.apply_operations("plate.dxf", [{"op": "add_point", "location": [2, 2]}]))["live"]["reloaded"]
     assert "live" not in ok(live_rt(ws, app).apply_operations(plate, [{"op": "add_point", "location": [3, 3]}]))
+
+
+def test_repeated_sync_after_zoom_does_not_mistake_view_changes_for_drawing_edits(ws, plate):
+    app = FakeApp()
+    rt = live_rt(ws, app, live_sync=True)
+    ok(rt.autocad_live("open", plate))
+    for index in range(3):
+        result = ok(rt.apply_operations(plate, [{"op": "add_point", "location": [index, index]}]))
+        assert result["live"]["reloaded"] and result["live"]["view_kept"]
+        assert app.docs[0].Saved is False and app.docs[0].dbmod == 24
+    assert len(ezdxf.readfile(ws / plate).modelspace().query("POINT")) == 3
+
+
+@pytest.mark.parametrize("dbmod", [0, 1, 2, 4, 17, 25, 32, 64])
+def test_reload_protects_every_non_view_only_unsaved_change(ws, plate, dbmod):
+    app = FakeApp()
+    rt = live_rt(ws, app)
+    ok(rt.autocad_live("open", plate))
+    doc = app.docs[0]
+    doc.Saved, doc.dbmod = False, dbmod
+    assert rt.autocad_live("reload", plate)["error"]["code"] == "AUTOCAD_UNSAVED_CHANGES"
+    assert app.docs == [doc]
+
+
+@pytest.mark.parametrize("variable,value", [("VIEWDIR", (1.0, 0.0, 0.0)), ("VIEWTWIST", 0.5),
+                                           ("PERSPECTIVE", 1), ("WORLDUCS", 0), ("TILEMODE", 0)])
+def test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore(ws, plate, variable, value):
+    app = FakeApp()
+    rt = live_rt(ws, app)
+    ok(rt.autocad_live("open", plate))
+    doc = app.docs[0]
+    doc.Saved, doc.dbmod = False, 16
+    original = doc.GetVariable
+    doc.GetVariable = lambda name: value if name == variable else original(name)
+    assert rt.autocad_live("reload", plate)["error"]["code"] == "AUTOCAD_UNSAVED_CHANGES"
+    assert app.docs == [doc]
+
+
+@pytest.mark.parametrize("dbmod", [8, 16, 24])
+def test_reload_restores_an_ordinary_paper_space_view(ws, plate, dbmod):
+    app = FakeApp()
+    rt = live_rt(ws, app)
+    ok(rt.autocad_live("open", plate))
+    doc = app.docs[0]
+    doc.Saved, doc.dbmod = False, dbmod
+    original = doc.GetVariable
+    doc.GetVariable = lambda name: {"TILEMODE": 0, "CVPORT": 1}.get(name, original(name))
+    assert ok(rt.autocad_live("reload", plate))["view_kept"]
 
 
 def test_pull_commits_the_users_edits(ws, plate):

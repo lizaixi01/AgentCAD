@@ -987,6 +987,9 @@ class Runtime:
         zoom | command. ``pull`` commits the edits made in AutoCAD like any other change (checkpoint, journal,
         diff, validation); the drawing is then re-opened in AutoCAD from the committed file.
 
+        New documents are opened read-only so the runtime can replace the DXF on Windows; edits in AutoCAD
+        can still be pulled. An already-open document is left as-is; reload a saved write-open drawing to switch.
+
         The version AutoCAD opened is recorded (open / reload). If the runtime committed changes since, AutoCAD's
         copy is stale and ``pull`` would revert them: it refuses unless ``force`` (the overwritten version stays
         in a checkpoint)."""
@@ -1022,9 +1025,17 @@ class Runtime:
                     # already open (by the user, or earlier): AutoCAD shows what it read then, which this
                     # runtime cannot know, so an unrecorded base stays unknown and pull asks for reload or force
                     out = {"drawing": rel, "open_in_autocad": True, **s.describe(doc)}
+                hints = []
                 if was_open and _live_base(store) is None:
-                    out["hint"] = ("AutoCAD already had this drawing open, possibly an older version: reload it "
-                                   "before pulling, or pull with force=true to take AutoCAD's version")
+                    hints.append("AutoCAD already had this drawing open, possibly an older version: reload it "
+                                 "before pulling, or pull with force=true to take AutoCAD's version")
+                if out["read_only"]:
+                    hints.append("AutoCAD has the drawing open read-only so AgentCAD can update it; edits made in "
+                                 "AutoCAD can be committed with action='pull'")
+                else:
+                    hints.append("AutoCAD has the drawing open for writing and may prevent AgentCAD from replacing "
+                                 "it on Windows. Pull unsaved edits, or reload a saved drawing to reopen read-only")
+                out["hint"] = "; ".join(hints)
                 return out
             if action == "reload":
                 with self._lock(store):  # the recorded base is the file AutoCAD re-read: no commit in between

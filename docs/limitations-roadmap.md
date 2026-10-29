@@ -50,10 +50,11 @@
 
 `autocad_live`（`backends/acad_live.py`）通过 COM 连接用户正在运行的 AutoCAD（Windows，需要 pywin32，`pip install agentcad[live]`）：打开图纸、在每次修改后重新载入（`AGENTCAD_LIVE_SYNC=1`）、缩放到实体，以及用 `pull` 把用户在 AutoCAD 里的修改作为一次普通变更提交（检查点、日志、差异、验证）。限制：
 
-- 自动化测试用的是模拟 COM 对象。本机 AutoCAD 2027 的 GUI 启动后停在 Autodesk 许可证/登录界面，COM 调用被拒绝（`RPC_E_CALL_REJECTED`），所以还没有在真实 GUI 上跑通；遇到这种情况返回 `AUTOCAD_BUSY`，提示用户先处理 AutoCAD 中的对话框。
+- 初期 GUI 验证曾停在 Autodesk 许可证/登录界面，COM 调用被拒绝（`RPC_E_CALL_REJECTED`）；遇到这种情况返回 `AUTOCAD_BUSY`，提示用户先处理 AutoCAD 中的对话框。后续已在登录后的 AutoCAD 2027 完成两张原生 DWG 转出 DXF 的实机复核：四套流程、12 次连续编辑同步通过，并覆盖回传、冲突与恢复，见[实验报告](comparison-native-dwg.md#实时编辑文件锁修复复核)。自动化回归仍使用模拟 COM 对象，其他 AutoCAD 版本尚未验证。
+- `open` 新打开的 DXF 使用 AutoCAD 只读模式，避免 Windows 文件锁阻止 AgentCAD 原子替换；GUI 仍能编辑，用 `pull` 回传。用户已经以写入方式打开的文档不会被自动关闭或转换；保存或回传编辑后显式 `reload` 才会转为只读。
 - AutoCAD 2027 只注册了带版本号的 ProgID（`AutoCAD.Application.26`），后端会从注册表中查找；可用 `AGENTCAD_ACAD_PROGID` 指定。
 - AutoCAD 只持有它打开时读到的版本。运行时会记录这个版本（open / reload 时）；如果之后 Agent 又提交了修改，`pull` 会拒绝（`LIVE_CONFLICT`），除非 `force=true`（被覆盖的版本留在检查点里）。不是由运行时打开的图纸同样需要 `force`。
-- `pull` 期间 AutoCAD 中的文档会先另存为临时 DXF，再关闭并从提交后的文件重新打开（保留视图）。如果提交失败，临时 DXF 保留下来（结果里的 `autocad_copy`），它就是 AutoCAD 当前打开的文档。视图恢复使用 VIEWCTR，在非世界坐标系（UCS）下可能偏移。AutoCAD 中未保存的修改不会被 `reload` 丢弃，除非显式传 `discard=true`。
+- `pull` 期间 AutoCAD 中的文档会先另存为临时 DXF，再关闭并从提交后的文件重新打开（保留视图）。如果提交失败，临时 DXF 保留下来（结果里的 `autocad_copy`），它就是 AutoCAD 当前打开的文档。视图恢复仅保留中心和缩放，不保证多视口、窗口位置或完整相机状态；非世界 UCS 下可能偏移。`reload` 可重载普通二维世界坐标系下仅含视图/窗口变化的未保存状态（`DBMOD` 8/16/24），避免恢复视图本身阻塞下一次编辑；图元、图层、变量、字段、未知修改及不支持的视图状态继续拒绝，除非显式传 `discard=true`。
 - `command` 发送原始命令行，默认关闭（`AGENTCAD_ALLOW_LIVE_COMMANDS=1` 开启），其效果只在 AutoCAD 中，需要 `pull` 才会进入图纸。
 
 ## 行业库（2026-10-29）
