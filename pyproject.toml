@@ -27,6 +27,9 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/agentcad"]
 
+[tool.hatch.build.targets.sdist]
+exclude = ["/docs/comparison-native-dwg.md", "/docs/assets/native-dwg-times.svg"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-q"
