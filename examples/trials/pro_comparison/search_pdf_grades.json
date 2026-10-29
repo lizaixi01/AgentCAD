@@ -1,0 +1,156 @@
+[
+  {
+    "task": "H4",
+    "rep": 4,
+    "arm": "A",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "standard layers with colour/linetype/lineweight",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "empty junk layers deleted",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "every object colour/linetype/lineweight ByLayer",
+          "cat": "bylayer",
+          "ok": true
+        },
+        {
+          "check": "outline polyline kept, on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "5 holes (duplicate removed), on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "10 centre lines on CENTER; edge duplicates and zero-length lines removed",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "4 dimensions kept (200/100/160/Ø40), on DIM",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "2 texts kept, on TEXT",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "no other objects added",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "centre-line endpoints preserved from fixture",
+          "cat": "preserve",
+          "ok": true
+        }
+      ],
+      "fails": []
+    },
+    "seconds": 62.71,
+    "calls": 10,
+    "reported_tool_errors": 0,
+    "other_tool_calls": 0,
+    "input_tokens": 266378,
+    "cached_input_tokens": 226816,
+    "output_tokens": 1593,
+    "rounds_attempted": 1,
+    "rounds_completed": 1,
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
+  },
+  {
+    "task": "H4",
+    "rep": 4,
+    "arm": "B",
+    "ok": true,
+    "grade": {
+      "ok": true,
+      "checks": [
+        {
+          "check": "standard layers with colour/linetype/lineweight",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "empty junk layers deleted",
+          "cat": "layers",
+          "ok": true
+        },
+        {
+          "check": "every object colour/linetype/lineweight ByLayer",
+          "cat": "bylayer",
+          "ok": true
+        },
+        {
+          "check": "outline polyline kept, on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "5 holes (duplicate removed), on OUTLINE",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "10 centre lines on CENTER; edge duplicates and zero-length lines removed",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "4 dimensions kept (200/100/160/Ø40), on DIM",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "2 texts kept, on TEXT",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "no other objects added",
+          "cat": "objects",
+          "ok": true
+        },
+        {
+          "check": "centre-line endpoints preserved from fixture",
+          "cat": "preserve",
+          "ok": true
+        }
+      ],
+      "fails": []
+    },
+    "seconds": 106.33,
+    "calls": 188,
+    "reported_tool_errors": 3,
+    "other_tool_calls": 0,
+    "input_tokens": 535975,
+    "cached_input_tokens": 497280,
+    "output_tokens": 3557,
+    "rounds_attempted": 1,
+    "rounds_completed": 1,
+    "round_statuses": [
+      "completed"
+    ],
+    "run_status": "completed",
+    "eligible_for_rate": true,
+    "counted_success": true
+  }
+]

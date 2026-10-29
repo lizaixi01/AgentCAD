@@ -1,0 +1,9 @@
+{
+  "entities": 22,
+  "lineweight_codes": {
+    "-3": 22
+  },
+  "bylayer_code": -1,
+  "default_code": -3,
+  "final_message_claimed_bylayer": true
+}

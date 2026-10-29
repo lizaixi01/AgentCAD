@@ -1,0 +1,42 @@
+{
+  "agentcad_commit": "51333f9773a077d2a573c3683fc310a1e6113452",
+  "pro_commit": "58a05ddfc34a9832c626e82cd88ecdce8e16a62a",
+  "model": "gpt-6.1-sol",
+  "reasoning_effort": "high",
+  "codex_cli": "codex-cli 0.163.0",
+  "python": "3.11.16 (main, Sep  1 2026, 14:15:24) [MSC v.1944 64 bit (AMD64)]",
+  "repetitions": 1,
+  "tasks": [
+    "H4"
+  ],
+  "arms": {
+    "A": "AgentCAD",
+    "B": "AutoCAD MCP Pro"
+  },
+  "pro_config": {
+    "backend": "ezdxf",
+    "discovery_mode": "search",
+    "undo_depth": 5,
+    "allowed_paths": "workspace",
+    "png_renderer_available": true
+  },
+  "agentcad_config": {
+    "root": "workspace",
+    "scripts": "disabled"
+  },
+  "execution": "Each pair concurrently; pairs run sequentially. Every H1 round starts a new Codex and MCP process.",
+  "prompt_common": "你是负责此图纸的 CAD 工作人员。仅通过当前连接的 cad MCP 服务操作图纸；不要运行命令，不要使用其他插件或调用全局资源列表。图纸位于当前工作区，单位为毫米。请按要求操作，并将成果保存回 part.dxf。用服务可用的方式检查结果。无法完成的内容请如实报告，不要猜测。最后简要说明完成情况、问题和最终检查结果。\n\n",
+  "orientation": {
+    "A": "该服务提供 list_operations，可先用它发现可用的图纸操作及参数。",
+    "B": "该服务提供 search_tools、describe_tool 和 call_tool；用 search_tools 按英文或 AutoCAD 命令搜索，按需查参数，再通过 call_tool 调用。"
+  },
+  "fixtures": {
+    "H4": "5252e699ac1590f216c877c5c5466c5e633a61afb3d779a8e7928f2d7eba05d4"
+  },
+  "retry": {
+    "task": "H4",
+    "rep": 4,
+    "both_arms": true,
+    "session_timeout_seconds": 360
+  }
+}
