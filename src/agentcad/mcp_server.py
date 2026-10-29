@@ -16,6 +16,8 @@ INLINE_IMAGE_MAX = 2 * 1024 * 1024  # bytes: a png export larger than this is no
 
 INSTRUCTIONS = """AgentCAD: CAD runtime for agents: 2D drawings (.dxf) and 3D parametric parts (.FCStd, FreeCAD).
 Paths are relative to the workspace. The same tools work on both; the file extension picks 2D or 3D.
+Tool names below are this server's own; your client lists them with its prefix (in Claude Code:
+mcp__agentcad__list_operations, mcp__agentcad__apply_operations, ...). Always call them by the listed name.
 
 Basics
 - Find operations: list_operations() is a compact index (2D ops, plus part_operations names). Full schemas for
@@ -32,10 +34,12 @@ Basics
 
 2D drawings (.dxf)
 - Coordinates [x, y]. Templates add layers OUTLINE/HOLES/CENTER/DIM/TEXT. Dimensions, leaders, tables,
-  title blocks, blocks with attributes, P&ID / GD&T / ISO fasteners ('library' ops; standard_library for sizes).
+  title blocks, blocks with attributes, P&ID / GD&T / ISO fasteners and bearings ('library' ops; standard_library looks up sizes and lists a
+  drawing's parts).
 - Real drawings often have paper-space sheets (read_drawing.layouts) with their own copy of the part: edit
   them too with the 'layout' parameter. New sheets: create_layout, then add_viewport.
-- Export svg / png / pdf / json, dwg with AutoCAD. autocad_live works next to a running AutoCAD.
+- Export svg / png / pdf / json, dwg with AutoCAD. autocad_live shows your drawing in the user's running AutoCAD
+  and pulls their edits back.
   run_script (only if enabled) covers edits no op can express.
 
 3D parts (.FCStd)
@@ -47,7 +51,8 @@ Basics
   "height":40}]}, {"op":"pad","sketch":"$0","length":10}, {"op":"add_sketch","on_face":"top","shapes":
   [{"type":"circle","center":[0,0],"diameter":12}]}, {"op":"pocket","sketch":"$2","through_all":true}]
 - Sketch coordinates are [x, y] in the sketch plane, space coordinates [x, y, z], mm. Edge / face selectors
-  ("top", {"type": "circle", "radius": 6}) are re-resolved after every edit; '=Params.w' drives dimensions.
+  ("top", {"type": "circle", "radius": 6}) are re-resolved after every edit; '=Params.w' drives dimensions: change them later with set_parameters or
+  modify_feature and the part rebuilds.
 - The result's validation.shape gives size, volume and holes: check them against what you meant to build.
 - See what you built: export_drawing(path, "preview.png", "png", views=[...]); a view is a name (iso, front,
   top, right, ...) or the camera position [x, y, z] relative to the part. The image comes back in the result.
