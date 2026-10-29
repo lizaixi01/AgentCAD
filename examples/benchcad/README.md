@@ -87,7 +87,7 @@ Paired by task, with 95% bootstrap intervals:
   - Cost and tokens dropped: Claude's cost fell 25% and its input tokens 12%; Codex's input tokens fell 14%.
   - IoU did not change measurably. Claude after #25 vs before: −0.027 (−0.062 to +0.006). Codex after #24 vs
     before: +0.007 (−0.018 to +0.035).
-- **Why the code arm may win here.** These are hypotheses; only the first is backed by what we can see:
+- **Why the code arm may win here.** The first two points are hypotheses; the last two are what the logs show:
   - CadQuery is a full code-CAD language that models know well, and BenchCAD's reference parts are themselves
     CadQuery programs.
   - The code arm compares its part pixel for pixel with the input through the same renderer, while AgentCAD's
@@ -106,7 +106,7 @@ Paired by task, with 95% bootstrap intervals:
     `edit_feature` and `set_placement`; the op is `modify_feature`. A "did you mean" hint would help here.
   - Claude guesses too. After #24 it called `apply_operations` with nonexistent ops 16 times (`edit_feature`,
     `edit_sketch`). Its `UNKNOWN_PARAM` errors grew from 10 to 18 to 46, mostly on `modify_feature`'s parameters.
-    Changing an existing feature is the interface agents trip over most.
+    Changing an existing feature is the interface Claude trips over most.
   - At medium effort, Claude also calls tools by bare name (`list_operations` instead of
     `mcp__agentcad__list_operations`), and Claude Code rejects such calls. This happened in 46 of 100 tasks before
     #24, in 90 after it, and in 64 after #25, whose instructions name the prefix. It happened in 5 of 100 tasks in
