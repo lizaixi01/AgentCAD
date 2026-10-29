@@ -195,7 +195,9 @@ def test_ephemeral_detection(monkeypatch):
     assert install.choose_launcher("auto", {"ephemeral": True}) == "pipx"
 
 
-def test_freecad_option(home, tmp_path):
+def test_freecad_option(home, tmp_path, monkeypatch):
+    for k in ("AGENTCAD_FREECAD", "FREECAD_LIB"):
+        monkeypatch.delenv(k, raising=False)
     with pytest.raises(install.AgentCADError) as ei:
         install.setup(["cursor"], freecad=str(tmp_path / "nope"))
     assert ei.value.code == "FREECAD_NOT_FOUND" and not _paths(home)["cursor"].exists()
@@ -205,6 +207,12 @@ def test_freecad_option(home, tmp_path):
     res = install.setup(["cursor"], freecad=str(tmp_path / "FreeCAD"))
     assert res.entry["env"]["AGENTCAD_FREECAD"] == (tmp_path / "FreeCAD").as_posix()
     assert res.freecad == str(tmp_path / "FreeCAD")
+    monkeypatch.setattr(install, "find_freecad_path", lambda: None)  # as on a machine without a standard install
+    again = install.setup(["cursor", "codex"])  # a later run without --freecad keeps it
+    assert [c["status"] for c in again.clients] == ["unchanged", "added"]
+    assert again.entry["env"]["AGENTCAD_FREECAD"] == (tmp_path / "FreeCAD").as_posix()
+    by = {c["name"]: c for c in install.doctor()["checks"]}
+    assert by["FreeCAD"]["status"] == "ok" and "app configs" in by["FreeCAD"]["detail"]
 
 
 def test_ask_clients():

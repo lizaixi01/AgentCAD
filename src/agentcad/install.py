@@ -274,6 +274,30 @@ def find_freecad_path() -> str | None:
     return hit[0][0] if hit else None
 
 
+def freecad_at(path: str) -> bool:
+    """Is there a usable FreeCAD at this AGENTCAD_FREECAD value?"""
+    from .backends import freecad as fc
+    old = os.environ.get("AGENTCAD_FREECAD")
+    os.environ["AGENTCAD_FREECAD"] = path
+    try:
+        return fc.find_freecad() is not None
+    finally:
+        if old is None:
+            del os.environ["AGENTCAD_FREECAD"]
+        else:
+            os.environ["AGENTCAD_FREECAD"] = old
+
+
+def configured_freecad(root: Path) -> str | None:
+    """A working AGENTCAD_FREECAD from any app's agentcad entry."""
+    for client in CLIENTS:
+        _, entry = _client_entry(client, root)
+        path = ((entry or {}).get("env") or {}).get("AGENTCAD_FREECAD")
+        if path and freecad_at(path):
+            return path
+    return None
+
+
 def find_autocad_path() -> str | None:
     if os.name != "nt":
         return None
@@ -287,29 +311,19 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
           allow_scripts: bool = False, name: str = NAME, runner: Runner | None = None) -> SetupResult:
     info = install_info()
     launcher = choose_launcher(launcher, info)
-    if freecad:
-        from .backends import freecad as fc
-        old = os.environ.get("AGENTCAD_FREECAD")
-        os.environ["AGENTCAD_FREECAD"] = freecad
-        try:
-            if fc.find_freecad() is None:
-                raise input_error("FREECAD_NOT_FOUND", f"No FreeCAD found at {freecad}",
-                                  hint="Give FreeCAD's install folder, its bin folder or its python / freecadcmd")
-        finally:
-            if old is None:
-                del os.environ["AGENTCAD_FREECAD"]
-            else:
-                os.environ["AGENTCAD_FREECAD"] = old
+    if freecad and not freecad_at(freecad):
+        raise input_error("FREECAD_NOT_FOUND", f"No FreeCAD found at {freecad}",
+                          hint="Give FreeCAD's install folder, its bin folder or its python / freecadcmd")
     root_path = workspace_root(root)
+    found = find_freecad_path()
+    if not freecad and not found:  # keep a FreeCAD that an earlier 'setup --freecad' wrote
+        freecad = configured_freecad(root_path)
     if not dry_run:
         root_path.mkdir(parents=True, exist_ok=True)
     entry = server_entry(root_path, launcher, source or info["source"], freecad=freecad, read_only=read_only,
                          allow_scripts=allow_scripts)
     res = SetupResult(root_path, launcher, entry, dry_run, self_cmd=self_command(info))
-    if freecad:
-        res.freecad = freecad
-    else:
-        res.freecad = find_freecad_path()
+    res.freecad = freecad or found
     res.autocad = find_autocad_path()
     run = runner or _run
     for client in clients:
@@ -486,6 +500,9 @@ def doctor(root: str | os.PathLike | None = None) -> dict[str, Any]:
         add("Workspace", "missing", f"{ws} does not exist or is not writable",
             "Run agentcad setup (it creates the folder), or set AGENTCAD_ROOT to a folder you own")
     fc = find_freecad_path()
+    if not fc:
+        fc = configured_freecad(ws)
+        fc = f"{fc} (set in the app configs)" if fc else None
     add("FreeCAD", "ok" if fc else "missing", fc or "not found: 3D parts (.FCStd) will not work",
         "" if fc else "Install FreeCAD 1.1 from freecad.org, then: agentcad setup --freecad <FreeCAD folder>")
     if os.name == "nt":
