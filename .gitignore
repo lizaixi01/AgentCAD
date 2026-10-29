@@ -35,3 +35,5 @@ examples/trials/hard/**/H2_r*.stderr.log
 .claude/worktrees/
 # MCP client config holds this checkout's absolute paths; generate it with `agentcad --root playground mcp-config --write`
 .mcp.json
+# BenchCAD pilot: per-run MCP configs (absolute local paths)
+examples/benchcad/runs/*/*/_mcp/

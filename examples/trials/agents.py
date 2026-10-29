@@ -35,21 +35,40 @@ def claude_exe() -> str:
     return str(found[-1])
 
 
-def codex_cmd(arm: str, root: str, effort: str, scripts: bool = False) -> list[str]:
+def server_env(root: str, scripts: bool = False) -> dict[str, str]:
+    """Environment of the AgentCAD MCP server: the workspace root, plus where 3D parts find FreeCAD."""
+    env = {"AGENTCAD_ROOT": root, "PYTHONIOENCODING": "utf-8"}
+    for key in ("AGENTCAD_FREECAD", "FREECAD_LIB"):
+        if os.environ.get(key):
+            env[key] = os.environ[key]
+    if os.environ.get("AGENTCAD_SRC"):  # run the MCP server from another source tree (a pinned snapshot)
+        env["PYTHONPATH"] = os.environ["AGENTCAD_SRC"]
+    if scripts:
+        env["AGENTCAD_ALLOW_SCRIPTS"] = "1"
+    return env
+
+
+def codex_cmd(arm: str, root: str, effort: str, scripts: bool = False, images: list[str] = ()) -> list[str]:
+    """``images``: files attached to the prompt (Codex cannot open images itself in the mcp arm)."""
+    attach = [a for img in images for a in ("-i", img)]
     if arm == "code":
         return ["codex", "exec", "--skip-git-repo-check", "-s", "workspace-write", "--json", "-C", root,
-                "-c", f'model_reasoning_effort="{effort}"', "-"]
-    env = f'AGENTCAD_ROOT="{root}"' + (', AGENTCAD_ALLOW_SCRIPTS="1"' if scripts else "")
+                "-c", f'model_reasoning_effort="{effort}"', *attach, "-"]
+    env = ", ".join(f'{k}="{Path(v).as_posix() if k != "PYTHONIOENCODING" else v}"'
+                    for k, v in server_env(root, scripts).items())
     return ["codex", "exec", "--skip-git-repo-check", "-s", "read-only", "--json", "-C", root,
             "-c", f'model_reasoning_effort="{effort}"',
             "-c", f'mcp_servers.agentcad.command="{PY.as_posix()}"',
             "-c", 'mcp_servers.agentcad.args=["-m","agentcad.mcp_server"]',
             "-c", f"mcp_servers.agentcad.env={{{env}}}",
             "-c", 'mcp_servers.agentcad.default_tools_approval_mode="approve"',
-            "-c", "mcp_servers.agentcad.tool_timeout_sec=300", "-"]
+            "-c", "mcp_servers.agentcad.tool_timeout_sec=300", *attach, "-"]
 
 
-def claude_cmd(arm: str, root: str, effort: str, conf_dir: Path, python: str = "", scripts: bool = False) -> list[str]:
+def claude_cmd(arm: str, root: str, effort: str, conf_dir: Path, python: str = "", scripts: bool = False,
+               images: list[str] = ()) -> list[str]:
+    """``images``: the mcp arm also gets the Read tool, so the agent can look at these input images. Run the
+    process with the workspace as its working directory: reads outside it would ask, and asking is denied."""
     base = [claude_exe(), "-p", "--output-format", "stream-json", "--verbose", "--model", CLAUDE_MODEL,
             "--effort", effort, "--no-session-persistence", "--permission-prompts", "none",
             "--setting-sources", "project"]
@@ -58,24 +77,21 @@ def claude_cmd(arm: str, root: str, effort: str, conf_dir: Path, python: str = "
         return base + ["--tools", "Bash,Read,Write,Edit,Glob,Grep", "--permission-mode", "acceptEdits",
                        "--allowedTools", "Read", "Write", "Edit", "Glob", "Grep", f"Bash({py} *)",
                        f'Bash("{py}" *)', "--strict-mcp-config", "--mcp-config", '{"mcpServers":{}}']
-    env = {"AGENTCAD_ROOT": root, "PYTHONIOENCODING": "utf-8"}
-    if os.environ.get("AGENTCAD_SRC"):  # run the MCP server from another source tree (a pinned snapshot)
-        env["PYTHONPATH"] = os.environ["AGENTCAD_SRC"]
-    if scripts:
-        env["AGENTCAD_ALLOW_SCRIPTS"] = "1"
     conf_dir.mkdir(parents=True, exist_ok=True)
     conf = conf_dir / f"mcp_{hashlib.sha1(root.encode()).hexdigest()[:12]}.json"
     conf.write_text(json.dumps({"mcpServers": {"agentcad": {
-        "command": str(PY), "args": ["-m", "agentcad.mcp_server"], "env": env}}}), encoding="utf-8")
-    return base + ["--tools", "", "--permission-mode", "dontAsk", "--allowedTools", "mcp__agentcad",
-                   "--strict-mcp-config", "--mcp-config", str(conf)]
+        "command": str(PY), "args": ["-m", "agentcad.mcp_server"], "env": server_env(root, scripts)}}}),
+        encoding="utf-8")
+    tools = ["--tools", "Read", "--allowedTools", "mcp__agentcad", "Read"] if images else \
+        ["--tools", "", "--allowedTools", "mcp__agentcad"]
+    return base + tools + ["--permission-mode", "dontAsk", "--strict-mcp-config", "--mcp-config", str(conf)]
 
 
 def command(agent: str, arm: str, root: str, effort: str, conf_dir: Path, python: str = "",
-            scripts: bool = False) -> list[str]:
+            scripts: bool = False, images: list[str] = ()) -> list[str]:
     if agent == "claude":
-        return claude_cmd(arm, root, effort, conf_dir, python, scripts)
-    return codex_cmd(arm, root, effort, scripts)
+        return claude_cmd(arm, root, effort, conf_dir, python, scripts, images)
+    return codex_cmd(arm, root, effort, scripts, images)
 
 
 # Variables a Claude Code (desktop) session sets for the processes it starts. A trial launched from inside such a
