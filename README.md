@@ -19,7 +19,7 @@ No clicking. No GUI. Just natural language, code, and engineering.
   <img src="docs/assets/part3d/hub.png" alt="Flanged hub built through AgentCAD: Ø120 flange, hub with a Ø30 bore, six bolt holes from a polar pattern, a fillet and a chamfer" width="36%">
   <img src="docs/assets/part3d/hub_params.png" alt="The same hub after one parameter edit: flange Ø160 and bore Ø40; the fillet, chamfer and bolt holes rebuild" width="36%">
 </p>
-<p align="center"><sub>A 3D part through the same tools: one batch of 12 operations builds the hub (left); one <code>set_parameters</code> call makes the flange Ø160 and the bore Ø40, and the fillet, chamfer and bolt holes rebuild (right). Previews rendered by AgentCAD's <code>export_drawing</code>; the operations are in <a href="docs/assets/part3d/">docs/assets/part3d/</a>.</sub></p>
+<p align="center"><sub>A 3D part through the same tools, here driven from the CLI: one batch of 12 operations builds the hub (left); one <code>set_parameters</code> call makes the flange Ø160 and the bore Ø40, and the fillet, chamfer and bolt holes rebuild (right). Previews rendered by AgentCAD's <code>export_drawing</code>; the operations are in <a href="docs/assets/part3d/">docs/assets/part3d/</a>.</sub></p>
 
 ---
 
