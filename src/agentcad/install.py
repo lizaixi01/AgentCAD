@@ -254,7 +254,8 @@ def _claude_user_entry(name: str) -> dict[str, Any] | None:
 
 
 def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
-    return subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+    return subprocess.run(cmd, shell=False, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                          timeout=120)
 
 
 # --- setup -----------------------------------------------------------------------------------------------------

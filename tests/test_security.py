@@ -74,7 +74,8 @@ def test_no_shell_or_arbitrary_execution_surface():
     import agentcad
     from pathlib import Path
     pkg = Path(agentcad.__file__).parent
-    launchers = {pkg / "backends" / "autocad.py", pkg / "backends" / "freecad.py", pkg / "scripting.py"}
+    launchers = {pkg / "backends" / "autocad.py", pkg / "backends" / "freecad.py", pkg / "scripting.py",
+                 pkg / "install.py"}
     for f in pkg.rglob("*.py"):
         text = f.read_text("utf-8")
         assert "os.system" not in text and "eval(" not in text, f
@@ -89,6 +90,11 @@ def test_no_shell_or_arbitrary_execution_surface():
     assert "shell=False" in fc and "shell=True" not in fc and "timeout=TIMEOUT" in fc
     scripting = (pkg / "scripting.py").read_text("utf-8")
     assert "shell=False" in scripting and "shell=True" not in scripting and "timeout=timeout" in scripting
+    # install.py runs only the user's own 'claude mcp' CLI, from 'agentcad setup'; no tool reaches it
+    inst = (pkg / "install.py").read_text("utf-8")
+    assert "shell=False" in inst and "shell=True" not in inst
+    for f in ("service.py", "mcp_server.py", "http_api.py"):
+        assert "install import" not in (pkg / f).read_text("utf-8").replace("install import ensure_workspace", ""), f
     assert "check_script(code)" in (pkg / "service.py").read_text("utf-8")
     assert Policy(root=Path.cwd()).allow_scripts in (False,) or __import__("os").environ.get("AGENTCAD_ALLOW_SCRIPTS")
     assert all(callable(d.fn) for d in REGISTRY.values())
