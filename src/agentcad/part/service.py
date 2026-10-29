@@ -25,7 +25,7 @@ if TYPE_CHECKING:
 
 SUFFIX = ".fcstd"
 EXPORTS = {"step": (".step", ".stp"), "iges": (".iges", ".igs"), "brep": (".brep", ".brp"), "stl": (".stl",),
-           "obj": (".obj",)}
+           "obj": (".obj",), "png": (".png",)}
 
 
 def is_part(path: Any) -> bool:
@@ -126,18 +126,31 @@ def create(rt: "Runtime", path: str, units: str, overwrite: bool) -> dict[str, A
 
 
 def apply(rt: "Runtime", path: str, operations: list[dict], dry_run: bool, requirements: list[dict] | None,
-          strict: bool, label: str | None) -> dict[str, Any]:
+          strict: bool, label: str | None, create: dict | None = None) -> dict[str, Any]:
+    """``create`` ({units}): a missing part is made in the same FreeCAD job as the operations and only written if
+    they succeed, so a failed batch leaves no empty part behind (and dry_run works on a part that does not exist)."""
     if not dry_run:
         rt.policy.check_write()
-    p, store = store_for(rt, path)
+    p, store = store_for(rt, path, must_exist=create is None)
+    new = not p.exists()
+    units = None
+    if new:
+        unknown = set(create) - {"units"}
+        if unknown:
+            raise input_error("UNKNOWN_PARAM", f"create: unknown field(s) {sorted(unknown)} for a 3D part",
+                              hint="A part takes create={units}")
+        units = normalize_unit(create.get("units", "mm"))
     prevalidate(operations, rt.policy)
     cand = _candidate(rt)
     try:
         with rt._lock(store):
-            store.load()
+            if not new:
+                store.load()
+            job = {"action": "apply", "ops": operations, "requirements": requirements}
+            if new:
+                job.update(input=None, units=units)
             try:
-                res = _run(rt, {"action": "apply", "ops": operations, "requirements": requirements},
-                           inputs={"input": p}, outputs={"output": cand})
+                res = _run(rt, job, inputs=None if new else {"input": p}, outputs={"output": cand})
             except AgentCADError as exc:
                 store.journal({"tool": "apply_operations", "kind": "part", "ok": False, "label": label,
                                "operations": operations, "error": exc.to_dict(), "file_unchanged": True})
@@ -156,11 +169,13 @@ def apply(rt: "Runtime", path: str, operations: list[dict], dry_run: bool, requi
                                     details={"validation": _brief(report), "failure_snapshot": snap})
             info = store.commit_bytes(cand.read_bytes(), label=label or "apply_operations")
             seq = store.journal({"tool": "apply_operations", "kind": "part", "ok": True, "label": label,
-                                 "operations": operations, "changes": res["changes"], **info})
+                                 "operations": operations, "changes": res["changes"],
+                                 **({"created": {"units": units}} if new else {}), **info})
     finally:
         cand.unlink(missing_ok=True)
     return {"drawing": rt._rel(p), "changes": res["changes"], "results": res["results"],
-            "validation": _brief(report), "journal_seq": seq, **info}
+            "validation": _brief(report), "journal_seq": seq, **({"created": {"units": units}} if new else {}),
+            **info}
 
 
 def read(rt: "Runtime", path: str) -> dict[str, Any]:
@@ -208,7 +223,11 @@ def validate(rt: "Runtime", path: str, requirements: list[dict] | None, detail: 
     return {"drawing": rt._rel(p), "validation": report if detail else _brief(report)}
 
 
-def export(rt: "Runtime", path: str, output: str, format: str, overwrite: bool) -> dict[str, Any]:  # noqa: A002
+def export(rt: "Runtime", path: str, output: str, format: str, overwrite: bool,  # noqa: A002
+           views: list | None = None, image_size: int | None = None, fit: str | None = None) -> dict[str, Any]:
+    """png: a shaded preview (parallel projection, part centred and filling the frame) of one view, or a labelled
+    grid of several. views: names (iso, front, back, right, left, top, bottom, iso_back, iso_bottom) or [x, y, z]
+    directions from the part towards the camera. fit 'view' fills each view; 'uniform' uses one scale for all."""
     rt.policy.check_write()
     p, store = store_for(rt, path)
     store.load()
@@ -220,15 +239,19 @@ def export(rt: "Runtime", path: str, output: str, format: str, overwrite: bool) 
     if out.exists() and not overwrite:
         raise input_error("FILE_EXISTS", f"{output} exists", hint="overwrite=true")
     out.parent.mkdir(parents=True, exist_ok=True)
+    if fmt != "png" and (views or image_size or fit):
+        raise input_error("UNKNOWN_PARAM", "views, image_size and fit apply to png previews only")
     tmp = _jobs(rt) / f"export-{uuid.uuid4().hex[:12]}{out.suffix}"
+    job = {"action": "render", "views": views, "size": image_size, "fit": fit} if fmt == "png" else \
+        {"action": "export", "format": fmt}
     try:
-        res = _run(rt, {"action": "export", "format": fmt}, inputs={"input": p}, outputs={"output": tmp})
+        res = _run(rt, job, inputs={"input": p}, outputs={"output": tmp})
         shutil.move(str(tmp), out)
     finally:
         tmp.unlink(missing_ok=True)
     store.journal({"tool": "export_drawing", "kind": "part", "ok": True, "output": rt._rel(out), "format": fmt})
     return {"drawing": rt._rel(p), "output": rt._rel(out), "format": fmt, "bytes": out.stat().st_size,
-            "shape": res["shape"]}
+            "shape": res["shape"], **{k: res[k] for k in ("readback", "views", "grid", "cell_size", "fit") if k in res}}
 
 
 def diff(rt: "Runtime", path: str, against: str) -> dict[str, Any]:

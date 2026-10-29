@@ -35,11 +35,11 @@
 16. **版面与制图规范不检查**：标注互相重叠、文字压线、轴类的台阶/倒角轮廓线等，验证器发现不了，需要出图目视检查（`examples/trials/render_png.py`）。
 17. **字体**：新图默认 `gbenor.shx` + `gbcbig.shx`。没有安装这两个字体的 CAD 软件会做字体替换。
 
-19. **三维零件**（2026-10-29）：一个零件一个 Body，没有装配；不能从三维生成二维工程图；不能渲染图片给 Agent 看；还没有用 Agent 做过三维对比实验。详见 [part-3d.md](part-3d.md)。
+19. **三维零件**（2026-10-29）：一个零件一个 Body，没有装配；不能从三维生成二维工程图（预览图已有：`export_drawing` 的 png）；还没有用 Agent 做过三维对比实验。详见 [part-3d.md](part-3d.md)。
 
 ## 路线图
 
-- **三维**：从模型投影出二维工程图（DXF，接现有标注和出图）；渲染视图供 Agent 目视检查；装配；用 CADBench / BenchCAD 测 Agent。
+- **三维**：从模型投影出二维工程图（DXF，接现有标注和出图）；装配；用 CADBench / BenchCAD 测 Agent。
 
 - **实测暴露的问题**（[trials-report.md](trials-report.md)、[comparison-hard-tasks.md](comparison-hard-tasks.md)）：~~读取图纸空间布局~~（已完成）；~~脚本出口~~（已完成，`run_script`）；判断图纸副本与模型是否一致；`modify` 支持标注；标注重叠检测；保留动态块数据。
 - **P1 收尾**：两线角度标注创建、HATCH、MLEADER、坐标标注；为 `mirror` 作用于标注/块、开口多段线偏移补测试。
