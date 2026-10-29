@@ -16,7 +16,7 @@ import glob
 import json
 import os
 import shutil
-import subprocess  # starts FreeCAD only (see tests/test_security.py)
+import subprocess  # starts FreeCAD, and stops its process tree on a timeout (see tests/test_security.py)
 import sys
 import tempfile
 import time
@@ -87,6 +87,26 @@ def available() -> bool:
     return find_freecad() is not None
 
 
+def _kill_tree(p) -> None:
+    """Stop FreeCAD and wait for it. On Windows FreeCADCmd.exe is a launcher and the work runs in a child
+    freecadcmd.exe that p.kill() alone leaves running (an endless script then burns a core for good, and keeps
+    console.log open so its job folder cannot be removed). Elsewhere it runs in a session of its own (see Popen)."""
+    if os.name == "nt":
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(p.pid)], shell=False, capture_output=True,
+                       timeout=30, check=False)
+    else:
+        import signal
+        try:
+            os.killpg(p.pid, signal.SIGKILL)
+        except OSError:
+            pass
+    p.kill()
+    try:
+        p.wait(timeout=30)
+    except subprocess.TimeoutExpired:
+        pass
+
+
 def _wait_reporting(p, log: Path, deadline: float, on_progress) -> None:
     """Wait for the process like ``p.wait``, passing each new line of ``log`` to ``on_progress`` meanwhile."""
     pos = 0
@@ -148,14 +168,14 @@ def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
     try:
         with open(d / "console.log", "wb") as fo:
             p = subprocess.Popen(args, cwd=d, stdout=fo, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
-                                 env=env, shell=False)
+                                 env=env, shell=False, start_new_session=os.name != "nt")
             try:
                 if on_progress is None:
                     p.wait(timeout=limit)
                 else:
                     _wait_reporting(p, d / "progress.jsonl", t0 + limit, on_progress)
             except subprocess.TimeoutExpired:
-                p.kill()
+                _kill_tree(p)
                 raise AgentCADError("FREECAD_TIMEOUT", f"FreeCAD did not finish within {limit:g}s",
                                     category="internal", retryable=True, details={"job": str(d)})
         res_path = d / "result.json"

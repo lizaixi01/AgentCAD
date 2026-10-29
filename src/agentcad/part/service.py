@@ -22,7 +22,7 @@ from ..errors import AgentCADError, file_error, input_error
 from ..policy import Policy
 from ..store import DrawingStore
 from ..units import normalize_unit
-from .ops import prevalidate
+from .ops import normalize, prevalidate
 
 if TYPE_CHECKING:
     from ..service import Runtime
@@ -159,6 +159,7 @@ def apply(rt: "Runtime", path: str, operations: list[dict], dry_run: bool, requi
             raise input_error("UNKNOWN_PARAM", f"create: unknown field(s) {sorted(unknown)} for a 3D part",
                               hint="A part takes create={units}")
         units = normalize_unit(create.get("units", "mm"))
+    operations, normalized = normalize(operations)
     prevalidate(operations, rt.policy)
     cand = _candidate(rt)
     try:
@@ -178,7 +179,8 @@ def apply(rt: "Runtime", path: str, operations: list[dict], dry_run: bool, requi
             report = res["report"]
             if dry_run:
                 return {"drawing": rt._rel(p), "dry_run": True, "would_change": res["changes"],
-                        "results": res["results"], "validation": _brief(report)}
+                        "results": res["results"], "validation": _brief(report),
+                        **({"normalized": normalized} if normalized else {})}
             if strict and not report["passed"]:
                 snap = _snapshot(rt, store, cand)
                 store.journal({"tool": "apply_operations", "kind": "part", "ok": False, "label": label,
@@ -195,7 +197,7 @@ def apply(rt: "Runtime", path: str, operations: list[dict], dry_run: bool, requi
         cand.unlink(missing_ok=True)
     return {"drawing": rt._rel(p), "changes": res["changes"], "results": res["results"],
             "validation": _brief(report), "journal_seq": seq, **({"created": {"units": units}} if new else {}),
-            **info}
+            **({"normalized": normalized} if normalized else {}), **info}
 
 
 SCRIPT_LANGUAGES = ("cadquery", "freecad")
