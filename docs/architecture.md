@@ -57,7 +57,7 @@ ezdxf (DXF 内核)                 part/* → backends/freecad → FreeCAD 进�
    Windows 上目标文件被别的进程打开时 `os.replace` 会失败，所以每次替换最多重试 2 s（`store.replace_file`）。还是失败时（`rollback` 和 `recover` 恢复检查点也走同一个流程，`store._replace_tracked`）：图纸替换之前的任何一步 → `FILE_BUSY`，`retryable=true`，文件不变，这次刚建的检查点也删掉（先改 head.json，改成了才删文件；head.json 本身被占着时检查点留着，文件也留着）。只清这次自己写的 `pending`，前一次没结算的不动；结算前一次时 head.json 被占着，同样返回 `FILE_BUSY`，什么都不改。不带参数的 `rollback` 恢复最近一个和当前文件不同的检查点，所以留下的那个检查点不会让重试变成空操作；提交副本 → 不算失败，结果带 `warnings`；图纸替换之后的 head 更新 → `FILE_BUSY`，`partial_changes=true`、`retryable=false`，改动已在文件里，提示调 `recover`，不要重做。journal 写 head 失败不影响结果，下一条记录的 seq 从 journal 文件末尾接着编。`partial_changes=true` 的那次调用会把它的操作作为一条失败记录写进 journal，结算时 `recover` 记录带上这些操作（`operations`、`changes`、`completed_seq`）。
 6. 从磁盘重新读取，运行验证器，把报告随结果一起返回。
 
-`run_script`（可选，默认关闭）：对操作目录覆盖不到的编辑，Agent 提交一段 ezdxf 脚本。脚本先做静态检查（只允许导入 ezdxf 和标准数学/数据模块；禁止打开或保存文件、eval/exec、getattr、双下划线访问），然后在独立的 Python 进程中（`-I`、不经 shell、有超时）对图纸副本运行。运行结果由 Runtime 严格重读、检查预算、计算 diff，然后按上面第 4–6 步提交：检查点、journal（记录完整脚本和哈希）、校验、`strict`。失败时文件不变，可以 `rollback`。
+`run_script`（可选，默认关闭）：对操作目录覆盖不到的编辑，Agent 提交一段 ezdxf 脚本（三维零件是 CadQuery 或 FreeCAD Part 脚本，建出零件的基体，见 [part-3d.md](part-3d.md#脚本建模run_script)）。脚本先做静态检查（只允许导入 ezdxf 和标准数学/数据模块；禁止打开或保存文件、eval/exec、getattr、双下划线访问），然后在独立的 Python 进程中（`-I`、不经 shell、有超时）对图纸副本运行。运行结果由 Runtime 严格重读、检查预算、计算 diff，然后按上面第 4–6 步提交：检查点、journal（记录完整脚本和哈希）、校验、`strict`。失败时文件不变，可以 `rollback`。
 
 `recover`：`pending` 带目标 sha256 且文件可读时，先结算这次中断的提交：文件就是目标内容 → 补写提交副本和 head，journal 记一条 `recover`（`completed_commit`，带 `sha256` 和 `checkpoint_before`，时间线把它当作一次提交）；文件还是上次提交的内容 → 只清掉 `pending`。下一次提交开始前也会先这样结算，所以 Agent 没调 `recover` 就接着改，前一次改动也不会无记录地并进去。其余情况（文件不可读、旧格式的 `pending`、文件丢失）优先恢复 `committed.dxf`（必须与 head 中的哈希一致），否则回退到最近一个可读的检查点。损坏文件会保留到 `failed/`。
 
@@ -115,5 +115,5 @@ ezdxf (DXF 内核)                 part/* → backends/freecad → FreeCAD 进�
 - 覆盖需要 `overwrite=true`，被覆盖的文件会先建检查点；导出目标不能是源文件。
 - 只读模式；操作白名单；批次操作数、实体总数、单批新增实体数都有预算；删除超过 50 个实体需要 `confirm_large`。
 - 每张图纸有写锁，返回 `retryable` 错误。
-- 代码中没有 `os.system`、`eval`。`exec` 只出现在可选脚本工具的子进程入口 `_script_runner.py` 中；`run_script` 默认关闭（`AGENTCAD_ALLOW_SCRIPTS=1` 或 CLI `--allow-scripts` 才开启），脚本先过静态检查，再在独立进程中运行。这些检查用来防止误操作，不是安全沙箱：只对你愿意让它以你的身份运行 Python 的 Agent 开启。`subprocess` 只出现在 `scripting.py`（启动脚本子进程）和可选的 `backends/autocad.py` 中：可执行文件来自配置或自动发现，不经 shell（`shell=False`），有超时；作业脚本只包含固定文件名，不含调用方字符串；不修改宿主 AutoCAD 的持久设置。这些约束都有测试扫描。Agent 的输入只能落到封闭的操作注册表上。
+- 代码中没有 `os.system`、`eval`。`exec` 只出现在可选脚本工具的子进程入口 `_script_runner.py`、`part/_cq_runner.py` 和 FreeCAD 作业脚本 `part/_fc_runner.py`（只在单独的、没有打开文档的 FreeCAD 进程里执行 `run_script` 的 FreeCAD Part 脚本）中，每个文件恰好一处（测试按所在函数固定）；`run_script` 默认关闭（`AGENTCAD_ALLOW_SCRIPTS=1` 或 CLI `--allow-scripts` 才开启），脚本先过静态检查，再在独立进程中运行。这些检查用来防止误操作，不是安全沙箱：只对你愿意让它以你的身份运行 Python 的 Agent 开启。`subprocess` 只出现在 `scripting.py`（启动脚本子进程）和可选的 `backends/autocad.py` 中：可执行文件来自配置或自动发现，不经 shell（`shell=False`），有超时；作业脚本只包含固定文件名，不含调用方字符串；不修改宿主 AutoCAD 的持久设置。这些约束都有测试扫描。Agent 的输入只能落到封闭的操作注册表上。
 - HTTP 默认只绑定 127.0.0.1，请求体限制 8 MB。

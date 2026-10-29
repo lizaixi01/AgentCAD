@@ -1219,6 +1219,9 @@ EDITABLE = set(OPS)
 def op_modify_feature(ctx, p, i):
     f = ctx.obj(_need(p, "feature", "modify_feature"), "modify_feature.feature")
     rec = load_json(f, "AgentCADOp")
+    if script_of(f) is not None:
+        raise OpError("NOT_EDITABLE", f"{f.Name} is the solid run_script built",
+                      hint="Run the changed script again (keep_features=true keeps the ops built on it)")
     if rec is None:
         raise OpError("NOT_EDITABLE", f"{f.Name} was not made by AgentCAD, so its op cannot be re-applied",
                       hint="Delete it and add a new feature, or edit parameters it references")
@@ -1255,6 +1258,11 @@ def op_delete_feature(ctx, p, i):
     f = ctx.obj(_need(p, "feature", "delete_feature"), "delete_feature.feature")
     if f.TypeId in ("PartDesign::Body", "Spreadsheet::Sheet", "App::Origin"):
         raise OpError("NOT_A_FEATURE", f"{f.Name} is a {f.TypeId}; delete_feature removes features and sketches")
+    if script_of(f) is not None:
+        raise OpError("NOT_A_FEATURE", f"{f.Name} is the solid run_script built, the base of the Body",
+                      hint="Run the changed script again, or rollback to before it")
+    if f.TypeId == "PartDesign::FeatureBase":
+        raise OpError("NOT_A_FEATURE", f"{f.Name} is the Body's base feature, not a feature AgentCAD can delete")
     order, seen = [], set()
 
     def collect(o):
@@ -1427,6 +1435,8 @@ def feature_info(o, detail=False):
         d["tag"] = t
     if "Invalid" in o.State or "Error" in o.State:
         d["error"] = o.getStatusString()
+    if o.TypeId == "PartDesign::FeatureBase" and script_of(o) is not None:
+        d["made_by"] = "run_script"
     rec = load_json(o, "AgentCADOp")
     if rec and detail:
         d["op"] = rec
@@ -1484,13 +1494,17 @@ def summary(doc, detail=False):
         grp = list(b.Group)
         tip = b.Tip
         after = grp[grp.index(tip) + 1:] if tip in grp else []
+        scr = script_of(b.BaseFeature)
         out["bodies"].append({"name": b.Name, "tip": tip.Name if tip else None,
+                              **({"base": {"object": b.BaseFeature.Name, "made_by": "run_script",
+                                           **{k: scr[k] for k in ("language", "lines", "code_sha256") if k in scr}}}
+                                 if scr is not None else {}),
                               "features": [feature_info(o, detail) for o in grp],
                               **({"after_tip": [o.Name for o in after]} if after else {}),
                               "shape": shape_summary(b.Shape)})
     others = [o for o in doc.Objects if o.TypeId not in ("PartDesign::Body", "Spreadsheet::Sheet", "App::Origin",
                                                          "App::Plane", "App::Line", "App::Point")
-              and not any(b.hasObject(o) for b in bodies)]
+              and not any(b.hasObject(o) or b.BaseFeature is o for b in bodies)]
     if others:
         out["outside_bodies"] = [{"name": o.Name, "type": o.TypeId} for o in others]
     return out
@@ -1529,6 +1543,11 @@ def check_doc(doc):
         if not sh.isValid():
             issues.append(issue("INVALID_SHAPE", "error", f"{b.Name}: the B-rep shape is not valid",
                                 entities=[b.Name]))
+        if script_of(b.BaseFeature) is not None:
+            issues.append(issue("SCRIPT_BASE_SOLID", "warning", f"{b.Name} starts from a solid built by run_script "
+                                f"({b.BaseFeature.Name}), not from editable PartDesign features",
+                                "Fine for STEP/mesh deliverables; a grader that requires a native feature tree "
+                                "(CADBench) rejects it", entities=[b.BaseFeature.Name]))
         bad = _non_partdesign(b)
         if bad:
             issues.append(issue("NON_PARAMETRIC_GEOMETRY", "error", f"{b.Name} contains non-PartDesign geometry "
@@ -1540,6 +1559,11 @@ def check_doc(doc):
             if after:
                 issues.append(issue("FEATURES_AFTER_TIP", "warning", f"{after} come after the Body's Tip and are "
                                     "not part of the solid", entities=after))
+    stray = _outside_bodies(doc, bodies)
+    if stray:
+        issues.append(issue("GEOMETRY_OUTSIDE_BODY", "error", f"{stray} hold geometry outside the Body",
+                            "A part is one Body: delete them (delete_feature) or model them inside the Body",
+                            entities=stray))
     for o in doc.Objects:
         if o.TypeId == "Sketcher::SketchObject":
             for k in ("ConflictingConstraints", "RedundantConstraints", "MalformedConstraints"):
@@ -1549,10 +1573,23 @@ def check_doc(doc):
     return issues
 
 
+def _outside_bodies(doc, bodies):
+    """Objects with a shape that belong to no Body (a Body's script-made BaseFeature excepted)."""
+    out = []
+    for o in doc.Objects:
+        if o.TypeId in ("PartDesign::Body", "App::Origin", "App::Plane", "App::Line", "App::Point") or \
+                any(b.hasObject(o) or b.BaseFeature is o for b in bodies):
+            continue
+        sh = getattr(o, "Shape", None)
+        if sh is not None and not sh.isNull():
+            out.append(o.Name)
+    return out
+
+
 def _non_partdesign(body):
     bad = []
     for o in body.Group:
-        if o.TypeId in ALLOWED_TYPES:
+        if o.TypeId in ALLOWED_TYPES or o.TypeId == "PartDesign::FeatureBase" and script_of(o) is not None:
             continue
         sh = getattr(o, "Shape", None)
         if sh is not None and not sh.isNull() and len(sh.Faces) > 0:
@@ -1728,12 +1765,165 @@ def run_ops(doc, ops):
     return ctx, results
 
 
+# --- script-built base solid (run_script) ----------------------------------------------------------------------
+# A CadQuery or FreeCAD Part script builds a solid; it becomes the Body's BaseFeature: a Part::Feature outside the
+# Body holds the shape (and the script, AgentCADScript), and FreeCAD puts a PartDesign::FeatureBase first in the
+# Body. Ops added later (fillet, hole, pocket, ...) build on it like on any feature, and their selectors are
+# re-resolved when the script is run again.
+# Scripts never run in the process that edits the part: a CadQuery script runs in AgentCAD's interpreter, a FreeCAD
+# script in a FreeCAD process of its own (action "script_solid", no document open, so Part.show or
+# App.activeDocument() cannot reach the part). Either way only the solid comes back, as BREP, for action "apply".
+
+SCRIPT_BUILTINS = ("abs", "all", "any", "bool", "dict", "divmod", "enumerate", "filter", "float", "format",
+                   "frozenset", "hasattr", "int", "isinstance", "issubclass", "iter", "len", "list", "map", "max",
+                   "min", "next", "object", "pow", "print", "range", "repr", "reversed", "round", "set", "slice",
+                   "sorted", "str", "sum", "tuple", "type", "zip", "chr", "ord", "property", "staticmethod",
+                   "classmethod", "super", "Exception", "ValueError", "KeyError", "IndexError", "TypeError",
+                   "ZeroDivisionError", "RuntimeError", "StopIteration", "AssertionError", "ArithmeticError",
+                   "AttributeError", "NotImplementedError", "LookupError", "True", "False", "None")
+
+
+def script_of(o):
+    """The run_script record of a Body's base (FeatureBase, or the Part::Feature behind it), else None."""
+    if o is None:
+        return None
+    if o.TypeId == "PartDesign::FeatureBase":
+        o = getattr(o, "BaseFeature", None)
+    return load_json(o, "AgentCADScript") if o is not None and hasattr(o, "AgentCADScript") else None
+
+
+def _exec_freecad_script(code, allowed):
+    """Run an agent's FreeCAD Part script (checked by scripting.check_script beforehand); return its result."""
+    import builtins
+    import contextlib
+    import io
+    safe = {k: getattr(builtins, k) for k in SCRIPT_BUILTINS if hasattr(builtins, k)}
+
+    def guarded_import(name, globals=None, locals=None, fromlist=(), level=0):  # noqa: A002
+        if level != 0 or name.split(".")[0] not in allowed:
+            raise ImportError(f"import of {name!r} is not allowed in run_script")
+        return __import__(name, globals, locals, fromlist, level)
+
+    safe["__import__"] = guarded_import
+    safe["__build_class__"] = builtins.__build_class__
+    env = {"__builtins__": safe, "__name__": "agent_script", "Part": Part, "App": App, "FreeCAD": App, "Vector": V,
+           "math": math, "result": None}
+    buf = io.StringIO()
+    try:
+        with contextlib.redirect_stdout(buf):
+            exec(compile(code, "agent_script.py", "exec"), env)  # the agent's script (run_script, opt-in)
+    except BaseException as exc:  # noqa: BLE001 - everything the script raises is its error
+        tb = traceback.extract_tb(exc.__traceback__)
+        src = code.splitlines()
+        lines = [f"line {f.lineno}: {src[f.lineno - 1].strip() if 0 < f.lineno <= len(src) else ''}"
+                 for f in tb if f.filename == "agent_script.py"]
+        raise OpError("SCRIPT_FAILED", f"The script raised {type(exc).__name__}: {exc}",
+                      hint="Nothing was saved; fix the script and run it again",
+                      details={"script_lines": lines[-3:], "stdout": buf.getvalue()[-4000:],
+                               "traceback": "".join(traceback.format_exception(exc))[-3000:]})
+    res = env.get("result")
+    if res is None:
+        raise OpError("NO_RESULT", "The script did not set `result`",
+                      hint="End the script with result = <Part.Shape holding the solid>")
+    if not isinstance(res, Part.Shape):
+        raise OpError("NOT_A_SOLID", f"`result` is a {type(res).__name__}, not a Part.Shape")
+    return res, buf.getvalue()[-8000:]
+
+
+def one_solid(sh):
+    """(the one solid of a script's result, whether several had to be fused)."""
+    solids = list(sh.Solids)
+    if not solids:
+        raise OpError("NOT_A_SOLID", f"The script's result holds no solid (a {sh.ShapeType} with "
+                      f"{len(sh.Faces)} faces)", hint="Extrude, revolve or loft the profile into a solid")
+    if len(solids) > 1:
+        fused = solids[0].fuse(solids[1:]).removeSplitter()
+        solids = list(fused.Solids)
+        if len(solids) != 1:
+            raise OpError("NOT_SINGLE_SOLID", f"The script's result holds {len(solids)} separate solids",
+                          hint="A part is one solid: make the pieces overlap or touch, then union them")
+        return solids[0], True
+    return solids[0], False
+
+
+def action_script_solid(job):
+    """run_script, language 'freecad': run the agent's Part script in this process, which has no document open,
+    and write the solid it leaves in ``result`` to ``output`` as BREP."""
+    shape, stdout = _exec_freecad_script(job["code"], set(job.get("allowed_imports") or ()))
+    solid, fused = one_solid(shape)
+    solid.exportBrep(job["output"])
+    return {"fused": fused, "stdout": stdout}
+
+
+def set_script_base(ctx, base):
+    """Make the script's solid the part's base. keep_features: the Body's features stay and are rebuilt on the
+    new solid; otherwise the part is the solid alone (the old Body, its features and old base are removed)."""
+    doc = ctx.doc
+    solid, _ = one_solid(Part.read(base["brep"]))  # written by the script's own process
+    if ctx.unit_mm != 1.0:  # script numbers are in the part's unit, like op values; FreeCAD stores mm
+        solid = solid.copy()
+        solid.scale(ctx.unit_mm)
+    bodies = [o for o in doc.Objects if o.TypeId == "PartDesign::Body"]
+    if len(bodies) > 1:
+        raise OpError("AMBIGUOUS_BODY", f"The part has {len(bodies)} bodies; run_script needs one or none")
+    body = bodies[0] if bodies else None
+    if body is not None and not base.get("keep_features"):
+        old = body.BaseFeature
+        gone = [o.Name for o in body.Group] + [body.Name]
+        body.removeObjectsFromDocument()
+        doc.removeObject(body.Name)
+        if old is not None:
+            gone.append(old.Name)
+            doc.removeObject(old.Name)
+        ctx.deleted += gone
+        body = None
+    if body is None:
+        body = doc.addObject("PartDesign::Body", "Body")
+        ctx.created.append(body.Name)
+    pf = body.BaseFeature
+    if pf is None:
+        pf = doc.addObject("Part::Feature", "ScriptSolid")
+        ctx.created.append(pf.Name)
+        pf.Shape = solid
+        body.BaseFeature = pf
+        fb = next((o for o in body.Group if o.TypeId == "PartDesign::FeatureBase"), None)
+        if fb is not None:
+            ctx.created.append(fb.Name)
+    else:
+        pf.Shape = solid
+        ctx.modified.append(pf.Name)
+    store_json(pf, "AgentCADScript", base.get("record") or {})
+    again = [n for n in ctx.created if n in ctx.deleted]  # replaced under the same name: modified
+    ctx.created = [n for n in ctx.created if n not in again]
+    ctx.deleted = [n for n in ctx.deleted if n not in again]
+    ctx.modified += [n for n in again if n not in ctx.modified]
+    regenerate(ctx)
+    bad = broken(doc)
+    if bad:
+        first = bad[0]
+        raise OpError("FEATURE_FAILED", f"{first['feature']}: {first['message'] or 'recompute failed'} (rebuilding "
+                      "the kept features on the new solid)", category="geometry", hint=hint_for(first["message"]),
+                      entities=[b["feature"] for b in bad], details={"broken": bad})
+    bb = solid.BoundBox
+    return {"object": pf.Name, "solid": {"volume": r6(solid.Volume), "size": [r6(bb.XLength), r6(bb.YLength),
+                                                                              r6(bb.ZLength)], "unit": "mm"},
+            "features_kept": [o.Name for o in body.Group if o.TypeId != "PartDesign::FeatureBase"]}
+
+
 def action_apply(job):
     PROGRESS["file"] = job.get("progress")
     doc = open_or_new(job)
+    base = bctx = None
+    if job.get("base"):  # run_script: the script's solid becomes the Body's base
+        bctx = Ctx(doc)
+        base = set_script_base(bctx, {**job["base"], "brep": job.get("base_brep")})
     ctx, results = run_ops(doc, job.get("ops") or [])
+    if bctx is not None:
+        ctx.created[:0], ctx.modified[:0], ctx.deleted[:0] = bctx.created, bctx.modified, bctx.deleted
     report_progress(phase="checking")
     out = {"results": results, "changes": {"added": ctx.created, "modified": ctx.modified, "deleted": ctx.deleted}}
+    if base is not None:
+        out["base"] = base
     if not job.get("output"):
         out["summary"] = summary(doc)
         return out
@@ -1883,7 +2073,8 @@ def _camera(d):
     return right, np.cross(d, right), d  # screen x, screen y, towards the camera
 
 
-def render_view(sh, d, size, fit, ss=2):
+def render_view(sh, d, size, fit, ss=2, with_mask=False):
+    """The shaded image (size * ss pixels square); with_mask, also the silhouette (pixels the solid covers)."""
     import numpy as np
     right, up, fwd = _camera(d)
     bb = sh.BoundBox
@@ -1945,7 +2136,7 @@ def render_view(sh, d, size, fit, ss=2):
                 for oy in range(ss):
                     xx, yy = np.clip(lx[vis] + ox - ss // 2, 0, n - 1), np.clip(ly[vis] + oy - ss // 2, 0, n - 1)
                     img[yy, xx] = EDGE_RGB
-    return img
+    return (img, np.isfinite(zb)) if with_mask else img
 
 
 def _scanline(x, y, z, n):
@@ -2039,8 +2230,18 @@ def action_render(job):
     fit = job.get("fit") or "view"
     if fit not in ("view", "uniform"):
         raise OpError("BAD_VALUE", "fit must be 'view' or 'uniform'")
-    imgs = [_downsample(render_view(body.Shape, d, size, fit), 2) for _, d in views]
     names = [nm for nm, _ in views]
+    if job.get("raw"):  # export with a reference image: per-view renders and silhouettes, composed by AgentCAD
+        arrays = {}
+        for i, (_, d) in enumerate(views):
+            img, mask = render_view(body.Shape, d, size, "view", with_mask=True)
+            arrays[f"img{i}"] = np.clip(_downsample(img, 2), 0, 255).astype("uint8")
+            m = mask.astype(float)
+            arrays[f"mask{i}"] = m.reshape(size, 2, size, 2).mean(axis=(1, 3)) >= 0.5
+        with open(job["raw"], "wb") as f:
+            np.savez_compressed(f, **arrays)
+        return {"views": names, "cell_size": size, "shape": shape_summary(body.Shape)}
+    imgs = [_downsample(render_view(body.Shape, d, size, fit), 2) for _, d in views]
     if len(imgs) > 1:  # several views: one sheet, two or three per row, each cell labelled
         cols = 2 if len(imgs) <= 4 else 3
         rows = -(-len(imgs) // cols)
@@ -2083,7 +2284,7 @@ def action_mesh(job):
 
 ACTIONS = {"apply": action_apply, "summary": action_summary, "validate": action_validate,
            "read_shape": action_read_shape, "render": action_render, "mesh": action_mesh,
-           "topology": action_topology, "export": action_export}
+           "topology": action_topology, "export": action_export, "script_solid": action_script_solid}
 
 
 def main():

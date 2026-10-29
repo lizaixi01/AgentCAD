@@ -584,11 +584,23 @@ class Runtime:
 
     @tool
     def run_script(self, path: str, code: str, label: str | None = None, dry_run: bool = False,
-                   requirements: list[dict] | None = None, strict: bool = False) -> dict[str, Any]:
+                   requirements: list[dict] | None = None, strict: bool = False, language: str | None = None,
+                   keep_features: bool = False) -> dict[str, Any]:
         """Run an ezdxf script on the drawing as one transaction (opt-in; see scripting.py). The script edits the
         document given as ``doc`` in place; it may set ``result`` to return a JSON value. Its output is re-read
-        strictly, diffed, validated and committed with a checkpoint; the journal keeps the full script."""
+        strictly, diffed, validated and committed with a checkpoint; the journal keeps the full script.
+
+        3D part (.FCStd): a CadQuery (``language`` 'cadquery', default) or FreeCAD Part ('freecad') program that
+        sets ``result`` to the solid; it becomes the part's base solid, which later part ops build on
+        (``keep_features``: rebuild the Body's existing features on the new solid). See part.service.run_script."""
         from . import scripting
+        if part.is_part(path):
+            return part.run_script(self, path, code, language, keep_features, dry_run, requirements, strict, label)
+        if language not in (None, "ezdxf"):
+            raise input_error("BAD_LANGUAGE", f"language {language!r}: drawings (.dxf) take ezdxf scripts",
+                              hint="CadQuery and FreeCAD scripts build 3D parts (.FCStd)")
+        if keep_features:
+            raise input_error("UNKNOWN_PARAM", "keep_features applies to 3D parts (.FCStd)")
         self.policy.check_scripts_allowed()
         if not dry_run:
             self.policy.check_write()
@@ -942,7 +954,7 @@ class Runtime:
                        dxf_version: str | None = None, overwrite: bool = False, layout: str | None = None,
                        paper: str | None = None, scale: float | None = None, orientation: str = "auto",
                        monochrome: bool = False, views: list | None = None, image_size: int | None = None,
-                       fit: str | None = None) -> dict[str, Any]:
+                       fit: str | None = None, reference: str | None = None) -> dict[str, Any]:
         """Export to dxf (optionally another DXF version, incl. R12 via ezdxf.addons.r12export), svg, json,
         pdf, or dwg (optional AutoCAD backend; ``dxf_version`` then selects the DWG release, default 2018).
 
@@ -952,11 +964,12 @@ class Runtime:
         fits ``paper`` (A0-A4 or 'auto').
 
         3D parts (.FCStd): step, iges, brep, stl, obj, or png (shaded preview: ``views``, ``image_size``,
-        ``fit``; see part.service.export)."""
+        ``fit``; ``reference``: compare with a reference image of the same views; see part.service.export)."""
         if part.is_part(path):
-            return part.export(self, path, output, format, overwrite, views, image_size, fit)
-        if views or image_size or fit:
-            raise input_error("UNKNOWN_PARAM", "views, image_size and fit apply to png previews of 3D parts")
+            return part.export(self, path, output, format, overwrite, views, image_size, fit, reference)
+        if views or image_size or fit or reference:
+            raise input_error("UNKNOWN_PARAM", "views, image_size, fit and reference apply to png previews of 3D "
+                                               "parts")
         self.policy.check_write()
         p, store = self._drawing(path)
         fmt = format.lower()

@@ -7,7 +7,10 @@ batch never touches the part.
 """
 from __future__ import annotations
 
+import hashlib
+import importlib.util
 import shutil
+import time
 import uuid
 import zipfile
 from pathlib import Path
@@ -66,8 +69,9 @@ def _jobs(rt: "Runtime") -> Path:
 
 
 def _run(rt: "Runtime", job: dict[str, Any], inputs: dict[str, Path] | None = None,
-         outputs: dict[str, Path] | None = None, on_progress=None) -> dict[str, Any]:
-    res = freecad.run(job, inputs, outputs, on_progress)
+         outputs: dict[str, Path] | None = None, on_progress=None, timeout: float | None = None,
+         workdir: Path | None = None) -> dict[str, Any]:
+    res = freecad.run(job, inputs, outputs, on_progress, timeout, workdir)
     if not res.get("ok"):
         e = res.get("error") or {}
         cat = e.get("category", "internal")
@@ -194,6 +198,127 @@ def apply(rt: "Runtime", path: str, operations: list[dict], dry_run: bool, requi
             **info}
 
 
+SCRIPT_LANGUAGES = ("cadquery", "freecad")
+CQ_HINT = "pip install \"agentcad-runtime[cadquery]\", or language='freecad' for a FreeCAD Part script"
+
+
+def _script_error(res: dict[str, Any]) -> AgentCADError:
+    code = res.get("code") or "SCRIPT_FAILED"
+    if code == "DEPENDENCY_MISSING":
+        return AgentCADError(code, f"CadQuery could not be loaded: {res.get('error')}", category="dependency",
+                             hint=CQ_HINT)
+    msg = f"The script raised {res.get('error')}" if code == "SCRIPT_FAILED" else res.get("error", code)
+    details = {k: res[k] for k in ("script_lines", "stdout") if res.get(k)}
+    if res.get("traceback"):
+        details["traceback"] = res["traceback"][-1500:]
+    return AgentCADError(code, msg, category="input", details=details,
+                         hint=res.get("hint") or "Nothing was saved; fix the script and run it again")
+
+
+def _freecad_script(rt: "Runtime", code: str, job_dir: Path, brep: Path, timeout: float) -> dict[str, Any]:
+    """Run a FreeCAD Part script in a FreeCAD process of its own (no document open), working in ``job_dir``;
+    its solid is written to ``brep``."""
+    from .. import scripting
+    t0 = time.perf_counter()
+    try:
+        res = _run(rt, {"action": "script_solid", "code": code,
+                        "allowed_imports": sorted(scripting.LANGUAGES["freecad"]["imports"])},
+                   outputs={"output": brep}, timeout=timeout, workdir=job_dir / "freecad")
+    except AgentCADError as exc:
+        if exc.code == "FREECAD_TIMEOUT":
+            raise AgentCADError("SCRIPT_TIMEOUT", f"The script ran longer than {timeout:g} s (FreeCAD's start "
+                                "included) and was stopped", category="input",
+                                hint="Simplify the script, or raise AGENTCAD_SCRIPT_TIMEOUT")
+        raise
+    res["seconds"] = round(time.perf_counter() - t0, 3)
+    return res
+
+
+def run_script(rt: "Runtime", path: str, code: str, language: str | None, keep_features: bool, dry_run: bool,
+               requirements: list[dict] | None, strict: bool, label: str | None) -> dict[str, Any]:
+    """Build the part's solid with a CadQuery (default) or FreeCAD Part script, as one transaction.
+
+    The script runs in a process of its own, with a job folder in the workspace's state directory as working
+    directory and the policy's time limit: CadQuery in a child of AgentCAD's own interpreter (FreeCAD's Python
+    cannot import it), a FreeCAD script in a FreeCAD process with no document open. Only its solid comes back, as
+    BREP (OpenCASCADE's native format, exact). A second FreeCAD job makes it the Body's BaseFeature, rebuilds kept
+    features on it, saves a candidate, re-opens and validates it, and AgentCAD commits it like a batch (checkpoint,
+    journal with the full script, rollback). A missing part is created (mm); script numbers are in the part's
+    unit, and the result reports the solid in mm, like validation.shape."""
+    from .. import scripting
+    rt.policy.check_scripts_allowed()
+    if not dry_run:
+        rt.policy.check_write()
+    lang = (language or "cadquery").strip().lower()
+    if lang not in SCRIPT_LANGUAGES:
+        raise input_error("BAD_LANGUAGE", f"language {language!r} is not available for a 3D part",
+                          hint="'cadquery' (default) or 'freecad' (Part module); ezdxf scripts are for .dxf drawings")
+    scripting.check_script(code, lang)
+    if lang == "cadquery" and importlib.util.find_spec("cadquery") is None:
+        raise AgentCADError("DEPENDENCY_MISSING", "CadQuery is not installed in AgentCAD's Python",
+                            category="dependency", hint=CQ_HINT)
+    p, store = store_for(rt, path, must_exist=False)
+    new = not p.exists()
+    sha = hashlib.sha256(code.encode("utf-8")).hexdigest()
+    record = {"language": lang, "code": code, "code_sha256": sha, "lines": len(code.splitlines()),
+              **({"label": label} if label else {})}
+    timeout = rt.policy.script_timeout
+    cand = _candidate(rt)
+    job_dir = _jobs(rt) / f"script-{uuid.uuid4().hex[:12]}"
+    fail = {"tool": "run_script", "kind": "part", "ok": False, "label": label, "language": lang, "code": code,
+            "code_sha256": sha}
+    try:
+        with rt._lock(store):
+            if not new:
+                store.load()
+            base: dict[str, Any] = {"record": record, "keep_features": bool(keep_features)}
+            inputs = {} if new else {"input": p}
+            job: dict[str, Any] = {"action": "apply", "ops": [], "requirements": requirements, "base": base}
+            if new:
+                job.update(input=None, units="mm")
+            script: dict[str, Any] = {"language": lang}
+            brep = job_dir / "result.brep"
+            try:
+                if lang == "cadquery":
+                    res = scripting.run_cadquery(code, job_dir, timeout)
+                    if not res.get("ok"):
+                        raise _script_error(res)
+                else:
+                    res = _freecad_script(rt, code, job_dir, brep, timeout)
+                script["seconds"] = res.get("seconds")
+                if res.get("stdout"):
+                    script["stdout"] = res["stdout"]
+                inputs["base_brep"] = brep
+                out = _run(rt, job, inputs=inputs, outputs={"output": cand})
+            except AgentCADError as exc:
+                store.journal({**fail, "error": exc.to_dict(), "file_unchanged": True})
+                raise
+            based = out.get("base") or {}
+            script["solid"] = {**based.get("solid", {}), **({"fused": True} if res.get("fused") else {})}
+            report = out["report"]
+            result = {"drawing": rt._rel(p), "changes": out["changes"], "script": script,
+                      **({"features_kept": based["features_kept"]} if based.get("features_kept") else {}),
+                      **({"created": {"units": "mm"}} if new else {})}
+            if dry_run:
+                return {**result, "dry_run": True, "validation": _brief(report)}
+            if strict and not report["passed"]:
+                snap = _snapshot(rt, store, cand)
+                store.journal({**fail, "error": {"code": "VALIDATION_FAILED"}, "failure_snapshot": snap})
+                raise AgentCADError("VALIDATION_FAILED", "Validation of the script's solid failed; nothing was saved",
+                                    category="validation", hint="Inspect validation.issues; fix the script and retry",
+                                    details={"validation": _brief(report), "failure_snapshot": snap})
+            attempt = {"tool": "run_script", "kind": "part", "label": label, "language": lang, "code": code,
+                       "code_sha256": sha, "keep_features": bool(keep_features), "changes": out["changes"],
+                       **({"created": {"units": "mm"}} if new else {})}
+            info = store.commit_bytes(cand.read_bytes(), label=label or "run_script", attempt=attempt)
+            seq = store.journal({**attempt, "ok": True,
+                                 **({"stdout": script["stdout"]} if script.get("stdout") else {}), **info})
+    finally:
+        cand.unlink(missing_ok=True)
+        shutil.rmtree(job_dir, ignore_errors=True)
+    return {**result, "validation": _brief(report), "journal_seq": seq, **info}
+
+
 def read(rt: "Runtime", path: str) -> dict[str, Any]:
     p, store = store_for(rt, path)
     store.load()
@@ -240,10 +365,13 @@ def validate(rt: "Runtime", path: str, requirements: list[dict] | None, detail: 
 
 
 def export(rt: "Runtime", path: str, output: str, format: str, overwrite: bool,  # noqa: A002
-           views: list | None = None, image_size: int | None = None, fit: str | None = None) -> dict[str, Any]:
+           views: list | None = None, image_size: int | None = None, fit: str | None = None,
+           reference: str | None = None) -> dict[str, Any]:
     """png: a shaded preview (parallel projection, part centred and filling the frame) of one view, or a labelled
     grid of several. views: names (iso, front, back, right, left, top, bottom, iso_back, iso_bottom) or [x, y, z]
-    directions from the part towards the camera. fit 'view' fills each view; 'uniform' uses one scale for all."""
+    directions from the part towards the camera. fit 'view' fills each view; 'uniform' uses one scale for all.
+    reference: an image in the workspace laid out as the same grid of views; the png then shows, per view, the
+    reference, our render aligned to it and a diff, and the result holds each view's silhouette IoU (compare.py)."""
     rt.policy.check_write()
     p, store = store_for(rt, path)
     store.load()
@@ -255,8 +383,10 @@ def export(rt: "Runtime", path: str, output: str, format: str, overwrite: bool, 
     if out.exists() and not overwrite:
         raise input_error("FILE_EXISTS", f"{output} exists", hint="overwrite=true")
     out.parent.mkdir(parents=True, exist_ok=True)
-    if fmt != "png" and (views or image_size or fit):
-        raise input_error("UNKNOWN_PARAM", "views, image_size and fit apply to png previews only")
+    if fmt != "png" and (views or image_size or fit or reference):
+        raise input_error("UNKNOWN_PARAM", "views, image_size, fit and reference apply to png previews only")
+    if reference:
+        return _export_compare(rt, p, store, out, views, image_size, fit, reference)
     tmp = _jobs(rt) / f"export-{uuid.uuid4().hex[:12]}{out.suffix}"
     job = {"action": "render", "views": views, "size": image_size, "fit": fit} if fmt == "png" else \
         {"action": "export", "format": fmt}
@@ -268,6 +398,51 @@ def export(rt: "Runtime", path: str, output: str, format: str, overwrite: bool, 
     store.journal({"tool": "export_drawing", "kind": "part", "ok": True, "output": rt._rel(out), "format": fmt})
     return {"drawing": rt._rel(p), "output": rt._rel(out), "format": fmt, "bytes": out.stat().st_size,
             "shape": res["shape"], **{k: res[k] for k in ("readback", "views", "grid", "cell_size", "fit") if k in res}}
+
+
+def _export_compare(rt: "Runtime", p: Path, store: DrawingStore, out: Path, views: list | None,
+                    image_size: int | None, fit: str | None, reference: str) -> dict[str, Any]:
+    import numpy as np
+
+    from . import compare
+    if fit:
+        raise input_error("UNKNOWN_PARAM", "fit does not apply with a reference: each view is aligned to it")
+    views = views or ["iso"]
+    if not isinstance(views, list) or not 1 <= len(views) <= 9:
+        raise input_error("BAD_VIEW", "views: a list of 1 to 9 views")
+    cell = 256 if image_size is None else image_size
+    if isinstance(cell, bool) or not isinstance(cell, (int, float)) or cell != int(cell) or not 64 <= cell <= 1024:
+        raise input_error("OUT_OF_RANGE", f"image_size {image_size!r}: with a reference, 64..1024 pixels per cell",
+                          hint="Each reference cell is compared at 1024 px at most; 256 (the default) is plenty")
+    cell = int(cell)
+    ref = rt.policy.resolve(reference, must_exist=True, suffixes=compare.IMAGE_SUFFIXES)
+    cells = compare.load_reference(ref, len(views))
+    size = int(min(1024, max(128, max(cells[0][0].shape[:2]))))  # render at about the reference's resolution
+    tmp = _jobs(rt) / f"compare-{uuid.uuid4().hex[:12]}"
+    try:
+        res = _run(rt, {"action": "render", "views": views, "size": size}, inputs={"input": p},
+                   outputs={"raw": tmp.with_suffix(".npz")})
+        with np.load(tmp.with_suffix(".npz")) as z:
+            renders = [(z[f"img{i}"], z[f"mask{i}"]) for i in range(len(views))]
+        names = res["views"]
+        results, rows, mode = compare.compare_views(cells, names, renders)
+        labels = [[f"reference: {n}", "ours (aligned)",
+                   f"diff  IoU {r['iou']:.3f}" if r["iou"] is not None else "diff"] for n, r in zip(names, results)]
+        grid, cell = compare.save_sheet(rows, labels, tmp.with_suffix(".png"), cell)
+        shutil.move(str(tmp.with_suffix(".png")), out)
+    finally:
+        tmp.with_suffix(".npz").unlink(missing_ok=True)
+        tmp.with_suffix(".png").unlink(missing_ok=True)
+    scores = [r["iou"] for r in results if r["iou"] is not None]
+    summary = {"reference": rt._rel(ref), "views": results,
+               "mean_iou": round(sum(scores) / len(scores), 4) if scores else None,
+               "alignment": compare.ALIGNMENT, "legend": compare.LEGEND}
+    if mode != "filled":
+        summary["reference_mode"] = mode
+    store.journal({"tool": "export_drawing", "kind": "part", "ok": True, "output": rt._rel(out), "format": "png",
+                   "reference": rt._rel(ref), "mean_iou": summary["mean_iou"]})
+    return {"drawing": rt._rel(p), "output": rt._rel(out), "format": "png", "bytes": out.stat().st_size,
+            "shape": res["shape"], "views": names, "grid": grid, "cell_size": cell, "compare": summary}
 
 
 def diff(rt: "Runtime", path: str, against: str) -> dict[str, Any]:
