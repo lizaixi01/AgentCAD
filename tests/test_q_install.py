@@ -163,9 +163,13 @@ def test_claude_code_uses_cli_when_present(home, monkeypatch):
     assert f"AGENTCAD_ROOT={(home / 'AgentCAD').resolve().as_posix()}" in add
     assert add[add.index("--") + 1:] == [res.entry["command"], "-m", "agentcad.mcp_server"]
     assert not (home / "AgentCAD" / ".mcp.json").exists()
-
     failing = install.setup(["claude-code"], runner=lambda cmd: subprocess.CompletedProcess(cmd, 1, "", "boom"))
     assert failing.clients[0]["status"] == "error" and failing.clients[0]["message"] == "boom"
+    # Claude Code stored it (as it does in ~/.claude.json): a second run leaves it alone
+    (home / ".claude.json").write_text(chr(0xFEFF) + json.dumps({"mcpServers": {"agentcad": {"type": "stdio", **res.entry}}}),
+                                       "utf-8")
+    calls.clear()
+    assert install.setup(["claude-code"], runner=runner).clients[0]["status"] == "unchanged" and calls == []
 
 
 def test_uvx_launcher(home):

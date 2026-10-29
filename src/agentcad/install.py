@@ -164,10 +164,11 @@ def detect_clients() -> dict[str, bool]:
 
 # --- writers: each keeps the other servers and is a no-op when the entry is already right -------------------------
 def _read_json(path: Path) -> dict[str, Any]:
-    if not path.is_file() or not path.read_text("utf-8").strip():
+    text = path.read_text("utf-8-sig") if path.is_file() else ""  # -sig: files saved by Notepad start with a BOM
+    if not text.strip():
         return {}
     try:
-        data = json.loads(path.read_text("utf-8"))
+        data = json.loads(text)
     except ValueError as exc:
         raise input_error("BAD_CONFIG", f"{path} is not valid JSON: {exc}", hint="Fix or move that file, then run setup again")
     if not isinstance(data, dict):
@@ -223,7 +224,7 @@ def codex_table(name: str, entry: dict[str, Any], launcher: str) -> str:
 
 
 def write_codex_config(path: Path, name: str, table: str, dry_run: bool = False) -> str:
-    text = path.read_text("utf-8") if path.is_file() else ""
+    text = path.read_text("utf-8-sig") if path.is_file() else ""
     rest, found = _drop_toml_table(text, name)
     if found and table.strip() in text:
         return "unchanged"
@@ -241,6 +242,15 @@ def claude_cli_commands(name: str, entry: dict[str, Any]) -> list[list[str]]:
     for k, v in entry["env"].items():
         add += ["-e", f"{k}={v}"]
     return [[claude, "mcp", "remove", name, "--scope", "user"], add + ["--", entry["command"], *entry["args"]]]
+
+
+def _claude_user_entry(name: str) -> dict[str, Any] | None:
+    """The user-scope entry Claude Code stored in ~/.claude.json, as {command, args, env}."""
+    try:
+        e = (_read_json(Path.home() / ".claude.json").get("mcpServers") or {}).get(name)
+    except (AgentCADError, OSError):
+        return None
+    return {k: e.get(k, [] if k == "args" else {}) for k in ("command", "args", "env")} if isinstance(e, dict) else None
 
 
 def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
@@ -332,7 +342,9 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
             if client == "claude-code" and shutil.which("claude"):
                 cmds = claude_cli_commands(name, entry)
                 rec.update(target="claude mcp (user scope)", commands=cmds)
-                if dry_run:
+                if _claude_user_entry(name) == entry:
+                    rec["status"] = "unchanged"
+                elif dry_run:
                     rec["status"] = "would run"
                 else:
                     run(cmds[0])  # fails harmlessly when it is not registered yet
