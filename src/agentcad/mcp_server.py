@@ -1,6 +1,7 @@
 """MCP server (stdio). Each tool is a thin adapter over ``Runtime``; no CAD
 logic lives here. Configure with env AGENTCAD_ROOT (workspace sandbox),
-AGENTCAD_READ_ONLY=1 and AGENTCAD_ALLOWED_OPS=op1,op2."""
+AGENTCAD_READ_ONLY=1 and AGENTCAD_ALLOWED_OPS=op1,op2. The live viewer starts on the first change
+(AGENTCAD_VIEWER=0: not at all; AGENTCAD_VIEWER_OPEN=1: also open it in the browser)."""
 from __future__ import annotations
 
 from typing import Annotated, Any, Literal
@@ -13,35 +14,61 @@ from .service import Runtime
 
 INLINE_IMAGE_MAX = 2 * 1024 * 1024  # bytes: a png export larger than this is not returned inline
 
-INSTRUCTIONS = """AgentCAD: headless CAD runtime: 2D drawings (DXF) and 3D parametric parts (FreeCAD .FCStd).
-Workflow: list_operations (compact index; ops=[...] gives full schemas) -> apply_operations (batch many ops in one
-call; create={units,...} makes a new drawing in the same call; ops can reference entities created earlier in the
-batch as "$<index>", tagged entities as "tag:<name>"). Its result already holds the independent validation of the
-saved file (pass requirements to check them); call validate_drawing only for detail=true. Several drawings:
-apply_batch, one call. get_diff / history / rollback as needed. Independent read-only calls can go in one turn.
-Coordinates are [x, y] in drawing units; lengths may be strings with units ("8mm"). Angles are degrees CCW.
-Every result has ok + structured error {code, category, message, entities, retryable, hint, partial_changes}.
-A failed batch never modifies the file (partial_changes=false).
-Real drawings often have paper-space layouts (printed sheets, read_drawing.layouts) with their own copy of the part:
-edit and validate them too, using the 'layout' parameter. New sheets: create_layout, then add_viewport.
-run_script (if enabled) covers edits no op can express.
-If the user works in AutoCAD next to you, autocad_live shows your drawing there and pulls their edits back.
-Industry content (P&ID symbols and lines, GD&T frames, ISO holes, bolts, nuts, bearings) comes from the 'library'
-ops; standard_library looks up sizes and lists a drawing's parts.
-3D parts: give a .FCStd path to create_drawing / apply_operations / read_drawing / inspect_entities /
-validate_drawing / get_diff / export_drawing (step, stl, ...) / rollback / history. Their operations are
-list_operations(category='part') (names: list_operations().part_operations): set_parameters, add_sketch, then
-pad / pocket / revolve / hole / fillet / chamfer / patterns ... A part is one PartDesign Body, one solid, all
-features native and editable. Drive dimensions by parameters ('=Params.width') and change them later with
-set_parameters or modify_feature; edge and face selectors ({"type": "line", "direction": "z"}, "top") are
-re-resolved after every edit. Coordinates are mm, [x, y] in a sketch, [x, y, z] in space."""
+INSTRUCTIONS = """AgentCAD: CAD runtime for agents: 2D drawings (.dxf) and 3D parametric parts (.FCStd, FreeCAD).
+Paths are relative to the workspace. The same tools work on both; the file extension picks 2D or 3D.
+Tool names below are this server's own; your client may list them with a prefix (Claude Code:
+mcp__<server name>__<tool>, usually mcp__agentcad__list_operations). Always call them by the listed name.
+
+Basics
+- Find operations: list_operations() is a compact index (2D ops, plus part_operations names). Full schemas for
+  just the ops you need: list_operations(ops=["add_sketch", "pad"]) (2D and 3D names alike), or a whole
+  category ('part', 'draw', 'annotate', ...). Unsure of a parameter? Fetch the schema instead of guessing.
+- Change files with apply_operations: many ops in one call; create={"units": "mm"} makes the file in the same
+  call. Later ops reference earlier ones as "$<index>" and tagged ones as "tag:<name>". A failed batch changes
+  nothing (partial_changes=false); fix what the error names (code, message, hint) and resend the batch.
+  Several files in one call: apply_batch. Independent read-only calls can go in one turn.
+- The result already holds an independent validation of the saved file (pass requirements to check sizes,
+  counts, ...); validate_drawing only for detail=true. Undo: rollback; what changed: get_diff / history.
+- Lengths: numbers in the file's units, or strings with units ("8mm", "0.5in"). Angles: degrees, CCW.
+- Exporting to a file that exists returns FILE_EXISTS: pass overwrite=true (e.g. re-rendering a preview).
+
+2D drawings (.dxf)
+- Coordinates [x, y]. Templates add layers OUTLINE/HOLES/CENTER/DIM/TEXT. Dimensions, leaders, tables,
+  title blocks, blocks with attributes, P&ID / GD&T / ISO fasteners and bearings ('library' ops; standard_library looks up sizes and lists a
+  drawing's parts).
+- Real drawings often have paper-space sheets (read_drawing.layouts) with their own copy of the part: edit
+  them too with the 'layout' parameter. New sheets: create_layout, then add_viewport.
+- Export svg / png / pdf / json, dwg with AutoCAD. autocad_live shows your drawing in the user's running AutoCAD
+  and pulls their edits back.
+  run_script (only if enabled) covers edits no op can express.
+
+3D parts (.FCStd)
+- One PartDesign Body, one solid, every feature native and editable. Usual order: set_parameters (optional),
+  add_sketch on a plane (XY normal +Z, XZ normal -Y, YZ normal +X; offset moves it along the normal) or
+  on_face, then pad (adds along the normal) / pocket (cuts against it) / revolve / groove / hole, then fillet,
+  chamfer, thickness, patterns, mirror, loft, sweep, helix. primitive adds or cuts boxes, cylinders, ...
+- Example batch: [{"op":"add_sketch","plane":"XY","shapes":[{"type":"rectangle","center":[0,0],"width":80,
+  "height":40}]}, {"op":"pad","sketch":"$0","length":10}, {"op":"add_sketch","on_face":"top","shapes":
+  [{"type":"circle","center":[0,0],"diameter":12}]}, {"op":"pocket","sketch":"$2","through_all":true}]
+- Sketch coordinates are [x, y] in the sketch plane, space coordinates [x, y, z], mm. Edge / face selectors
+  ("top", {"type": "circle", "radius": 6}) are re-resolved after every edit; '=Params.w' drives dimensions: change them later with set_parameters or
+  modify_feature and the part rebuilds.
+- The result's validation.shape gives size, volume and holes: check them against what you meant to build.
+- See what you built: export_drawing(path, "preview.png", "png", views=[...]); a view is a name (iso, front,
+  top, right, ...) or the camera position [x, y, z] relative to the part. The image comes back in the result.
+  Each view is scaled to fill its cell (fit='view'), so compare shapes and proportions within a view, not
+  sizes across views; fit='uniform' uses one scale. To match a reference image, use its camera positions.
+- Deliver with export_drawing(path, "part.step", "step") (also stl, iges, brep, obj): read back and compared.
+
+Live viewer: results that change a file carry viewer_url, a page on this computer where the user watches the
+work step by step and can save or share it. Give the user that link once, the first time you change something."""
 
 Path_ = Annotated[str, Field(description="Drawing path (.dxf) or 3D part (.FCStd), relative to the workspace "
                                         "root")]
 
 
 def build_server(policy: Policy | None = None) -> FastMCP:
-    rt = Runtime(policy or Policy())
+    rt = Runtime(policy or Policy(), auto_viewer=True)
     mcp = FastMCP("agentcad", instructions=INSTRUCTIONS)
 
     @mcp.tool()
@@ -49,10 +76,12 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                                                                            "full schemas for that category; 'part' "
                                                                            "(or part_sketch|part_feature|part_edit) "
                                                                            "for 3D part operations")] = None,
-                        ops: Annotated[list[str] | None, Field(description="Op names: full schemas for just these")] = None,
+                        ops: Annotated[list[str] | str | None, Field(description="Op names, 2D or 3D: full "
+                                                                     "schemas for just these")] = None,
                         detail: Annotated[bool, Field(description="Full schemas for every op (~90K chars)")] = False) -> dict:
         """Operations usable in apply_operations. Without arguments: a compact index (name, category, summary,
-        parameter names, * = required). Get JSON schemas (types, units, defaults, limits) with ops=[...] or category."""
+        parameter names, * = required). Get JSON schemas (types, units, defaults, limits) with ops=[...] or category;
+        part schemas point to a shared 'conventions' block (selectors, dims) in the same result."""
         return rt.list_operations(category, ops, detail)
 
     @mcp.tool()
@@ -254,7 +283,7 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                            "[x, y, z] directions from the part to the camera (the camera's position); several make one labelled grid. "
                            "Default ['iso']")] = None,
                        image_size: Annotated[int | None, Field(ge=64, le=2048, description="png: pixels per view "
-                                                               "(default 512)")] = None,
+                                                               "(default 512 for one view, 256 per view in a grid)")] = None,
                        fit: Annotated[Literal["view", "uniform"] | None, Field(description="png: 'view' (default) "
                            "fills each view with the part (no fixed scale: do not measure pixels); 'uniform' uses "
                            "one scale for every view")] = None,
@@ -333,7 +362,8 @@ def serve_stdio(policy: Policy | None = None) -> None:
 
 
 def main() -> None:
-    serve_stdio()
+    from .install import ensure_workspace  # $AGENTCAD_ROOT, else ~/AgentCAD (not the client's start folder)
+    serve_stdio(Policy(root=ensure_workspace()))
 
 
 if __name__ == "__main__":

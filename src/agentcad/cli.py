@@ -9,9 +9,11 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from .errors import AgentCADError
 from .policy import Policy
 from .service import Runtime
 
+REPO_URL = "https://github.com/lizaixi01/AgentCAD"
 EXIT = {"validation": 1, "input": 2, "spec": 2, "geometry": 2, "file": 3, "policy": 4, "internal": 5, "dependency": 6}
 
 
@@ -35,8 +37,11 @@ def _die(msg: str) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(prog="agentcad", description="Headless agent-native 2D CAD runtime (DXF)")
-    ap.add_argument("--root", help="Workspace root (default: $AGENTCAD_ROOT or cwd); all paths must be inside it")
+    ap = argparse.ArgumentParser(prog="agentcad", description="Headless agent-native CAD runtime: 2D drawings (DXF) "
+                                 "and 3D parts (FreeCAD). New here? Run 'agentcad setup', then 'agentcad doctor'.")
+    ap.add_argument("--root", help="Workspace root (default: $AGENTCAD_ROOT, else the current folder; 'mcp', 'setup' "
+                                   "and 'doctor' use ~/AgentCAD instead of the current folder); all paths must be "
+                                   "inside it")
     ap.add_argument("--read-only", action="store_true", help="Refuse every modification")
     ap.add_argument("--allow-scripts", action="store_true", help="Enable the 'script' command (agent-written ezdxf scripts)")
     ap.add_argument("--compact", action="store_true", help="Single-line JSON output")
@@ -132,7 +137,31 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("path")
 
     s = sub.add_parser("ops", help="Operation index; --op/--category/--detail for JSON schemas"); s.add_argument("--category"); s.add_argument("--op", action="append", help="Full schema of this op (repeatable)"); s.add_argument("--detail", action="store_true")
-    sub.add_parser("mcp", help="Run the MCP server on stdio")
+    sub.add_parser("mcp", help="Run the MCP server on stdio (workspace: --root, $AGENTCAD_ROOT or ~/AgentCAD)")
+    s = sub.add_parser("setup", help="Connect AgentCAD to Claude Code, Codex, Claude Desktop or Cursor",
+                       description="Writes the MCP config of the chosen apps (keeping their other servers), creates "
+                                   "the workspace folder, looks for FreeCAD and AutoCAD and prints what to do next. "
+                                   "Safe to run again.")
+    s.add_argument("--client", action="append", choices=("claude-code", "codex", "claude-desktop", "cursor", "all"),
+                   help="App to configure (repeatable; 'all' = all four). Default: ask, or every app found when "
+                        "--yes is given or input is not a terminal")
+    s.add_argument("--root", dest="setup_root", metavar="FOLDER",
+                   help="Workspace folder for drawings (default: $AGENTCAD_ROOT, else ~/AgentCAD)")
+    s.add_argument("--freecad", metavar="PATH", help="FreeCAD 1.1 install folder (or its bin folder / python), if "
+                                                     "it is not found automatically")
+    s.add_argument("--launcher", choices=("auto", "uvx", "pipx", "python"), default="auto",
+                   help="How the app starts the server: uvx or pipx (fetch AgentCAD from GitHub) or this Python. "
+                        "auto: uvx (else pipx) when this copy runs from a uvx/pipx cache, else this Python")
+    s.add_argument("--from", dest="source", metavar="SPEC", help="uvx/pipx package source (default: where this "
+                                                                 "copy came from, else git+" + REPO_URL + ")")
+    s.add_argument("--name", default="agentcad", help="Server name in the configs")
+    s.add_argument("--dry-run", action="store_true", help="Show what would change; write nothing")
+    s.add_argument("-y", "--yes", action="store_true", help="Do not ask; configure every app found")
+    s.add_argument("--json", action="store_true", help="Print the result as JSON")
+    s = sub.add_parser("doctor", help="Check Python, AgentCAD, FreeCAD, AutoCAD, Pillow and each app's MCP config",
+                       description="Each check says ok, missing or skip, with a one-line fix.")
+    s.add_argument("--root", dest="setup_root", metavar="FOLDER", help="Workspace folder to check")
+    s.add_argument("--json", action="store_true", help="Print the result as JSON")
     s = sub.add_parser("mcp-config", help="Print (or --write) an MCP client config for this interpreter and --root")
     s.add_argument("--client", choices=("claude", "codex"), default="claude")
     s.add_argument("--name", default="agentcad", help="Server name in the config")
@@ -148,8 +177,39 @@ def build_parser() -> argparse.ArgumentParser:
     return ap
 
 
+def _setup_or_doctor(a: argparse.Namespace) -> tuple[dict[str, Any], int]:
+    from . import install
+    root = a.setup_root or a.root
+    if a.cmd == "doctor":
+        r = install.doctor(root)
+        print(json.dumps(r, ensure_ascii=False, indent=1) if a.json else install.render_doctor(r))
+        return {"ok": True}, 0 if r["ok"] else 1
+    clients = [c for c in (a.client or []) if c != "all"]
+    if a.client and "all" in a.client:
+        clients = list(install.CLIENTS)
+    if not a.client:
+        detected = install.detect_clients()
+        if a.yes or a.json or not sys.stdin.isatty():
+            clients = [c for c in install.CLIENTS if detected[c]]
+        else:
+            clients = install.ask_clients(detected)
+    try:
+        res = install.setup(list(dict.fromkeys(clients)), root, launcher=a.launcher, source=a.source,
+                            freecad=a.freecad, dry_run=a.dry_run, read_only=a.read_only,
+                            allow_scripts=a.allow_scripts, name=a.name)
+    except AgentCADError as exc:
+        return {"ok": False, "error": exc.to_dict()}, EXIT.get(exc.category, 5)
+    print(json.dumps(res.to_dict(), ensure_ascii=False, indent=1) if a.json else install.render_setup(res))
+    return {"ok": True}, 0 if res.ok else 1
+
+
 def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
     a = build_parser().parse_args(argv)
+    if a.cmd in ("setup", "doctor"):
+        return _setup_or_doctor(a)
+    if a.cmd == "mcp" and not a.root:
+        from .install import ensure_workspace
+        a.root = str(ensure_workspace())  # never the folder the client happens to start in
     policy = Policy(**({"root": Path(a.root)} if a.root else {}))
     if a.read_only:
         policy.read_only = True

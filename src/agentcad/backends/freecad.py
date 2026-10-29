@@ -86,9 +86,37 @@ def available() -> bool:
     return find_freecad() is not None
 
 
+def _wait_reporting(p, log: Path, deadline: float, on_progress) -> None:
+    """Wait for the process like ``p.wait``, passing each new line of ``log`` to ``on_progress`` meanwhile."""
+    pos = 0
+    while True:
+        try:
+            p.wait(timeout=0.1)
+            return
+        except subprocess.TimeoutExpired:
+            if time.perf_counter() >= deadline:
+                raise
+        try:
+            with open(log, "rb") as f:
+                f.seek(pos)
+                data = f.read()
+        except OSError:
+            continue
+        end = data.rfind(b"\n") + 1  # whole lines only: the runner may be writing the next one
+        pos += end
+        for raw in data[:end].splitlines():
+            try:
+                on_progress(json.loads(raw))
+            except Exception:  # noqa: BLE001 - progress must never fail the job
+                pass
+
+
 def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
-        outputs: dict[str, Path] | None = None) -> dict[str, Any]:
+        outputs: dict[str, Path] | None = None, on_progress=None) -> dict[str, Any]:
     """Run one job; return the runner's result dict ({"ok": ...}). Raises only for process-level failures.
+
+    ``on_progress(event)``: the runner writes one line per operation to ``progress.jsonl`` in the job folder
+    ({"step", "total"} or {"phase": "checking"}); they are passed on while the job runs (polled every 0.1 s).
 
     FreeCAD reads and writes files only inside a short job folder under the system temp directory: deep workspace
     paths exceed Windows' 260-character limit when FreeCAD saves (it failed in pytest's temp folders). ``inputs``
@@ -104,6 +132,8 @@ def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
         job[key] = str(local)
     for key, dst in (outputs or {}).items():
         job[key] = str(d / f"{key}{dst.suffix}")
+    if on_progress is not None:
+        job["progress"] = str(d / "progress.jsonl")
     (d / "job.json").write_text(json.dumps(job), "utf-8")
     args = cmd + [str(RUNNER)] + ([str(d)] if "-I" in cmd else [])
     env = {**os.environ, **extra, "AGENTCAD_FC_JOB": str(d)}
@@ -114,7 +144,10 @@ def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
             p = subprocess.Popen(args, cwd=d, stdout=fo, stderr=subprocess.STDOUT, stdin=subprocess.DEVNULL,
                                  env=env, shell=False)
             try:
-                p.wait(timeout=TIMEOUT)
+                if on_progress is None:
+                    p.wait(timeout=TIMEOUT)
+                else:
+                    _wait_reporting(p, d / "progress.jsonl", t0 + TIMEOUT, on_progress)
             except subprocess.TimeoutExpired:
                 p.kill()
                 raise AgentCADError("FREECAD_TIMEOUT", f"FreeCAD did not finish within {TIMEOUT:g}s",

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 
 import ezdxf
@@ -10,6 +11,8 @@ from agentcad.policy import Policy
 from agentcad.service import Runtime
 
 FIXTURES = Path(__file__).parent / "fixtures"
+# MCP servers built by tests must not start a live viewer (test_o_viewer turns it on where it tests it)
+os.environ["AGENTCAD_VIEWER"] = "0"
 
 PLATE_SPEC = {
     "kind": "plate", "units": "mm", "name": "Mounting plate", "width": 100, "height": 60,

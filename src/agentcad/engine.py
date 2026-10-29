@@ -21,6 +21,7 @@ from typing import Any
 
 from ezdxf.document import Drawing
 
+from . import progress
 from .errors import AgentCADError, input_error, policy_error
 from .model import ACTIVE_LAYOUT, entity_to_dict, get_tag, is_model, set_tag
 from .ops import REGISTRY, Ctx, coerce
@@ -57,6 +58,7 @@ def execute(doc: Drawing, ops: list[dict[str, Any]], unit: str | None, policy: P
         name = raw["op"]
         opdef = REGISTRY[name]
         ctx.op_index = i
+        progress.step(i, len(ops), raw)
         params = dict(params)
         layout = params.pop("layout", None)
         token = None

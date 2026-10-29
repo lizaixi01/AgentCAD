@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<meta name="generator" content="AgentCAD">
+<title>AgentCAD</title>
+<style>
+:root { --bg: #f3f5f8; --panel: #fff; --ink: #111827; --muted: #5b6474; --line: #e3e7ee; --soft: #eef2f7; --accent: #1f6feb;
+        --ok: #15803d; --ok-soft: #e3f6e8; --warn: #b45309; --warn-soft: #fdf1dc; --bad: #c62828; --bad-soft: #fde8e8; }
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0e1116; --panel: #161b22; --ink: #eef2f7; --muted: #a3acb9; --line: #29303b; --soft: #1d232c; --accent: #5b9cff;
+          --ok: #4ade80; --ok-soft: #12291b; --warn: #fbbf24; --warn-soft: #2d230f; --bad: #f87171; --bad-soft: #321616; }
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 17px/1.55 system-ui, -apple-system, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", sans-serif; }
+.wrap { max-width: 1100px; margin: 0 auto; padding: 28px 18px 48px; }
+h1 { font-size: 30px; margin: 0 0 4px; overflow-wrap: anywhere; }
+.meta { color: var(--muted); margin-bottom: 20px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 16px; margin-bottom: 20px;
+        box-shadow: 0 1px 2px rgba(16,24,40,.06), 0 4px 16px rgba(16,24,40,.06); }
+.pic { background: #fff; border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; position: relative; }
+.pic img { display: block; width: 100%; height: auto; max-height: 72vh; object-fit: contain; }
+.tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.tabs button { font: inherit; font-weight: 600; min-height: 44px; padding: 8px 16px; border-radius: 22px; border: 1px solid var(--line); background: var(--panel); color: var(--ink); cursor: pointer; }
+.tabs button[aria-pressed="true"] { background: var(--accent); color: #fff; border-color: var(--accent); }
+.cmp .after { position: absolute; inset: 0; clip-path: inset(0 0 0 var(--cut, 50%)); background: #fff; }
+.cmp .after img { width: 100%; height: 100%; }
+.cmp .line { position: absolute; top: 0; bottom: 0; left: var(--cut, 50%); width: 3px; margin-left: -1.5px; background: #1f6feb; pointer-events: none; }
+.cmp input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: ew-resize; margin: 0; }
+.cmp .lbl { position: absolute; top: 12px; padding: 5px 13px; border-radius: 18px; font-weight: 700; font-size: 15px; pointer-events: none; }
+.cmp .lbl.b { left: 12px; background: #eef1f5; color: #374151; } .cmp .lbl.a { right: 12px; background: #1f6feb; color: #fff; }
+.legend { display: flex; gap: 16px; color: var(--muted); font-size: 15px; margin-top: 10px; flex-wrap: wrap; }
+.legend i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
+h2 { font-size: 20px; margin: 0 0 10px; }
+ol { list-style: none; margin: 0; padding: 0; }
+li { display: grid; grid-template-columns: 34px 1fr; gap: 12px; padding: 10px 6px; border-top: 1px solid var(--line); }
+li:first-child { border-top: 0; }
+li.shown { background: var(--soft); border-radius: 10px; }
+.fi { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: var(--ok-soft); color: var(--ok); font-weight: 800; }
+.fi.bad { background: var(--bad-soft); color: var(--bad); }
+.ft { font-weight: 600; overflow-wrap: anywhere; }
+.fs { color: var(--muted); font-size: 15px; overflow-wrap: anywhere; }
+.pill { font-size: 13px; font-weight: 700; padding: 1px 8px; border-radius: 10px; margin-left: 6px; }
+.pill.a { background: var(--ok-soft); color: var(--ok); } .pill.m { background: var(--warn-soft); color: var(--warn); } .pill.d { background: var(--bad-soft); color: var(--bad); }
+.bad { color: var(--bad); }
+footer { color: var(--muted); font-size: 14px; text-align: center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 id="name"></h1>
+  <div class="meta" id="meta"></div>
+  <div class="card">
+    <div class="tabs" id="tabs"></div>
+    <div class="pic" id="pic"></div>
+    <div class="legend" id="legend" hidden><span><i style="background:#16a34a"></i><span id="lgA"></span></span><span><i style="background:#ea580c"></i><span id="lgM"></span></span><span><i style="background:#b8bcc4"></i><span id="lgO"></span></span></div>
+  </div>
+  <div class="card"><h2 id="histT"></h2><ol id="hist"></ol></div>
+  <footer id="foot"></footer>
+</div>
+<script>/*__FRIENDLY__*/</script>
+<script id="data" type="application/json">"__DATA__"</script>
+<script>
+(function () {
+  "use strict";
+  const D = JSON.parse(document.getElementById("data").textContent);
+  const F = window.AgentCADFriendly, L = /^zh\b/i.test(navigator.language || "") ? "zh" : "en", t = (k, v) => F.t(k, v, L);
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? "" : s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+  const name = String(D.name || "").split("/").pop();
+  document.documentElement.lang = L === "zh" ? "zh-CN" : "en";
+  document.title = name + " · AgentCAD";
+  $("name").textContent = name;
+  const when = D.exported ? new Date(D.exported.replace(/([+-]\d\d)(\d\d)$/, "$1:$2")) : new Date();
+  $("meta").textContent = `${D.kind === "part" ? t("part") : t("drawing")} · ${t("exportedFrom", { d: when.toLocaleString(L === "zh" ? "zh-CN" : undefined) })}`;
+  $("lgA").textContent = t("legendAdded"); $("lgM").textContent = t("legendModified"); $("lgO").textContent = t("legendOther");
+  const views = [["drawing", D.kind === "part" ? t("part") : t("drawing"), D.image]];
+  if (D.image_changes) views.push(["changes", t("highlight"), D.image_changes]);
+  if (D.image_before && D.image_after) views.push(["compare", t("compare"), null]);
+  function show(key) {
+    for (const b of $("tabs").children) b.setAttribute("aria-pressed", String(b.dataset.k === key));
+    const pic = $("pic"); pic.className = "pic"; pic.style.removeProperty("--cut");
+    $("legend").hidden = key !== "changes";
+    if (key === "compare") {
+      pic.className = "pic cmp";
+      pic.innerHTML = `<img alt="${esc(t("before"))}" src="${D.image_before}"><div class="after"><img alt="${esc(t("after"))}" src="${D.image_after}"></div>` +
+        `<div class="line"></div><span class="lbl b">${esc(t("before"))}</span><span class="lbl a">${esc(t("after"))}</span>` +
+        `<input type="range" min="0" max="100" value="50" aria-label="${esc(t("compare"))}">`;
+      const inp = pic.querySelector("input");
+      inp.oninput = () => pic.style.setProperty("--cut", inp.value + "%");
+      return;
+    }
+    const v = views.find((x) => x[0] === key);
+    pic.innerHTML = `<img alt="${esc(name)}" src="${v[2]}">`;
+  }
+  if (views.length > 1) for (const [k, label] of views) {
+    const b = document.createElement("button"); b.dataset.k = k; b.textContent = label; b.onclick = () => show(k); $("tabs").appendChild(b);
+  } else $("tabs").hidden = true;
+  show("drawing");
+  $("histT").textContent = t("historyTitle");
+  const ol = $("hist");
+  for (const r of (D.history || []).slice().reverse()) {
+    const li = document.createElement("li");
+    if (r.shown) li.className = "shown";
+    const ch = r.changes || {};
+    const pills = r.ok ? [["a", "+", ch.added], ["m", "~", ch.modified], ["d", "−", ch.deleted]].filter((x) => x[2])
+      .map((x) => `<span class="pill ${x[0]}">${x[1]}${esc(x[2])}</span>`).join("") : "";
+    // every piece is escaped here; the only markup is the span built around the (escaped) failure text
+    const sub = ["#" + r.seq, r.ts ? new Date(r.ts).toLocaleString(L === "zh" ? "zh-CN" : undefined) : ""]
+      .concat(r.shown ? [t("shownVersion")] : []).filter(Boolean).map(esc);
+    if (!r.ok) sub.push(`<span class="bad">${esc(t("failed"))}${r.error ? ": " + esc(r.error.message || r.error.code) : ""}</span>`);
+    li.innerHTML = `<span class="fi ${r.ok ? "" : "bad"}">${r.ok ? "✓" : "!"}</span><div><div class="ft">${esc(F.summary({ tool: r.tool, steps: r.steps, drawing: D.name }, L))}${pills}</div>` +
+      (r.label ? `<div class="fs">${esc(r.label)}</div>` : "") + `<div class="fs">${sub.join(" · ")}</div></div>`;
+    ol.appendChild(li);
+  }
+  $("foot").textContent = t("madeWith");
+})();
+</script>
+</body>
+</html>
