@@ -42,7 +42,7 @@ def scorer(suite: str):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("suite", choices=["v2c", "t1"])
-    ap.add_argument("--agent", choices=["claude", "codex"], required=True)
+    ap.add_argument("--agent", required=True, help="run label: the agent, or the --label of run.py")
     a = ap.parse_args()
     score = scorer(a.suite)
     tasks = sorted(p for p in (DATA / a.suite).iterdir() if (p / "task.json").exists())

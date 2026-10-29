@@ -48,12 +48,73 @@ Notes:
   for Codex, `FILE_EXISTS` from `export_drawing` refusing to overwrite an earlier `preview.png`.
 - The pilot is one run per task. Run-to-run variance has not been measured.
 
+## Control experiment: AgentCAD vs the same agent writing CadQuery (2026-10-29/30)
+
+The pilot could not tell how much AgentCAD itself helps. So the same 100 tasks were run again, at reasoning effort
+`medium` for both agents, in two arms that differ only in the tools:
+
+- **AgentCAD arm** (`--arm mcp`): as in the pilot. AgentCAD MCP only, with PNG previews from `export_drawing`.
+- **Code arm** (`--arm code`), the control: no AgentCAD. The agent writes a CadQuery program and runs it with
+  BenchCAD's own interpreter (CadQuery 2.3). It checks its part with `render.py`, which draws the same four views
+  with BenchCAD's renderer, the one that drew the input. Claude Code gets `Read`/`Write`/`Edit` and Bash limited to
+  that interpreter; Codex runs `-s workspace-write`.
+
+The AgentCAD arm was then run twice more after fixes the logs called for: #24 (`opt`) and #25 (`opt2`, Claude only;
+see below). AgentCAD `d08d567` for the first runs (`control_meta.json`); the reruns ran `7f6fb16` (#24's head) and
+`5116d41` (#25's first commit, the instructions change).
+`summarize_control.py` writes every number below to `control_summary.json`.
+
+| Medium effort, 100 tasks | Mean IoU | ≥ 0.9 | < 0.5 | Median time | Median input tokens | Cost |
+|---|---|---|---|---|---|---|
+| Claude Code + AgentCAD | 0.641 | 17 | 26 | 56 s | 179k | $29.0 |
+| Claude Code + AgentCAD, after #24 | 0.640 | 14 | 26 | 53 s | 166k | $22.9 |
+| Claude Code + AgentCAD, after #25 | 0.613 | 17 | 29 | 52 s | 157k | $21.8 |
+| Claude Code writing CadQuery | **0.682** | 20 | 23 | 77 s | 75k | $15.6 |
+| Codex + AgentCAD | 0.804 | 49 | 12 | 160 s | 303k | — |
+| Codex + AgentCAD, after #24 | 0.811 | 45 | 11 | 148 s | 260k | — |
+| Codex writing CadQuery | **0.918** | 73 | 1 | 294 s | 281k | — |
+
+Paired by task, with 95% bootstrap intervals:
+
+- **The code arm builds more accurate parts.** Codex + AgentCAD after #24 scores 0.107 below Codex writing CadQuery
+  (−0.144 to −0.073); Claude after #25 scores 0.069 below (−0.110 to −0.027).
+- **The AgentCAD arm is faster.** Its median time per task is 52 s vs 77 s for Claude and 148 s vs 294 s for Codex.
+- **The fixes cut cost, not error.**
+  - Cost and tokens dropped: Claude's cost fell 25% and its input tokens 12%; Codex's input tokens fell 14%.
+  - IoU did not change measurably. Claude after #25 vs before: −0.027 (−0.062 to +0.006). Codex after #24 vs
+    before: +0.007 (−0.018 to +0.035).
+- **Why the code arm wins here:**
+  - CadQuery is a full code-CAD language that models know well, and BenchCAD's reference parts are themselves
+    CadQuery programs.
+  - The code arm compares its part pixel for pixel with the input through the same renderer. AgentCAD's preview
+    frames and colours parts differently, so thin features are hard to calibrate. For example, a dog bone got
+    the right outline and the wrong thickness: IoU 0.08 against 0.84 for the code arm.
+  - In 77 of 100 tasks, Codex in the code arm also read the renderer's source (`benchcad_core/scoring/views.py`)
+    outside its workspace, despite the prompt. It held no reference data. But it told Codex the exact framing,
+    which the AgentCAD arm could not see.
+- **What the fixes found.**
+  - #24: `list_operations(ops=[...])` looked only among 2D ops, so 37 Claude calls for real part ops failed. After
+    #24 none did. The 13 `UNKNOWN_OPERATION` left (Codex) are guessed names that do not exist, such as
+    `edit_feature` and `set_placement`; the op is `modify_feature`. A "did you mean" hint would help here.
+  - At medium effort, Claude also calls tools by bare name (`list_operations` instead of
+    `mcp__agentcad__list_operations`), and Claude Code rejects such calls. This happened in 46 of 100 tasks before
+    #24, in 90 after it, and in 64 after #25, whose instructions name the prefix. It happened in 5 of 100 tasks in
+    the xhigh pilot.
+- **What this measures.** Vision2Code scores one solid built from nothing. It does not score what AgentCAD adds:
+  checkpoints and undo, the journal, independent validation, an editable feature tree, the live viewer.
+
+Next: make the 3D path agent-native. That means CadQuery scripts run as AgentCAD transactions, and previews
+compared with a reference image, aligned per view with a match score. Then rerun this experiment.
+
 ## Files
 
 - `prepare.py`: draws the sample and writes each task's input composite and reference STEP into the data directory
   (default `D:\Projects\bench-data`, or `BENCHCAD_DATA`). Run with BenchCAD's own venv.
 - `run.py`: runs the tasks through an agent (`examples/trials/agents.py`), with retries for transient API errors.
-- `score.py`: scores the submissions with BenchCAD's scorer (BenchCAD's venv) into `runs/<agent>/<suite>.scores.jsonl`.
+  `--arm code` is the CadQuery control; `--label` names the run directory.
+- `render.py`: copied into each code-arm workspace; renders a STEP with BenchCAD's own four-view renderer.
+- `score.py`: scores the submissions with BenchCAD's scorer (BenchCAD's venv) into `runs/<label>/<suite>.scores.jsonl`.
+- `summarize_control.py`: the control experiment's numbers and paired intervals, into `control_summary.json`.
 - `strip_logs.py`: replaces the inline preview images in the run logs with a placeholder, to keep the logs small.
 - `runs/<agent>/v2c/<id>.jsonl`: each task's event stream (images stripped); `<id>.stderr.log`: its stderr. Claude's `Read` calls
   (187 in all, all inside the task's own workspace) are not counted as AgentCAD tool calls above.
