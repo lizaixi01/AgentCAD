@@ -10,9 +10,12 @@ import matplotlib
 
 matplotlib.use("svg")
 import matplotlib.pyplot as plt  # noqa: E402
+from matplotlib.patches import FancyBboxPatch, Rectangle  # noqa: E402
 
 OUT = Path(__file__).parent
-plt.rcParams.update({"svg.fonttype": "path", "font.family": "DejaVu Sans", "font.size": 10})
+# a fixed hash salt and no date (savefig below): the same numbers give byte-identical SVGs
+plt.rcParams.update({"svg.fonttype": "path", "font.family": "DejaVu Sans", "font.size": 10, "svg.hashsalt": "agentcad"})
+R_PT = 3  # corner radius at a bar's data end: about 4 px at the README's 860 px width
 
 # Typical minutes per run (median of 3, or of the paired successes; lower is better): (task, alternative, AgentCAD, alternative)
 SPEED = [
@@ -28,12 +31,19 @@ RELIABILITY = [
     ("Native DWG, end to end in AutoCAD 2027", "vs. AutoCAD MCP Pro · Codex", 11, 10, 12),   # comparison-native-dwg.md
     ("12 drafting tasks", "vs. writing code · Claude Code", 24, 23, 24),                      # comparison-claude-code.md
 ]
-# BenchCAD Vision2Code, 100 tasks, mean voxel IoU (both through AgentCAD)        # examples/benchcad/README.md
-BENCH = [("Codex · gpt-6.1-sol", 0.872), ("Claude Code · Opus 5.5", 0.766)]
+# BenchCAD Vision2Code, 100 tasks at medium effort, mean voxel IoU: AgentCAD with CadQuery scripts and the
+# reference comparison (#26) vs. the same agent writing CadQuery itself      # examples/benchcad/README.md
+BENCH = [
+    ("Claude Code · Opus 5.5", "vs. writing CadQuery itself", 0.754, 0.682),
+    ("Codex · gpt-6.1-sol", "vs. writing CadQuery itself", 0.857, 0.918),
+]
 
+# One accent (AgentCAD) and a de-emphasis gray, on GitHub's page colours. The accent is the dataviz reference
+# palette's slot-1 blue; the pair passes its validator in both modes (the gray reads gray by design, and every bar
+# carries its value, which covers the light gray's sub-3:1 contrast).
 THEMES = {
-    "light": dict(bg="#FFFFFF", ink="#1F2328", muted="#59636E", grid="#E4E7EB", us="#08776A", alt="#ABB1B8"),
-    "dark": dict(bg="#0D1117", ink="#E6EDF3", muted="#9198A1", grid="#262C33", us="#1FCFB0", alt="#5A626B"),
+    "light": dict(bg="#FFFFFF", ink="#1F2328", muted="#59636E", grid="#E4E7EB", us="#2A78D6", alt="#ABB1B8"),
+    "dark": dict(bg="#0D1117", ink="#E6EDF3", muted="#9198A1", grid="#262C33", us="#3987E5", alt="#5A626B"),
 }
 
 
@@ -47,19 +57,32 @@ def style(ax, t):
     ax.set_axisbelow(True)
 
 
+def bar(ax, y, w, h, color):
+    """A horizontal bar from 0: square at the baseline, rounded at the data end. Set the axis limits first."""
+    if w <= 0:
+        return
+    (x0, x1), (y0, y1) = ax.get_xlim(), ax.get_ylim()
+    pos, (fw, fh) = ax.get_position(), ax.figure.get_size_inches()
+    per_in_x, per_in_y = (x1 - x0) / (pos.width * fw), (y1 - y0) / (pos.height * fh)  # data units per inch
+    r = min(R_PT / 72 * per_in_x, w / 2)
+    ax.add_patch(FancyBboxPatch((0, y - h / 2), w, h, boxstyle=f"round,pad=0,rounding_size={r}",
+                                mutation_aspect=per_in_y / per_in_x, color=color, linewidth=0))
+    ax.add_patch(Rectangle((0, y - h / 2), w - r, h, color=color, linewidth=0))  # squares the baseline end
+
+
 def pair_rows(ax, rows, t, fmt, xmax):
     """Two thin bars per row: AgentCAD on top, the alternative below; value labels at the bar ends."""
-    h, gap = 0.30, 0.04
+    h, gap = 0.30, 0.06
+    ax.set_xlim(0, xmax)
+    ax.set_ylim(-(len(rows) - 1) * 1.25 - 0.7, 0.7)
     for i, (task, alt, a, b) in enumerate(rows):
         y = -i * 1.25
-        ax.barh(y + (h + gap) / 2, a, height=h, color=t["us"])
-        ax.barh(y - (h + gap) / 2, b, height=h, color=t["alt"])
+        bar(ax, y + (h + gap) / 2, a, h, t["us"])
+        bar(ax, y - (h + gap) / 2, b, h, t["alt"])
         ax.text(xmax * 0.008 + a, y + (h + gap) / 2, fmt(a), va="center", color=t["ink"], fontsize=9, fontweight="bold")
         ax.text(xmax * 0.008 + b, y - (h + gap) / 2, fmt(b), va="center", color=t["muted"], fontsize=9)
         ax.text(-xmax * 0.02, y + 0.12, task, ha="right", va="center", color=t["ink"], fontsize=9.5)
         ax.text(-xmax * 0.02, y - 0.24, alt, ha="right", va="center", color=t["muted"], fontsize=8.5)
-    ax.set_xlim(0, xmax)
-    ax.set_ylim(-(len(rows) - 1) * 1.25 - 0.7, 0.7)
     ax.set_yticks([])
 
 
@@ -95,19 +118,13 @@ def draw(theme):
 
     ax = fig.add_subplot(gs[2])
     style(ax, t)
-    for i, (who, v) in enumerate(BENCH):
-        ax.barh(-i * 0.8, v, height=0.34, color=t["us"])
-        ax.text(v + 0.012, -i * 0.8, f"{v:.3f}", va="center", color=t["ink"], fontsize=9, fontweight="bold")
-        ax.text(-0.02, -i * 0.8, who, ha="right", va="center", color=t["ink"], fontsize=9.5)
-    ax.set_xlim(0, 1.18)
-    ax.set_ylim(-1.3, 0.5)
-    ax.set_yticks([])
+    pair_rows(ax, BENCH, t, lambda v: f"{v:.3f}", 1.18)
     ax.set_xticks([0, 0.5, 1])
-    ax.text(-0.555, -0.5, "Both agents build through AgentCAD · self-run, 100 sampled tasks · "
-            "not comparable to the BenchCAD leaderboard", transform=ax.transAxes, color=t["muted"], fontsize=8.5)
+    ax.text(-0.555, -0.42, "AgentCAD with CadQuery scripts and a match score against the target · self-run, 100 "
+            "sampled tasks · not the BenchCAD leaderboard", transform=ax.transAxes, color=t["muted"], fontsize=8.5)
     ax.set_title("3D: rebuild a part from 4 views, BenchCAD Vision2Code (mean IoU, 1 = exact)", loc="left",
                  color=t["ink"], fontsize=10.5, fontweight="bold", x=-0.555)
-    fig.savefig(OUT / f"results-{theme}.svg", facecolor=t["bg"])
+    fig.savefig(OUT / f"results-{theme}.svg", facecolor=t["bg"], metadata={"Date": None})
     plt.close(fig)
 
 

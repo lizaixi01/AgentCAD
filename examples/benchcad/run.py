@@ -1,7 +1,7 @@
 """Run prepared BenchCAD tasks through an external agent that builds the part with AgentCAD.
 
-    python examples/benchcad/run.py v2c --agent claude [--arm mcp|code] [--label NAME] [--jobs 3] [--effort high]
-                                        [--ids id1 id2] [--limit N]
+    python examples/benchcad/run.py v2c --agent claude [--arm mcp|code|hybrid] [--label NAME] [--jobs 3]
+                                        [--effort high] [--ids id1 id2] [--limit N]
 
 Each task gets a fresh workspace <ws>/<label>/<suite>/<id>/ outside this repository (the MCP server's
 AGENTCAD_ROOT) holding only the task's input/ files (plus render.py in the code arm). In the AgentCAD arm the agent
@@ -15,6 +15,10 @@ to runs.jsonl beside them. Set AGENTCAD_FREECAD for 3D parts (the MCP server inh
 
 Arm "code" is the control: no AgentCAD. The agent writes CadQuery and runs it with BenchCAD's own interpreter
 (BENCH_PY), and checks its part with render.py, which draws the same four views with BenchCAD's renderer.
+
+Arm "hybrid" is the AgentCAD arm with scripts turned on (AGENTCAD_ALLOW_SCRIPTS): run_script on the part runs
+CadQuery in the MCP server's interpreter, the repository's .venv, which needs agentcad-runtime[cadquery]. Its
+prompt asks for the reference comparison (export_drawing(..., reference="composite.png")).
 """
 from __future__ import annotations
 
@@ -30,7 +34,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE.parent / "trials"))
-from agents import agent_env, command  # noqa: E402
+from agents import PY, agent_env, command  # noqa: E402
 
 DATA = Path(os.environ.get("BENCHCAD_DATA", r"D:\Projects\bench-data"))
 WS = Path(os.environ.get("BENCHCAD_WS", r"D:\Projects\bench-ws"))
@@ -74,6 +78,28 @@ single solid. Work only in your workspace; it is already your working directory,
 (e.g. `%PY% part.py`).
 To compare your part with the target, run `%PY% render.py submission.step preview.png`: it renders the same four
 camera positions in the same 2x2 order with the renderer that drew composite.png. %LOOK%
+submission.step is scored by voxel IoU against the real part when you finish; there is no other output."""
+
+V2C_HYBRID_PROMPT = """You are an expert CAD engineer. composite.png in your workspace is a 2x2 composite of 4
+diagonal views of a mechanical part. Build that part as a 3D AgentCAD part.
+
+Views (cameras at, all looking at part center [0.5, 0.5, 0.5]):
+- Top-left:     [-1, -1, -1]
+- Top-right:    [ 1,  1,  1]
+- Bottom-left:  [ 1, -1,  1]
+- Bottom-right: [-1,  1, -1]
+
+Renders are normalized: bbox centered at [0.5, 0.5, 0.5], longest side maps to [0,1]. Match orientation exactly:
+world XYZ of your part must match world XYZ in the renders. Absolute size is not scored, proportions are.
+
+Use only the AgentCAD tools. Build the part in part.FCStd with run_script("part.FCStd", code), a CadQuery program
+(`cq` imported) that sets `result` to the solid, and/or with apply_operations (list_operations(category="part")
+gives the part operations). Export it with export_drawing("part.FCStd", "submission.step", "step"). The part must
+be a single solid.
+To compare your part with the target, export_drawing("part.FCStd", "compare.png", "png",
+views=[[-1,-1,-1],[1,1,1],[1,-1,1],[-1,1,-1]], reference="composite.png", overwrite=true) renders the same four
+camera positions in the same 2x2 order (a views vector is the camera position), aligned to the target's
+silhouettes, and returns a match score per view (compare.views[].iou, compare.mean_iou) with a diff image.
 submission.step is scored by voxel IoU against the real part when you finish; there is no other output."""
 
 LOOK = {"claude": "Look at preview.png next to composite.png with the Read tool.",
@@ -126,12 +152,17 @@ def _run_once(task: Path, agent: str, arm: str, label: str, effort: str, timeout
             raise SystemExit("the code arm is set up for v2c only")
         shutil.copy(HERE / "render.py", ws / "render.py")
         prompt = V2C_CODE_PROMPT.replace("%PY%", BENCH_PY.as_posix()).replace("%LOOK%", LOOK[agent])
+    elif arm == "hybrid":
+        if suite != "v2c":
+            raise SystemExit("the hybrid arm is set up for v2c only")
+        prompt = V2C_HYBRID_PROMPT
     else:
         prompt = V2C_PROMPT if suite == "v2c" else T1_PROMPT.replace("%FILES%", ", ".join(images))
     logs = HERE / "runs" / label / suite
     logs.mkdir(parents=True, exist_ok=True)
-    cmd = command(agent, arm, ws.as_posix(), effort, logs / "_mcp", python=str(BENCH_PY),
-                  images=[(ws / i).as_posix() for i in images])
+    # the hybrid arm is the AgentCAD arm with scripts enabled (CadQuery in AgentCAD's venv: the [cadquery] extra)
+    cmd = command(agent, "mcp" if arm == "hybrid" else arm, ws.as_posix(), effort, logs / "_mcp",
+                  python=str(BENCH_PY), scripts=arm == "hybrid", images=[(ws / i).as_posix() for i in images])
     t0 = time.time()
     status = "done"
     with open(logs / f"{tid}.jsonl", "wb") as out, open(logs / f"{tid}.stderr.log", "wb") as err:
@@ -155,7 +186,9 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("suite", choices=["v2c", "t1"])
     ap.add_argument("--agent", choices=["claude", "codex"], required=True)
-    ap.add_argument("--arm", choices=["mcp", "code"], default="mcp", help="code: CadQuery without AgentCAD")
+    ap.add_argument("--arm", choices=["mcp", "code", "hybrid"], default="mcp",
+                    help="code: CadQuery without AgentCAD; hybrid: AgentCAD with CadQuery scripts and reference "
+                         "comparison")
     ap.add_argument("--label", help="run directory name (default: the agent)")
     ap.add_argument("--effort", default="high")
     ap.add_argument("--jobs", type=int, default=3)
@@ -167,6 +200,8 @@ def main() -> None:
     label = a.label or a.agent
     if not os.environ.get("AGENTCAD_FREECAD") and not os.environ.get("FREECAD_LIB"):
         print("warning: AGENTCAD_FREECAD is not set; 3D parts need FreeCAD", file=sys.stderr)
+    if a.arm == "hybrid" and subprocess.run([str(PY), "-c", "import cadquery"], capture_output=True).returncode:
+        raise SystemExit(f"the hybrid arm needs CadQuery in {PY}: install agentcad-runtime[cadquery] there")
     tasks = sorted(p for p in (DATA / a.suite).iterdir() if (p / "task.json").exists())
     if a.ids:
         tasks = [t for t in tasks if t.name in a.ids]
