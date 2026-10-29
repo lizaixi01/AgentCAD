@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -210,6 +211,59 @@ def test_freecad_script_cannot_reach_the_part(srt, ws):
     assert r["validation"]["passed"] and [i["code"] for i in r["validation"]["issues"]] == ["SCRIPT_BASE_SOLID"]
     read = ok(srt.read_drawing("s.FCStd"))
     assert "outside_bodies" not in read and read["bodies"][0]["shape"]["size"] == [10.0, 20.0, 30.0]
+
+
+SPRING = """
+helix = Part.makeHelix(8, 40, 10)
+e = helix.Edges[0]
+ring = Part.Wire(Part.makeCircle(1.5, e.valueAt(e.FirstParameter), e.tangentAt(e.FirstParameter)))
+result = Part.Wire(helix.Edges).makePipeShell([ring], True, True)
+"""
+
+
+@needs_freecad
+def test_swept_parts_report_their_true_size(srt, ws):
+    """A coil of 1.5 mm wire on radius 10 is 23 mm across. FreeCAD's quick bounding box follows the sweep's B-spline
+    control points (29.2 mm here, 57% too wide on a BenchCAD spring), and sizes, bbox requirements, previews and
+    the export check all used it."""
+    height = 40 + 3 * math.cos(math.atan(8 / (20 * math.pi)))  # the end circles are normal to the helix
+    want = [23, 23, height]
+    r = ok(srt.run_script("spring.FCStd", SPRING, language="freecad",
+                          requirements=[{"type": "bbox", "size": want, "tolerance": 0.01}]))
+    assert r["validation"]["passed"], r["validation"]
+    assert shape(r)["size"] == pytest.approx(want, abs=1e-3)
+    assert r["script"]["solid"]["size"] == pytest.approx(want, abs=1e-3)
+    e = ok(srt.export_drawing("spring.FCStd", "spring.step", "step"))
+    assert e["readback"]["matches"] and e["readback"]["size"] == pytest.approx(want, abs=1e-3)
+
+
+@needs_freecad
+def test_cross_drilled_pin_exports_to_step(srt, ws):
+    """A pin with two cross holes reads back from its STEP with a volume 2.6e-6 off (OCC integrates the volume
+    numerically) and a quick bounding box 0.0005 mm wider. The export check refused that as EXPORT_MISMATCH, as it
+    did with parts in BenchCAD runs."""
+    pin = ("pin = Part.makeCylinder(5.5, 50)\nfor z in (4, 46):\n"
+           "    pin = pin.cut(Part.makeCylinder(1, 20, Vector(0, 10, z), Vector(0, -1, 0)))\nresult = pin")
+    ok(srt.run_script("pin.FCStd", pin, language="freecad"))
+    e = ok(srt.export_drawing("pin.FCStd", "pin.step", "step"))
+    assert e["readback"]["matches"] and e["readback"]["size"] == [11.0, 11.0, 50.0]
+    assert e["readback"]["faces"] == e["shape"]["faces"]
+
+
+@needs_freecad
+def test_a_reported_face_box_selects_that_face(srt, ws):
+    """The SELECTOR_EMPTY hint sends agents to inspect_entities for face boxes, so each face's reported bbox, used as
+    a "box" selector, must select that face: also a fillet's torus and a sweep's B-spline tube, whose exact boxes
+    are smaller than the box selectors test."""
+    ok(srt.run_script("spring.FCStd", SPRING, language="freecad"))
+    ok(srt.apply_operations("fil.FCStd", [
+        {"op": "add_sketch", "plane": "XY", "shapes": [{"type": "circle", "center": [0, 0], "diameter": 20}]},
+        {"op": "pad", "sketch": "$0", "length": 30},
+        {"op": "fillet", "edges": {"type": "circle", "z": 30}, "radius": 3}], create={"units": "mm"}))
+    for path in ("spring.FCStd", "fil.FCStd"):
+        for f in ok(srt.inspect_entities(path, filter={"kind": "faces"}))["entities"]:
+            hits = ok(srt.inspect_entities(path, filter={"kind": "faces", "selector": {"box": f["bbox"]}}))
+            assert f["name"] in [h["name"] for h in hits["entities"]], (path, f)
 
 
 def add_stray_shape(part):
