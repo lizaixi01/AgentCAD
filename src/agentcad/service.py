@@ -107,6 +107,23 @@ def tool(fn):
     return wrapper
 
 
+def _op_names(ops: Any) -> list[str] | None:
+    """Op names as a list. Agents also send them as one string: a JSON list ('["pad","pocket"]') or 'pad, pocket'."""
+    if ops is None or isinstance(ops, list):
+        return ops or None
+    if isinstance(ops, str):
+        s = ops.strip()
+        if s.startswith("["):
+            try:
+                parsed = json.loads(s)
+            except ValueError:
+                parsed = None
+            if isinstance(parsed, list) and all(isinstance(o, str) for o in parsed):
+                return parsed or None
+        return [o.strip().strip("'\"") for o in s.strip("[]").split(",") if o.strip()] or None
+    raise input_error("BAD_PARAMETER", "ops: a list of operation names")
+
+
 def _paper_layouts(doc) -> list[dict[str, Any]]:
     """Paper-space layouts with their content. A layout holding geometry (not just viewports) is often the
     printed sheet: a scaled copy of the part, title block and notes that must be edited along with the model."""
@@ -302,27 +319,40 @@ class Runtime:
         Claude Code trials failed on their first list_operations call (docs/comparison-claude-code.md)."""
         from .ops import REGISTRY
         from .ops.registry import COMMON_ALL, COMMON_DRAW
-        from .part.ops import PART_REGISTRY
+        from .part.ops import PART_CONVENTIONS, PART_REGISTRY, part_schema
+        ops = _op_names(ops)
         if category is not None and (category == "part" or category.startswith("part_")):
             names = ops or sorted(PART_REGISTRY)
             unknown = [o for o in names if o not in PART_REGISTRY]
             if unknown:
                 raise input_error("UNKNOWN_OPERATION", f"Unknown part operation(s) {unknown}",
                                   hint=f"Part operations: {sorted(PART_REGISTRY)}")
-            full = [PART_REGISTRY[o].schema() for o in names
+            full = [part_schema(PART_REGISTRY[o]) for o in names
                     if category == "part" or PART_REGISTRY[o].category == category]
-            return {"operations": full, "count": len(full), "detail": True, "kind": "part"}
+            return {"operations": full, "count": len(full), "detail": True, "kind": "part",
+                    "conventions": PART_CONVENTIONS}
         constraints = {"check": sorted(CHECK_TYPES), "enforce": sorted(ENFORCE_TYPES)}
         cats = sorted({d.category for d in REGISTRY.values()})
         if category is not None and category not in cats:
             raise input_error("UNKNOWN_CATEGORY", f"No operation category {category!r}", hint=f"Categories: {cats}")
         if ops:
-            unknown = [o for o in ops if o not in REGISTRY]
+            # Names are looked up among drawing and part operations alike; fillet, chamfer and mirror exist for
+            # both, and then both schemas come back, the part one marked kind='part'.
+            unknown = [o for o in ops if o not in REGISTRY and o not in PART_REGISTRY]
             if unknown:
                 raise input_error("UNKNOWN_OPERATION", f"Unknown operation(s) {unknown}",
-                                  hint=f"Operations: {sorted(REGISTRY)}")
-            full = [REGISTRY[o].schema() for o in ops if category is None or REGISTRY[o].category == category]
-            return {"operations": full, "count": len(full), "detail": True, "constraint_types": constraints}
+                                  hint=f"Drawing operations: {sorted(REGISTRY)}; part operations: "
+                                       f"{sorted(PART_REGISTRY)}")
+            full: list[dict[str, Any]] = []
+            for o in ops:
+                if o in REGISTRY and (category is None or REGISTRY[o].category == category):
+                    full.append(REGISTRY[o].schema())
+                if o in PART_REGISTRY and category is None:
+                    full.append({**part_schema(PART_REGISTRY[o]), "kind": "part"})
+            out = {"operations": full, "count": len(full), "detail": True, "constraint_types": constraints}
+            if any(s.get("kind") == "part" for s in full):
+                out["conventions"] = PART_CONVENTIONS
+            return out
         if detail or category is not None:
             full = [o for o in catalog() if category is None or o["category"] == category]
             return {"operations": full, "count": len(full), "detail": True, "constraint_types": constraints}

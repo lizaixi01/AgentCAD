@@ -39,8 +39,33 @@ def test_catalog_lists_part_operations(rt):
             "polar_pattern", "mirror", "set_parameters", "modify_feature"} <= names
     full = ok(rt.list_operations(category="part", ops=["fillet"]))
     assert full["operations"][0]["op"] == "fillet" and "layout" not in full["operations"][0]["params"]["properties"]
-    # the 2D fillet is a different op with the same name
-    assert "layout" in ok(rt.list_operations(ops=["fillet"]))["operations"][0]["params"]["properties"]
+    # the 2D fillet is a different op with the same name: both come back, the part one marked
+    both = ok(rt.list_operations(ops=["fillet"]))["operations"]
+    assert "layout" in both[0]["params"]["properties"] and both[1]["kind"] == "part"
+
+
+def test_part_ops_by_name_without_a_category(rt):
+    """Agents ask for part schemas by name, often without category='part' and sometimes as one string: 37 of
+    their list_operations calls failed with UNKNOWN_OPERATION in the BenchCAD runs before this."""
+    for ops in (["add_sketch", "pad"], '["add_sketch","pad"]', "add_sketch, pad"):
+        r = ok(rt.list_operations(ops=ops))
+        assert [(o["op"], o.get("kind")) for o in r["operations"]] == [("add_sketch", "part"), ("pad", "part")]
+        assert "edges" in r["conventions"]
+    err = rt.list_operations(ops=["pad", "no_such_op"])["error"]
+    assert err["code"] == "UNKNOWN_OPERATION" and "part operations" in err["hint"]
+
+
+def test_part_schemas_share_their_conventions(rt):
+    """Selector, feature-reference and dimension text is sent once in 'conventions', not in every schema."""
+    import json
+    from agentcad.part.ops import EDGES, FACES, PART_CONVENTIONS, REF
+    r = ok(rt.list_operations(category="part"))
+    ops = json.dumps(r["operations"])
+    assert EDGES not in ops and FACES not in ops and REF not in ops and "a string with a unit such as" not in ops
+    assert "see conventions.edges" in ops and r["conventions"] == PART_CONVENTIONS
+    assert len(json.dumps(r)) < 19000  # ~22K before
+    fillet = next(o for o in r["operations"] if o["op"] == "fillet")["params"]
+    assert fillet["required"] == ["edges", "radius"] and "tag" in fillet["properties"]
 
 
 def test_part_ops_are_checked_before_freecad_starts(rt, ws):
@@ -427,6 +452,12 @@ def test_preview_and_edge_selection_skip_degenerate_edges(rt, ws, extra):
         {"op": "primitive", "kind": "cylinder", "dims": {"radius": 3, "height": 40}}, extra]))
     r = ok(rt.export_drawing("knob.FCStd", "knob.png", "png", views=["iso", [-1, -1, -1]], image_size=96))
     assert r["grid"] == [1, 2] and (ws / "knob.png").stat().st_size > 0
+    if extra["kind"] == "sphere":  # default sizes: 512 for one view, 256 per view in a grid
+        from PIL import Image
+        assert ok(rt.export_drawing("knob.FCStd", "one.png", "png"))["cell_size"] == 512
+        r = ok(rt.export_drawing("knob.FCStd", "four.png", "png", views=[[-1, -1, -1], [1, 1, 1], [1, -1, 1],
+                                                                          [-1, 1, -1]]))
+        assert r["cell_size"] == 256 and Image.open(ws / "four.png").size == (512, 512)
     ok(rt.export_drawing("knob.FCStd", "knob.step", "step"))
     r = rt.apply_operations("knob.FCStd", [{"op": "fillet", "edges": {"type": "circle", "radius": 3}, "radius": 1}],
                             dry_run=True)

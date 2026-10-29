@@ -21,13 +21,32 @@ def _unrunnable(*_a: Any, **_k: Any) -> dict[str, Any]:  # executed by the FreeC
     raise RuntimeError("part operations run in FreeCAD")
 
 
+BODY = "Body to add to (default: the part's only Body, created on first use)"
+TAG = "Name for later reference as 'tag:<name>'"
+
+
 def part_op(name: str, category: str, description: str, params: dict[str, Param], *, creates: bool = True) -> None:
     if creates:
-        params = {**params,
-                  "body": Param("string", description="Body to add to (default: the part's only Body, created "
-                                                      "on first use)"),
-                  "tag": Param("string", description="Name for later reference as 'tag:<name>'")}
+        params = {**params, "body": Param("string", description=BODY), "tag": Param("string", description=TAG)}
     PART_REGISTRY[name] = OpDef(name, category, description, params, _unrunnable, common_all=False)
+
+
+def part_schema(d: OpDef) -> dict[str, Any]:
+    """A part op's JSON schema with the text many ops share replaced by a pointer into PART_CONVENTIONS, which
+    list_operations sends once."""
+    def short(v: Any) -> Any:
+        if isinstance(v, str):
+            for long, brief in _SHORT:
+                v = v.replace(long, brief)
+            return v
+        if isinstance(v, dict):
+            return {k: short(x) for k, x in v.items()}
+        if isinstance(v, list):
+            return [short(x) for x in v]
+        return v
+    s = d.schema()
+    s["params"] = short(s["params"])
+    return s
 
 
 REF = "feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001'"
@@ -39,6 +58,18 @@ EDGES = ("edge selector, re-resolved after every edit: 'all', 'Edge3', or an obj
 FACES = ("face selector, re-resolved after every edit: 'top'|'bottom'|'front'|'back'|'left'|'right' (outermost "
          "planar face), 'Face2', or an object with any of type (plane|cylinder|...), normal (+z|-x|[x,y,z]), "
          "extreme (max|min along the normal), axis, radius|diameter, inner (holes), x|y|z, box, near + count")
+DIM_SUFFIX = " (mm, a string with a unit such as '0.5in', or an expression such as '=Params.width * 2')"
+# Sent once per list_operations result instead of inside every part schema.
+PART_CONVENTIONS = {
+    "dim": "a length or angle: a number (mm or degrees), a string with a unit ('0.5in', '30deg'), or an expression "
+           "such as '=Params.width * 2'",
+    "edges": EDGES, "faces": FACES, "feature": REF,
+    "body": BODY + " (every op that adds a feature)", "tag": TAG + " (every op that adds a feature)",
+}
+_SHORT = ((DIM_SUFFIX, " (dim)"), (EDGES, "edge selector (see conventions.edges)"),
+          (FACES, "face selector (see conventions.faces)"), (REF, "feature reference (see conventions.feature)"),
+          (BODY, "see conventions.body"), (TAG, "see conventions.tag"))
+
 SHAPES = ("closed profiles (or construction geometry), each {type, ...}: rectangle {corner [x,y] (lower left) | "
           "center, width, height, name}; circle {center, diameter | radius, name}; polygon {points: [[x,y] | "
           "[x,y,bulge], ...]}; polyline {points, closed}; regular_polygon {center, sides, circumradius | "
