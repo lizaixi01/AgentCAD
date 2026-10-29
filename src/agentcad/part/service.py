@@ -22,7 +22,7 @@ from ..errors import AgentCADError, file_error, input_error
 from ..policy import Policy
 from ..store import DrawingStore
 from ..units import normalize_unit
-from .ops import normalize, prevalidate
+from .ops import normalize, op_params, prevalidate
 
 if TYPE_CHECKING:
     from ..service import Runtime
@@ -166,7 +166,7 @@ def apply(rt: "Runtime", path: str, operations: list[dict], dry_run: bool, requi
         with rt._lock(store):
             if not new:
                 store.load()
-            job = {"action": "apply", "ops": operations, "requirements": requirements}
+            job = {"action": "apply", "ops": operations, "requirements": requirements, "op_params": op_params()}
             if new:
                 job.update(input=None, units=units)
             try:

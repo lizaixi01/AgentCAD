@@ -212,10 +212,18 @@ PARAM_ALIASES = {
     "revolve": {"midplane": "symmetric", "reverse": "reversed"},
     "groove": {"midplane": "symmetric", "reverse": "reversed"},
     "primitive": {"shape": "kind", "type": "kind"},
-    "modify_feature": {"params": "set", "changes": "set", "values": "set", "sketch": "feature", "target": "feature"},
+    "modify_feature": {"params": "set", "changes": "set", "values": "set", "sketch": "feature"},
 }
+# Never moved into modify_feature's 'set': tool arguments and per-op keys that mean something else there
+NOT_SET_KEYS = {"op", "feature", "set", "comment", "body", "tag", "dry_run", "strict", "label", "requirements",
+                "create", "path", "operations"}
 DIM_KEYS = {"length", "width", "height", "radius", "radius1", "radius2", "angle", "sides", "circumradius",
             "xmin", "xmax", "ymin", "ymax", "zmin", "zmax", "x2min", "x2max", "z2min", "z2max"}
+
+
+def op_params() -> dict[str, list[str]]:
+    """Each part op's parameter names, sent to the FreeCAD runner so modify_feature can check the keys it sets."""
+    return {name: sorted(d.all_params()) for name, d in PART_REGISTRY.items()}
 
 
 def normalize(ops: Any) -> tuple[Any, list[dict[str, Any]]]:
@@ -229,6 +237,7 @@ def normalize(ops: Any) -> tuple[Any, list[dict[str, Any]]]:
             out.append(raw)
             continue
         op = dict(raw)
+        had_set = "set" in op
         note: dict[str, Any] = {}
         if op["op"] not in PART_REGISTRY and op["op"] in OP_ALIASES:
             note["op"] = {op["op"]: OP_ALIASES[op["op"]]}
@@ -244,10 +253,12 @@ def normalize(ops: Any) -> tuple[Any, list[dict[str, Any]]]:
             if dims:
                 op["dims"] = dims
                 note["moved_into_dims"] = sorted(dims)
-        if name == "modify_feature":
-            extra = [k for k in op if k not in ("op", "feature", "set", "comment")]
-            if extra and (op.get("set") is None or isinstance(op.get("set"), dict)):
-                op["set"] = {**{k: op.pop(k) for k in extra}, **(op.get("set") or {})}
+        if name == "modify_feature" and not had_set and "set" not in op:
+            # new values written beside the feature ({op, feature, length: 12}): only when no 'set' was given, so
+            # a stray key next to an explicit 'set' still fails; the runner checks each key against the feature's op
+            extra = [k for k in op if k not in NOT_SET_KEYS]
+            if extra:
+                op["set"] = {k: op.pop(k) for k in extra}
                 note["moved_into_set"] = sorted(extra)
         if renamed:
             note["renamed"] = renamed
@@ -273,7 +284,7 @@ def prevalidate(ops: list[Any], policy: Any) -> None:
             # never suggest deleting something to an agent that asked for another op ('edit_feature' is closest to
             # 'delete_feature' by spelling)
             close = [c for c in difflib.get_close_matches(name, PART_REGISTRY.keys(), n=3)
-                     if c != "delete_feature" or any(w in name for w in ("del", "remove"))]
+                     if c != "delete_feature" or name.startswith("del") or any(w in name for w in ("delete", "remove"))]
             raise input_error("UNKNOWN_OP", f"Unknown part operation {name!r}", op_index=i, op=name,
                               hint=f"Did you mean {close}?" if close else
                               "This is a 3D part (.FCStd); list_operations(category='part') lists its operations")

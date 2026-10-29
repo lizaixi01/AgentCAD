@@ -1231,6 +1231,13 @@ def op_modify_feature(ctx, p, i):
     for k in ("op", "body", "tag"):
         if k in changes:
             raise OpError("BAD_VALUE", f"modify_feature cannot change {k!r}")
+    allowed = OP_PARAMS.get(rec.get("op"))  # sent by AgentCAD with the job; a key the op does not take did nothing
+    if allowed:
+        unknown = sorted(k for k in changes if k not in allowed)
+        if unknown:
+            raise OpError("UNKNOWN_PARAM", f"modify_feature: {f.Name} was made by {rec['op']}, which has no "
+                                           f"parameter(s) {unknown}",
+                          hint=f"{rec['op']} parameters: {[k for k in allowed if k not in ('body', 'tag')]}")
     params = {**rec, **changes}
     params = {k: v for k, v in params.items() if v is not None}
     ctx.op_of[f.Name] = i
@@ -1704,6 +1711,7 @@ def open_or_new(job):
 
 
 PROGRESS = {"file": None}  # job["progress"]: a file the parent polls to show which operation runs (viewer)
+OP_PARAMS: dict = {}  # job["op_params"]: each op's parameter names, for modify_feature's check of what it sets
 
 
 def report_progress(**ev):
@@ -1912,6 +1920,8 @@ def set_script_base(ctx, base):
 
 def action_apply(job):
     PROGRESS["file"] = job.get("progress")
+    OP_PARAMS.clear()
+    OP_PARAMS.update(job.get("op_params") or {})
     doc = open_or_new(job)
     base = bctx = None
     if job.get("base"):  # run_script: the script's solid becomes the Body's base

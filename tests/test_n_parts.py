@@ -612,6 +612,15 @@ def test_common_op_and_parameter_names_are_mapped():
     assert [n["op_index"] for n in notes] == [0, 1, 2, 3]
     assert notes[1]["op"] == {"edit_feature": "modify_feature"} and notes[1]["moved_into_set"] == ["length"]
     assert notes[0]["renamed"] == {"length": "depth", "midplane": "symmetric"}
+    # never moved into 'set': a stray key next to an explicit 'set', tool arguments, a second feature name
+    ops, _ = normalize([
+        {"op": "modify_feature", "feature": "tag:p", "set": {"length": 1}, "params": {"length": 2}},
+        {"op": "modify_feature", "feature": "tag:p", "length": 3, "dry_run": True},
+        {"op": "modify_feature", "feature": "tag:p", "sketch": "tag:s2"},
+    ])
+    assert ops[0] == {"op": "modify_feature", "feature": "tag:p", "set": {"length": 1}, "params": {"length": 2}}
+    assert ops[1] == {"op": "modify_feature", "feature": "tag:p", "set": {"length": 3}, "dry_run": True}
+    assert ops[2] == {"op": "modify_feature", "feature": "tag:p", "set": {"sketch": "tag:s2"}}  # re-point the pad
 
 
 def test_unknown_op_hint_never_suggests_deleting(rt, ws):
@@ -622,6 +631,8 @@ def test_unknown_op_hint_never_suggests_deleting(rt, ws):
     assert e["code"] == "UNKNOWN_OP" and "delete_feature" not in e.get("hint", "")
     e = rt.apply_operations("p.FCStd", [{"op": "remove_feature", "feature": "Pad"}])["error"]
     assert "delete_feature" in e["hint"]
+    e = rt.apply_operations("p.FCStd", [{"op": "model_featur", "feature": "Pad"}])["error"]  # 'del' in 'model'
+    assert "delete_feature" not in e.get("hint", "")
 
 
 @needs_freecad
@@ -637,3 +648,13 @@ def test_aliased_ops_run_and_are_reported(rt, ws):
     # the journal records what ran, under the canonical names
     last = [json.loads(x) for x in (ws / ".agentcad").rglob("journal.jsonl").__next__().read_text("utf-8").splitlines()][-1]
     assert last["operations"][0] == {"op": "modify_feature", "feature": "tag:base", "set": {"length": 15}}
+    # a key the feature's op does not take is an error, not a silent no-op (before: ok, and a new checkpoint)
+    before = sha256_file(ws / "a.FCStd")
+    e = rt.apply_operations("a.FCStd", [{"op": "edit_feature", "feature": "tag:base", "width": 5}])["error"]
+    assert e["code"] == "UNKNOWN_PARAM" and "pad" in e["message"] and "length" in e["hint"]
+    e = rt.apply_operations("a.FCStd", [{"op": "modify_feature", "feature": "tag:base", "set": {"width": 5}}])["error"]
+    assert e["code"] == "UNKNOWN_PARAM"
+    for bad in ({"op": "modify_feature", "feature": "tag:base", "length": 3, "dry_run": True},
+                {"op": "modify_feature", "feature": "tag:base", "set": {"length": 1}, "params": {"length": 2}}):
+        assert rt.apply_operations("a.FCStd", [bad])["error"]["code"] == "UNKNOWN_PARAM"
+    assert sha256_file(ws / "a.FCStd") == before

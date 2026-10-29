@@ -92,8 +92,14 @@ def _kill_tree(p) -> None:
     freecadcmd.exe that p.kill() alone leaves running (an endless script then burns a core for good, and keeps
     console.log open so its job folder cannot be removed). Elsewhere it runs in a session of its own (see Popen)."""
     if os.name == "nt":
-        subprocess.run(["taskkill", "/F", "/T", "/PID", str(p.pid)], shell=False, capture_output=True,
-                       timeout=30, check=False)
+        # by its full path, so no other 'taskkill' on PATH runs; /T follows recorded parent ids, called right
+        # after our own child stopped answering
+        taskkill = str(Path(os.environ.get("SystemRoot", r"C:\Windows")) / "System32" / "taskkill.exe")
+        try:
+            subprocess.run([taskkill, "/F", "/T", "/PID", str(p.pid)], shell=False, capture_output=True,
+                           stdin=subprocess.DEVNULL, timeout=30, check=False)
+        except (OSError, subprocess.SubprocessError):
+            pass
     else:
         import signal
         try:
@@ -178,6 +184,9 @@ def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
                 _kill_tree(p)
                 raise AgentCADError("FREECAD_TIMEOUT", f"FreeCAD did not finish within {limit:g}s",
                                     category="internal", retryable=True, details={"job": str(d)})
+            except BaseException:  # Ctrl+C or any other exit: FreeCAD runs in a session of its own, stop it too
+                _kill_tree(p)
+                raise
         res_path = d / "result.json"
         if not res_path.is_file():
             log = (d / "console.log").read_text("utf-8", errors="replace")[-2000:]
