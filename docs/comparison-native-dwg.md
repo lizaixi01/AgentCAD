@@ -40,7 +40,7 @@
 
 **怎么使用：**由 `autocad_live open` 新打开的 DXF 改用只读方式，AgentCAD 可以替换文件，AutoCAD 仍可在内存中编辑，用 `pull` 提交。已经由用户以写入方式打开的图纸会保持原样；无须保留编辑时显式 `reload`，有编辑时先回传，未知版本仍需确认使用 `force`。
 
-**为什么还要修视图：**实机中恢复视图会把 AutoCAD 标为未保存，`DBMOD` 为 16 或 24。修复只把普通二维、世界坐标系下的视图/窗口变化作为可重载状态；图元、图层、变量、字段或未知修改仍受保护。标记含义依据 [Autodesk DBMOD 文档](https://help.autodesk.com/cloudhelp/2025/ENG/AutoCAD-Core/files/GUID-E255E808-2D48-4BDE-A760-FFEA28E5A86F.htm)。
+**为什么还要修视图：**实机中恢复视图会把 AutoCAD 标为未保存，`DBMOD` 为 16 或 24。修复只把普通二维、世界坐标系下的视图/窗口变化作为可重载状态；图元、图层、变量、字段或未知修改仍受保护。标记含义依据 [Autodesk DBMOD 文档](https://help.autodesk.com/cloudhelp/2025/ENU/AutoCAD-Core/files/GUID-E255E808-2D48-4BDE-A760-FFEA28E5A86F.htm)。
 
 <details>
 <summary>计时、数据与验证范围</summary>
