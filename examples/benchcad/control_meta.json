@@ -1,0 +1,29 @@
+{
+ "agentcad_commit": "d08d5679ce3e4cab543734524bce9d2eb05b6d80",
+ "frozen_at": "2026-10-29T20:03:49+08:00",
+ "benchcad_main": "77fd16a80a4e5fc39964ee23b6cc3225beefac8f",
+ "suite": "v2c",
+ "num": 100,
+ "seed": 42,
+ "effort": "medium",
+ "claude_model": "opus (claude-opus-5-5)",
+ "codex_model": "gpt-6.1-sol",
+ "arms": {
+  "mcp": "AgentCAD MCP tools only, PNG previews from export_drawing",
+  "code": "CadQuery 2.3 with BenchCAD's interpreter, render.py draws the same 4 views with BenchCAD's renderer"
+ },
+ "labels": [
+  "claude-mcp-medium",
+  "codex-mcp-medium",
+  "claude-code-medium",
+  "codex-code-medium",
+  "claude-mcp-opt-medium",
+  "codex-mcp-opt-medium",
+  "claude-mcp-opt2-medium"
+ ],
+ "reruns": {
+  "claude-mcp-opt-medium": "7f6fb16d809a96f4eec1d4952bc9634c86fe487b (PR #24 head)",
+  "codex-mcp-opt-medium": "7f6fb16d809a96f4eec1d4952bc9634c86fe487b (PR #24 head)",
+  "claude-mcp-opt2-medium": "5116d412d7123bc0ee7e5756c070a955fe079994 (PR #25 first commit)"
+ }
+}

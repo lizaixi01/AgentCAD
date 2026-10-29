@@ -7,7 +7,8 @@
 v2c: benchcad_core.scoring.iou.iou_step_vs_step(submission, gt), voxel IoU at 64^3 on normalized shapes.
 t1:  envs.common.score_case.score_case(case_dir, submission), the part_v1 score verify_case.py prints.
 A task without submission.step scores 0, as an episode that never submits does in BenchCAD.
-Writes examples/benchcad/runs/<agent>/<suite>.scores.jsonl and prints the mean.
+Writes examples/benchcad/runs/<label>/<suite>.scores.jsonl (label: the agent, or run.py's --label) and prints
+the mean.
 """
 from __future__ import annotations
 
@@ -42,7 +43,7 @@ def scorer(suite: str):
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("suite", choices=["v2c", "t1"])
-    ap.add_argument("--agent", choices=["claude", "codex"], required=True)
+    ap.add_argument("--agent", required=True, help="run label: the agent, or the --label of run.py")
     a = ap.parse_args()
     score = scorer(a.suite)
     tasks = sorted(p for p in (DATA / a.suite).iterdir() if (p / "task.json").exists())

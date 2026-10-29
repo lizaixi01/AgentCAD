@@ -1,13 +1,20 @@
 """Run prepared BenchCAD tasks through an external agent that builds the part with AgentCAD.
 
-    python examples/benchcad/run.py v2c --agent claude [--jobs 3] [--effort high] [--ids id1 id2] [--limit N]
+    python examples/benchcad/run.py v2c --agent claude [--arm mcp|code] [--label NAME] [--jobs 3] [--effort high]
+                                        [--ids id1 id2] [--limit N]
 
-Each task gets a fresh workspace <ws>/<agent>/<suite>/<id>/ outside this repository (the MCP server's
-AGENTCAD_ROOT) holding only the task's input/ files. The agent can call AgentCAD's MCP tools and look at the input
-images (Claude Code: Read, run from the workspace; Codex: the images are attached to the prompt), and nothing
-else. It must leave its part in submission.step. The reference stays under <data>, never inside a workspace.
-Event streams go to examples/benchcad/runs/<agent>/<suite>/<id>.jsonl; run summaries to runs.jsonl beside them.
-Set AGENTCAD_FREECAD for 3D parts (the MCP server inherits it).
+Each task gets a fresh workspace <ws>/<label>/<suite>/<id>/ outside this repository (the MCP server's
+AGENTCAD_ROOT) holding only the task's input/ files (plus render.py in the code arm). In the AgentCAD arm the agent
+can call AgentCAD's MCP tools and look at the input images (Claude Code: Read, run from the workspace; Codex: the
+images are attached to the prompt), and nothing else. The code arm's agent gets file tools and a shell (see
+agents.py); neither sandbox stops reads outside the workspace, so the logs are checked for the data directory
+(leak_suspect). It must leave its part in submission.step. The reference stays under <data>, never inside a
+workspace.
+Event streams go to examples/benchcad/runs/<label>/<suite>/<id>.jsonl (label defaults to the agent); run summaries
+to runs.jsonl beside them. Set AGENTCAD_FREECAD for 3D parts (the MCP server inherits it).
+
+Arm "code" is the control: no AgentCAD. The agent writes CadQuery and runs it with BenchCAD's own interpreter
+(BENCH_PY), and checks its part with render.py, which draws the same four views with BenchCAD's renderer.
 """
 from __future__ import annotations
 
@@ -27,6 +34,7 @@ from agents import agent_env, command  # noqa: E402
 
 DATA = Path(os.environ.get("BENCHCAD_DATA", r"D:\Projects\bench-data"))
 WS = Path(os.environ.get("BENCHCAD_WS", r"D:\Projects\bench-ws"))
+BENCH_PY = Path(os.environ.get("BENCH_PY", r"D:\Projects\bench-src\BenchCAD-main\.venv\Scripts\python.exe"))
 
 V2C_PROMPT = """You are an expert CAD engineer. composite.png in your workspace is a 2x2 composite of 4 diagonal
 views of a mechanical part. Build that part as a 3D AgentCAD part.
@@ -48,6 +56,29 @@ views=[[-1,-1,-1],[1,1,1],[1,-1,1],[-1,1,-1]]) renders the same four camera posi
 (a views vector is the camera position); look at it next to composite.png.
 submission.step is scored by voxel IoU against the real part when you finish; there is no other output."""
 
+V2C_CODE_PROMPT = """You are an expert CAD engineer. composite.png in your workspace is a 2x2 composite of 4
+diagonal views of a mechanical part. Build that part with CadQuery.
+
+Views (cameras at, all looking at part center [0.5, 0.5, 0.5]):
+- Top-left:     [-1, -1, -1]
+- Top-right:    [ 1,  1,  1]
+- Bottom-left:  [ 1, -1,  1]
+- Bottom-right: [-1,  1, -1]
+
+Renders are normalized: bbox centered at [0.5, 0.5, 0.5], longest side maps to [0,1]. Match orientation exactly:
+world XYZ of your part must match world XYZ in the renders. Absolute size is not scored, proportions are.
+
+Write your CadQuery program in part.py in your workspace and run it with %PY% (it has CadQuery 2.3); it must
+export the part to submission.step (cadquery.exporters.export(result, "submission.step")). The part must be a
+single solid. Work only in your workspace; it is already your working directory, so run commands without cd
+(e.g. `%PY% part.py`).
+To compare your part with the target, run `%PY% render.py submission.step preview.png`: it renders the same four
+camera positions in the same 2x2 order with the renderer that drew composite.png. %LOOK%
+submission.step is scored by voxel IoU against the real part when you finish; there is no other output."""
+
+LOOK = {"claude": "Look at preview.png next to composite.png with the Read tool.",
+        "codex": "Look at preview.png next to composite.png with your view_image tool."}
+
 T1_PROMPT = """You are an expert CAD engineer. drawing.png in your workspace is the engineering drawing of one
 part, in millimetres, first-angle projection unless its header says third-angle. If the lettering is too small,
 the sheet is also there as tiles drawing_tile_r<i>c<j>.png (row i from the top, column j from the left, 10 %
@@ -65,35 +96,42 @@ output. Your workspace files: %FILES%"""
 
 # Provider-side failures that say nothing about the agent: the run is repeated instead of scored 0.
 TRANSIENT = ("Selected model is at capacity", "overloaded_error", "rate_limit", "Connection dropped",
-             "ECONNRESET", "503 Service Unavailable")
+             "ECONNRESET", "503 Service Unavailable", "usage_limit_reached")
 
 
-def run_one(task: Path, agent: str, effort: str, timeout: int, attempts: int = 3) -> dict:
+def run_one(task: Path, agent: str, arm: str, label: str, effort: str, timeout: int, attempts: int = 3) -> dict:
     for attempt in range(1, attempts + 1):
-        row = _run_once(task, agent, effort, timeout)
+        row = _run_once(task, agent, arm, label, effort, timeout)
         if not row["transient"] or attempt == attempts:
             row["attempt"] = attempt
             break
         time.sleep(60 * attempt)
-    logs = HERE / "runs" / agent / row["suite"]
+    logs = HERE / "runs" / label / row["suite"]
     with open(logs.parent / "runs.jsonl", "a", encoding="utf-8") as f:
         f.write(json.dumps(row) + "\n")
     print(json.dumps(row), flush=True)
     return row
 
 
-def _run_once(task: Path, agent: str, effort: str, timeout: int) -> dict:
+def _run_once(task: Path, agent: str, arm: str, label: str, effort: str, timeout: int) -> dict:
     meta = json.loads((task / "task.json").read_text(encoding="utf-8"))
     suite, tid = meta["suite"], meta["id"]
-    ws = WS / agent / suite / tid
+    ws = WS / label / suite / tid
     if ws.exists():
         shutil.rmtree(ws)
     shutil.copytree(task / "input", ws)
     images = sorted(p.name for p in ws.glob("*.png"))
-    prompt = V2C_PROMPT if suite == "v2c" else T1_PROMPT.replace("%FILES%", ", ".join(images))
-    logs = HERE / "runs" / agent / suite
+    if arm == "code":
+        if suite != "v2c":
+            raise SystemExit("the code arm is set up for v2c only")
+        shutil.copy(HERE / "render.py", ws / "render.py")
+        prompt = V2C_CODE_PROMPT.replace("%PY%", BENCH_PY.as_posix()).replace("%LOOK%", LOOK[agent])
+    else:
+        prompt = V2C_PROMPT if suite == "v2c" else T1_PROMPT.replace("%FILES%", ", ".join(images))
+    logs = HERE / "runs" / label / suite
     logs.mkdir(parents=True, exist_ok=True)
-    cmd = command(agent, "mcp", ws.as_posix(), effort, logs / "_mcp", images=[(ws / i).as_posix() for i in images])
+    cmd = command(agent, arm, ws.as_posix(), effort, logs / "_mcp", python=str(BENCH_PY),
+                  images=[(ws / i).as_posix() for i in images])
     t0 = time.time()
     status = "done"
     with open(logs / f"{tid}.jsonl", "wb") as out, open(logs / f"{tid}.stderr.log", "wb") as err:
@@ -108,7 +146,7 @@ def _run_once(task: Path, agent: str, effort: str, timeout: int) -> dict:
     leak = str(DATA).replace("\\", "/").lower() in log.replace("\\\\", "/").replace("\\", "/").lower()
     submitted = (ws / "submission.step").exists()
     tail = log[-4000:] + (logs / f"{tid}.stderr.log").read_text(encoding="utf-8", errors="replace")[-4000:]
-    return {"suite": suite, "id": tid, "agent": agent, "effort": effort, "status": status, "exit": code,
+    return {"suite": suite, "id": tid, "agent": agent, "arm": arm, "effort": effort, "status": status, "exit": code,
             "seconds": round(time.time() - t0, 1), "submitted": submitted, "leak_suspect": leak,
             "transient": not submitted and any(t in tail for t in TRANSIENT)}
 
@@ -117,6 +155,8 @@ def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("suite", choices=["v2c", "t1"])
     ap.add_argument("--agent", choices=["claude", "codex"], required=True)
+    ap.add_argument("--arm", choices=["mcp", "code"], default="mcp", help="code: CadQuery without AgentCAD")
+    ap.add_argument("--label", help="run directory name (default: the agent)")
     ap.add_argument("--effort", default="high")
     ap.add_argument("--jobs", type=int, default=3)
     ap.add_argument("--timeout", type=int, default=1800, help="seconds per task")
@@ -124,16 +164,17 @@ def main() -> None:
     ap.add_argument("--limit", type=int)
     ap.add_argument("--skip-done", action="store_true", help="skip tasks that already have a submission")
     a = ap.parse_args()
+    label = a.label or a.agent
     if not os.environ.get("AGENTCAD_FREECAD") and not os.environ.get("FREECAD_LIB"):
         print("warning: AGENTCAD_FREECAD is not set; 3D parts need FreeCAD", file=sys.stderr)
     tasks = sorted(p for p in (DATA / a.suite).iterdir() if (p / "task.json").exists())
     if a.ids:
         tasks = [t for t in tasks if t.name in a.ids]
     if a.skip_done:
-        tasks = [t for t in tasks if not (WS / a.agent / a.suite / t.name / "submission.step").exists()]
+        tasks = [t for t in tasks if not (WS / label / a.suite / t.name / "submission.step").exists()]
     tasks = tasks[:a.limit] if a.limit else tasks
     with ThreadPoolExecutor(a.jobs) as pool:
-        list(pool.map(lambda t: run_one(t, a.agent, a.effort, a.timeout), tasks))
+        list(pool.map(lambda t: run_one(t, a.agent, a.arm, label, a.effort, a.timeout), tasks))
 
 
 if __name__ == "__main__":
