@@ -16,24 +16,34 @@ Files are read into a content-addressed cache outside the workspace before they 
     GET /api/diff?path=&v=        what the commit that made version v changed (as get_diff reports it)
     GET /api/mesh?path=&v=        3D part: triangles and edges (JSON) for three.js
     GET /api/png?path=&v=         3D part: the shaded preview grid (fallback when WebGL is unavailable)
-    GET /api/events               SSE: {"drawing", "kind": changed|added|removed, "id"}
+    GET /api/thumb?path=&v=       small picture for the file list and before/after (2D: SVG, 3D: iso PNG)
+    GET /api/activity             recent progress events the runtime wrote (progress.py), oldest first
+    GET /api/export?path=&v=      a self-contained HTML snapshot (picture + change history) to send to someone
+    GET /api/events?progress=1    SSE: {"drawing", "kind": changed|added|removed, "id"}; progress=1 adds
+                                  {"kind": "activity", "activity": <progress event>}
+
+The MCP server starts one in the background on the first change (``start_background``), so a user only has to
+open the ``viewer_url`` its results carry.
 """
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
+import re
 import socket
 import tempfile
 import threading
 import time
 import uuid
-from collections import OrderedDict
+from collections import OrderedDict, deque
 from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
 
+from . import progress
 from .errors import AgentCADError, input_error
 from .policy import STATE_DIR, Policy
 from .store import DrawingStore, read_dxf, sha256_file
@@ -42,7 +52,11 @@ STATIC = Path(__file__).resolve().parent / "viewer_static"
 SUFFIXES = (".dxf", ".fcstd")
 SKIP_DIRS = {STATE_DIR, ".git", ".venv", "venv", "node_modules", "__pycache__", ".claude"}
 MAX_FILES = 2000
-ROUTES = {"/api/timeline", "/api/layers", "/api/diff", "/api/svg", "/api/mesh", "/api/png"}
+ROUTES = {"/api/timeline", "/api/layers", "/api/diff", "/api/svg", "/api/mesh", "/api/png", "/api/thumb",
+          "/api/export"}
+STATIC_FILES = {"/friendly.js": ("friendly.js", "text/javascript; charset=utf-8"),
+                "/logo.svg": ("logo.svg", "image/svg+xml")}
+FREECAD_JOBS = threading.BoundedSemaphore(2)  # thumbnails of many parts must not start FreeCAD for each at once
 INFO_FILE = "viewer.json"  # <root>/.agentcad/viewer.json: where a running viewer listens (see viewer_url)
 LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})
 COLORS = {"added": "#16a34a", "modified": "#ea580c", "other": "#b8bcc4"}
@@ -157,6 +171,8 @@ class Workspace:
         records = []
         for r in st.read_journal():
             line = _journal_line(r)
+            if r.get("operations"):
+                line["steps"] = progress.group_ops(r["operations"])
             sha = r.get("sha256") if r.get("ok") else None
             if sha:
                 line["version"] = sha
@@ -244,12 +260,23 @@ class Workspace:
                 "modified": d["modified"], "layers": d["layers"]}
 
     @_retry
-    def svg(self, rel: str, version: str | None, diff: bool = False, hide: tuple[str, ...] = ()) -> str:
+    def svg(self, rel: str, version: str | None, diff: bool = False, hide: tuple[str, ...] = (),
+            frame: str | None = None) -> str:
+        """``frame``: another version; both are then framed alike (the union of their extents), so a before and an
+        after picture line up."""
         sha, _ = self.snapshot(rel, version)
         before = self.before(rel, sha) if diff else None
-        return self._memo(("svg", sha, before, tuple(sorted(hide))), lambda: self._svg(rel, sha, before, hide))
+        if frame:
+            frame = self.snapshot(rel, frame)[0]
+        return self._memo(("svg", sha, before, tuple(sorted(hide)), frame),
+                          lambda: self._svg(rel, sha, before, hide, frame))
 
-    def _svg(self, rel: str, sha: str, before: str | None, hide: tuple[str, ...]) -> str:
+    def _extents(self, rel: str, sha: str):
+        from ezdxf import bbox
+        _, doc = self._doc(rel, sha)
+        return bbox.extents(doc.modelspace(), fast=True)
+
+    def _svg(self, rel: str, sha: str, before: str | None, hide: tuple[str, ...], frame: str | None = None) -> str:
         from ezdxf import bbox
         from ezdxf.addons.drawing import Frontend, RenderContext, layout, svg
         from ezdxf.addons.drawing.config import BackgroundPolicy, Configuration
@@ -277,9 +304,12 @@ class Workspace:
         page = layout.Page(0, 0, layout.Units.mm, margins=layout.Margins.all(5))
         box = None
         try:  # hiding layers must not re-frame the drawing
-            ext = bbox.extents(msp, fast=True)
-            if ext.has_data and ext.size.x > 0 and ext.size.y > 0:
-                box = BoundingBox2d([ext.extmin.vec2, ext.extmax.vec2])
+            exts = [bbox.extents(msp, fast=True)] + ([self._extents(rel, frame)] if frame else [])
+            pts = [p.vec2 for e in exts if e.has_data for p in (e.extmin, e.extmax)]
+            if pts:
+                b = BoundingBox2d(pts)
+                if b.size.x > 0 and b.size.y > 0:
+                    box = b
         except Exception:
             box = None
         try:
@@ -317,7 +347,8 @@ class Workspace:
     # --- 3D (FreeCAD) -------------------------------------------------------------------------------
     def _fc(self, job: dict[str, Any], src: Path, out: Path | None = None) -> dict[str, Any]:
         from .backends import freecad
-        res = freecad.run(job, inputs={"input": src}, outputs={"output": out} if out else None)
+        with FREECAD_JOBS:
+            res = freecad.run(job, inputs={"input": src}, outputs={"output": out} if out else None)
         if not res.get("ok"):
             e = res.get("error") or {}
             raise AgentCADError(e.get("code", "FREECAD_ERROR"), e.get("message", "FreeCAD job failed"),
@@ -347,34 +378,146 @@ class Workspace:
         return out
 
 
+    @_retry
+    def thumb(self, rel: str, version: str | None) -> tuple[bytes, str]:
+        """A small picture: 2D the SVG, 3D one shaded iso view."""
+        if not _is_part(rel):
+            return self.svg(rel, version).encode("utf-8"), "image/svg+xml"
+        sha, src = self.snapshot(rel, version)
+        out = self.cache / f"{sha}.thumb.png"
+        if not out.is_file():
+            self._memo(("thumb", sha), lambda: self._fc({"action": "render", "views": ["iso"], "size": 240},
+                                                        src, out))
+        return out.read_bytes(), "image/png"
+
+    # --- export ---------------------------------------------------------------------------------------
+    def export_html(self, rel: str, version: str | None) -> tuple[str, str]:
+        """(file name, page): one self-contained HTML file with the picture of a version and the file's change
+        history, to send to someone. No script, style or image is loaded from anywhere; no absolute path, root
+        or checkpoint location is included."""
+        sha, _ = self.snapshot(rel, version)
+        tl = self.timeline(rel)
+        hist = []
+        for r in tl["records"]:
+            item = {k: r[k] for k in ("seq", "ts", "tool", "ok", "label", "ops", "steps", "changes", "error")
+                    if r.get(k) is not None}
+            if r.get("version") == sha:
+                item["shown"] = True
+            hist.append(item)
+        data: dict[str, Any] = {"name": rel, "kind": tl["kind"], "version": sha[:12],
+                                "exported": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "history": hist}
+        before = self.before(rel, sha)
+        if _is_part(rel):
+            data["image"] = "data:image/png;base64," + base64.b64encode(self.png(rel, sha).read_bytes()).decode()
+            try:
+                d = self.diff(rel, sha)
+                data["diff"] = {k: d[k] for k in ("parameters", "shape", "features") if d.get(k)}
+            except AgentCADError:
+                pass
+        else:
+            def uri(svg_text: str) -> str:
+                return "data:image/svg+xml;base64," + base64.b64encode(svg_text.encode("utf-8")).decode()
+            data["image"] = uri(self.svg(rel, sha))
+            if before and before in self.versions(self.store(rel)):
+                data["image_changes"] = uri(self.svg(rel, sha, diff=True))
+                data["image_before"] = uri(self.svg(rel, before, frame=sha))
+                data["image_after"] = uri(self.svg(rel, sha, frame=before))
+                data["diff"] = {"summary": self._change_sets(rel, sha, before)["summary"]}
+        data = _scrub_obj(data, self.policy.root)
+        page = (STATIC / "snapshot.html").read_text("utf-8")
+        friendly = (STATIC / "friendly.js").read_text("utf-8")
+        payload = json.dumps(data, ensure_ascii=False).replace("<", "\\u003c")
+        page = page.replace("/*__FRIENDLY__*/", friendly.replace("</", "<\\/")).replace('"__DATA__"', payload)
+        name = re.sub(r"[^\w.-]+", "_", Path(rel).stem)[:60].strip("._") or "drawing"
+        return f"{name}-{sha[:8]}.html", page
+
+
+def _scrub_obj(obj: Any, root: Path) -> Any:
+    """Every string in ``obj`` without absolute paths (progress.scrub); image data URIs are left as they are."""
+    if isinstance(obj, str):
+        return obj if obj.startswith("data:image/") else progress.scrub(obj, root)
+    if isinstance(obj, dict):
+        return {k: _scrub_obj(v, root) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_scrub_obj(v, root) for v in obj]
+    return obj
+
+
 class ChangeFeed:
     """Polls the workspace and keeps a numbered list of change events; waiters block on ``wait``."""
 
-    def __init__(self, ws: Workspace, interval: float = 0.4, rescan: float = 1.0) -> None:
+    def __init__(self, ws: Workspace, interval: float = 0.3, rescan: float = 1.0) -> None:
         self.ws = ws
         self.interval = interval
         self.rescan = rescan
-        self.events: list[dict[str, Any]] = []
+        self.events: list[dict[str, Any]] = []  # file events: changed | added | removed
+        self.progress_events: list[dict[str, Any]] = []  # kind 'activity'
+        self._next_id = 0
         self.cond = threading.Condition()
         self.sigs: dict[str, tuple] = {}
         self.drawings: list[str] = []
         self._last_scan = 0.0
         self._stop = threading.Event()
+        self.activity: deque[dict[str, Any]] = deque(maxlen=400)  # recent progress events (progress.py)
+        self._log = progress.log_path(ws.policy)
+        self._log_pos = 0
+        self._read_activity(baseline=True)
         self.poll()  # baseline: what exists now is not news
 
-    def _emit(self, drawing: str, kind: str) -> None:
+    def _read_activity(self, baseline: bool = False) -> None:
+        """New lines of <root>/.agentcad/activity.jsonl become 'activity' events (the runtime only appends; a
+        smaller file means it was rotated, so it is read from the start)."""
+        try:
+            size = self._log.stat().st_size
+        except OSError:
+            self._log_pos = 0
+            return
+        if size < self._log_pos:
+            self._log_pos = 0
+        if baseline:
+            self._log_pos = max(0, size - 64 * 1024)
+        if size == self._log_pos:
+            return
+        with open(self._log, "rb") as f:
+            f.seek(self._log_pos)
+            data = f.read(4 * 1024 * 1024)
+        end = data.rfind(b"\n") + 1
+        lines = data[:end].splitlines()
+        if baseline and self._log_pos:
+            lines = lines[1:]  # the first line read from the middle of the file is partial
+        self._log_pos += end
+        for raw in lines:
+            try:
+                ev = json.loads(raw)
+            except ValueError:
+                continue
+            if not isinstance(ev, dict):
+                continue
+            self.activity.append(ev)
+            if not baseline:
+                self._emit(str(ev.get("drawing") or ""), "activity", activity=ev)
+
+    def _emit(self, drawing: str, kind: str, **extra: Any) -> None:
+        """File events go to ``events``, progress events to ``progress_events``; both share one id sequence (the
+        SSE stream's Last-Event-ID)."""
         with self.cond:
-            ev = {"id": len(self.events) + 1, "drawing": drawing, "kind": kind, "ts": time.time()}
-            self.events.append(ev)
-            del self.events[:-1000]
+            self._next_id += 1
+            ev = {"id": self._next_id, "drawing": drawing, "kind": kind, "ts": time.time(), **extra}
+            target = self.progress_events if kind == "activity" else self.events
+            target.append(ev)
+            del target[:-1000]
             self.cond.notify_all()
 
     @property
     def last_id(self) -> int:
         with self.cond:
-            return self.events[-1]["id"] if self.events else 0
+            return self._next_id
 
     def poll(self) -> None:
+        try:
+            self._read_activity()
+        except (OSError, ValueError):
+            pass
         first = not self._last_scan
         if first or time.monotonic() - self._last_scan >= self.rescan:
             self.drawings = self.ws.list_drawings()
@@ -396,14 +539,18 @@ class ChangeFeed:
                 self._emit(rel, "removed")
         self.sigs = now
 
-    def since(self, last: int) -> list[dict[str, Any]]:
+    def since(self, last: int, progress: bool = False) -> list[dict[str, Any]]:
+        """Events after id ``last``: file events, and with ``progress`` the progress events too."""
         with self.cond:
-            return [e for e in self.events if e["id"] > last]
+            evs = [e for e in self.events if e["id"] > last]
+            if progress:
+                evs = sorted(evs + [e for e in self.progress_events if e["id"] > last], key=lambda e: e["id"])
+            return evs
 
-    def wait(self, last: int, timeout: float) -> list[dict[str, Any]]:
+    def wait(self, last: int, timeout: float, progress: bool = False) -> list[dict[str, Any]]:
         with self.cond:
-            self.cond.wait_for(lambda: bool(self.events) and self.events[-1]["id"] > last, timeout)
-            return [e for e in self.events if e["id"] > last]
+            self.cond.wait_for(lambda: bool(self.since(last, progress)), timeout)
+            return self.since(last, progress)
 
     def run(self) -> None:
         while not self._stop.wait(self.interval):
@@ -428,9 +575,15 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
 
-        def _send(self, code: int, body: bytes, ctype: str, cache: bool = False) -> None:
+        def _send(self, code: int, body: bytes, ctype: str, cache: bool = False, download: str | None = None) -> None:
             self.send_response(code)
             self.send_header("Content-Type", ctype)
+            self.send_header("X-Content-Type-Options", "nosniff")
+            if download:  # an ASCII name for old clients, the real one (UTF-8, e.g. Chinese) for the rest
+                from urllib.parse import quote
+                ascii_name = re.sub(r"[^A-Za-z0-9._-]+", "_", download)
+                self.send_header("Content-Disposition",
+                                 f"attachment; filename=\"{ascii_name}\"; filename*=UTF-8''{quote(download)}")
             self.send_header("Content-Length", str(len(body)))
             self.send_header("Cache-Control", "private, max-age=86400" if cache else "no-store")
             self.end_headers()
@@ -452,6 +605,11 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
             try:
                 if u.path in ("/", "/index.html"):
                     return self._send(200, (STATIC / "index.html").read_bytes(), "text/html; charset=utf-8")
+                if u.path in STATIC_FILES:
+                    name, ctype = STATIC_FILES[u.path]
+                    return self._send(200, (STATIC / name).read_bytes(), ctype)
+                if u.path == "/api/activity":
+                    return self._json({"ok": True, "events": list(feed.activity), "last_event": feed.last_id})
                 if u.path == "/api/ping":
                     return self._json({"ok": True, "root": str(ws.policy.root)})
                 if u.path == "/api/drawings":
@@ -459,7 +617,8 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                         {"path": r, "kind": "part" if _is_part(r) else "drawing"} for r in ws.list_drawings()],
                         "last_event": feed.last_id})
                 if u.path == "/api/events":
-                    return self._events(int(self.headers.get("Last-Event-ID") or q.get("since") or feed.last_id))
+                    return self._events(int(self.headers.get("Last-Event-ID") or q.get("since") or feed.last_id),
+                                        q.get("progress") == "1")
                 if u.path not in ROUTES:
                     return self._json({"ok": False, "error": {"code": "NOT_FOUND", "category": "input",
                                                               "message": u.path}}, 404)
@@ -473,8 +632,16 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                     return self._json({"ok": True, **ws.diff(path, v)})
                 if u.path == "/api/svg":
                     hide = tuple(x for x in q.get("hide", "").split(",") if x)
-                    body = ws.svg(path, v, diff=q.get("diff") == "1", hide=hide).encode("utf-8")
+                    body = ws.svg(path, v, diff=q.get("diff") == "1", hide=hide,
+                                  frame=q.get("frame") or None).encode("utf-8")
                     return self._send(200, body, "image/svg+xml", cache=pinned)
+                if u.path == "/api/thumb":
+                    body, ctype = ws.thumb(path, v)
+                    return self._send(200, body, ctype, cache=pinned)
+                if u.path == "/api/export":
+                    name, page = ws.export_html(path, v)
+                    return self._send(200, page.encode("utf-8"), "text/html; charset=utf-8",
+                                      download=name)
                 if u.path == "/api/mesh":
                     return self._send(200, ws.mesh(path, v).read_bytes(), "application/json", cache=pinned)
                 return self._send(200, ws.png(path, v).read_bytes(), "image/png", cache=pinned)  # /api/png
@@ -488,7 +655,7 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                 self._json({"ok": False, "error": {"code": "INTERNAL_ERROR", "category": "internal",
                                                    "message": f"{type(exc).__name__}: {exc}"}}, 500)
 
-        def _events(self, last: int) -> None:
+        def _events(self, last: int, progress: bool = False) -> None:
             self.send_response(200)
             self.send_header("Content-Type", "text/event-stream")
             self.send_header("Cache-Control", "no-store")
@@ -499,7 +666,7 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                 self.wfile.write(b"retry: 1000\n\n")
                 self.wfile.flush()
                 while not feed._stop.is_set():
-                    evs = feed.wait(last, 15)
+                    evs = feed.wait(last, 15, progress)
                     if not evs:
                         self.wfile.write(b": keep-alive\n\n")
                     for ev in evs:
@@ -536,7 +703,7 @@ def _server(host: str):
 class Viewer:
     """The server and its change feed; ``start`` runs it in the background (tests), ``serve`` blocks."""
 
-    def __init__(self, policy: Policy, host: str = "127.0.0.1", port: int = 8770, interval: float = 0.4,
+    def __init__(self, policy: Policy, host: str = "127.0.0.1", port: int = 8770, interval: float = 0.3,
                  allow_remote: bool = False,
                  cache_dir: Path | None = None) -> None:
         policy.read_only = True  # the viewer never writes a drawing
@@ -587,6 +754,32 @@ class Viewer:
                 self.info_path.unlink()
         except (OSError, ValueError):
             pass
+
+
+def start_background(policy: Policy) -> Viewer | None:
+    """Start a viewer of ``policy.root`` in this process, on daemon threads (it ends with the process). Used by the
+    MCP server on its first change, so the user only has to open the link. Port: AGENTCAD_VIEWER_PORT, else the
+    first free one of 8770-8779, else any. AGENTCAD_VIEWER_OPEN=1 also opens it in the browser. None on failure."""
+    import atexit
+    env_port = os.environ.get("AGENTCAD_VIEWER_PORT", "").strip()
+    ports = [int(env_port)] if env_port.isdigit() else [*range(8770, 8780), 0]
+    view_policy = Policy(root=policy.root, read_only=True)  # its own: Viewer makes the policy read-only
+    for port in ports:
+        try:
+            v = Viewer(view_policy, port=port).start()
+        except OSError:
+            continue
+        except Exception:  # noqa: BLE001 - a viewer is a convenience; never fail the agent's call
+            return None
+        atexit.register(v.stop)
+        if os.environ.get("AGENTCAD_VIEWER_OPEN", "").strip().lower() in {"1", "true", "yes", "on"}:
+            try:
+                import webbrowser
+                webbrowser.open(v.url)
+            except Exception:  # noqa: BLE001
+                pass
+        return v
+    return None
 
 
 def viewer_url(policy: Policy, drawing: str) -> str | None:

@@ -6,6 +6,7 @@
 from __future__ import annotations
 
 import hashlib
+import inspect
 import json
 import os
 import shutil
@@ -19,7 +20,7 @@ from typing import Any, Callable
 import ezdxf
 from ezdxf import bbox
 
-from . import engine, spec as specmod
+from . import engine, progress, spec as specmod
 from .constraints import ENFORCE_TYPES, CHECK_TYPES, check_constraints, enforce_one
 from .errors import AgentCADError, input_error, policy_error
 from .metadata import all_meta, get_meta, set_meta
@@ -41,6 +42,13 @@ TOOLS: dict[str, Callable] = {}
 LIVE_SYNC_TOOLS = {"create_drawing", "apply_operations", "run_script", "apply_constraints", "draw_from_spec",
                    "revise_drawing", "revise_from_document", "rollback", "recover", "import_drawing"}
 LIVE_ACTIONS = ("status", "open", "reload", "pull", "zoom", "command")
+# tools whose results carry viewer_url (the live viewer's page for the drawing they changed)
+VIEWER_TOOLS = LIVE_SYNC_TOOLS | {"apply_batch"}
+# tools that report progress to the live viewer (progress.py): name -> the argument naming the drawing
+PROGRESS_TOOLS = {"create_drawing": "path", "apply_operations": "path", "run_script": "path",
+                  "apply_constraints": "path", "draw_from_spec": "output", "revise_drawing": "path",
+                  "revise_from_document": "output", "rollback": "path", "recover": "path",
+                  "import_drawing": "output", "validate_drawing": "path"}
 
 
 def _live_base(store, path: Path | None = None) -> str | None:
@@ -60,10 +68,14 @@ def tool(fn):
     """Wrap a Runtime method into the standard envelope with metrics and error capture."""
     name = fn.__name__
 
+    sig = inspect.signature(fn)
+
     @wraps(fn)
     def wrapper(self: "Runtime", *args, **kwargs):
         t0 = time.perf_counter()
         in_bytes = len(json.dumps([args, kwargs], default=str))
+        act, ops = self._activity(name, sig, args, kwargs)
+        token = progress.begin(act) if act else None
         try:
             payload = fn(self, *args, **kwargs)
             env = {"ok": True, "tool": name, **payload}
@@ -73,12 +85,16 @@ def tool(fn):
             env = {"ok": False, "tool": name,
                    "error": AgentCADError("INTERNAL_ERROR", f"{type(exc).__name__}: {exc}", category="internal",
                                           details={"traceback": traceback.format_exc(limit=8)}).to_dict()}
+        finally:
+            if token is not None:
+                progress.end(token)
+        if act:
+            act.finish(env, ops)
         if (env["ok"] and name in LIVE_SYNC_TOOLS and self.policy.live_sync and env.get("drawing")
                 and not env.get("dry_run")):
             env["live"] = self._live_sync(env["drawing"])
-        if env["ok"] and name == "create_drawing":
-            from .viewer import viewer_url
-            url = viewer_url(self.policy, env["drawing"])
+        if env["ok"] and name in VIEWER_TOOLS and not env.get("dry_run"):
+            url = self._viewer_link(env)
             if url:
                 env["viewer_url"] = url
         env["metrics"] = {"duration_ms": round((time.perf_counter() - t0) * 1000, 2), "input_bytes": in_bytes,
@@ -148,9 +164,15 @@ def setup_document(units: str, template: str, version: str, annotation_scale: fl
 
 
 class Runtime:
-    def __init__(self, policy: Policy | None = None) -> None:
+    def __init__(self, policy: Policy | None = None, auto_viewer: bool = False) -> None:
+        """``auto_viewer``: start the live viewer in the background on the first change (the MCP server sets it;
+        AGENTCAD_VIEWER=0 in the environment turns it off)."""
         self.policy = policy or Policy()
         self.metrics: list[dict[str, Any]] = []
+        self.auto_viewer = auto_viewer and os.environ.get("AGENTCAD_VIEWER", "1").strip().lower() not in \
+            {"0", "false", "no", "off"}
+        self._viewer = None
+        self._viewer_retry = 0.0
 
     # --- helpers ---------------------------------------------------------------------------
     def _drawing(self, path: str, must_exist: bool = True, part_ok: bool = False) -> tuple[Path, DrawingStore]:
@@ -196,6 +218,52 @@ class Runtime:
 
     def _rel(self, p: Path) -> str:
         return p.relative_to(self.policy.root).as_posix()
+
+    def _activity(self, name: str, sig: inspect.Signature, args: tuple, kwargs: dict):
+        """(progress.Activity, operations) for a call the live viewer follows, else (None, None). A call nested in
+        another one on the same drawing (apply_operations(create=...) creating it) is not reported separately."""
+        arg = PROGRESS_TOOLS.get(name)
+        if arg is None or self.policy.read_only:
+            return None, None
+        try:
+            bound = sig.bind_partial(self, *args, **kwargs).arguments
+            if bound.get("dry_run") or not isinstance(bound.get(arg), str):
+                return None, None
+            drawing = self._rel(self.policy.resolve(bound[arg]))
+            outer = progress.current()
+            if outer is not None and outer.drawing == drawing:
+                return None, None
+            ops = bound.get("operations") if isinstance(bound.get("operations"), list) else None
+            act = progress.Activity(self.policy, name, drawing)
+            checks = name == "validate_drawing" or (name == "apply_constraints"
+                                                    and bound.get("mode", "check") == "check")
+            act.emit("checking" if checks else "working", step=0, total=len(ops) if ops is not None else None)
+            return act, ops
+        except Exception:  # noqa: BLE001 - a bad path fails the call itself, with its own error
+            return None, None
+
+    def _viewer_link(self, env: dict[str, Any]) -> str | None:
+        """The live viewer's page for the drawing a call changed. With ``auto_viewer`` (the MCP server) a viewer is
+        started in the background on the first change if none serves this root (AGENTCAD_VIEWER=0 turns that off)."""
+        drawing = env.get("drawing")
+        if not drawing and env.get("jobs"):
+            drawing = next((j["path"] for j in env["jobs"] if j.get("ok")), "")
+        drawing = drawing or ""
+        try:
+            from .viewer import viewer_url
+            if self._viewer is not None:
+                return f"{self._viewer.url}#{drawing}"
+            url = viewer_url(self.policy, drawing)
+            if url or not self.auto_viewer or time.monotonic() < self._viewer_retry:
+                return url
+            from .viewer import start_background
+            self._viewer = start_background(self.policy)
+            if self._viewer is None:
+                self._viewer_retry = time.monotonic() + 60
+                return None
+            return f"{self._viewer.url}#{drawing}"
+        except Exception:  # noqa: BLE001 - the viewer is a convenience; the change is already committed
+            return None
 
     def live_connect(self, start: bool = False):
         """The running AutoCAD (COM), or None; replaced in tests."""
@@ -399,6 +467,7 @@ class Runtime:
             attempt = {"tool": "apply_operations", "label": label, "operations": operations, "changes": _changes(res)}
             info = store.commit(doc, label=label or "apply_operations", attempt=attempt)
             seq = store.journal({**attempt, "ok": True, **info})
+        progress.checking()
         report = validate_file(p, requirements=requirements, bounds=bounds, layout=layout)
         out = {"drawing": self._rel(p), "changes": _changes(res), "results": res["results"],
                "validation": _brief(report), "journal_seq": seq, **info}

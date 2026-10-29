@@ -1,6 +1,7 @@
 """MCP server (stdio). Each tool is a thin adapter over ``Runtime``; no CAD
 logic lives here. Configure with env AGENTCAD_ROOT (workspace sandbox),
-AGENTCAD_READ_ONLY=1 and AGENTCAD_ALLOWED_OPS=op1,op2."""
+AGENTCAD_READ_ONLY=1 and AGENTCAD_ALLOWED_OPS=op1,op2. The live viewer starts on the first change
+(AGENTCAD_VIEWER=0: not at all; AGENTCAD_VIEWER_OPEN=1: also open it in the browser)."""
 from __future__ import annotations
 
 from typing import Annotated, Any, Literal
@@ -34,14 +35,17 @@ list_operations(category='part') (names: list_operations().part_operations): set
 pad / pocket / revolve / hole / fillet / chamfer / patterns ... A part is one PartDesign Body, one solid, all
 features native and editable. Drive dimensions by parameters ('=Params.width') and change them later with
 set_parameters or modify_feature; edge and face selectors ({"type": "line", "direction": "z"}, "top") are
-re-resolved after every edit. Coordinates are mm, [x, y] in a sketch, [x, y, z] in space."""
+re-resolved after every edit. Coordinates are mm, [x, y] in a sketch, [x, y, z] in space.
+Live viewer: results that change a file carry viewer_url, a page on this computer where the user watches the
+drawing or part change, step by step, and can save or share it. Give the user that link the first time you
+change something (once is enough), e.g. "You can watch it here: <viewer_url>"."""
 
 Path_ = Annotated[str, Field(description="Drawing path (.dxf) or 3D part (.FCStd), relative to the workspace "
                                         "root")]
 
 
 def build_server(policy: Policy | None = None) -> FastMCP:
-    rt = Runtime(policy or Policy())
+    rt = Runtime(policy or Policy(), auto_viewer=True)
     mcp = FastMCP("agentcad", instructions=INSTRUCTIONS)
 
     @mcp.tool()

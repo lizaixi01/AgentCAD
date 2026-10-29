@@ -13,6 +13,7 @@ import zipfile
 from pathlib import Path
 from typing import Any, TYPE_CHECKING
 
+from .. import progress
 from ..backends import freecad
 from ..errors import AgentCADError, file_error, input_error
 from ..policy import Policy
@@ -65,8 +66,8 @@ def _jobs(rt: "Runtime") -> Path:
 
 
 def _run(rt: "Runtime", job: dict[str, Any], inputs: dict[str, Path] | None = None,
-         outputs: dict[str, Path] | None = None) -> dict[str, Any]:
-    res = freecad.run(job, inputs, outputs)
+         outputs: dict[str, Path] | None = None, on_progress=None) -> dict[str, Any]:
+    res = freecad.run(job, inputs, outputs, on_progress)
     if not res.get("ok"):
         e = res.get("error") or {}
         cat = e.get("category", "internal")
@@ -75,6 +76,20 @@ def _run(rt: "Runtime", job: dict[str, Any], inputs: dict[str, Path] | None = No
                             entities=e.get("entities"), op_index=e.get("op_index"), op=e.get("op"),
                             hint=e.get("hint"), details=e.get("details"))
     return res
+
+
+def _progress_relay(operations: list[dict]):
+    """Forward the FreeCAD runner's per-operation lines to the live viewer (progress.py), or None if nobody
+    follows this call."""
+    if progress.current() is None:
+        return None
+
+    def relay(ev: dict[str, Any]) -> None:
+        if ev.get("phase") == "checking":
+            progress.checking()
+        elif isinstance(ev.get("step"), int) and 0 <= ev["step"] < len(operations):
+            progress.step(ev["step"], len(operations), operations[ev["step"]])
+    return relay
 
 
 def _candidate(rt: "Runtime") -> Path:
@@ -150,7 +165,8 @@ def apply(rt: "Runtime", path: str, operations: list[dict], dry_run: bool, requi
             if new:
                 job.update(input=None, units=units)
             try:
-                res = _run(rt, job, inputs=None if new else {"input": p}, outputs={"output": cand})
+                res = _run(rt, job, inputs=None if new else {"input": p}, outputs={"output": cand},
+                           on_progress=_progress_relay(operations))
             except AgentCADError as exc:
                 store.journal({"tool": "apply_operations", "kind": "part", "ok": False, "label": label,
                                "operations": operations, "error": exc.to_dict(), "file_unchanged": True})
