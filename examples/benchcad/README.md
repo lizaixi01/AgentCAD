@@ -153,7 +153,7 @@ Paired by task, with 95% bootstrap intervals:
     residual.
   - At those prices, the $20.6 gap splits into cache writes $12.5, output $4.8 and cache reads $3.3. Cache writes
     are each turn's new content, such as compare images and tool results. AgentCAD's tool definitions and
-    instructions (about 33k characters) are read back from the cache, so they are part of the $3.3.
+    instructions (about 33k characters) come mostly from the cache, as part of the $3.3.
   - It also took more turns: 14 vs 12.5 median.
 - **This arm cannot split the gain.** It adds scripts and the comparison together.
 
@@ -199,7 +199,7 @@ Next:
 - A comparison that sees inside the outline (shading or depth), so the score tracks the shape and not just its
   silhouettes.
 - Smaller compare results, to cut Claude's cost. The images and tool results each turn writes to its cache are
-  most of the extra cost.
+  the largest part of the extra cost.
 
 ## Files
 
