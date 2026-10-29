@@ -3,10 +3,13 @@
     python examples/benchcad/run.py v2c --agent claude [--arm mcp|code] [--label NAME] [--jobs 3] [--effort high]
                                         [--ids id1 id2] [--limit N]
 
-Each task gets a fresh workspace <ws>/<agent>/<suite>/<id>/ outside this repository (the MCP server's
-AGENTCAD_ROOT) holding only the task's input/ files. The agent can call AgentCAD's MCP tools and look at the input
-images (Claude Code: Read, run from the workspace; Codex: the images are attached to the prompt), and nothing
-else. It must leave its part in submission.step. The reference stays under <data>, never inside a workspace.
+Each task gets a fresh workspace <ws>/<label>/<suite>/<id>/ outside this repository (the MCP server's
+AGENTCAD_ROOT) holding only the task's input/ files (plus render.py in the code arm). In the AgentCAD arm the agent
+can call AgentCAD's MCP tools and look at the input images (Claude Code: Read, run from the workspace; Codex: the
+images are attached to the prompt), and nothing else. The code arm's agent gets file tools and a shell (see
+agents.py); neither sandbox stops reads outside the workspace, so the logs are checked for the data directory
+(leak_suspect). It must leave its part in submission.step. The reference stays under <data>, never inside a
+workspace.
 Event streams go to examples/benchcad/runs/<label>/<suite>/<id>.jsonl (label defaults to the agent); run summaries
 to runs.jsonl beside them. Set AGENTCAD_FREECAD for 3D parts (the MCP server inherits it).
 

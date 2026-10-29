@@ -3,10 +3,12 @@ the same camera positions, framing and colors. Copied into each workspace of the
 
     python render.py submission.step preview.png
 """
+import os
 import sys
 from pathlib import Path
 
-sys.path.insert(0, r"D:\Projects\bench-src\BenchCAD-main")
+# BENCHCAD_SRC: the folder holding BenchCAD-main, as for prepare.py and score.py
+sys.path.insert(0, str(Path(os.environ.get("BENCHCAD_SRC", r"D:\Projects\bench-src")) / "BenchCAD-main"))
 from benchcad_core.scoring.views import composite_for_step  # noqa: E402
 
 out = Path(sys.argv[2])

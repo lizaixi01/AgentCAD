@@ -21,7 +21,8 @@ from summarize_run import summarize  # noqa: E402
 LABELS = ["claude-mcp-medium", "claude-mcp-opt-medium", "claude-mcp-opt2-medium", "claude-code-medium",
           "codex-mcp-medium", "codex-mcp-opt-medium", "codex-code-medium"]
 CONTRASTS = [("claude-mcp-opt2-medium", "claude-mcp-medium"), ("claude-mcp-opt2-medium", "claude-code-medium"),
-             ("claude-mcp-medium", "claude-code-medium"), ("codex-mcp-opt-medium", "codex-mcp-medium"),
+             ("claude-mcp-medium", "claude-code-medium"), ("claude-mcp-opt-medium", "claude-code-medium"),
+             ("codex-mcp-opt-medium", "codex-mcp-medium"),
              ("codex-mcp-opt-medium", "codex-code-medium"), ("codex-mcp-medium", "codex-code-medium")]
 
 

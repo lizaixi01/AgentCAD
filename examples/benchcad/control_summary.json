@@ -134,6 +134,17 @@
    "b_better": 51
   },
   {
+   "a": "claude-mcp-opt-medium",
+   "b": "claude-code-medium",
+   "mean_diff": -0.0419,
+   "ci95": [
+    -0.084,
+    0.0021
+   ],
+   "a_better": 26,
+   "b_better": 52
+  },
+  {
    "a": "codex-mcp-opt-medium",
    "b": "codex-mcp-medium",
    "mean_diff": 0.0069,

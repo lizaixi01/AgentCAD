@@ -7,7 +7,8 @@
 v2c: benchcad_core.scoring.iou.iou_step_vs_step(submission, gt), voxel IoU at 64^3 on normalized shapes.
 t1:  envs.common.score_case.score_case(case_dir, submission), the part_v1 score verify_case.py prints.
 A task without submission.step scores 0, as an episode that never submits does in BenchCAD.
-Writes examples/benchcad/runs/<agent>/<suite>.scores.jsonl and prints the mean.
+Writes examples/benchcad/runs/<label>/<suite>.scores.jsonl (label: the agent, or run.py's --label) and prints
+the mean.
 """
 from __future__ import annotations
 
