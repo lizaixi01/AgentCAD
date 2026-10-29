@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="docs/assets/brand/logo.svg" alt="AgentCAD" width="360">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/logo-dark.svg">
+    <img src="docs/assets/brand/logo.svg" alt="AgentCAD" width="380">
+  </picture>
 </p>
 
 <p align="center"><b>The CAD runtime built for AI agents.</b><br>
