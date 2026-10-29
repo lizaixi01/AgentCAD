@@ -1,0 +1,14 @@
+[
+ {"op":"set_parameters","params":{"flange_d":120,"bore_d":30}},
+ {"op":"add_sketch","plane":"XY","shapes":[{"type":"circle","center":[0,0],"diameter":"=Params.flange_d"}]},
+ {"op":"pad","sketch":"$1","length":14},
+ {"op":"add_sketch","plane":"XY","offset":14,"shapes":[{"type":"circle","center":[0,0],"diameter":60}]},
+ {"op":"pad","sketch":"$3","length":26},
+ {"op":"add_sketch","plane":"XY","offset":40,"shapes":[{"type":"circle","center":[0,0],"diameter":"=Params.bore_d"}]},
+ {"op":"pocket","sketch":"$5","through_all":true},
+ {"op":"add_sketch","plane":"XY","offset":14,"shapes":[{"type":"circle","center":[45,0],"diameter":12}]},
+ {"op":"pocket","sketch":"$7","through_all":true,"tag":"bolt"},
+ {"op":"polar_pattern","features":["tag:bolt"],"occurrences":6},
+ {"op":"fillet","edges":{"type":"circle","radius":30,"z":14},"radius":4},
+ {"op":"chamfer","edges":{"type":"circle","z":40},"size":1.5}
+]

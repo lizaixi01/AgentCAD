@@ -4,7 +4,7 @@
 
 Traditional CAD software was built for humans to click, drag, and draw. AgentCAD is CAD infrastructure built for AI agents.
 
-Connect Claude Code, Codex, or any agent through MCP or the CLI. Describe what you want, and the agent creates, edits, validates, and exports real engineering drawings (DXF, and DWG when AutoCAD is installed).
+Connect Claude Code, Codex, or any agent through MCP or the CLI. Describe what you want, and the agent creates, edits, validates, and exports real engineering drawings (DXF, and DWG when AutoCAD is installed) and parametric 3D parts (FreeCAD `.FCStd`, exported to STEP and STL).
 
 No clicking. No GUI. Just natural language, code, and engineering.
 
@@ -15,6 +15,11 @@ No clicking. No GUI. Just natural language, code, and engineering.
   <img src="examples/trials/hard/png/H5/A/H5_r1__part.png" alt="Bracket plate dimensioned by an agent through AgentCAD: overall size, hole spacing, slot and chamfer" width="49%">
 </p>
 <p align="center"><sub>Both drawings were made by an agent through AgentCAD and plotted by AutoCAD 2027. Left: "make an A3 sheet with a 1:2 viewport". Right: "dimension this part so the shop can make it".</sub></p>
+<p align="center">
+  <img src="docs/assets/part3d/hub.png" alt="Flanged hub built through AgentCAD: Ø120 flange, hub with a Ø30 bore, six bolt holes from a polar pattern, a fillet and a chamfer" width="36%">
+  <img src="docs/assets/part3d/hub_params.png" alt="The same hub after one parameter edit: flange Ø160 and bore Ø40; the fillet, chamfer and bolt holes rebuild" width="36%">
+</p>
+<p align="center"><sub>A 3D part through the same tools: one batch of 12 operations builds the hub (left); one <code>set_parameters</code> call makes the flange Ø160 and the bore Ø40, and the fillet, chamfer and bolt holes rebuild (right). Previews rendered by AgentCAD's <code>export_drawing</code>; the operations are in <a href="docs/assets/part3d/">docs/assets/part3d/</a>.</sub></p>
 
 ---
 
@@ -24,13 +29,16 @@ Ask an agent to edit a drawing today and it writes a throwaway script against a 
 
 AgentCAD gives the agent a CAD runtime instead of a blank Python file:
 
-- **Operations, not scripts.** 55 typed operations (draw, edit, annotate, layers, blocks, sheets and viewports), each with a JSON schema. Batches are atomic: if one step fails, the file is untouched.
+- **Operations, not scripts.** 62 typed 2D operations (draw, edit, annotate, layers, blocks, sheets and viewports, industry symbols) and 19 for 3D parts (sketch, pad, pocket, revolve, hole, fillet, pattern, loft, sweep…), each with a JSON schema. Batches are atomic: if one step fails, the file is untouched.
 - **Every change is reversible.** Checkpoints before every edit, a diff of what changed, and a durable journal, so a new session can see and undo what an earlier one did.
-- **Checked by something other than the agent.** An independent validator re-reads the file from disk and reports problems as structured errors the agent can act on: geometry that doesn't close, dimensions that disagree with the part, text that will print too small, sheets it didn't check.
+- **Checked by something other than the agent.** An independent validator re-reads the file from disk and reports problems as structured errors the agent can act on: geometry that doesn't close, dimensions that disagree with the part, text that will print too small, sheets it didn't check. For 3D parts: one valid solid, its size and volume, the holes it has, and features that failed to rebuild.
+- **The agent can see its work.** 3D parts export shaded PNG previews from any view direction, returned inline to the agent so it can compare them with what it was asked to build. A live browser viewer shows you the same drawings and parts as they change.
 - **Real drawings, not just new ones.** Paper-space layouts, title blocks with attributes, DWG import/export and AutoCAD AUDIT through an optional headless AutoCAD backend.
 - **Safe by default.** Workspace sandbox, read-only mode, operation allow-lists. An escape hatch for custom ezdxf scripts exists, runs as a transaction, and is off unless you turn it on.
 
 ## Does it work? We measured it.
+
+### 2D: drafting tasks
 
 We gave two agents the same 12 drafting tasks, from a flange drawing to editing a real AutoCAD sample DWG, five rounds of revisions with an undo, a batch of 12 drawings, cleaning up a supplier's drawing, dimensioning a part and making a print sheet. One arm could only use AgentCAD. The other wrote Python with ezdxf. A neutral grader scored the files, and we plotted the results in AutoCAD.
 
@@ -44,6 +52,19 @@ We gave two agents the same 12 drafting tasks, from a flange drawing to editing 
 Time per run, 3 runs per task (median for Claude Code, mean for Codex). The Codex AgentCAD column is after two fixes the experiments called for: the real-DWG task was 0/3 until AgentCAD could see paper-space sheets, and the print-sheet task was 0/3 until it had layout and viewport operations. On most tasks the agent was 1.4–3× faster through AgentCAD. The one miss on the code side was the undo: a fresh session had no record of what it was asked to revert. AgentCAD's journal is what made every undo work.
 
 Where it doesn't win yet, we say so: for a batch of near-identical drawings a single generated script is faster and cheaper, and AgentCAD sessions still read 2× the input tokens of the code arm. Full numbers, logs and graders: [docs/comparison-claude-code.md](docs/comparison-claude-code.md), [docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md), [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md).
+
+### 3D: rebuilding parts from pictures (BenchCAD)
+
+We also ran a 100-task sample of [BenchCAD](https://arxiv.org/abs/2605.10865)'s Vision2Code task. The agent sees one image with four views of a part, and has to build that part as a solid using only AgentCAD's tools. BenchCAD's own scorer compares the result with the reference (voxel IoU, 1.0 is an exact match).
+
+| | Claude Code (Opus 5.5) + AgentCAD | Codex (gpt-6.1-sol) + AgentCAD |
+|---|---|---|
+| Parts submitted | 100 / 100 | 100 / 100 |
+| Mean IoU | 0.766 | **0.872** |
+| Near-exact (IoU ≥ 0.9) | 27 | **66** |
+| Median time per part | **3.1 min** | 5.8 min |
+
+This is our harness, run by us, so it is not comparable to the BenchCAD leaderboard. On the leaderboard, models write CadQuery code in one shot. Here the agent works in a loop: it renders previews of its part, compares them with the input and fixes what is off. Codex was the better modeller here; Claude often stopped with proportions estimated from pixels. Setup, per-task logs and caveats: [examples/benchcad/README.md](examples/benchcad/README.md).
 
 ## Get started in two minutes
 
@@ -79,6 +100,8 @@ Leave out `--write` to just print the config. `--read-only` and `--allow-scripts
 > Undo that.
 
 > Make an A3 sheet for plate.dxf with a 1:2 viewport and drawing number MP-240 in the title block.
+
+> Model a flanged hub as hub.FCStd: Ø120 × 14 flange, Ø60 hub 26 high, Ø30 bore through, six Ø12 bolt holes on a Ø90 circle, R4 fillet where the hub meets the flange. Make the flange and bore diameters parameters, show me a preview, and export hub.step.
 
 More prompts to try: [playground/README.md](playground/README.md).
 
@@ -118,7 +141,7 @@ Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial so
 
 ## Where it stands
 
-AgentCAD is early. 3D parts are new and not yet measured with agents; they can't be turned into 2D drawings yet. DWG needs AutoCAD on the machine. The industry libraries cover common P&ID, GD&T and ISO fastener content, not a full catalogue. The live session has also been [checked in AutoCAD 2027](docs/comparison-native-dwg.md#实时编辑文件锁修复复核): 12 consecutive edits synchronized across four flows on two drawings, including pull, conflict protection and checkpoint recovery. It opens new DXFs read-only so AgentCAD can replace them; GUI edits come back through pull. Other AutoCAD versions remain untested. Readability checks cover text height, and plot layout still needs a human eye. The earlier agent drafting evidence covers 12 tasks on two agents. What's missing is tracked in [docs/limitations-roadmap.md](docs/limitations-roadmap.md).
+AgentCAD is early. 3D parts have been measured on one benchmark sample (Vision2Code, one run per task); they are single bodies without assemblies, and they can't be turned into 2D drawings yet. DWG needs AutoCAD on the machine. The industry libraries cover common P&ID, GD&T and ISO fastener content, not a full catalogue. The live session has also been [checked in AutoCAD 2027](docs/comparison-native-dwg.md#实时编辑文件锁修复复核): 12 consecutive edits synchronized across four flows on two drawings, including pull, conflict protection and checkpoint recovery. It opens new DXFs read-only so AgentCAD can replace them; GUI edits come back through pull. Other AutoCAD versions remain untested. Readability checks cover text height, and plot layout still needs a human eye. The earlier agent drafting evidence covers 12 tasks on two agents. What's missing is tracked in [docs/limitations-roadmap.md](docs/limitations-roadmap.md).
 
 ## Documentation
 
@@ -131,13 +154,14 @@ Most in-depth documents are in Chinese.
 | [docs/operations.md](docs/operations.md) | Reference for every operation (generated from code) |
 | [docs/part-3d.md](docs/part-3d.md) | 3D parametric parts: FreeCAD backend, operations, selectors, validation |
 | [docs/viewer.md](docs/viewer.md) | Live viewer: watch drawings and parts change in the browser, timeline, diffs |
+| [examples/benchcad/README.md](examples/benchcad/README.md) | BenchCAD Vision2Code pilot: 3D parts from images, Claude Code vs. Codex |
 | [docs/comparison-claude-code.md](docs/comparison-claude-code.md) | Claude Code: AgentCAD vs. writing code, before and after the compact catalog |
 | [docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md), [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md) | Codex: the same comparison |
 | [docs/trials-report.md](docs/trials-report.md) | Classic drafting tasks and 96 real AutoCAD sample drawings |
 | [docs/acceptance-report.md](docs/acceptance-report.md) | Acceptance tests and evidence |
 | [docs/limitations-roadmap.md](docs/limitations-roadmap.md) | Known limitations and roadmap |
 
-Run logs and graded results for the experiments are in `examples/trials/`. Logs of the tasks that use Autodesk sample drawings (T7, H2) are not published, because the drawings are not ours to redistribute.
+Run logs and graded results for the experiments are in `examples/trials/` and `examples/benchcad/`. Logs of the tasks that use Autodesk sample drawings (T7, H2) are not published, because the drawings are not ours to redistribute.
 
 ## License
 
