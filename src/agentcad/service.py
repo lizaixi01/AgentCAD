@@ -923,7 +923,8 @@ class Runtime:
                 from ezdxf.addons.drawing import Frontend, RenderContext, layout, svg
             except ImportError as exc:
                 raise AgentCADError("DEPENDENCY_MISSING", f"SVG preview needs an optional package: {exc}",
-                                    category="dependency", hint="pip install 'agentcad[preview]' (Pillow)")
+                                    category="dependency",
+                                    hint="pip install -e '.[preview]' (Pillow) in the AgentCAD checkout")
             from ezdxf.addons.drawing.config import BackgroundPolicy, Configuration
             backend = svg.SVGBackend()
             cfg = Configuration(background_policy=BackgroundPolicy.WHITE)

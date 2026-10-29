@@ -1,14 +1,28 @@
-# AgentCAD — Claude Code for CAD
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/brand/logo-dark.svg">
+    <img src="docs/assets/brand/logo.svg" alt="AgentCAD" width="380">
+  </picture>
+</p>
 
-**We're building AgentCAD to disrupt AutoCAD.**
+<p align="center"><b>The CAD runtime built for AI agents.</b><br>
+Your coding agent creates, edits, checks and exports real engineering drawings and 3D parts, through tools designed for it rather than for a mouse.</p>
 
-Traditional CAD software was built for humans to click, drag, and draw. AgentCAD is CAD infrastructure built for AI agents.
+**We're building AgentCAD to disrupt AutoCAD.** Traditional CAD software was built for humans to click, drag and draw. AgentCAD is CAD built for agents, not humans.
 
-Connect Claude Code, Codex, or any agent through MCP or the CLI. Describe what you want, and the agent creates, edits, validates, and exports real engineering drawings (DXF, and DWG when AutoCAD is installed) and parametric 3D parts (FreeCAD `.FCStd`, exported to STEP and STL).
+## What it is
 
-No clicking. No GUI. Just natural language, code, and engineering.
+AgentCAD is an open-source program you install on your machine. It is not a GUI app and not a prompt or skill. It is the CAD engine your agent calls:
 
-**CAD built for agents, not humans.**
+- **An MCP server** (the main way to use it). Claude Code, Codex or any MCP client gets 24 CAD tools. You talk to your agent; the agent uses AgentCAD.
+- **A CLI, a Python library and an HTTP API** with the same tools, for scripts and pipelines.
+
+Behind those tools:
+
+- **2D drawings:** DXF; DWG when AutoCAD is installed.
+- **Parametric 3D parts:** FreeCAD `.FCStd`, exported to STEP and STL.
+
+The core is MIT-licensed and needs no commercial software.
 
 <p align="center">
   <img src="examples/trials/hard/png/H6/A_ops/H6_r2.png" alt="A3 sheet made by Claude Code through AgentCAD: frame, title block and a 1:2 viewport onto a dimensioned base plate" width="49%">
@@ -36,35 +50,28 @@ AgentCAD gives the agent a CAD runtime instead of a blank Python file:
 - **Real drawings, not just new ones.** Paper-space layouts, title blocks with attributes, DWG import/export and AutoCAD AUDIT through an optional headless AutoCAD backend.
 - **Safe by default.** Workspace sandbox, read-only mode, operation allow-lists. An escape hatch for custom ezdxf scripts exists, runs as a transaction, and is off unless you turn it on.
 
-## Does it work? We measured it.
+## Results
 
-### 2D: drafting tasks
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/results/results-dark.svg">
+    <img src="docs/assets/results/results-light.svg" alt="Results chart. Typical minutes per run, AgentCAD vs. the alternative: five-round revision 4.1 vs 12.9 (writing code); real DWG edit 2.9 vs 6.0 (writing code); layer cleanup 1.0 vs 1.7 and dimensioning 1.8 vs 3.2 (AutoCAD MCP Pro); native DWG with AutoCAD open 3.0 vs 5.7 (AutoCAD MCP Pro). Runs that fully succeeded: undo across sessions 3/3 vs 0/3; native DWG 11/12 vs 10/12; 12 drafting tasks 24/24 vs 23/24. BenchCAD Vision2Code mean IoU: Codex 0.872, Claude Code 0.766." width="860">
+  </picture>
+</p>
 
-We gave two agents the same 12 drafting tasks, from a flange drawing to editing a real AutoCAD sample DWG, five rounds of revisions with an undo, a batch of 12 drawings, cleaning up a supplier's drawing, dimensioning a part and making a print sheet. One arm could only use AgentCAD. The other wrote Python with ezdxf. A neutral grader scored the files, and we plotted the results in AutoCAD.
+The 2D comparisons keep the agent and model the same and change only the tools. The BenchCAD run compares two agents that both use AgentCAD.
 
-| | Claude Code (Opus 5.5) + AgentCAD | Claude Code writing code | Codex + AgentCAD | Codex writing code |
-|---|---|---|---|---|
-| Runs correct | **24 / 24** | 23 / 24 | **24 / 24** | 24 / 24 |
-| Five-round revision with undo | **4.1 min** | 12.9 min | **6.2 min** | 18.3 min |
-| Edit a real DWG | **2.9 min** | 6.0 min | **3.4 min** | 9.7 min |
-| Make an A3 print sheet | **0.9 min** | 1.7 min | **2.5 min** | 3.6 min |
+- **Faster.** On most tasks, runs were 1.4–3× faster than the same agent writing ezdxf code. They were 1.7–1.9× faster than the same agent using AutoCAD MCP Pro, including with AutoCAD 2027 open.
+- **Undo that survives a new session.** In a five-round revision, AgentCAD restored an earlier hole size from its journal 3/3 times. With AutoCAD MCP Pro the agent could not, 0/3.
+- **3D from pictures.** On 100 [BenchCAD](https://arxiv.org/abs/2605.10865) Vision2Code tasks, agents rebuilt parts from four views with a mean IoU of 0.872 (Codex) and 0.766 (Claude Code). This is our own run, not the BenchCAD leaderboard, where models write CadQuery in one shot.
+- **Where it doesn't win yet:** for a batch of near-identical drawings, one generated script is faster and cheaper. AgentCAD sessions also read about 2× the input tokens.
 
-Time per run, 3 runs per task (median for Claude Code, mean for Codex). The Codex AgentCAD column is after two fixes the experiments called for: the real-DWG task was 0/3 until AgentCAD could see paper-space sheets, and the print-sheet task was 0/3 until it had layout and viewport operations. On most tasks the agent was 1.4–3× faster through AgentCAD. The one miss on the code side was the undo: a fresh session had no record of what it was asked to revert. AgentCAD's journal is what made every undo work.
-
-Where it doesn't win yet, we say so: for a batch of near-identical drawings a single generated script is faster and cheaper, and AgentCAD sessions still read 2× the input tokens of the code arm. Full numbers, logs and graders: [docs/comparison-claude-code.md](docs/comparison-claude-code.md), [docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md), [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md).
-
-### 3D: rebuilding parts from pictures (BenchCAD)
-
-We also ran a 100-task sample of [BenchCAD](https://arxiv.org/abs/2605.10865)'s Vision2Code task. The agent sees one image with four views of a part, and has to build that part as a solid using only AgentCAD's tools. BenchCAD's own scorer compares the result with the reference (voxel IoU, 1.0 is an exact match).
-
-| | Claude Code (Opus 5.5) + AgentCAD | Codex (gpt-6.1-sol) + AgentCAD |
-|---|---|---|
-| Parts submitted | 100 / 100 | 100 / 100 |
-| Mean IoU | 0.766 | **0.872** |
-| Near-exact (IoU ≥ 0.9) | 27 | **66** |
-| Median time per part | **3.1 min** | 5.8 min |
-
-This is our harness, run by us, so it is not comparable to the BenchCAD leaderboard. On the leaderboard, models write CadQuery code in one shot. Here the agent works in a loop: it renders previews of its part, compares them with the input and fixes what is off. Codex was the better modeller here. Its lead came mostly from simple parts it rebuilt near-exactly, where Claude stopped with proportions estimated from pixels. Setup, per-task logs and caveats: [examples/benchcad/README.md](examples/benchcad/README.md).
+Samples are small (2–3 runs per task, one run per BenchCAD task). The full reports with logs and graders:
+- [vs. writing code, Claude Code](docs/comparison-claude-code.md)
+- [vs. writing code, Codex](docs/comparison-hard-tasks.md)
+- [vs. AutoCAD MCP Pro](docs/comparison-autocad-mcp-pro.md)
+- [native DWG in AutoCAD 2027](docs/comparison-native-dwg.md)
+- [BenchCAD](examples/benchcad/README.md)
 
 ## Get started in two minutes
 
@@ -74,6 +81,8 @@ cd AgentCAD
 uv venv .venv --python 3.12
 uv pip install --python .venv -e ".[dev]"
 ```
+
+Install from this repository. The `agentcad` package on PyPI is an unrelated project. When AgentCAD is published there, it will be as `agentcad-runtime`.
 
 **Connect Claude Code.** This writes `.mcp.json` in the repository root. The file points at your venv's interpreter and your `playground/` folder, so it works wherever you cloned and on any OS. Open a new Claude Code session in the repository afterwards.
 
@@ -157,6 +166,8 @@ Most in-depth documents are in Chinese.
 | [examples/benchcad/README.md](examples/benchcad/README.md) | BenchCAD Vision2Code pilot: 3D parts from images, Claude Code vs. Codex |
 | [docs/comparison-claude-code.md](docs/comparison-claude-code.md) | Claude Code: AgentCAD vs. writing code, before and after the compact catalog |
 | [docs/comparison-hard-tasks.md](docs/comparison-hard-tasks.md), [docs/comparison-code-vs-agentcad.md](docs/comparison-code-vs-agentcad.md) | Codex: the same comparison |
+| [docs/comparison-autocad-mcp-pro.md](docs/comparison-autocad-mcp-pro.md) | Codex: AgentCAD vs. AutoCAD MCP Pro on the same tasks, plus fault injection |
+| [docs/comparison-native-dwg.md](docs/comparison-native-dwg.md) | Native DWG with AutoCAD 2027 open: AgentCAD vs. AutoCAD MCP Pro |
 | [docs/trials-report.md](docs/trials-report.md) | Classic drafting tasks and 96 real AutoCAD sample drawings |
 | [docs/acceptance-report.md](docs/acceptance-report.md) | Acceptance tests and evidence |
 | [docs/limitations-roadmap.md](docs/limitations-roadmap.md) | Known limitations and roadmap |
