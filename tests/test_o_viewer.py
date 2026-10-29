@@ -383,3 +383,17 @@ def test_create_drawing_does_not_load_the_http_server(ws):
             "print('http.server' in sys.modules)")
     out = subprocess.run([sys.executable, "-c", code], capture_output=True, text=True, timeout=120)
     assert out.stdout.strip() == "False", out.stderr
+
+
+@needs_freecad
+@pytest.mark.parametrize("extra", [
+    {"op": "primitive", "kind": "sphere", "dims": {"radius": 10}, "position": [0, 0, 40]},
+    {"op": "primitive", "kind": "cone", "dims": {"radius1": 6, "radius2": 0, "height": 12}, "position": [0, 0, 40]},
+])
+def test_mesh_skips_degenerate_edges(rt, workspace, extra):
+    """A sphere's or cone's pole is an edge without a curve: the viewer's mesh leaves it out instead of failing."""
+    ok(rt.create_drawing("knob.FCStd"))
+    ok(rt.apply_operations("knob.FCStd", [
+        {"op": "primitive", "kind": "cylinder", "dims": {"radius": 3, "height": 40}}, extra]))
+    m = json.loads(workspace.mesh("knob.FCStd", None).read_text("utf-8"))
+    assert m["indices"] and all(len(e) >= 6 for e in m["edges"])

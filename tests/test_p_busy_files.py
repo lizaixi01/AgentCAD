@@ -56,10 +56,11 @@ def test_busy_committed_copy_still_commits_and_records(rt, ws, blank):
 def test_busy_drawing_changes_nothing_and_is_retryable(rt, ws, blank):
     s = st(rt, blank)
     before = sha256_file(ws / blank)
+    cps = s.list_checkpoints()
     with open(ws / blank, "rb"):
         e = err(rt.apply_operations(blank, LINE))
     assert e["code"] == "FILE_BUSY" and e["retryable"] and not e["partial_changes"]
-    assert sha256_file(ws / blank) == before
+    assert sha256_file(ws / blank) == before and s.list_checkpoints() == cps  # no checkpoint left behind
     assert s.head()["pending"] is None
     assert not (ws / (blank + ".agentcad-tmp")).exists()
     ok(rt.apply_operations(blank, LINE))  # the retry applies it once
@@ -170,3 +171,55 @@ def test_busy_head_while_journaling_keeps_the_commit_and_seq(rt, ws, blank, monk
     seqs = [x["seq"] for x in journal(s)]
     assert r2["journal_seq"] == r["journal_seq"] + 1 and len(seqs) == len(set(seqs))
     assert json.loads(s.head_path.read_text("utf-8"))["seq"] == r2["journal_seq"]
+
+
+# --- rollback goes through the same transaction ----------------------------------------------------------------
+
+def test_rollback_with_a_busy_drawing_changes_nothing_and_is_retryable(rt, ws, blank):
+    ok(rt.apply_operations(blank, LINE))
+    before = sha256_file(ws / blank)
+    cps = st(rt, blank).list_checkpoints()
+    with open(ws / blank, "rb"):
+        e = err(rt.rollback(blank))
+    assert e["code"] == "FILE_BUSY" and e["retryable"] and not e["partial_changes"]
+    assert sha256_file(ws / blank) == before and st(rt, blank).head()["pending"] is None
+    # the failed attempt took no checkpoint, so the retry restores the same one (not a copy of the current file)
+    assert st(rt, blank).list_checkpoints() == cps
+    ok(rt.rollback(blank))
+    assert lines(ws, blank) == 0
+
+
+def test_rollback_with_a_busy_committed_copy_succeeds_with_a_warning(rt, ws, blank):
+    ok(rt.apply_operations(blank, LINE))
+    s = st(rt, blank)
+    with open(s.committed_path, "rb"):
+        r = ok(rt.rollback(blank))
+    assert r["warnings"] and lines(ws, blank) == 0
+    assert s.head()["pending"] is None and s.head()["sha256"] == sha256_file(ws / blank)
+
+
+def test_rollback_with_head_busy_after_the_replace_is_settled_by_recover(rt, ws, blank, monkeypatch):
+    ok(rt.apply_operations(blank, LINE))
+    s = st(rt, blank)
+    real = store_mod.replace_file
+    held = []
+
+    def replace(src, dst, timeout=None):
+        real(src, dst, timeout)
+        if dst == s.path and not held:
+            held.append(open(s.head_path, "rb"))
+
+    monkeypatch.setattr(store_mod, "replace_file", replace)
+    try:
+        e = err(rt.rollback(blank))
+    finally:
+        for f in held:
+            f.close()
+    monkeypatch.undo()
+    assert e["code"] == "FILE_BUSY" and e["partial_changes"] and not e["retryable"]
+    assert lines(ws, blank) == 0  # the rollback is in the file
+    r = ok(rt.recover(blank))
+    assert r["pending_commit"] == "completed" and r["label"].startswith("rollback to cp-")
+    head = s.head()
+    assert head["pending"] is None and head["sha256"] == sha256_file(ws / blank) == sha256_file(s.committed_path)
+    assert journal(s)[-1]["completed_commit"].startswith("rollback to")

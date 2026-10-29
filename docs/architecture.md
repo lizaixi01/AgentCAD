@@ -54,7 +54,7 @@ ezdxf (DXF 内核)                 part/* → backends/freecad → FreeCAD 进�
 3. 在内存文档上依次执行。任何一步失败都抛出结构化错误（`op_index`、`partial_changes=false`），内存文档直接丢弃，磁盘文件不变，journal 记录这次失败。
 4. 可选 `strict`：先把候选文档写到临时文件，交给独立验证器检查；不通过就不保存，失败现场写入 `failed/`。
 5. 提交：为旧文件建检查点 → 在 head 中写入 `pending`（带目标内容的 sha256）→ 临时文件 fsync 后 `os.replace` → 写提交副本 → 清除 `pending` → 写 journal。
-   Windows 上目标文件被别的进程打开时 `os.replace` 会失败，所以每次替换最多重试 2 s（`store.replace_file`）。还是失败时：图纸替换之前的任何一步 → `FILE_BUSY`，`retryable=true`，文件不变；提交副本 → 不算失败，结果带 `warnings`；图纸替换之后的 head 更新 → `FILE_BUSY`，`partial_changes=true`、`retryable=false`，改动已在文件里，提示调 `recover`，不要重做。journal 写 head 失败不影响结果，下一条记录的 seq 从 journal 文件末尾接着编。
+   Windows 上目标文件被别的进程打开时 `os.replace` 会失败，所以每次替换最多重试 2 s（`store.replace_file`）。还是失败时（`rollback` 和 `recover` 恢复检查点也走同一个流程，`store._replace_tracked`）：图纸替换之前的任何一步 → `FILE_BUSY`，`retryable=true`，文件不变，这次刚建的检查点也删掉（否则重试 `rollback` 会恢复到它，等于什么都没做）；提交副本 → 不算失败，结果带 `warnings`；图纸替换之后的 head 更新 → `FILE_BUSY`，`partial_changes=true`、`retryable=false`，改动已在文件里，提示调 `recover`，不要重做。journal 写 head 失败不影响结果，下一条记录的 seq 从 journal 文件末尾接着编。
 6. 从磁盘重新读取，运行验证器，把报告随结果一起返回。
 
 `run_script`（可选，默认关闭）：对操作目录覆盖不到的编辑，Agent 提交一段 ezdxf 脚本。脚本先做静态检查（只允许导入 ezdxf 和标准数学/数据模块；禁止打开或保存文件、eval/exec、getattr、双下划线访问），然后在独立的 Python 进程中（`-I`、不经 shell、有超时）对图纸副本运行。运行结果由 Runtime 严格重读、检查预算、计算 diff，然后按上面第 4–6 步提交：检查点、journal（记录完整脚本和哈希）、校验、`strict`。失败时文件不变，可以 `rollback`。

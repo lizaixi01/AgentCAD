@@ -237,15 +237,25 @@ class DrawingStore:
         existed = self.path.is_file()
         if existed and not overwrite_ok:
             raise input_error("FILE_EXISTS", f"{self.path.name} already exists", hint="Pass overwrite=true")
+        return self._replace_tracked(data, label=label,
+                                     checkpoint=lambda: self.checkpoint(f"before {label}") if existed else None)
+
+    def _replace_tracked(self, data: bytes, *, label: str, checkpoint: Callable[[], str | None]) -> dict[str, Any]:
+        """Replace the drawing with ``data`` as one transaction (commits and restores): settle an earlier
+        interrupted transaction, ``checkpoint`` the current file, write the pending marker with the target sha,
+        replace, refresh the committed copy, update head. A file another process holds past the retry timeout
+        raises FILE_BUSY: retryable while the drawing is untouched, partial_changes once it holds ``data``."""
         digest = hashlib.sha256(data).hexdigest()
+        cid = None
         try:  # until the drawing is replaced, a busy file means nothing changed
             self.settle_pending()
-            cid = self.checkpoint(f"before {label}") if existed else None
+            cid = checkpoint()
             head = self.head()
             # the target sha lets recover tell whether the drawing was replaced before the commit was interrupted
             head["pending"] = {"label": label, "checkpoint": cid, "ts": now(), "sha256": digest}
             self._write_head(head)
         except PermissionError:
+            self._abandon(cid)
             raise busy_error(self.head_path, applied=False)
         self.path.parent.mkdir(parents=True, exist_ok=True)
         tmp = self.path.with_name(self.path.name + ".agentcad-tmp")
@@ -257,11 +267,7 @@ class DrawingStore:
             replace_file(tmp, self.path)
         except PermissionError:
             tmp.unlink(missing_ok=True)
-            try:  # the file is unchanged: drop the marker so status and recover see a clean state
-                head["pending"] = None
-                self._write_head(head)
-            except PermissionError:
-                pass  # recover clears a marker whose target content is not in the file
+            self._abandon(cid)
             raise busy_error(self.path, applied=False)
         # From here the drawing holds the change: the commit has happened and must not be reported as failed.
         warnings = []
@@ -284,6 +290,21 @@ class DrawingStore:
                                                                     "sha256": digest, "checkpoint_before": cid})
         return {"checkpoint_before": cid, "sha256": digest, "bytes": len(data),
                 **({"warnings": warnings} if warnings else {})}
+
+    def _abandon(self, cid: str | None) -> None:
+        """Undo a transaction that stopped before the drawing was replaced: drop its pending marker and the
+        checkpoint it took, so a retry starts from the same state (a retried rollback would otherwise restore that
+        checkpoint, i.e. do nothing). Best effort: head.json may be the busy file; then recover clears the marker,
+        and the extra checkpoint is a harmless copy of the unchanged drawing."""
+        try:
+            head = self.head()
+            if cid and head["checkpoints"] and head["checkpoints"][-1]["id"] == cid:
+                head["checkpoints"].pop()
+                (self.cp_dir / f"{cid}{self.ext}").unlink(missing_ok=True)
+            head["pending"] = None
+            self._write_head(head)
+        except (PermissionError, ValueError):
+            pass
 
     def settle_pending(self, **record: Any) -> tuple[dict[str, Any], int] | None:
         """``finish_pending`` and journal the outcome: an interrupted commit that reached the file gets its record
@@ -320,25 +341,24 @@ class DrawingStore:
         return {"pending": pend, "outcome": outcome, "sha256": actual}
 
     def restore(self, cid: str, *, label: str) -> dict[str, Any]:
-        """Restore checkpoint ``cid`` ("committed" = the exact last committed state)."""
+        """Restore checkpoint ``cid`` ("committed" = the exact last committed state), as one transaction like a
+        commit (see ``_replace_tracked``)."""
         self.policy.check_write()
         src = self.committed_path if cid == "committed" else self.checkpoint_path(cid)
-        before = None
-        if self.path.is_file():
+        data = src.read_bytes()
+
+        def checkpoint() -> str | None:
+            if not self.path.is_file():
+                return None
             try:
                 self.reader(self.path, self.policy)
-                before = self.checkpoint(f"before {label}")
             except AgentCADError:
-                before = None  # never checkpoint a corrupt file
-        tmp = self.path.with_name(self.path.name + ".agentcad-tmp")
-        shutil.copy2(src, tmp)
-        replace_file(tmp, self.path)
-        shutil.copy2(self.path, self.committed_path)
-        head = self.head()
-        head["pending"] = None
-        head["sha256"] = sha256_file(self.path)
-        self._write_head(head)
-        return {"restored": cid, "checkpoint_before": before, "sha256": head["sha256"]}
+                return None  # never checkpoint a corrupt file
+            return self.checkpoint(f"before {label}")
+
+        info = self._replace_tracked(data, label=label, checkpoint=checkpoint)
+        return {"restored": cid, "checkpoint_before": info["checkpoint_before"], "sha256": info["sha256"],
+                **({"warnings": info["warnings"]} if "warnings" in info else {})}
 
     def status(self) -> dict[str, Any]:
         """Integrity of the file versus the last commit."""
