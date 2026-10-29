@@ -453,3 +453,13 @@ def test_mcp_tools_document_scripts_and_references(ws):
     assert "reference" in tools["export_drawing"].inputSchema["properties"]
     para = INSTRUCTIONS.split("3D scripts and reference images")[1]
     assert "run_script" in para and "reference=" in para and "iou" in para
+
+
+@needs_freecad
+def test_freecad_script_timeout_leaves_no_folder(ws):
+    """A FreeCAD script that runs too long is killed and waited for, so its working folder (console.log
+    included) is removed like after any other script."""
+    rt = Runtime(Policy(root=ws, allow_scripts=True, script_timeout=3))
+    e = rt.run_script("p.FCStd", "while True:\n    pass", language="freecad")["error"]
+    assert e["code"] == "SCRIPT_TIMEOUT" and not (ws / "p.FCStd").exists()
+    assert not list((ws / ".agentcad" / "freecad").glob("script-*"))

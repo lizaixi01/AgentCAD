@@ -2,6 +2,7 @@
 (AGENTCAD_FREECAD=<FreeCAD 1.1 folder>); the rest run without it."""
 from __future__ import annotations
 
+import json
 import math
 import zipfile
 
@@ -588,3 +589,72 @@ def test_slot(rt, end):
         {"op": "add_sketch", "plane": "XY", "shapes": [{"type": "slot", "start": [0, 0], "end": end, "width": 8}]},
         {"op": "pad", "sketch": "$0", "length": 2}]))
     assert shape(r)["volume"] == pytest.approx((30 * 8 + math.pi * 16) * 2, rel=1e-6)
+
+
+def test_common_op_and_parameter_names_are_mapped():
+    """Names agents bring from FreeCAD and CadQuery map to ours, and the notes say how; a name that would clash
+    with the canonical one is left for the usual error."""
+    from agentcad.part.ops import normalize
+    ops, notes = normalize([
+        {"op": "pocket", "sketch": "$0", "length": 5, "midplane": True},
+        {"op": "edit_feature", "feature": "tag:base", "length": 12},
+        {"op": "modify_feature", "feature": "tag:sk", "params": {"shapes": []}},
+        {"op": "primitive", "shape": "cylinder", "radius": 3, "height": 10},
+        {"op": "pocket", "sketch": "$0", "length": 5, "depth": 6},
+        {"op": "pad", "sketch": "$0", "length": 5},
+    ])
+    assert ops[0] == {"op": "pocket", "sketch": "$0", "depth": 5, "symmetric": True}
+    assert ops[1] == {"op": "modify_feature", "feature": "tag:base", "set": {"length": 12}}
+    assert ops[2] == {"op": "modify_feature", "feature": "tag:sk", "set": {"shapes": []}}
+    assert ops[3] == {"op": "primitive", "kind": "cylinder", "dims": {"radius": 3, "height": 10}}
+    assert ops[4] == {"op": "pocket", "sketch": "$0", "length": 5, "depth": 6}  # both given: not touched
+    assert ops[5] == {"op": "pad", "sketch": "$0", "length": 5}
+    assert [n["op_index"] for n in notes] == [0, 1, 2, 3]
+    assert notes[1]["op"] == {"edit_feature": "modify_feature"} and notes[1]["moved_into_set"] == ["length"]
+    assert notes[0]["renamed"] == {"length": "depth", "midplane": "symmetric"}
+    # never moved into 'set': a stray key next to an explicit 'set', tool arguments, a second feature name
+    ops, _ = normalize([
+        {"op": "modify_feature", "feature": "tag:p", "set": {"length": 1}, "params": {"length": 2}},
+        {"op": "modify_feature", "feature": "tag:p", "length": 3, "dry_run": True},
+        {"op": "modify_feature", "feature": "tag:p", "sketch": "tag:s2"},
+    ])
+    assert ops[0] == {"op": "modify_feature", "feature": "tag:p", "set": {"length": 1}, "params": {"length": 2}}
+    assert ops[1] == {"op": "modify_feature", "feature": "tag:p", "set": {"length": 3}, "dry_run": True}
+    assert ops[2] == {"op": "modify_feature", "feature": "tag:p", "set": {"sketch": "tag:s2"}}  # re-point the pad
+
+
+def test_unknown_op_hint_never_suggests_deleting(rt, ws):
+    """By spelling, 'edit_featur' is closest to 'delete_feature'; an agent that wants to change a feature must not
+    be told to delete it."""
+    (ws / "p.FCStd").write_bytes(b"")
+    e = rt.apply_operations("p.FCStd", [{"op": "edit_featur", "feature": "Pad"}])["error"]
+    assert e["code"] == "UNKNOWN_OP" and "delete_feature" not in e.get("hint", "")
+    e = rt.apply_operations("p.FCStd", [{"op": "remove_feature", "feature": "Pad"}])["error"]
+    assert "delete_feature" in e["hint"]
+    e = rt.apply_operations("p.FCStd", [{"op": "model_featur", "feature": "Pad"}])["error"]  # 'del' in 'model'
+    assert "delete_feature" not in e.get("hint", "")
+
+
+@needs_freecad
+def test_aliased_ops_run_and_are_reported(rt, ws):
+    ok(rt.apply_operations("a.FCStd", [
+        {"op": "add_sketch", "plane": "XY", "shapes": [{"type": "rectangle", "center": [0, 0], "width": 40,
+                                                         "height": 20}]},
+        {"op": "pad", "sketch": "$0", "length": 10, "tag": "base"}], create={"units": "mm"}))
+    r = ok(rt.apply_operations("a.FCStd", [{"op": "edit_feature", "feature": "tag:base", "length": 15}]))
+    assert shape(r)["size"] == [40.0, 20.0, 15.0]
+    assert r["normalized"] == [{"op_index": 0, "as": "modify_feature", "op": {"edit_feature": "modify_feature"},
+                                "moved_into_set": ["length"]}]
+    # the journal records what ran, under the canonical names
+    last = [json.loads(x) for x in (ws / ".agentcad").rglob("journal.jsonl").__next__().read_text("utf-8").splitlines()][-1]
+    assert last["operations"][0] == {"op": "modify_feature", "feature": "tag:base", "set": {"length": 15}}
+    # a key the feature's op does not take is an error, not a silent no-op (before: ok, and a new checkpoint)
+    before = sha256_file(ws / "a.FCStd")
+    e = rt.apply_operations("a.FCStd", [{"op": "edit_feature", "feature": "tag:base", "width": 5}])["error"]
+    assert e["code"] == "UNKNOWN_PARAM" and "pad" in e["message"] and "length" in e["hint"]
+    e = rt.apply_operations("a.FCStd", [{"op": "modify_feature", "feature": "tag:base", "set": {"width": 5}}])["error"]
+    assert e["code"] == "UNKNOWN_PARAM"
+    for bad in ({"op": "modify_feature", "feature": "tag:base", "length": 3, "dry_run": True},
+                {"op": "modify_feature", "feature": "tag:base", "set": {"length": 1}, "params": {"length": 2}}):
+        assert rt.apply_operations("a.FCStd", [bad])["error"]["code"] == "UNKNOWN_PARAM"
+    assert sha256_file(ws / "a.FCStd") == before

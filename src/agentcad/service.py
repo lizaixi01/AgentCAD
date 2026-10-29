@@ -576,6 +576,8 @@ class Runtime:
                     "journal_seq": r["journal_seq"]}
             if r.get("created_drawing"):
                 item["created"] = True
+            if r.get("normalized"):
+                item["normalized"] = r["normalized"]
             out.append(item)
         skipped = sum(1 for x in out if x.get("skipped"))
         return {"jobs": out, "succeeded": sum(1 for x in out if x["ok"]),
