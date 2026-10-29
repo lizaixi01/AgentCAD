@@ -28,7 +28,15 @@ build-backend = "hatchling.build"
 packages = ["src/agentcad"]
 
 [tool.hatch.build.targets.sdist]
-exclude = ["/docs/comparison-native-dwg.md", "/docs/assets/native-dwg-times.svg", "/docs/assets/native-dwg-repeat-outcomes.svg", "/docs/assets/native-dwg-live-lock.svg", "/docs/assets/native-dwg-live-lock-results.json"]
+exclude = [
+    "/docs/comparison-native-dwg.md",
+    "/docs/assets/native-dwg-times.svg",
+    "/docs/assets/native-dwg-repeat-outcomes.svg",
+    "/docs/assets/native-dwg-live-lock.svg",
+    "/docs/assets/native-dwg-live-lock-results.json",
+    "/docs/assets/native-dwg-fixed-repeat.svg",
+    "/docs/assets/native-dwg-fixed-repeat-results.json",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

@@ -1,0 +1,1629 @@
+{
+  "manifest": {
+    "started_utc": "2026-10-29T07:50:07.720765+00:00",
+    "agentcad_commit": "1ddc6ef70be10d36ca56df03b61117ea79c29ae5",
+    "agentcad_fix_commit": "4e289b92252e93ff4272597bbe6e55d1a44ab065",
+    "runtime_unchanged_since_fix": true,
+    "pro_commit": "58a05ddfc34a9832c626e82cd88ecdce8e16a62a",
+    "codex_cli": "codex-cli 0.163.0",
+    "model": "gpt-6.1-sol",
+    "effort": "high",
+    "timeout_seconds": 900,
+    "rounds": 3,
+    "execution": "Serial; order seed 20261029; six pairs A-first and six B-first; every unit fresh workspace/model/MCP process",
+    "agentcad_live_sync": true,
+    "cad_scripts_both_arms": true,
+    "cad_commands_both_arms": true,
+    "common_prompt": "你是负责图纸的 CAD 工作人员。工作区内的 part.dwg 是原始图纸，请完成下面的修改，将交付成果保存为 part_rev.dwg（真正的 AutoCAD DWG 格式）；不要覆盖 part.dwg。仅通过当前连接的 cad MCP 服务读写图纸，不要运行操作系统命令、使用其他插件或调用全局资源列表；允许使用 CAD 服务提供的脚本或表达式。检查结果并如实报告无法完成的内容。\n\n编辑前先在 AutoCAD 实机会话中打开要编辑的图纸，保持它打开后再进行修改；交付后在该 AutoCAD 会话中回读核对修改结果。不要关闭图纸来绕过文件锁。\n\n",
+    "orientation": {
+      "A": "AgentCAD 提供 DWG 导入、导出及 AutoCAD 审核工具；list_operations 可查图纸操作和参数。先 import_drawing 把原始 DWG 导入工作 DXF，再用 autocad_live action=open 打开该 DXF。本轮已开启自动同步，修改后应检查返回的 live 状态；最后导出 part_rev.dwg。在 AutoCAD 中的回读可用 autocad_live action=command；允许使用 CAD 服务的脚本或表达式。",
+      "B": "服务提供 search_tools、describe_tool 和 call_tool；可按英文或 AutoCAD 命令搜索、查参数并调用。本轮使用真实 AutoCAD COM 后端，先打开原始 DWG，再修改、另存并在会话中回读。"
+    },
+    "tasks": {
+      "plate": "这是一张机械基板图，单位 mm。修改模型空间及名为 Base Plate 的打印布局中相应的几何副本：将原直径 10.2 的孔全部改为 10.5，原直径 25 的孔全部改为 26，孔心和其他孔不变。布局中的零件副本按模型尺寸的 0.325 倍绘制，因此对应的图纸空间孔径也要按该比例更新。模型空间和 Base Plate 布局各给两个实际直径 40 的大孔分别加真正的直径标注，布局中的标注要显示 40。模型空间零件外框下方加一行高度 5 的文字：REV B: Ø10.2→Ø10.5, Ø25→Ø26。保留其他已有对象、图层、布局和位置，不要增加无关对象。",
+      "bearing": "这是一张轴承座图，单位 mm。模型空间和名为 Bearing Block_Slide 的打印布局中各有四个直径 5 的孔；把这两处的孔全部改为直径 5.5，孔心不变。模型空间的 (50, 0) 位置增加一条高度 4 的文字 REV B: 4X D5.5。保留其他已有对象、图层、布局和位置，不要增加无关对象。",
+      "floor": "这是一张建筑楼层平面图，单位为英寸。模型空间恰有两条 TEXT 的内容是 PRINTER ISLAND；请将它们都改成 PRINT AREA，保留原位置、旋转角度、文字高度和图层。在模型空间的 (736, 650) 增加一条高度 12 的文字 REV B: PRINT AREA RENAMED，放在名为 REV_NOTES 的图层中，若该图层不存在则创建。保留其他已有对象、图层和布局。",
+      "bridge": "这是一张桥面排水标准参考图，本次仅作测试，不能用于施工。保持原图单位。在模型空间找到恰好两条内容为 SPLIT 6\" PVC 的 TEXT，将两条文字都改为 SPLIT 6\" PVC SCH 40，保留原位置、旋转角度、文字高度和图层。在模型空间坐标 (2147490, 2147484) 处新增高度 0.12 的文字 EVAL ONLY - NOT FOR CONSTRUCTION，放在 EVAL_NOTES 图层；图层不存在时创建。保留其他已有对象、图层和布局，不要增加无关对象。"
+    },
+    "schedule": [
+      {
+        "case": "bridge",
+        "rep": 1,
+        "arm": "A"
+      },
+      {
+        "case": "bridge",
+        "rep": 1,
+        "arm": "B"
+      },
+      {
+        "case": "floor",
+        "rep": 1,
+        "arm": "B"
+      },
+      {
+        "case": "floor",
+        "rep": 1,
+        "arm": "A"
+      },
+      {
+        "case": "bearing",
+        "rep": 1,
+        "arm": "A"
+      },
+      {
+        "case": "bearing",
+        "rep": 1,
+        "arm": "B"
+      },
+      {
+        "case": "plate",
+        "rep": 1,
+        "arm": "B"
+      },
+      {
+        "case": "plate",
+        "rep": 1,
+        "arm": "A"
+      },
+      {
+        "case": "bridge",
+        "rep": 2,
+        "arm": "B"
+      },
+      {
+        "case": "bridge",
+        "rep": 2,
+        "arm": "A"
+      },
+      {
+        "case": "bearing",
+        "rep": 2,
+        "arm": "B"
+      },
+      {
+        "case": "bearing",
+        "rep": 2,
+        "arm": "A"
+      },
+      {
+        "case": "floor",
+        "rep": 2,
+        "arm": "A"
+      },
+      {
+        "case": "floor",
+        "rep": 2,
+        "arm": "B"
+      },
+      {
+        "case": "plate",
+        "rep": 2,
+        "arm": "A"
+      },
+      {
+        "case": "plate",
+        "rep": 2,
+        "arm": "B"
+      },
+      {
+        "case": "bearing",
+        "rep": 3,
+        "arm": "A"
+      },
+      {
+        "case": "bearing",
+        "rep": 3,
+        "arm": "B"
+      },
+      {
+        "case": "floor",
+        "rep": 3,
+        "arm": "B"
+      },
+      {
+        "case": "floor",
+        "rep": 3,
+        "arm": "A"
+      },
+      {
+        "case": "bridge",
+        "rep": 3,
+        "arm": "A"
+      },
+      {
+        "case": "bridge",
+        "rep": 3,
+        "arm": "B"
+      },
+      {
+        "case": "plate",
+        "rep": 3,
+        "arm": "B"
+      },
+      {
+        "case": "plate",
+        "rep": 3,
+        "arm": "A"
+      }
+    ],
+    "harness_sha256": "4438353746a60297b612fb4910c84d7a1877e1b6cc248a6977d179cc0895b706",
+    "scorers_sha256": {
+      "score.py": "f389495eb1f955d0da4d04949ad68dc6ecb53afc35a0e2dbbc0f40e845690360",
+      "bridge_score.py": "6f3a2c35bcd7c753d11e26f9f5d5e9910d378e36e4cab11c66e086b8ca299231",
+      "blockcheck.py": "eb62573b3283142db32aee4de9b73aee3da402a273423831cca547c956502d03"
+    },
+    "fixtures_sha256": {
+      "plate": "5852f8d05e69921cb758e420ff89ab6a57a8d3ed6d563e6c81dbd738f5066bd7",
+      "bearing": "30332bc54795e88968bfd642fe695d579d5792bbd839618de7a74a609b4b02dd",
+      "floor": "19270c23e56e407aab2ade3644e8f301c34e390638d99c3f0cc4f2d3a6516792",
+      "bridge": "715738bf440fd95d0b4060e6bb986901df380745e33a4269f1609f620fa36229"
+    }
+  },
+  "environments": {
+    "A": {
+      "python": "3.11.16",
+      "packages": {
+        "ezdxf": "1.4.5",
+        "mcp": "1.30.0",
+        "pywin32": "312",
+        "pillow": "13.0.0"
+      }
+    },
+    "B": {
+      "python": "3.11.16",
+      "packages": {
+        "ezdxf": "1.4.4",
+        "mcp": "1.29.0",
+        "pywin32": "312",
+        "fastmcp": "3.4.5",
+        "pillow": "12.3.0",
+        "matplotlib": "3.11.1"
+      }
+    }
+  },
+  "tool_failure_evidence": [
+    {
+      "index": 1,
+      "case": "bridge",
+      "rep": 1,
+      "arm": "A",
+      "errors": [
+        {
+          "tool": "autocad_live",
+          "category": "BAD_EXTENSION"
+        }
+      ],
+      "counts": {
+        "BAD_EXTENSION": 1
+      }
+    },
+    {
+      "index": 2,
+      "case": "bridge",
+      "rep": 1,
+      "arm": "B",
+      "errors": [],
+      "counts": {}
+    },
+    {
+      "index": 3,
+      "case": "floor",
+      "rep": 1,
+      "arm": "B",
+      "errors": [],
+      "counts": {}
+    },
+    {
+      "index": 4,
+      "case": "floor",
+      "rep": 1,
+      "arm": "A",
+      "errors": [
+        {
+          "tool": "autocad_live",
+          "category": "BAD_EXTENSION"
+        }
+      ],
+      "counts": {
+        "BAD_EXTENSION": 1
+      }
+    },
+    {
+      "index": 5,
+      "case": "bearing",
+      "rep": 1,
+      "arm": "A",
+      "errors": [
+        {
+          "tool": "list_operations",
+          "category": "UNKNOWN_OPERATION"
+        },
+        {
+          "tool": "autocad_live",
+          "category": "BAD_EXTENSION"
+        }
+      ],
+      "counts": {
+        "UNKNOWN_OPERATION": 1,
+        "BAD_EXTENSION": 1
+      }
+    },
+    {
+      "index": 6,
+      "case": "bearing",
+      "rep": 1,
+      "arm": "B",
+      "errors": [
+        {
+          "tool": "drawing_open",
+          "category": "tool_call_failed_without_structured_code"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        }
+      ],
+      "counts": {
+        "tool_call_failed_without_structured_code": 1,
+        "pro_lisp_policy_refusal": 2
+      }
+    },
+    {
+      "index": 7,
+      "case": "plate",
+      "rep": 1,
+      "arm": "B",
+      "errors": [
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        }
+      ],
+      "counts": {
+        "pro_lisp_policy_refusal": 4
+      }
+    },
+    {
+      "index": 8,
+      "case": "plate",
+      "rep": 1,
+      "arm": "A",
+      "errors": [
+        {
+          "tool": "autocad_live",
+          "category": "BAD_EXTENSION"
+        }
+      ],
+      "counts": {
+        "BAD_EXTENSION": 1
+      }
+    },
+    {
+      "index": 9,
+      "case": "bridge",
+      "rep": 2,
+      "arm": "B",
+      "errors": [
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        }
+      ],
+      "counts": {
+        "pro_lisp_policy_refusal": 1
+      }
+    },
+    {
+      "index": 10,
+      "case": "bridge",
+      "rep": 2,
+      "arm": "A",
+      "errors": [],
+      "counts": {}
+    },
+    {
+      "index": 11,
+      "case": "bearing",
+      "rep": 2,
+      "arm": "B",
+      "errors": [
+        {
+          "tool": "drawing_open",
+          "category": "pro_open_fullname_error"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        }
+      ],
+      "counts": {
+        "pro_open_fullname_error": 1,
+        "pro_lisp_policy_refusal": 2
+      }
+    },
+    {
+      "index": 12,
+      "case": "bearing",
+      "rep": 2,
+      "arm": "A",
+      "errors": [
+        {
+          "tool": "list_operations",
+          "category": "UNKNOWN_OPERATION"
+        }
+      ],
+      "counts": {
+        "UNKNOWN_OPERATION": 1
+      }
+    },
+    {
+      "index": 13,
+      "case": "floor",
+      "rep": 2,
+      "arm": "A",
+      "errors": [
+        {
+          "tool": "autocad_live",
+          "category": "BAD_EXTENSION"
+        }
+      ],
+      "counts": {
+        "BAD_EXTENSION": 1
+      }
+    },
+    {
+      "index": 14,
+      "case": "floor",
+      "rep": 2,
+      "arm": "B",
+      "errors": [],
+      "counts": {}
+    },
+    {
+      "index": 15,
+      "case": "plate",
+      "rep": 2,
+      "arm": "A",
+      "errors": [
+        {
+          "tool": "run_script",
+          "category": "SCRIPT_FAILED"
+        },
+        {
+          "tool": "autocad_live",
+          "category": "BAD_EXTENSION"
+        },
+        {
+          "tool": "read_drawing",
+          "category": "FILE_NOT_FOUND"
+        },
+        {
+          "tool": "read_drawing",
+          "category": "FILE_NOT_FOUND"
+        }
+      ],
+      "counts": {
+        "SCRIPT_FAILED": 1,
+        "BAD_EXTENSION": 1,
+        "FILE_NOT_FOUND": 2
+      }
+    },
+    {
+      "index": 16,
+      "case": "plate",
+      "rep": 2,
+      "arm": "B",
+      "errors": [
+        {
+          "tool": "drawing_open",
+          "category": "tool_call_failed_without_structured_code"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        }
+      ],
+      "counts": {
+        "tool_call_failed_without_structured_code": 1,
+        "pro_lisp_policy_refusal": 3
+      }
+    },
+    {
+      "index": 17,
+      "case": "bearing",
+      "rep": 3,
+      "arm": "A",
+      "errors": [
+        {
+          "tool": "autocad_live",
+          "category": "BAD_EXTENSION"
+        }
+      ],
+      "counts": {
+        "BAD_EXTENSION": 1
+      }
+    },
+    {
+      "index": 18,
+      "case": "bearing",
+      "rep": 3,
+      "arm": "B",
+      "errors": [
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        }
+      ],
+      "counts": {
+        "pro_lisp_policy_refusal": 2
+      }
+    },
+    {
+      "index": 19,
+      "case": "floor",
+      "rep": 3,
+      "arm": "B",
+      "errors": [],
+      "counts": {}
+    },
+    {
+      "index": 20,
+      "case": "floor",
+      "rep": 3,
+      "arm": "A",
+      "errors": [
+        {
+          "tool": "autocad_live",
+          "category": "BAD_EXTENSION"
+        }
+      ],
+      "counts": {
+        "BAD_EXTENSION": 1
+      }
+    },
+    {
+      "index": 21,
+      "case": "bridge",
+      "rep": 3,
+      "arm": "A",
+      "errors": [
+        {
+          "tool": "autocad_live",
+          "category": "BAD_EXTENSION"
+        }
+      ],
+      "counts": {
+        "BAD_EXTENSION": 1
+      }
+    },
+    {
+      "index": 22,
+      "case": "bridge",
+      "rep": 3,
+      "arm": "B",
+      "errors": [],
+      "counts": {}
+    },
+    {
+      "index": 23,
+      "case": "plate",
+      "rep": 3,
+      "arm": "B",
+      "errors": [
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        },
+        {
+          "tool": "system_run_lisp",
+          "category": "pro_lisp_policy_refusal"
+        }
+      ],
+      "counts": {
+        "pro_lisp_policy_refusal": 2
+      }
+    },
+    {
+      "index": 24,
+      "case": "plate",
+      "rep": 3,
+      "arm": "A",
+      "errors": [
+        {
+          "tool": "list_operations",
+          "category": "UNKNOWN_OPERATION"
+        },
+        {
+          "tool": "run_script",
+          "category": "SCRIPT_FAILED"
+        },
+        {
+          "tool": "autocad_live",
+          "category": "BAD_EXTENSION"
+        }
+      ],
+      "counts": {
+        "UNKNOWN_OPERATION": 1,
+        "SCRIPT_FAILED": 1,
+        "BAD_EXTENSION": 1
+      }
+    }
+  ],
+  "failure_analysis": [
+    {
+      "index": 16,
+      "case": "plate",
+      "rep": 2,
+      "arm": "B",
+      "observed": "One additional CIRCLE in Base Plate paper space; all expected circles are present. The extra circle is unrelated to the requested edits.",
+      "audit_errors": 0,
+      "model_status": "completed",
+      "evidence": "The extra circle's center and radius equal the center and numeric value supplied to a system_run_command ZOOM Center macro in the same trial.",
+      "interpretation": "Possible command-context problem; this numerical match does not prove the internal mechanism. No AutoCAD crash was observed.",
+      "classification": "Output task correctness failure, not a rounding mismatch"
+    }
+  ],
+  "measurements": [
+    {
+      "index": 1,
+      "case": "bridge",
+      "rep": 1,
+      "arm": "A",
+      "model_status": "model_service_interrupted",
+      "end_to_end_passed": false,
+      "file_passed": true,
+      "agent_seconds": 870.7,
+      "verification_seconds": 12.12,
+      "total_seconds": 882.82,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 13,
+      "reported_tool_errors": 1,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "Selected model is at capacity",
+      "usage": null,
+      "cleanup_returncode": null,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T07:50:58.680362+00:00",
+      "finished_utc": "2026-10-29T08:05:41.573937+00:00",
+      "primary_outcome": "model_service_interrupted"
+    },
+    {
+      "index": 2,
+      "case": "bridge",
+      "rep": 1,
+      "arm": "B",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 331.66,
+      "verification_seconds": 11.37,
+      "total_seconds": 343.03,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1015",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 33,
+      "reported_tool_errors": 0,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 970009,
+        "cached_input_tokens": 912000,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3755,
+        "reasoning_output_tokens": 923
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:09:25.562034+00:00",
+      "finished_utc": "2026-10-29T08:15:08.687670+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 3,
+      "case": "floor",
+      "rep": 1,
+      "arm": "B",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 328.37,
+      "verification_seconds": 11.46,
+      "total_seconds": 339.83,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 30,
+      "reported_tool_errors": 0,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 706764,
+        "cached_input_tokens": 659968,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2751,
+        "reasoning_output_tokens": 350
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:15:13.663363+00:00",
+      "finished_utc": "2026-10-29T08:20:53.511555+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 4,
+      "case": "floor",
+      "rep": 1,
+      "arm": "A",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 157.07,
+      "verification_seconds": 9.55,
+      "total_seconds": 166.62,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 16,
+      "reported_tool_errors": 1,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 517231,
+        "cached_input_tokens": 471680,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2667,
+        "reasoning_output_tokens": 1241
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:20:58.387918+00:00",
+      "finished_utc": "2026-10-29T08:23:45.066334+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 5,
+      "case": "bearing",
+      "rep": 1,
+      "arm": "A",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 176.4,
+      "verification_seconds": 6.2,
+      "total_seconds": 182.6,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 23,
+      "reported_tool_errors": 2,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 854233,
+        "cached_input_tokens": 799232,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3077,
+        "reasoning_output_tokens": 1100
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:23:48.957148+00:00",
+      "finished_utc": "2026-10-29T08:26:51.591063+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 6,
+      "case": "bearing",
+      "rep": 1,
+      "arm": "B",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 144.05,
+      "verification_seconds": 7.52,
+      "total_seconds": 151.57,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 28,
+      "reported_tool_errors": 3,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 434976,
+        "cached_input_tokens": 376192,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3752,
+        "reasoning_output_tokens": 770
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:26:55.586627+00:00",
+      "finished_utc": "2026-10-29T08:29:27.172908+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 7,
+      "case": "plate",
+      "rep": 1,
+      "arm": "B",
+      "model_status": "model_service_interrupted",
+      "end_to_end_passed": false,
+      "file_passed": false,
+      "agent_seconds": 163.46,
+      "verification_seconds": 7.25,
+      "total_seconds": 170.71,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1015",
+      "audit_errors": 0,
+      "failed_checks": [
+        "Base Plate:circles",
+        "Base Plate:dimension_count",
+        "Base Plate:diameter_dims",
+        "Model:circles",
+        "Model:dimension_count",
+        "Model:diameter_dims",
+        "one_revision_note"
+      ],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 38,
+      "reported_tool_errors": 4,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "Selected model is at capacity",
+      "usage": null,
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:29:30.689800+00:00",
+      "finished_utc": "2026-10-29T08:32:21.423192+00:00",
+      "primary_outcome": "model_service_interrupted"
+    },
+    {
+      "index": 8,
+      "case": "plate",
+      "rep": 1,
+      "arm": "A",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 173.12,
+      "verification_seconds": 6.46,
+      "total_seconds": 179.58,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 24,
+      "reported_tool_errors": 1,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 1123460,
+        "cached_input_tokens": 1049600,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3759,
+        "reasoning_output_tokens": 1240
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:32:25.794216+00:00",
+      "finished_utc": "2026-10-29T08:35:25.398069+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 9,
+      "case": "bridge",
+      "rep": 2,
+      "arm": "B",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 270.8,
+      "verification_seconds": 8.36,
+      "total_seconds": 279.16,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 26,
+      "reported_tool_errors": 1,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 546348,
+        "cached_input_tokens": 498560,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4387,
+        "reasoning_output_tokens": 1202
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:35:30.507987+00:00",
+      "finished_utc": "2026-10-29T08:40:09.716561+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 10,
+      "case": "bridge",
+      "rep": 2,
+      "arm": "A",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 206.54,
+      "verification_seconds": 8.26,
+      "total_seconds": 214.8,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 22,
+      "reported_tool_errors": 0,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 867128,
+        "cached_input_tokens": 789888,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3562,
+        "reasoning_output_tokens": 1535
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:40:13.783643+00:00",
+      "finished_utc": "2026-10-29T08:43:48.623676+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 11,
+      "case": "bearing",
+      "rep": 2,
+      "arm": "B",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 364.0,
+      "verification_seconds": 5.82,
+      "total_seconds": 369.82,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1015",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 38,
+      "reported_tool_errors": 3,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 544082,
+        "cached_input_tokens": 490496,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3896,
+        "reasoning_output_tokens": 571
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:43:53.560419+00:00",
+      "finished_utc": "2026-10-29T08:50:03.402546+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 12,
+      "case": "bearing",
+      "rep": 2,
+      "arm": "A",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 307.91,
+      "verification_seconds": 5.79,
+      "total_seconds": 313.7,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 17,
+      "reported_tool_errors": 1,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 714093,
+        "cached_input_tokens": 666880,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3594,
+        "reasoning_output_tokens": 1282
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:50:06.489641+00:00",
+      "finished_utc": "2026-10-29T08:55:20.205374+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 13,
+      "case": "floor",
+      "rep": 2,
+      "arm": "A",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 111.04,
+      "verification_seconds": 7.2,
+      "total_seconds": 118.24,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 19,
+      "reported_tool_errors": 1,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 578554,
+        "cached_input_tokens": 522624,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2155,
+        "reasoning_output_tokens": 609
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:55:23.532262+00:00",
+      "finished_utc": "2026-10-29T08:57:21.810827+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 14,
+      "case": "floor",
+      "rep": 2,
+      "arm": "B",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 261.34,
+      "verification_seconds": 7.31,
+      "total_seconds": 268.65,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 30,
+      "reported_tool_errors": 0,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 516897,
+        "cached_input_tokens": 484864,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2823,
+        "reasoning_output_tokens": 451
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T08:57:25.905119+00:00",
+      "finished_utc": "2026-10-29T09:01:54.574479+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 15,
+      "case": "plate",
+      "rep": 2,
+      "arm": "A",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 646.8,
+      "verification_seconds": 7.87,
+      "total_seconds": 654.67,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 29,
+      "reported_tool_errors": 4,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 996878,
+        "cached_input_tokens": 926208,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5307,
+        "reasoning_output_tokens": 2168
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T09:01:57.706348+00:00",
+      "finished_utc": "2026-10-29T09:12:52.402287+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 16,
+      "case": "plate",
+      "rep": 2,
+      "arm": "B",
+      "model_status": "completed",
+      "end_to_end_passed": false,
+      "file_passed": false,
+      "agent_seconds": 485.65,
+      "verification_seconds": 6.08,
+      "total_seconds": 491.73,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [
+        "Base Plate:circles"
+      ],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 73,
+      "reported_tool_errors": 4,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 1503203,
+        "cached_input_tokens": 1436288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 10959,
+        "reasoning_output_tokens": 3109
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T09:12:57.073719+00:00",
+      "finished_utc": "2026-10-29T09:21:08.841502+00:00",
+      "primary_outcome": "output_checks_failed"
+    },
+    {
+      "index": 17,
+      "case": "bearing",
+      "rep": 3,
+      "arm": "A",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 106.68,
+      "verification_seconds": 6.58,
+      "total_seconds": 113.26,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 17,
+      "reported_tool_errors": 1,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 614350,
+        "cached_input_tokens": 559488,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1938,
+        "reasoning_output_tokens": 656
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T09:21:12.713175+00:00",
+      "finished_utc": "2026-10-29T09:23:06.000430+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 18,
+      "case": "bearing",
+      "rep": 3,
+      "arm": "B",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 453.71,
+      "verification_seconds": 6.02,
+      "total_seconds": 459.73,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 29,
+      "reported_tool_errors": 2,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 595606,
+        "cached_input_tokens": 534912,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4799,
+        "reasoning_output_tokens": 705
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T09:23:10.490179+00:00",
+      "finished_utc": "2026-10-29T09:30:50.247850+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 19,
+      "case": "floor",
+      "rep": 3,
+      "arm": "B",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 224.96,
+      "verification_seconds": 6.96,
+      "total_seconds": 231.92,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1015",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 26,
+      "reported_tool_errors": 0,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 377764,
+        "cached_input_tokens": 357504,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2306,
+        "reasoning_output_tokens": 301
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T09:30:53.974087+00:00",
+      "finished_utc": "2026-10-29T09:34:45.911766+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 20,
+      "case": "floor",
+      "rep": 3,
+      "arm": "A",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 127.68,
+      "verification_seconds": 7.39,
+      "total_seconds": 135.07,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 18,
+      "reported_tool_errors": 1,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 649655,
+        "cached_input_tokens": 600320,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2313,
+        "reasoning_output_tokens": 796
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T09:34:50.052120+00:00",
+      "finished_utc": "2026-10-29T09:37:05.136819+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 21,
+      "case": "bridge",
+      "rep": 3,
+      "arm": "A",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 201.88,
+      "verification_seconds": 8.71,
+      "total_seconds": 210.59,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 22,
+      "reported_tool_errors": 1,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 814078,
+        "cached_input_tokens": 755584,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4085,
+        "reasoning_output_tokens": 1756
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T09:37:09.638875+00:00",
+      "finished_utc": "2026-10-29T09:40:40.273179+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 22,
+      "case": "bridge",
+      "rep": 3,
+      "arm": "B",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 425.4,
+      "verification_seconds": 8.75,
+      "total_seconds": 434.15,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 38,
+      "reported_tool_errors": 0,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 1545881,
+        "cached_input_tokens": 1479808,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 5145,
+        "reasoning_output_tokens": 1647
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T09:40:46.082045+00:00",
+      "finished_utc": "2026-10-29T09:48:00.275634+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 23,
+      "case": "plate",
+      "rep": 3,
+      "arm": "B",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 384.11,
+      "verification_seconds": 6.7,
+      "total_seconds": 390.81,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": null,
+      "live_sync_results": [],
+      "file_busy_errors": 0,
+      "cad_calls": 61,
+      "reported_tool_errors": 2,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 1916465,
+        "cached_input_tokens": 1849216,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 10314,
+        "reasoning_output_tokens": 3380
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T09:48:05.174068+00:00",
+      "finished_utc": "2026-10-29T09:54:36.021071+00:00",
+      "primary_outcome": "completed"
+    },
+    {
+      "index": 24,
+      "case": "plate",
+      "rep": 3,
+      "arm": "A",
+      "model_status": "completed",
+      "end_to_end_passed": true,
+      "file_passed": true,
+      "agent_seconds": 170.22,
+      "verification_seconds": 6.89,
+      "total_seconds": 177.11,
+      "source_unchanged": true,
+      "output_exists": true,
+      "dwg_header": "AC1032",
+      "audit_errors": 0,
+      "failed_checks": [],
+      "gui_readback_passed": true,
+      "gui_readback_reason": null,
+      "live_open_before_edit": true,
+      "live_sync_results": [
+        {
+          "reloaded": true,
+          "open_in_autocad": true,
+          "view_kept": true
+        }
+      ],
+      "file_busy_errors": 0,
+      "cad_calls": 22,
+      "reported_tool_errors": 3,
+      "other_tool_calls": 0,
+      "timeout": false,
+      "terminal_error": "",
+      "usage": {
+        "input_tokens": 917979,
+        "cached_input_tokens": 844288,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3672,
+        "reasoning_output_tokens": 1208
+      },
+      "cleanup_returncode": 0,
+      "autocad_crash_event_codes": [],
+      "started_utc": "2026-10-29T09:54:41.452392+00:00",
+      "finished_utc": "2026-10-29T09:57:38.588951+00:00",
+      "primary_outcome": "completed"
+    }
+  ],
+  "summary": {
+    "A": {
+      "attempted": 12,
+      "end_to_end_passed": 11,
+      "file_passed": 12,
+      "model_service_interrupted": 1,
+      "completed_total_seconds_median": 179.58
+    },
+    "B": {
+      "attempted": 12,
+      "end_to_end_passed": 10,
+      "file_passed": 10,
+      "model_service_interrupted": 1,
+      "completed_total_seconds_median": 341.42999999999995
+    }
+  },
+  "notes": [
+    "New live-open-and-readback requirement; historical measurements are retained separately",
+    "Elapsed totals include the model, its retries, CAD tools, and independent file verification; additional supervisor GUI readback, GUI startup and cleanup excluded",
+    "Only compare timing for complete paired deliveries; external model interruptions remain visible",
+    "Read-only report data only: no source drawing, derivatives or raw entity logs are published"
+  ]
+}

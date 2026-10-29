@@ -8,3 +8,5 @@ docs/assets/native-dwg-times.svg export-ignore
 docs/assets/native-dwg-repeat-outcomes.svg export-ignore
 docs/assets/native-dwg-live-lock.svg export-ignore
 docs/assets/native-dwg-live-lock-results.json export-ignore
+docs/assets/native-dwg-fixed-repeat.svg export-ignore
+docs/assets/native-dwg-fixed-repeat-results.json export-ignore
