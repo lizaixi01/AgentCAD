@@ -463,3 +463,37 @@ def test_mcp_returns_png_inline(ws):
     assert [c.type for c in a] == ["text", "image"] and a[1].mimeType == "image/png"
     assert json.loads(a[0].text)["ok"] and json.loads(a[0].text)["output"] == "p.png"
     assert [c.type for c in b] == ["text"] and json.loads(b[0].text)["ok"]
+
+
+@needs_freecad
+@pytest.mark.parametrize("shapes, axis, volume", [
+    # half disk on the axis, as a bulge polygon and as arc + line: a sphere of radius 10
+    ([{"type": "polygon", "points": [[10, 0, 1], [-10, 0]]}], "H", 4 / 3 * math.pi * 1000),
+    ([{"type": "arc", "center": [0, 0], "radius": 10, "start_angle": 0, "end_angle": 180},
+      {"type": "line", "start": [-10, 0], "end": [10, 0]}], "H", 4 / 3 * math.pi * 1000),
+    # half disk 5 off the axis (Pappus: area x 2 pi x centroid distance)
+    ([{"type": "polygon", "points": [[5, 0, 1], [5, 20]]}], "V",
+     math.pi * 100 / 2 * 2 * math.pi * (5 + 40 / (3 * math.pi))),
+])
+def test_half_circle_profiles(rt, shapes, axis, volume):
+    """A 180 degree arc's end points already fix its radius, so the sketch locks the centre instead: before,
+    every half circle failed with SKETCH_OVERCONSTRAINED (the usual profile for a knob, a dome or a sphere)."""
+    ok(rt.create_drawing("half.FCStd"))
+    r = ok(rt.apply_operations("half.FCStd", [{"op": "add_sketch", "plane": "XZ", "shapes": shapes},
+                                              {"op": "revolve", "sketch": "$0", "axis": axis}]))
+    s = shape(r)
+    assert s["solids"] == 1 and s["valid"] and s["volume"] == pytest.approx(volume, rel=1e-6)
+
+
+@needs_freecad
+@pytest.mark.parametrize("deg", [179.9, 180, 180.01, 270])
+def test_arcs_around_half_a_turn(rt, deg):
+    """Arcs either side of 180 degrees keep their radius constraint and build the exact circular segment."""
+    a = math.radians(deg)
+    ok(rt.create_drawing("seg.FCStd"))
+    r = ok(rt.apply_operations("seg.FCStd", [
+        {"op": "add_sketch", "plane": "XY", "shapes": [
+            {"type": "arc", "center": [0, 0], "radius": 10, "start_angle": 0, "end_angle": deg},
+            {"type": "line", "start": [10 * math.cos(a), 10 * math.sin(a)], "end": [10, 0]}]},
+        {"op": "pad", "sketch": "$0", "length": 1}]))
+    assert shape(r)["volume"] == pytest.approx(50 * (a - math.sin(a)), rel=1e-6)
