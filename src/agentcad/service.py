@@ -311,7 +311,7 @@ class Runtime:
 
     # --- tools ------------------------------------------------------------------------------------
     @tool
-    def list_operations(self, category: str | None = None, ops: list[str] | None = None,
+    def list_operations(self, category: str | None = None, ops: list[str] | str | None = None,
                         detail: bool = False) -> dict[str, Any]:
         """Default: a compact index (name, category, one-line summary, parameter names; * = required), ~9K chars.
         Full JSON schemas for the ops named in 'ops', for one 'category', or for everything with detail=true.
@@ -349,6 +349,11 @@ class Runtime:
                     full.append(REGISTRY[o].schema())
                 if o in PART_REGISTRY and category is None:
                     full.append({**part_schema(PART_REGISTRY[o]), "kind": "part"})
+            if not full:
+                where = {o: ("part" if o not in REGISTRY else REGISTRY[o].category) for o in ops}
+                raise input_error("UNKNOWN_OPERATION", f"None of {ops} is a {category!r} operation",
+                                  hint=f"Their categories: {where}. Leave out the category to get them; part "
+                                       f"operations also come with category='part'")
             out = {"operations": full, "count": len(full), "detail": True, "constraint_types": constraints}
             if any(s.get("kind") == "part" for s in full):
                 out["conventions"] = PART_CONVENTIONS
