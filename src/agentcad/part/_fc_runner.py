@@ -600,8 +600,22 @@ class SketchBuilder:
             self.lock_point(g, pos, p)
         for g in gids:
             geom = self.sk.Geometry[g]
-            if type(geom).__name__ == "ArcOfCircle":
+            if type(geom).__name__ != "ArcOfCircle":
+                continue
+            chord = geom.EndPoint - geom.StartPoint
+            if abs(chord.Length - 2 * geom.Radius) > 1e-7 * max(1.0, geom.Radius):
                 self.con(Sketcher.Constraint("Radius", g, geom.Radius))
+                continue
+            # A half circle: its locked end points already fix the radius (chord = 2r), so a Radius constraint is
+            # redundant and the solver rejects the sketch. What is still free is where the centre sits on the
+            # chord's perpendicular bisector: lock the centre's coordinate along the axis closest to it.
+            c = geom.Center
+            if abs(chord.x) > abs(chord.y):  # bisector closer to Y
+                self.con(Sketcher.Constraint("PointOnObject", g, 3, -1) if abs(c.y) < TOL else
+                         Sketcher.Constraint("DistanceY", -1, 1, g, 3, c.y))
+            else:
+                self.con(Sketcher.Constraint("PointOnObject", g, 3, -2) if abs(c.x) < TOL else
+                         Sketcher.Constraint("DistanceX", -1, 1, g, 3, c.x))
 
     def shape(self, s, i):
         nm = f"{self.name}.shapes[{i}]"
