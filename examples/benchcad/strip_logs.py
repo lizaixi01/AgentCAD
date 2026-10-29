@@ -1,4 +1,4 @@
-"""Replace inline base64 image payloads in agent run logs with a short placeholder, in place.
+"""Replace long base64 strings in agent run logs (inline images, thinking signatures) with a placeholder, in place.
 
 The preview PNGs that export_drawing returns inline make up most of a run log's size. They can be
 regenerated from the workspace, so the committed logs keep the trace and drop the pixels.

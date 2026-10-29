@@ -68,7 +68,8 @@ def codex_cmd(arm: str, root: str, effort: str, scripts: bool = False, images: l
 def claude_cmd(arm: str, root: str, effort: str, conf_dir: Path, python: str = "", scripts: bool = False,
                images: list[str] = ()) -> list[str]:
     """``images``: the mcp arm also gets the Read tool, so the agent can look at these input images. Run the
-    process with the workspace as its working directory: reads outside it would ask, and asking is denied."""
+    process with the workspace as its working directory. ``Read`` is allowed without a path scope, so check the
+    logs for reads outside it (run.py flags runs that mention the data directory)."""
     base = [claude_exe(), "-p", "--output-format", "stream-json", "--verbose", "--model", CLAUDE_MODEL,
             "--effort", effort, "--no-session-persistence", "--permission-prompts", "none",
             "--setting-sources", "project"]
