@@ -112,13 +112,13 @@ The same `Runtime` is available from Python and over HTTP (`agentcad --root work
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
 | 3D parts | Parametric FreeCAD parts (`.FCStd`) through the same tools: sketches, pad, pocket, revolve, holes, fillets, chamfers, shells, patterns, lofts, sweeps, helices, driven by named parameters. Edge and face selections survive edits. STEP/STL export and shaded PNG previews. Needs FreeCAD 1.1 (optional) — see [docs/part-3d.md](docs/part-3d.md) |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | 320 automated tests, including 27 cases checked against AutoCAD 2027 behaviour and 57 3D-part tests (51 of them build parts in FreeCAD 1.1) |
+| Tests | 339 automated tests, including 27 cases checked against AutoCAD 2027 behaviour and 57 3D-part tests (51 of them build parts in FreeCAD 1.1) |
 
 Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial software.
 
 ## Where it stands
 
-AgentCAD is early. 3D parts are new and not yet measured with agents; they can't be turned into 2D drawings yet. DWG needs AutoCAD on the machine. The industry libraries cover common P&ID, GD&T and ISO fastener content, not a full catalogue. The live AutoCAD session is tested against a stand-in for AutoCAD's COM interface; a run against the GUI needs a signed-in AutoCAD licence. Readability checks cover text height, and plot layout still needs a human eye. The evidence so far is 12 tasks on two agents. What's missing is tracked in [docs/limitations-roadmap.md](docs/limitations-roadmap.md).
+AgentCAD is early. 3D parts are new and not yet measured with agents; they can't be turned into 2D drawings yet. DWG needs AutoCAD on the machine. The industry libraries cover common P&ID, GD&T and ISO fastener content, not a full catalogue. The live session has also been [checked in AutoCAD 2027](docs/comparison-native-dwg.md#实时编辑文件锁修复复核): 12 consecutive edits synchronized across four flows on two drawings, including pull, conflict protection and checkpoint recovery. It opens new DXFs read-only so AgentCAD can replace them; GUI edits come back through pull. Other AutoCAD versions remain untested. Readability checks cover text height, and plot layout still needs a human eye. The earlier agent drafting evidence covers 12 tasks on two agents. What's missing is tracked in [docs/limitations-roadmap.md](docs/limitations-roadmap.md).
 
 ## Documentation
 

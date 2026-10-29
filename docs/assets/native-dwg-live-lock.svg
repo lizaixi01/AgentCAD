@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 492" role="img" aria-labelledby="title desc">
+<title id="title">实时编辑文件锁修复：AutoCAD 2027 实机复核</title>
+<desc id="desc">同版本两张图：写入打开时零次修改成功，共两次；显式以只读方式重开后两次均成功。修复后两张图各两轮、每轮三次编辑，共十二次编辑同步成功；中位耗时4.72秒，范围4.38至5.49秒。四次编辑回传、冲突保护、检查点恢复以及DWG回读审核全部通过。</desc>
+<rect width="880" height="492" rx="12" fill="#fff"/>
+<g font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" fill="#18263b">
+<text x="28" y="35" font-size="21" font-weight="700">实时编辑锁：修复后能连续用了吗？</text>
+<text x="28" y="62" font-size="13" fill="#506177">AutoCAD 2027 实机 · 两张原生 DWG 转出的 DXF · 专项回归验证</text>
+<text x="28" y="99" font-size="15" font-weight="600">同版本对照：相同图纸，相同修改</text>
+<text x="28" y="128" font-size="14">普通写入打开</text>
+<rect x="207" y="110" width="167" height="27" rx="4" fill="#fde8e6"/><rect x="382" y="110" width="167" height="27" rx="4" fill="#fde8e6"/>
+<text x="290" y="129" text-anchor="middle" font-size="13" fill="#aa3028">轴承座：FILE_BUSY</text><text x="465" y="129" text-anchor="middle" font-size="13" fill="#aa3028">基板：FILE_BUSY</text>
+<text x="578" y="129" font-size="15" font-weight="600" fill="#aa3028">0 / 2 完成</text>
+<text x="28" y="169" font-size="14">显式只读重开</text>
+<rect x="207" y="151" width="167" height="27" rx="4" fill="#dcf5e8"/><rect x="382" y="151" width="167" height="27" rx="4" fill="#dcf5e8"/>
+<text x="290" y="170" text-anchor="middle" font-size="13" fill="#17613f">轴承座：完成</text><text x="465" y="170" text-anchor="middle" font-size="13" fill="#17613f">基板：完成</text>
+<text x="578" y="170" font-size="15" font-weight="600" fill="#17613f">2 / 2 完成</text>
+<path d="M28 199H852" stroke="#e2e8f0"/>
+<text x="28" y="230" font-size="15" font-weight="600">连续编辑：每行连续 3 次；色块内为本次编辑与同步秒数</text>
+<text x="28" y="265" font-size="14">轴承座 · 第 1 轮</text>
+<rect x="207" y="247" width="106" height="27" rx="4" fill="#2463c7"/><text x="260" y="265" text-anchor="middle" font-size="13" fill="#fff">5.32</text>
+<rect x="321" y="247" width="106" height="27" rx="4" fill="#2463c7"/><text x="374" y="265" text-anchor="middle" font-size="13" fill="#fff">4.67</text>
+<rect x="435" y="247" width="106" height="27" rx="4" fill="#2463c7"/><text x="488" y="265" text-anchor="middle" font-size="13" fill="#fff">4.75</text>
+<text x="578" y="273" font-size="23" font-weight="700" fill="#17613f">12 / 12 同步成功</text>
+<text x="28" y="303" font-size="14">机械基板 · 第 1 轮</text>
+<rect x="207" y="285" width="106" height="27" rx="4" fill="#2463c7"/><text x="260" y="303" text-anchor="middle" font-size="13" fill="#fff">5.32</text>
+<rect x="321" y="285" width="106" height="27" rx="4" fill="#2463c7"/><text x="374" y="303" text-anchor="middle" font-size="13" fill="#fff">5.28</text>
+<rect x="435" y="285" width="106" height="27" rx="4" fill="#2463c7"/><text x="488" y="303" text-anchor="middle" font-size="13" fill="#fff">4.68</text>
+<text x="578" y="307" font-size="14">中位 4.72 秒</text>
+<text x="28" y="341" font-size="14">轴承座 · 第 2 轮</text>
+<rect x="207" y="323" width="106" height="27" rx="4" fill="#2463c7"/><text x="260" y="341" text-anchor="middle" font-size="13" fill="#fff">5.49</text>
+<rect x="321" y="323" width="106" height="27" rx="4" fill="#2463c7"/><text x="374" y="341" text-anchor="middle" font-size="13" fill="#fff">4.59</text>
+<rect x="435" y="323" width="106" height="27" rx="4" fill="#2463c7"/><text x="488" y="341" text-anchor="middle" font-size="13" fill="#fff">4.93</text>
+<text x="578" y="345" font-size="13" fill="#506177">范围 4.38–5.49 秒</text>
+<text x="28" y="379" font-size="14">机械基板 · 第 2 轮</text>
+<rect x="207" y="361" width="106" height="27" rx="4" fill="#2463c7"/><text x="260" y="379" text-anchor="middle" font-size="13" fill="#fff">4.38</text>
+<rect x="321" y="361" width="106" height="27" rx="4" fill="#2463c7"/><text x="374" y="379" text-anchor="middle" font-size="13" fill="#fff">4.57</text>
+<rect x="435" y="361" width="106" height="27" rx="4" fill="#2463c7"/><text x="488" y="379" text-anchor="middle" font-size="13" fill="#fff">4.56</text>
+<path d="M28 410H852" stroke="#e2e8f0"/>
+<text x="28" y="438" font-size="14" fill="#17613f">4/4 回传通过　 ·　4/4 冲突保护通过　 ·　4/4 检查点恢复通过　 ·　4/4 DWG 审核零错误</text>
+<text x="28" y="468" font-size="12" fill="#506177">仅为本次修复回归；耗时不含启动、DWG 转换与模型推理。原 AgentCAD / Pro 对比数据保留。</text>
+</g></svg>

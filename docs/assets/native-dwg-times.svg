@@ -1,0 +1,41 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 378" role="img" aria-labelledby="title desc">
+  <title id="title">原生 DWG 任务完成用时</title>
+  <desc id="desc">每侧每题一次，包含独立复核。轴承座：AgentCAD 138.17 秒，AutoCAD MCP Pro 140.55 秒；建筑平面：106.47 和 368.15 秒；桥梁标准图：166.92 和 451.26 秒。</desc>
+  <rect width="880" height="378" rx="12" fill="#ffffff"/>
+  <g font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" fill="#18263b">
+    <text x="28" y="35" font-size="21" font-weight="700">完成一项任务需要多久？</text>
+    <text x="28" y="61" font-size="13" fill="#506177">含独立复核 · 每侧每题各 1 次 · 秒</text>
+    <rect x="566" y="24" width="14" height="14" rx="3" fill="#2463c7"/>
+    <text x="587" y="36" font-size="14">AgentCAD</text>
+    <rect x="694" y="24" width="14" height="14" rx="3" fill="#c96920"/>
+    <text x="715" y="36" font-size="14">AutoCAD MCP Pro</text>
+    <g stroke="#e2e8f0" stroke-width="1">
+      <path d="M244 96V342 M348 96V342 M452 96V342 M556 96V342 M660 96V342 M764 96V342"/>
+    </g>
+    <g fill="#65758b" font-size="12" text-anchor="middle">
+      <text x="244" y="88">0</text><text x="348" y="88">100</text><text x="452" y="88">200</text>
+      <text x="556" y="88">300</text><text x="660" y="88">400</text><text x="764" y="88">500 秒</text>
+    </g>
+    <g font-size="15" font-weight="600">
+      <text x="28" y="139">轴承座</text>
+      <text x="28" y="223">建筑平面</text>
+      <text x="28" y="307">桥梁标准图</text>
+    </g>
+    <g fill="#2463c7">
+      <rect x="244" y="112" width="143.697" height="21" rx="4"/>
+      <rect x="244" y="196" width="110.729" height="21" rx="4"/>
+      <rect x="244" y="280" width="173.597" height="21" rx="4"/>
+    </g>
+    <g fill="#c96920">
+      <rect x="244" y="142" width="146.172" height="21" rx="4"/>
+      <rect x="244" y="226" width="382.876" height="21" rx="4"/>
+      <rect x="244" y="310" width="469.310" height="21" rx="4"/>
+    </g>
+    <g font-size="13" font-weight="600">
+      <text x="395.7" y="128">138.17</text><text x="398.2" y="158">140.55</text>
+      <text x="362.7" y="212">106.47</text><text x="634.9" y="242">368.15</text>
+      <text x="425.6" y="296">166.92*</text><text x="721.3" y="326">451.26</text>
+    </g>
+    <text x="28" y="365" font-size="12" fill="#506177">* 桥梁图的 AgentCAD 用时含 2.66 秒补充评分；更多条件和限制见正文。</text>
+  </g>
+</svg>

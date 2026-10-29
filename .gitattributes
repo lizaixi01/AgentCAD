@@ -3,3 +3,8 @@
 *.dxf -text
 *.svg -text
 *.dwg binary
+docs/comparison-native-dwg.md export-ignore
+docs/assets/native-dwg-times.svg export-ignore
+docs/assets/native-dwg-repeat-outcomes.svg export-ignore
+docs/assets/native-dwg-live-lock.svg export-ignore
+docs/assets/native-dwg-live-lock-results.json export-ignore

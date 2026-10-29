@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 442" role="img" aria-labelledby="title desc">
+  <title id="title">两轮原生 DWG 实验：交付结果与耗时</title>
+  <desc id="desc">每格代表一次。AgentCAD 八次均完成并通过独立检查；Pro 五次完成，轴承座第二次未交付，基板两次文件通过检查但会话崩溃。桥梁第一次任务完成后，清理阶段发生崩溃。</desc>
+  <rect width="1000" height="442" rx="12" fill="#ffffff"/>
+  <g font-family="Microsoft YaHei, Noto Sans CJK SC, sans-serif" fill="#18263b">
+    <text x="28" y="35" font-size="21" font-weight="700">两轮结果：文件和会话一起看</text>
+    <text x="28" y="60" font-size="13" fill="#506177">每格 1 次；数字是完成任务并独立复核的总秒数。样本少，不代表总体可靠率。</text>
+    <text x="339" y="91" text-anchor="middle" font-size="17" font-weight="700" fill="#2457b2">AgentCAD · 8/8 完成</text>
+    <text x="705" y="91" text-anchor="middle" font-size="17" font-weight="700" fill="#a64e16">AutoCAD MCP Pro · 5/8 完成</text>
+    <g text-anchor="middle" font-size="13" fill="#65758b">
+      <text x="248" y="116">第 1 次</text><text x="430" y="116">第 2 次</text>
+      <text x="614" y="116">第 1 次</text><text x="796" y="116">第 2 次</text>
+    </g>
+    <g font-size="15" font-weight="600">
+      <text x="28" y="154">轴承座</text><text x="28" y="216">建筑平面</text>
+      <text x="28" y="278">桥梁标准图</text><text x="28" y="340">机械基板</text>
+    </g>
+    <g fill="#eaf2ff">
+      <rect x="170" y="125" width="156" height="44" rx="6"/><rect x="352" y="125" width="156" height="44" rx="6"/>
+      <rect x="170" y="187" width="156" height="44" rx="6"/><rect x="352" y="187" width="156" height="44" rx="6"/>
+      <rect x="170" y="249" width="156" height="44" rx="6"/><rect x="352" y="249" width="156" height="44" rx="6"/>
+      <rect x="170" y="311" width="156" height="44" rx="6"/><rect x="352" y="311" width="156" height="44" rx="6"/>
+    </g>
+    <g fill="#fff1e7">
+      <rect x="536" y="125" width="156" height="44" rx="6"/>
+      <rect x="536" y="187" width="156" height="44" rx="6"/><rect x="718" y="187" width="156" height="44" rx="6"/>
+      <rect x="536" y="249" width="156" height="44" rx="6"/><rect x="718" y="249" width="156" height="44" rx="6"/>
+    </g>
+    <rect x="718" y="125" width="156" height="44" rx="6" fill="#fdecef"/>
+    <rect x="536" y="311" width="156" height="44" rx="6" fill="#fff6dd"/>
+    <rect x="718" y="311" width="156" height="44" rx="6" fill="#fff6dd"/>
+    <g text-anchor="middle" font-size="15" font-weight="600" fill="#2457b2">
+      <text x="248" y="153">✓ 138.17 秒</text><text x="430" y="153">✓ 66.09 秒</text>
+      <text x="248" y="215">✓ 106.47 秒</text><text x="430" y="215">✓ 97.80 秒</text>
+      <text x="248" y="277">✓ 166.92 秒</text><text x="430" y="277">✓ 173.82 秒</text>
+      <text x="248" y="339">✓ 124.34 秒</text><text x="430" y="339">✓ 120.90 秒</text>
+    </g>
+    <g text-anchor="middle" font-size="15" font-weight="600" fill="#a64e16">
+      <text x="614" y="153">✓ 140.55 秒</text>
+      <text x="614" y="215">✓ 368.15 秒</text><text x="796" y="215">✓ 365.23 秒</text>
+      <text x="614" y="277">✓ 451.26 秒†</text><text x="796" y="277">✓ 405.45 秒</text>
+    </g>
+    <text x="796" y="153" text-anchor="middle" font-size="15" font-weight="600" fill="#9c2c3e">× 未交付</text>
+    <g text-anchor="middle" font-size="13" font-weight="600" fill="#805018">
+      <text x="614" y="330">文件过检</text><text x="614" y="347">会话崩溃*</text>
+      <text x="796" y="330">文件过检</text><text x="796" y="347">会话崩溃*</text>
+    </g>
+    <g font-size="12" fill="#506177">
+      <text x="28" y="390">* 基板两次均在任务期间崩溃，模型未完成回读；保存的文件通过独立检查。</text>
+      <text x="28" y="411">† 桥梁首次任务完成并复核后，关闭测试图时崩溃；计入完成次数，另作异常记录。</text>
+    </g>
+  </g>
+</svg>
