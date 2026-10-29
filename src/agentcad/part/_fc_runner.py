@@ -1666,11 +1666,25 @@ def open_or_new(job):
     return doc
 
 
+PROGRESS = {"file": None}  # job["progress"]: a file the parent polls to show which operation runs (viewer)
+
+
+def report_progress(**ev):
+    if not PROGRESS["file"]:
+        return
+    try:
+        with open(PROGRESS["file"], "a", encoding="utf-8") as f:
+            f.write(json.dumps(ev) + "\n")
+    except OSError:
+        pass
+
+
 def run_ops(doc, ops):
     ctx = Ctx(doc)
     results = []
     for i, raw in enumerate(ops):
         name = raw.get("op")
+        report_progress(step=i, total=len(ops))
         p = {k: v for k, v in raw.items() if k not in ("op", "comment")}
         try:
             if name in META_OPS:
@@ -1715,8 +1729,10 @@ def run_ops(doc, ops):
 
 
 def action_apply(job):
+    PROGRESS["file"] = job.get("progress")
     doc = open_or_new(job)
     ctx, results = run_ops(doc, job.get("ops") or [])
+    report_progress(phase="checking")
     out = {"results": results, "changes": {"added": ctx.created, "modified": ctx.modified, "deleted": ctx.deleted}}
     if not job.get("output"):
         out["summary"] = summary(doc)
