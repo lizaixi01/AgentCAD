@@ -350,9 +350,10 @@ class Runtime:
                 if o in PART_REGISTRY and category is None:
                     full.append({**part_schema(PART_REGISTRY[o]), "kind": "part"})
             if not full:
+                where = {o: ("part" if o not in REGISTRY else REGISTRY[o].category) for o in ops}
                 raise input_error("UNKNOWN_OPERATION", f"None of {ops} is a {category!r} operation",
-                                  hint="Part operations: list_operations(ops=[...]) without a category, or "
-                                       "category='part'")
+                                  hint=f"Their categories: {where}. Leave out the category to get them; part "
+                                       f"operations also come with category='part'")
             out = {"operations": full, "count": len(full), "detail": True, "constraint_types": constraints}
             if any(s.get("kind") == "part" for s in full):
                 out["conventions"] = PART_CONVENTIONS

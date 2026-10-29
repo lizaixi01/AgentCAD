@@ -16,8 +16,8 @@ INLINE_IMAGE_MAX = 2 * 1024 * 1024  # bytes: a png export larger than this is no
 
 INSTRUCTIONS = """AgentCAD: CAD runtime for agents: 2D drawings (.dxf) and 3D parametric parts (.FCStd, FreeCAD).
 Paths are relative to the workspace. The same tools work on both; the file extension picks 2D or 3D.
-Tool names below are this server's own; your client lists them with its prefix (in Claude Code:
-mcp__agentcad__list_operations, mcp__agentcad__apply_operations, ...). Always call them by the listed name.
+Tool names below are this server's own; your client may list them with a prefix (Claude Code:
+mcp__<server name>__<tool>, usually mcp__agentcad__list_operations). Always call them by the listed name.
 
 Basics
 - Find operations: list_operations() is a compact index (2D ops, plus part_operations names). Full schemas for
