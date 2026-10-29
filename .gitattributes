@@ -5,3 +5,4 @@
 *.dwg binary
 docs/comparison-native-dwg.md export-ignore
 docs/assets/native-dwg-times.svg export-ignore
+docs/assets/native-dwg-repeat-outcomes.svg export-ignore
