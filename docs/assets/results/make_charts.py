@@ -14,7 +14,7 @@ import matplotlib.pyplot as plt  # noqa: E402
 OUT = Path(__file__).parent
 plt.rcParams.update({"svg.fonttype": "path", "font.family": "DejaVu Sans", "font.size": 10})
 
-# Minutes to a correct result (lower is better): (task, alternative, AgentCAD, alternative)
+# Typical minutes per run (median of 3, or of the paired successes; lower is better): (task, alternative, AgentCAD, alternative)
 SPEED = [
     ("Five-round revision with undo", "vs. writing code · Claude Code", 4.1, 12.9),        # comparison-claude-code.md
     ("Edit a real AutoCAD DWG", "vs. writing code · Claude Code", 2.9, 6.0),              # comparison-claude-code.md
@@ -78,7 +78,7 @@ def draw(theme):
     ax = fig.add_subplot(gs[0])
     style(ax, t)
     pair_rows(ax, SPEED, t, lambda v: f"{v:.1f} min", 14.5)
-    ax.set_title("Minutes to a correct result (lower is better)", loc="left", color=t["ink"], fontsize=10.5,
+    ax.set_title("Typical minutes per run (lower is better)", loc="left", color=t["ink"], fontsize=10.5,
                  fontweight="bold", x=-0.555)
 
     ax = fig.add_subplot(gs[1])
