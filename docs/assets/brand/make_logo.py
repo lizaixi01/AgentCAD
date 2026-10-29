@@ -1,5 +1,5 @@
-"""Generate the AgentCAD logo SVGs: the layout of a CAD app icon with its colors inverted (white on red ->
-black on cyan). Letters are DejaVu Sans Bold outlines, not any vendor's artwork.
+"""Generate the AgentCAD logo SVGs: the layout of a CAD app icon turned around, black letters on a white tile
+with a black CAD tab. Letters are DejaVu Sans Bold outlines, not any vendor's artwork.
 
     python docs/assets/brand/make_logo.py docs/assets/brand      (needs matplotlib for the DejaVu fonts, and fonttools)
 """
@@ -15,9 +15,11 @@ from fontTools.ttLib import TTFont
 OUT = Path(sys.argv[1])
 OUT.mkdir(parents=True, exist_ok=True)
 FONTS = Path(matplotlib.__file__).parent / "mpl-data" / "fonts" / "ttf"
-TILE_TOP, TILE_BOTTOM = "#19F0D2", "#0FCDB0"   # inverse of a red tile
-TAB = "#63F2DA"                                # inverse of its darker red tab
-INK = "#000000"                                # inverse of white letters
+TILE_TOP, TILE_BOTTOM = "#FFFFFF", "#ECEEF0"   # white tile
+EDGE = "#D0D7DE"                               # hairline, so the tile shows on white pages
+TAB = "#000000"                                # black tab
+INK = "#000000"                                # the A
+TAB_INK = "#FFFFFF"                            # CAD on the tab
 
 
 def text_path(text, font_file, size, x, y, tracking=0.0):
@@ -47,7 +49,8 @@ def mark(x, y, s, uid="m"):
             f'<stop offset="0" stop-color="{TILE_TOP}"/><stop offset="1" stop-color="{TILE_BOTTOM}"/>'
             f'</linearGradient><clipPath id="{uid}c"><rect x="{x}" y="{y}" width="{s}" height="{s}" '
             f'rx="{r:.1f}"/></clipPath></defs>')
-    tile = f'<rect x="{x}" y="{y}" width="{s}" height="{s}" rx="{r:.1f}" fill="url(#{uid}g)"/>'
+    tile = (f'<rect x="{x + 2 * k:.1f}" y="{y + 2 * k:.1f}" width="{s - 4 * k:.1f}" height="{s - 4 * k:.1f}" '
+            f'rx="{r - 2 * k:.1f}" fill="url(#{uid}g)" stroke="{EDGE}" stroke-width="{4 * k:.1f}"/>')
     size = 400 * k
     _, wa, ta = text_path("A", "DejaVuSans-Bold.ttf", size, 0, 0)
     a, _, _ = text_path("A", "DejaVuSans-Bold.ttf", size, x + 300 * k - wa / 2, y + 60 * k + ta)
@@ -57,7 +60,7 @@ def mark(x, y, s, uid="m"):
     _, wc, tc = text_path("CAD", "DejaVuSans-Bold.ttf", csize, 0, 0, tracking=-2 * k)
     cad, _, _ = text_path("CAD", "DejaVuSans-Bold.ttf", csize, tx + (tw - wc) / 2, ty + (th + tc) / 2,
                           tracking=-2 * k)
-    return defs + tile + f'<path d="{a}" fill="{INK}"/>' + tab + f'<path d="{cad}" fill="{INK}"/>'
+    return defs + tile + f'<path d="{a}" fill="{INK}"/>' + tab + f'<path d="{cad}" fill="{TAB_INK}"/>'
 
 
 def svg(w, h, inner, title):
