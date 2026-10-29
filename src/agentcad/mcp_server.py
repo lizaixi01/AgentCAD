@@ -55,6 +55,18 @@ Basics
   sizes across views; fit='uniform' uses one scale. To match a reference image, use its camera positions.
 - Deliver with export_drawing(path, "part.step", "step") (also stl, iges, brep, obj): read back and compared.
 
+3D scripts and reference images
+- Ops build an editable feature tree (parameters, modify_feature; what CADBench requires). A script is often
+  quicker for complex shapes, or when only the solid counts (STEP, a score on the shape). If enabled,
+  run_script(path.FCStd, code) runs CadQuery (`cq` imported) that sets `result` to a cq.Workplane or Shape
+  (language="freecad": FreeCAD Part code). The solid becomes the part's base, committed like a batch; part ops
+  (fillet, hole, pocket, ...) can build on it. To revise, re-run the whole changed script (keep_features=true
+  rebuilds those ops on the new solid).
+- Compare with a reference image: export_drawing(path, "cmp.png", "png", views=[...], reference="ref.png"),
+  views in the reference's order and grid (2 columns up to 4 views). Each view is scaled and centred onto the
+  reference's silhouette, so overall size is not compared, only shape and proportions. The image shows the
+  reference, ours and a diff (red: only reference, blue: only ours); compare.views[].iou and mean_iou score it.
+
 Live viewer: results that change a file carry viewer_url, a page on this computer where the user watches the
 work step by step and can save or share it. Give the user that link once, the first time you change something."""
 
@@ -151,19 +163,30 @@ def build_server(policy: Policy | None = None) -> FastMCP:
 
     @mcp.tool()
     def run_script(path: Path_,
-                   code: Annotated[str, Field(description="Python using ezdxf. The drawing is given as `doc` (model "
-                                                          "space as `msp`); edit it in place, do not open or save "
-                                                          "files. Paper layouts: doc.layouts.get(name). Optionally "
-                                                          "set `result` to a JSON value to return it.")],
+                   code: Annotated[str, Field(description="Drawing (.dxf): Python using ezdxf; the drawing is given "
+                                                          "as `doc` (model space as `msp`); edit it in place, do not "
+                                                          "open or save files. Paper layouts: doc.layouts.get(name). "
+                                                          "Optionally set `result` to a JSON value to return it. "
+                                                          "3D part (.FCStd): a CadQuery program (`cq` imported) "
+                                                          "that sets `result` to the solid (cq.Workplane or Shape); "
+                                                          "no file import/export.")],
                    dry_run: Annotated[bool, Field(description="Return the diff without saving")] = False,
                    requirements: Annotated[list[dict] | None, Field(description="Optional requirements to validate after")] = None,
                    strict: Annotated[bool, Field(description="Do not save if post-validation fails")] = False,
-                   label: str | None = None) -> dict:
-        """For edits the operation catalogue cannot express. Runs the script on a copy of the drawing in a separate
-        process (time-limited; imports limited to ezdxf/math/standard data modules), then commits it like a batch:
-        checkpoint, diff, validation, journal with the full script; rollback works as usual. Disabled unless the
-        server runs with AGENTCAD_ALLOW_SCRIPTS=1. Prefer apply_operations when an operation exists."""
-        return rt.run_script(path, code, label, dry_run, requirements, strict)
+                   label: str | None = None,
+                   language: Annotated[Literal["ezdxf", "cadquery", "freecad"] | None,
+                                       Field(description="Default: ezdxf for .dxf, cadquery for .FCStd; 'freecad': "
+                                                         "FreeCAD Part code (Part, App, Vector given) setting "
+                                                         "`result` to a Part.Shape")] = None,
+                   keep_features: Annotated[bool, Field(description="3D part: keep the Body's features and rebuild "
+                                                        "them on the new solid (default: the part becomes the "
+                                                        "script's solid alone)")] = False) -> dict:
+        """For what the operation catalogue cannot express. Runs the script in a separate process (time-limited;
+        imports limited to the library and standard math/data modules), then commits it like a batch: checkpoint,
+        diff, validation, journal with the full script; rollback works as usual. On a 3D part the script's solid
+        becomes the Body's base (a missing part is created), and part ops can build on it afterwards. Disabled
+        unless the server runs with AGENTCAD_ALLOW_SCRIPTS=1. Prefer apply_operations when an operation exists."""
+        return rt.run_script(path, code, label, dry_run, requirements, strict, language, keep_features)
 
     @mcp.tool()
     def apply_constraints(path: Path_,
@@ -282,6 +305,10 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                        fit: Annotated[Literal["view", "uniform"] | None, Field(description="png: 'view' (default) "
                            "fills each view with the part (no fixed scale: do not measure pixels); 'uniform' uses "
                            "one scale for every view")] = None,
+                       reference: Annotated[str | None, Field(description="png of a 3D part: a reference image in the "
+                           "workspace laid out as the same grid of views (same order; 2 columns up to 4 views). The "
+                           "png then shows per view the reference, our render aligned to its silhouette and a diff; "
+                           "the result gives each view's silhouette IoU and mean_iou")] = None,
                        inline_image: Annotated[bool, Field(description="png: also return the image in this result, "
                            "so you see it without opening the file (not above 2 MB)")] = True) -> Any:
         """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, PDF (plotted without
@@ -293,7 +320,7 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         STEP/IGES/BREP are read back and compared with the part; a part that is not one valid solid is refused.
         A png comes back in the result as an image too (inline_image), after the usual JSON."""
         r = rt.export_drawing(path, output, format, dxf_version, overwrite, layout, paper, scale, orientation,
-                              monochrome, views, image_size, fit)
+                              monochrome, views, image_size, fit, reference)
         if format == "png" and inline_image and r.get("ok"):
             png = rt.policy.root / r["output"]
             if png.is_file() and png.stat().st_size <= INLINE_IMAGE_MAX:

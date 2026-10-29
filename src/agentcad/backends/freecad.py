@@ -1,8 +1,9 @@
 """Optional FreeCAD backend: the geometry kernel for 3D parts (``.FCStd``). The 2D runtime never needs it.
 
 Every job runs ``part/_fc_runner.py`` in a separate FreeCAD process. The job folder holds ``job.json`` (action,
-files and operations as data) and receives ``result.json``. Nothing the caller sends becomes code or a command line:
-the arguments are the interpreter, the fixed runner path and the job folder.
+files and operations as data) and receives ``result.json``. Nothing the caller sends becomes a command line: the
+arguments are the interpreter, the fixed runner path and the job folder. The only code a caller sends is a FreeCAD
+Part script for run_script, which the policy keeps off unless scripts are allowed.
 
 Configuration: AGENTCAD_FREECAD = FreeCAD's install folder, its ``bin`` folder, its bundled ``python`` or
 ``freecadcmd``. Otherwise FREECAD_LIB (the folder holding FreeCAD.pyd/.so, as freecad-validator uses it, imported by
@@ -112,7 +113,7 @@ def _wait_reporting(p, log: Path, deadline: float, on_progress) -> None:
 
 
 def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
-        outputs: dict[str, Path] | None = None, on_progress=None) -> dict[str, Any]:
+        outputs: dict[str, Path] | None = None, on_progress=None, timeout: float | None = None) -> dict[str, Any]:
     """Run one job; return the runner's result dict ({"ok": ...}). Raises only for process-level failures.
 
     ``on_progress(event)``: the runner writes one line per operation to ``progress.jsonl`` in the job folder
@@ -121,7 +122,9 @@ def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
     FreeCAD reads and writes files only inside a short job folder under the system temp directory: deep workspace
     paths exceed Windows' 260-character limit when FreeCAD saves (it failed in pytest's temp folders). ``inputs``
     {job key: file} are copied in; ``outputs`` {job key: destination} are copied out when the job succeeds.
+    ``timeout``: seconds (default AGENTCAD_FREECAD_TIMEOUT, 300).
     """
+    limit = TIMEOUT if timeout is None else timeout
     cmd, extra = require()
     d = Path(tempfile.gettempdir()) / "agentcad-fc" / uuid.uuid4().hex[:12]
     d.mkdir(parents=True)
@@ -145,12 +148,12 @@ def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
                                  env=env, shell=False)
             try:
                 if on_progress is None:
-                    p.wait(timeout=TIMEOUT)
+                    p.wait(timeout=limit)
                 else:
-                    _wait_reporting(p, d / "progress.jsonl", t0 + TIMEOUT, on_progress)
+                    _wait_reporting(p, d / "progress.jsonl", t0 + limit, on_progress)
             except subprocess.TimeoutExpired:
                 p.kill()
-                raise AgentCADError("FREECAD_TIMEOUT", f"FreeCAD did not finish within {TIMEOUT:g}s",
+                raise AgentCADError("FREECAD_TIMEOUT", f"FreeCAD did not finish within {limit:g}s",
                                     category="internal", retryable=True, details={"job": str(d)})
         res_path = d / "result.json"
         if not res_path.is_file():

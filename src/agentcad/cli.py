@@ -68,10 +68,15 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--strict", action="store_true", help="Do not save if post-validation fails")
     s.add_argument("--label")
 
-    s = sub.add_parser("script", help="Run an ezdxf script on a drawing as one transaction (needs --allow-scripts)")
-    s.add_argument("path"); s.add_argument("--file", required=True, help="Python file; the drawing is `doc`")
+    s = sub.add_parser("script", help="Run an ezdxf script on a drawing, or a CadQuery / FreeCAD script that builds a "
+                                      "3D part's solid, as one transaction (needs --allow-scripts)")
+    s.add_argument("path"); s.add_argument("--file", required=True, help="Python file; a drawing is `doc`, a part's "
+                                                                         "script sets `result`")
     s.add_argument("--requirements-file"); s.add_argument("--dry-run", action="store_true")
     s.add_argument("--strict", action="store_true"); s.add_argument("--label")
+    s.add_argument("--language", choices=["ezdxf", "cadquery", "freecad"],
+                   help="Default: ezdxf for .dxf, cadquery for .FCStd")
+    s.add_argument("--keep-features", action="store_true", help="3D part: rebuild the Body's features on the new solid")
 
     s = sub.add_parser("validate", help="Independent validation of the file on disk")
     s.add_argument("path"); s.add_argument("--requirements-file"); s.add_argument("--requirements")
@@ -258,7 +263,8 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         except OSError as exc:
             _die(f"cannot read script {a.file}: {exc}")
         r = rt.run_script(a.path, code, label=a.label, dry_run=a.dry_run, strict=a.strict,
-                          requirements=_json_arg(None, a.requirements_file, "requirements"))
+                          requirements=_json_arg(None, a.requirements_file, "requirements"), language=a.language,
+                          keep_features=a.keep_features)
     elif c == "apply":
         ops = _json_arg(a.ops, a.ops_file, "operations")
         if ops is None:

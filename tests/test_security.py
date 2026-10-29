@@ -106,15 +106,15 @@ def test_no_shell_or_arbitrary_execution_surface():
     for f in pkg.rglob("*.py"):
         text = f.read_text("utf-8")
         assert "os.system" not in text and "eval(" not in text, f
-        if f != pkg / "_script_runner.py":
-            assert "exec(" not in text, f
+        if f not in (pkg / "_script_runner.py", pkg / "part" / "_cq_runner.py", pkg / "part" / "_fc_runner.py"):
+            assert "exec(" not in text, f  # the script runners: agent code, opt-in (run_script)
         if f not in launchers:
             assert "subprocess" not in text, f
     # process launchers: fixed executables, no shell
     backend = (pkg / "backends" / "autocad.py").read_text("utf-8")
     assert "shell=False" in backend and "shell=True" not in backend and "Popen(args" in backend
     fc = (pkg / "backends" / "freecad.py").read_text("utf-8")
-    assert "shell=False" in fc and "shell=True" not in fc and "timeout=TIMEOUT" in fc
+    assert "shell=False" in fc and "shell=True" not in fc and "timeout=limit" in fc
     scripting = (pkg / "scripting.py").read_text("utf-8")
     assert "shell=False" in scripting and "shell=True" not in scripting and "timeout=timeout" in scripting
     # install.py runs only the user's own 'claude mcp' CLI, from 'agentcad setup'. Modules that serve tools may

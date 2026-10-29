@@ -20,6 +20,9 @@ AgentCAD 用同一组工具处理二维图纸（`.dxf`）和三维零件（`.FCS
 `FREECAD_LIB`。`agentcad mcp-config --write` 会把这两个环境变量写进 MCP 配置。没装时三维工具返回
 `dependency/DEPENDENCY_MISSING`。
 
+用 CadQuery 脚本建模（`run_script`，见下）还要在 AgentCAD 自己的 Python 里装 CadQuery：
+`pip install "agentcad-runtime[cadquery]"`（实测 CadQuery 2.8，OCP 7.9.3）。FreeCAD 自带的 Python 不装它。
+
 ## 进程模型
 
 每次调用起一个 FreeCAD 进程（冷启动约 1.5 s，一次调用通常 0.5–1 s 完成）运行 `part/_fc_runner.py`：
@@ -66,6 +69,50 @@ FreeCAD 1.1.4 自带的拓扑命名修复在脚本建模时不可靠：实测改
 `{type, normal, extreme, axis, radius|diameter, inner, x|y|z, box, near, count}`。
 `inspect_entities(filter={"kind": "edges", "selector": {...}})` 能先预览选择器选到哪些边。
 
+## 脚本建模（`run_script`）
+
+操作建出的是可编辑的特征树（参数表、`modify_feature`，CADBench 只认这种）。有些形状用 CadQuery 一段程序写出来更快，
+模型也更熟悉它：BenchCAD Vision2Code 的对照试验里，直接写 CadQuery 的 Agent 得分高于用 AgentCAD 操作的 Agent。
+`run_script` 把两者接起来：脚本建出实体，AgentCAD 照常管检查点、journal、验证、撤销和预览，之后还能接着用操作改。
+
+```python
+run_script("part.FCStd", code="""
+import cadquery as cq
+result = cq.Workplane("XY").box(40, 20, 10).faces(">Z").workplane().hole(6)
+""")
+apply_operations("part.FCStd", [{"op": "fillet", "edges": {"type": "line", "direction": "z"}, "radius": 2}])
+```
+
+- **语言**：`language="cadquery"`（默认）：程序把 `result` 设成 `cq.Workplane`、`Shape` 或 `Assembly`（`cq` 已导入，
+  也认 `show_object(x)`）；`language="freecad"`：FreeCAD Part 代码（给了 `Part`、`App`、`Vector`），`result` 是
+  `Part.Shape`。`result` 里的多个实体会先合并；合并后仍是分开的几块就报 `NOT_SINGLE_SOLID`。数字按零件单位
+  （英寸零件里 `box(1, 1, 1)` 是 25.4 mm 的立方体）。零件不存在时按 mm 新建。
+- **实体存在哪**：脚本的实体放进 Body 外的一个 `Part::Feature`（`ScriptSolid`，脚本全文和 sha256 也存在它的
+  `AgentCADScript` 属性里），作为 Body 的 `BaseFeature`；FreeCAD 在 Body 开头放一个 `PartDesign::FeatureBase`。
+  之后的 `fillet`、`hole`、`pocket`、`on_face` 草图、`set_parameters` 驱动的尺寸都建在它上面，选择器照常每次重新解析。
+- **修改**：改脚本，整段重新运行。默认零件变成新实体本身（原来的 Body 和特征删掉，留在检查点里）；
+  `keep_features=true` 保留 Body 里已有的特征，在新实体上按顺序重建（选择器重新解析，重建失败则整次不提交）。
+  基体不能用 `modify_feature`/`delete_feature` 改，结果提示重新运行脚本。
+- **事务**：和 `apply_operations` 一样：检查点 → 运行 → 候选文件 → FreeCAD 重新打开并验证 → 原子提交 → journal
+  （记录完整脚本和哈希，`history(seq=[n])` 可取回）→ 查看器进度事件；`dry_run`、`strict`、`requirements`、
+  `rollback` 都照常。失败时文件不变。
+- **错误**：`SCRIPT_FAILED`（脚本抛异常；`details.script_lines` 是出错的脚本行，`details.traceback` 是回溯的末尾）、
+  `NO_RESULT`（没设 `result`）、`NOT_A_SOLID`（只有草图、线或面）、`NOT_SINGLE_SOLID`、`SCRIPT_TIMEOUT`、
+  `SCRIPT_REJECTED`（静态检查不过）、`DEPENDENCY_MISSING`（没装 CadQuery）。
+- **验证**：基体来自脚本时 `validate_drawing` 报一条警告 `SCRIPT_BASE_SOLID`，不是错误：导出 STEP/STL 没问题，
+  但要求原生特征树的评分器（CADBench）会拒收。
+
+**进程模型**：CadQuery 装不进 FreeCAD 的 Python（OCP 与 FreeCAD 各带一份 OCCT），所以 CadQuery 脚本在 AgentCAD
+自己解释器的子进程里运行（`python -I part/_cq_runner.py <作业目录>`，不经 shell，`AGENTCAD_SCRIPT_TIMEOUT` 限时，
+默认 60 s，含 CadQuery 启动的约 3–4 s；工作目录是工作区状态目录 `.agentcad/freecad/` 下的作业目录），实体写成
+BREP 交给 FreeCAD 进程导入。BREP 是 OCCT 自己的格式，两边都用 OCCT，几何原样过去，不像 STEP 要经过一次翻译。
+FreeCAD 脚本直接在 FreeCAD 进程里运行（限时为脚本限时 + 60 s）。
+
+**安全**：和二维脚本同一套策略：默认关闭（`AGENTCAD_ALLOW_SCRIPTS=1` 或 CLI `--allow-scripts` 开启）；先做静态检查
+（只能导入 cadquery / FreeCAD Part、numpy 和标准数学/数据模块；不能打开、导入、导出或保存文件，不能用
+`cq.exporters`/`importers`、`exportStep` 一类方法，不能 eval/exec/getattr/双下划线访问），运行时只给精简的内置函数和
+同一份导入白名单。这些检查防的是误操作，不是安全沙箱：只对你愿意让它以你的身份运行 Python 的 Agent 开启。
+
 ## 验证
 
 `validate_drawing` 对零件：FreeCAD 重新打开、重算，然后检查
@@ -104,6 +151,27 @@ Body 不是恰好一个有效实体（或有特征出错）时拒绝导出（`NO
 - 球体、圆锥顶点这类没有曲线的**退化边**（FreeCAD 读它的 `Curve` 会报 `undefined curve type`）在预览和边选择里都会跳过。
 - 预览**不要求**零件可导出：Body 有多个实体或特征出错时照样渲染当前的形状（导出 STEP 会拒绝），方便看清哪里出了问题。
 
+### 与参考图比较
+
+`export_drawing(part.FCStd, cmp.png, "png", views=[...], reference="ref.png")`：`reference` 是工作区里的一张图，
+按和预览一样的网格排好视图（顺序同 `views`；单视图一格，4 个以内 2 列，更多 3 列）。对每个视图：
+
+1. **参考轮廓**：和背景色不同的像素（背景色取格子边框一圈像素的中位数，所以背景是什么颜色都行；图带透明通道时
+   取不透明像素），再做一次约为格宽 1/128 的开运算，去掉网格线、标签、引线这类细线。开运算后几乎什么都不剩时，
+   当作线框图：先闭合轮廓再填充。
+2. **我们的渲染**：用这个视图的相机渲染零件，轮廓取自深度缓冲（加上轮廓边线）。
+3. **对齐**：把我们的轮廓按**同一个**比例缩放（保持长宽比），对齐到参考轮廓的包围盒中心。所以取景（缩放、
+   偏移、留白）不影响结果，**整体尺寸也不比较**，比的是形状和比例。参考轮廓碰到格子边缘时当作被裁切：
+   比例只按没被裁的方向算，并对齐到没被裁的一侧（结果里 `reference_cropped`）。
+4. **得分**：两边做同样的开运算后算轮廓 IoU（交集 / 并集）。
+
+输出图每个视图一行：参考格、对齐后的我们的渲染、差异图（红：只在参考里，蓝：只在我们的零件里，灰：两边都有）。
+每格高 `image_size`（默认 256 px）。结果里 `compare.views[]` 给每个视图的 `iou` 和对齐比例，`mean_iou` 是平均值。
+不传 `reference` 时预览行为不变。比较用 numpy + Pillow 在 AgentCAD 进程里做（`part/compare.py`），FreeCAD 进程
+只返回每个视图的渲染图和轮廓。
+
+注意包围盒对齐把整体尺寸误差藏起来了：零件整体大一倍，IoU 照样接近 1。尺寸看 `validation.shape`。
+
 无 GUI 的 FreeCAD 不能离屏渲染，所以预览在 runner 里自己光栅化：OCC 三角化 → 逐三角形扫描线填充的 numpy z-buffer →
 平面着色（光源靠近视线方向）→ 2 倍超采样。1024 px 四视图约 2.5 s（另加 FreeCAD 启动约 1.5 s）。用 FreeCAD 自带的
 numpy 和 PIL；纯 `FREECAD_LIB` 解释器没有 PIL 时用 zlib 直接写 PNG（不带标签）。
@@ -111,6 +179,8 @@ numpy 和 PIL；纯 `FREECAD_LIB` 解释器没有 PIL 时用 zlib 直接写 PNG�
 ## 已知限制
 
 - 一个零件一个 Body（CADBench 的要求）；多零件装配还没有。
+- 脚本建的基体是一个整块实体，不是特征树：之后的操作是可编辑的特征，但基体本身只能整段重新运行脚本来改。
+- 参考图比较只看轮廓（剪影），看不出轮廓内部的差别（例如盲孔、台阶面）；网格必须和预览的排法一致。
 - 没有从三维生成二维工程图（投影视图 → DXF）；这是下一步，接上之后三维模型能直接出图。
 - `on_face` 的草图是绝对定位：面移动时由 AgentCAD 的重新解析跟上，直接用 FreeCAD GUI 改模型则不会跟。
 - 非 mm 零件里，`set_parameters` 的裸数字按长度（零件单位）换算；计数类参数（如阵列个数）请直接写在操作里。
