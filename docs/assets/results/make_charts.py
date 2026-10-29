@@ -13,7 +13,8 @@ import matplotlib.pyplot as plt  # noqa: E402
 from matplotlib.patches import FancyBboxPatch, Rectangle  # noqa: E402
 
 OUT = Path(__file__).parent
-plt.rcParams.update({"svg.fonttype": "path", "font.family": "DejaVu Sans", "font.size": 10})
+# a fixed hash salt and no date (savefig below): the same numbers give byte-identical SVGs
+plt.rcParams.update({"svg.fonttype": "path", "font.family": "DejaVu Sans", "font.size": 10, "svg.hashsalt": "agentcad"})
 R_PT = 3  # corner radius at a bar's data end: about 4 px at the README's 860 px width
 
 # Typical minutes per run (median of 3, or of the paired successes; lower is better): (task, alternative, AgentCAD, alternative)
@@ -123,7 +124,7 @@ def draw(theme):
             "sampled tasks · not the BenchCAD leaderboard", transform=ax.transAxes, color=t["muted"], fontsize=8.5)
     ax.set_title("3D: rebuild a part from 4 views, BenchCAD Vision2Code (mean IoU, 1 = exact)", loc="left",
                  color=t["ink"], fontsize=10.5, fontweight="bold", x=-0.555)
-    fig.savefig(OUT / f"results-{theme}.svg", facecolor=t["bg"])
+    fig.savefig(OUT / f"results-{theme}.svg", facecolor=t["bg"], metadata={"Date": None})
     plt.close(fig)
 
 
