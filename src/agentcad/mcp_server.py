@@ -5,11 +5,13 @@ from __future__ import annotations
 
 from typing import Annotated, Any, Literal
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp import FastMCP, Image
 from pydantic import Field
 
 from .policy import Policy
 from .service import Runtime
+
+INLINE_IMAGE_MAX = 2 * 1024 * 1024  # bytes: a png export larger than this is not returned inline
 
 INSTRUCTIONS = """AgentCAD: headless CAD runtime: 2D drawings (DXF) and 3D parametric parts (FreeCAD .FCStd).
 Workflow: list_operations (compact index; ops=[...] gives full schemas) -> apply_operations (batch many ops in one
@@ -255,16 +257,25 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                                                                "(default 512)")] = None,
                        fit: Annotated[Literal["view", "uniform"] | None, Field(description="png: 'view' (default) "
                            "fills each view with the part (no fixed scale: do not measure pixels); 'uniform' uses "
-                           "one scale for every view")] = None) -> dict:
+                           "one scale for every view")] = None,
+                       inline_image: Annotated[bool, Field(description="png: also return the image in this result, "
+                           "so you see it without opening the file (not above 2 MB)")] = True) -> Any:
         """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, PDF (plotted without
         external software: one page per layout, paper layouts 1:1 on their sheet, vector output, reports scale and
         too-small printed text), or DWG (optional AutoCAD backend; dxf_version selects the DWG release).
         3D parts: step, iges, brep, stl, obj, or png: a shaded preview (parallel projection, part centred and
         filling the frame, edges drawn) to look at what you built, e.g. against a reference image. It renders
         even a part that is not one valid solid, to show what went wrong.
-        STEP/IGES/BREP are read back and compared with the part; a part that is not one valid solid is refused."""
-        return rt.export_drawing(path, output, format, dxf_version, overwrite, layout, paper, scale, orientation,
-                                 monochrome, views, image_size, fit)
+        STEP/IGES/BREP are read back and compared with the part; a part that is not one valid solid is refused.
+        A png comes back in the result as an image too (inline_image), after the usual JSON."""
+        r = rt.export_drawing(path, output, format, dxf_version, overwrite, layout, paper, scale, orientation,
+                              monochrome, views, image_size, fit)
+        if format == "png" and inline_image and r.get("ok"):
+            png = rt.policy.root / r["output"]
+            if png.is_file() and png.stat().st_size <= INLINE_IMAGE_MAX:
+                return [r, Image(path=png)]
+            r["inline_image"] = "skipped: file over 2 MB"
+        return r
 
     @mcp.tool()
     def import_drawing(source: Annotated[str, Field(description="DWG file in the workspace")], output: Path_,
