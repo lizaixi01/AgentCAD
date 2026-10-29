@@ -10,7 +10,8 @@
  "codex_model": "gpt-6.1-sol",
  "arms": {
   "mcp": "AgentCAD MCP tools only, PNG previews from export_drawing",
-  "code": "CadQuery 2.3 with BenchCAD's interpreter, render.py draws the same 4 views with BenchCAD's renderer"
+  "code": "CadQuery 2.3 with BenchCAD's interpreter, render.py draws the same 4 views with BenchCAD's renderer",
+  "hybrid": "AgentCAD MCP with run_script on parts (CadQuery 2.8 from agentcad-runtime[cadquery], or FreeCAD Part code) and export_drawing(..., reference=...) per-view match scores (PR #26)"
  },
  "labels": [
   "claude-mcp-medium",
@@ -19,11 +20,15 @@
   "codex-code-medium",
   "claude-mcp-opt-medium",
   "codex-mcp-opt-medium",
-  "claude-mcp-opt2-medium"
+  "claude-mcp-opt2-medium",
+  "claude-hybrid-medium",
+  "codex-hybrid-medium"
  ],
  "reruns": {
   "claude-mcp-opt-medium": "7f6fb16d809a96f4eec1d4952bc9634c86fe487b (PR #24 head)",
   "codex-mcp-opt-medium": "7f6fb16d809a96f4eec1d4952bc9634c86fe487b (PR #24 head)",
-  "claude-mcp-opt2-medium": "5116d412d7123bc0ee7e5756c070a955fe079994 (PR #25 first commit)"
+  "claude-mcp-opt2-medium": "5116d412d7123bc0ee7e5756c070a955fe079994 (PR #25 first commit)",
+  "claude-hybrid-medium": "8f1eeb7252ea41719499576eed7775dfd4992d37 (main after #26), cadquery 2.8.0",
+  "codex-hybrid-medium": "8f1eeb7252ea41719499576eed7775dfd4992d37 (main after #26), cadquery 2.8.0"
  }
 }

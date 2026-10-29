@@ -91,8 +91,8 @@ Paired by task, with 95% bootstrap intervals:
   - CadQuery is a full code-CAD language that models know well, and BenchCAD's reference parts are themselves
     CadQuery programs.
   - The code arm compares its part pixel for pixel with the input through the same renderer, while AgentCAD's
-    preview frames and colours parts differently. How much this matters is not measured: the next experiment adds
-    a reference comparison to AgentCAD to find out.
+    preview frames and colours parts differently. How much this matters is not measured here. The next section
+    adds a reference comparison to AgentCAD.
   - Not every miss is about tools. Claude + AgentCAD built the dog bone lying flat (thin along Z) where the reference
     stands in the YZ plane, a 90° orientation error its preview did not catch: IoU 0.08 against 0.84 for Claude
     writing code. Codex + AgentCAD built it upright: 0.92, and 0.99 after #24.
@@ -114,15 +114,84 @@ Paired by task, with 95% bootstrap intervals:
 - **What this measures.** Vision2Code scores one solid built from nothing. It does not score what AgentCAD adds:
   checkpoints and undo, the journal, independent validation, an editable feature tree, the live viewer.
 
-Next: make the 3D path agent-native. That means CadQuery scripts run as AgentCAD transactions, and previews
-compared with a reference image, aligned per view with a match score. Then rerun this experiment.
+## AgentCAD with scripts and a reference comparison (2026-10-30)
+
+The control pointed at two gaps in AgentCAD's 3D path, and #26 filled both:
+
+- `run_script` on a part runs a CadQuery program (or FreeCAD Part code) as one AgentCAD transaction. Its solid
+  becomes the body's base and is validated and checkpointed like any operation.
+- `export_drawing(..., reference=...)` renders the part from the reference's camera positions and aligns each view
+  to the reference silhouette. It returns a match score per view (silhouette IoU) and a diff image.
+
+The **hybrid arm** (`--arm hybrid`) ran the same 100 tasks at medium effort. It used AgentCAD `8f1eeb7` (main after
+#26) with CadQuery 2.8, and had the AgentCAD arm's tools with scripts turned on. Its prompt offers scripts and
+operations alike (`V2C_HYBRID_PROMPT` in `run.py`).
+
+| Medium effort, 100 tasks | Mean IoU | ≥ 0.9 | < 0.5 | Median time | Median input tokens | Cost |
+|---|---|---|---|---|---|---|
+| Claude Code + AgentCAD, after #25 | 0.613 | 17 | 29 | 52 s | 157k | $21.8 |
+| Claude Code + AgentCAD with scripts and compare | **0.754** | 29 | 11 | 84 s | 209k | $36.2 |
+| Claude Code writing CadQuery | 0.682 | 20 | 23 | 77 s | 75k | $15.6 |
+| Codex + AgentCAD, after #24 | 0.811 | 45 | 11 | 148 s | 260k | — |
+| Codex + AgentCAD with scripts and compare | 0.857 | 60 | 6 | 180 s | 289k | — |
+| Codex writing CadQuery | **0.918** | 73 | 1 | 294 s | 281k | — |
+
+Paired by task, with 95% bootstrap intervals:
+
+- **Claude now builds better parts through AgentCAD than by writing CadQuery itself.** The hybrid arm leads the
+  code arm by 0.072 (+0.032 to +0.112): it is better on 52 tasks and worse on 28. It leads the operations-only run
+  after #25 by 0.141 (+0.096 to +0.187).
+- **Codex closes about half of its gap, and is still behind.** It trails the code arm by 0.061 (−0.092 to −0.033),
+  where it trailed by 0.107 before. It leads the operations-only run after #24 by 0.046 (+0.023 to +0.067). It is
+  39% faster than writing CadQuery: 180 s vs 294 s median.
+- **Claude pays for it.** For 100 tasks it cost $36.2, 2.3× the code arm's $15.6, and took 9% longer per task.
+  - It took more steps: 22 vs 18 median.
+  - The compare images add input.
+  - Each step carries more context. The first step held 17k tokens against 8k in the code arm, because AgentCAD's
+    24 tool definitions and instructions (about 33k characters) are sent on every step.
+- **This arm cannot split the gain.** It adds scripts and the comparison together.
+
+What the logs show:
+
+- **Both agents built every part with a script.** `run_script` ran in all 100 tasks for both agents, while
+  `apply_operations` built a part in only one (Claude). To build a part from images, both prefer code to
+  operations. Operations remain AgentCAD's way to edit a feature tree, which this task does not test.
+- **Both compared every part with the target**: median 5 compare calls per task for Claude, 4 for Codex.
+- **The match score is optimistic.**
+  - The last compare averaged 0.93 (Claude) and 0.94 (Codex), against graded IoU of 0.75 and 0.86.
+  - Per task, the two correlate weakly: r = 0.38 and 0.46.
+  - Silhouettes see neither depth nor interior features. The four diagonal views are two pairs of opposite
+    cameras whose silhouettes mirror each other, so the score rests on two silhouettes.
+  - Codex's connector faceplate scored 0.96 on compare and 0.32 graded; its U-channel 0.996 and 0.59.
+- **A false export error cost a task.**
+  - The STEP export check refused 20 exports in 3 tasks, 5 runs (`EXPORT_MISMATCH`): a pin with two cross holes, a
+    knob and the coil spring. The parts were fine. The check held volumes to 1e-6, below OCC's integration noise, and
+    compared FreeCAD's quick bounding boxes, which follow B-spline control points.
+  - On the coil spring, the check refused Codex's export of a part that matched the target at 0.71. Codex spent the
+    rest of the task working around the error, then submitted a simpler spring it had not compared. It scored 0.18,
+    against 0.91 in the code arm.
+  - The same loose box made AgentCAD report sizes more than 1% off for 33 of the 200 final parts: up to 85% for a
+    twisted drill, 57% for a coil spring, 51% for a threaded bolt.
+  - #29 fixes both.
+- **Claude called tools by bare name in 51 of 100 tasks.** These were 101 calls (`run_script`, `export_drawing`),
+  which Claude Code rejects before they reach AgentCAD.
+
+Caveats: CadQuery is 2.8 in AgentCAD and 2.3 in the code arm. Test suites ran on the same machine during this run,
+so the times are noisy. As before, each task ran once.
+
+Next:
+
+- A comparison that sees inside the outline (shading or depth), so the score tracks the shape and not just its
+  silhouettes.
+- Fewer tool definitions on each step of 3D work, to cut Claude's cost.
 
 ## Files
 
 - `prepare.py`: draws the sample and writes each task's input composite and reference STEP into the data directory
   (default `D:\Projects\bench-data`, or `BENCHCAD_DATA`). Run with BenchCAD's own venv.
 - `run.py`: runs the tasks through an agent (`examples/trials/agents.py`), with retries for transient API errors.
-  `--arm code` is the CadQuery control; `--label` names the run directory.
+  `--arm code` is the CadQuery control, `--arm hybrid` AgentCAD with scripts and the reference comparison (it needs
+  `agentcad-runtime[cadquery]`); `--label` names the run directory.
 - `render.py`: copied into each code-arm workspace; renders a STEP with BenchCAD's own four-view renderer.
 - `score.py`: scores the submissions with BenchCAD's scorer (BenchCAD's venv) into `runs/<label>/<suite>.scores.jsonl`.
 - `summarize_control.py`: the control experiment's numbers and paired intervals, into `control_summary.json`.
