@@ -286,6 +286,8 @@ def _dir(v, name):
 
 
 def _curve_kind(e):
+    if e.Degenerated:  # e.g. a sphere's or cone's pole: no curve, and e.Curve raises "undefined curve type"
+        return "degenerate"
     c = e.Curve
     n = type(c).__name__
     return {"Line": "line", "LineSegment": "line", "Circle": "circle", "ArcOfCircle": "circle",
@@ -410,7 +412,7 @@ def select_edges(shape, sel, name="edges"):
                 face_edges.append(e)
     hits = []
     for i, e in enumerate(shape.Edges):
-        if _is_seam(shape, e):
+        if e.Degenerated or _is_seam(shape, e):
             continue
         if face_edges is not None and not any(e.isSame(x) for x in face_edges):
             continue
@@ -1897,7 +1899,8 @@ def render_view(sh, d, size, fit, ss=2):
         img[rows[win], cols[win]] = base * sv
     eps = 2.5 * ss / k  # depth slack: an edge on a visible face is drawn, one behind the solid is not
     for e in sh.Edges:
-        if _is_seam(sh, e):  # a cylinder's parametric seam is not an edge anyone would draw
+        # a cylinder's parametric seam is not an edge anyone would draw, nor a sphere's or cone's pole
+        if e.Degenerated or _is_seam(sh, e):
             continue
         pe = np.array([[q.x, q.y, q.z] for q in e.discretize(Deflection=max(span, 1e-9) / 800)], float)
         if len(pe) < 2:

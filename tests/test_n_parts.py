@@ -411,3 +411,55 @@ def test_png_preview(rt, ws, plate):
     assert bad["error"]["code"] == "BAD_VIEW" and "iso" in bad["error"]["hint"]
     bad = rt.export_drawing("plate.FCStd", "x.step", "step", views=["iso"])
     assert bad["error"]["code"] == "UNKNOWN_PARAM"
+
+
+@needs_freecad
+@pytest.mark.parametrize("extra", [
+    {"op": "primitive", "kind": "sphere", "dims": {"radius": 10}, "position": [0, 0, 40]},
+    {"op": "primitive", "kind": "cone", "dims": {"radius1": 6, "radius2": 0, "height": 12}, "position": [0, 0, 40]},
+    {"op": "primitive", "kind": "torus", "dims": {"radius1": 4, "radius2": 2}, "position": [0, 0, 20]},
+])
+def test_preview_and_edge_selection_skip_degenerate_edges(rt, ws, extra):
+    """A sphere's or cone's pole is an edge without a curve (FreeCAD raises "undefined curve type" on e.Curve):
+    previews and edge selectors skip it instead of failing."""
+    ok(rt.create_drawing("knob.FCStd"))
+    ok(rt.apply_operations("knob.FCStd", [
+        {"op": "primitive", "kind": "cylinder", "dims": {"radius": 3, "height": 40}}, extra]))
+    r = ok(rt.export_drawing("knob.FCStd", "knob.png", "png", views=["iso", [-1, -1, -1]], image_size=96))
+    assert r["grid"] == [1, 2] and (ws / "knob.png").stat().st_size > 0
+    ok(rt.export_drawing("knob.FCStd", "knob.step", "step"))
+    r = rt.apply_operations("knob.FCStd", [{"op": "fillet", "edges": {"type": "circle", "radius": 3}, "radius": 1}],
+                            dry_run=True)
+    assert r["ok"] or r["error"]["code"] != "FREECAD_ERROR", r
+
+
+@needs_freecad
+def test_mcp_returns_png_inline(ws):
+    """export_drawing(png) over MCP: the JSON envelope first, then the image, so an agent sees its part without a
+    file viewer. inline_image=false returns the JSON alone."""
+    import asyncio
+    import json
+    import os
+    import sys
+
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
+    async def run():
+        env = {**os.environ, "AGENTCAD_ROOT": str(ws)}
+        params = StdioServerParameters(command=sys.executable, args=["-m", "agentcad.mcp_server"], env=env)
+        async with stdio_client(params) as (r, w):
+            async with ClientSession(r, w) as s:
+                await s.initialize()
+                await s.call_tool("apply_operations", {"path": "p.FCStd", "create": {"units": "mm"}, "operations": [
+                    {"op": "primitive", "kind": "box", "dims": {"length": 20, "width": 10, "height": 5}}]})
+                a = await s.call_tool("export_drawing", {"path": "p.FCStd", "output": "p.png", "format": "png",
+                                                         "image_size": 64})
+                b = await s.call_tool("export_drawing", {"path": "p.FCStd", "output": "q.png", "format": "png",
+                                                         "image_size": 64, "inline_image": False})
+                return a.content, b.content
+
+    a, b = asyncio.run(run())
+    assert [c.type for c in a] == ["text", "image"] and a[1].mimeType == "image/png"
+    assert json.loads(a[0].text)["ok"] and json.loads(a[0].text)["output"] == "p.png"
+    assert [c.type for c in b] == ["text"] and json.loads(b[0].text)["ok"]
