@@ -141,6 +141,8 @@ def build_parser() -> argparse.ArgumentParser:
                         "codex appends to PATH (default ~/.codex/config.toml)")
     s = sub.add_parser("serve", help="Run the HTTP JSON API"); s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8765)
+    s = sub.add_parser("viewer", help="Live web viewer of the root's drawings and parts (read-only)")
+    s.add_argument("--host", default="127.0.0.1"); s.add_argument("--port", type=int, default=8770)
     return ap
 
 
@@ -158,6 +160,15 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
     if a.cmd == "serve":
         from .http_api import serve
         serve(policy, a.host, a.port)
+        return {"ok": True}, 0
+    if a.cmd == "viewer":
+        from .viewer import Viewer
+        try:
+            Viewer(policy, a.host, a.port).serve()
+        except OSError as exc:
+            return {"ok": False, "error": {"code": "PORT_IN_USE", "category": "input",
+                                           "message": f"Cannot listen on {a.host}:{a.port}: {exc}",
+                                           "hint": "Pass another --port"}}, 2
         return {"ok": True}, 0
     if a.cmd == "mcp-config":
         from .errors import AgentCADError
