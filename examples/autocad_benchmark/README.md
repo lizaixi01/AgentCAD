@@ -3,8 +3,9 @@
 This is an independent local adapter for the task matrix published by
 [U-C4N/Autocad-MCP](https://github.com/U-C4N/Autocad-MCP/tree/main/benchmarks),
 pinned at `58a05ddfc34a9832c626e82cd88ecdce8e16a62a` (v1.7.0, evaluator v8.1).
-It is not an upstream leaderboard submission. The [report](../../docs/comparison-upstream-benchmark.md)
-explains the measured baseline and the remaining capability gaps.
+It is not an upstream leaderboard submission. The [baseline report](../../docs/comparison-upstream-benchmark.md)
+preserves the original measurements. The [v8 implementation report](../../docs/comparison-upstream-benchmark-v8.md)
+records the subsequent implementation and full rerun.
 
 ## Method
 
@@ -22,17 +23,19 @@ explains the measured baseline and the remaining capability gaps.
   constraints plus one native hole-count requirement, including the moved bore
   in a second server process. TABLE/MLEADER accepts composite representations,
   as the reference adapter does; this does not assert native TABLE/MLEADER entities.
-- The adapter covers the **current baseline**, not every hypothetical future
-  implementation. Seven domain/preflight tasks are explicit capability assessments
-  against the retrieved tools, operation schemas and library index; they do not
-  claim a domain drawing was executed. Additional gaps are probed by relevant
-  public tools. Extend the playbooks and gates when the missing contracts ship.
+- All 31 tasks now have executable playbooks. P&ID, mechanical, architectural
+  and plant results come from native product readers of saved drawings. Upstream
+  supplies only synthetic inputs and the independent expected values. Architecture
+  and mechanical deliverables also pass the unchanged upstream all-focus critique
+  and `combine` quality score (zero critique issues and at least 90), in addition
+  to native semantic/geometric checks. That oracle reads files without changing them.
 - Every incomplete gate is zero, including `partial`. This is conservative:
   upstream's result contract permits a partial score, but its reference adapter
   uses all-or-nothing gates. `unsupported` remains in the denominator.
-  `cancel_safety` is `not_run`: the upstream deterministic held-worker trace
-  requires internal instrumentation without an equivalent public-interface
-  fixture here. That is missing evidence, not a measured product failure.
+  `cancel_safety` runs the deterministic held-worker race against the actual server
+  worker in a separate product Python process (`cancel_worker.py`). This is the one
+  internal fixture; a fresh MCP process then reopens its output. Cancellation stops
+  the waiter while the single executor slot remains occupied until the operation ends.
 - The report includes both the upstream attempted-task score and the percentage
   of the full fixed matrix that passed. It includes a separate v2 summary so
   older public competitor rows are not compared with a different denominator.
@@ -43,9 +46,10 @@ explains the measured baseline and the remaining capability gaps.
 ## Reproduce
 
 Use an isolated AgentCAD worktree with its own editable venv, following the
-repository's `AGENTS.md`. The measured AgentCAD product code is `945e6c6`;
-the report records every product Python source hash. A newer checkout measures
-the newer product and must not be labelled a reproduction of that baseline.
+repository's `AGENTS.md`. Each report records its product commit and every Python
+source hash. The historical baseline used `945e6c6`; use its archived adapter and
+that product commit to reproduce the baseline. The current adapter requires the
+new APIs documented in [engineering workflows](../../docs/engineering-workflows.md).
 
 Prepare the upstream evaluator in a separate directory. Commands below assume
 PowerShell and an existing parent output directory:
@@ -120,3 +124,18 @@ and the upstream pinned SHA identify the code needed to reproduce it.
 These are deterministic baseline runs, with earlier adapter-development runs
 retained locally rather than mixed into the final report. No existing trial
 results or README measurements are replaced.
+
+`results/2026-10-30-v8/` separately records the completed implementation. Its archive
+contains task-specific retained deliverables, both runners, protocol transcripts,
+source hashes, regression-test output, and rendered architectural/mechanical previews.
+Intermediate development runs are not counted as additional independent trials.
+
+Its `recheck/` subdirectory contains the clean `514de72` run after independent
+review fixes: v8 31/31, v2 10/10 and 416 passed / 73 skipped regression tests.
+The original full-pass evidence and reference result remain unchanged; the recheck
+manifest links their hashes instead of claiming another reference rerun.
+
+`integrated/` is the final verification after merging main's image-inspection
+change: clean product `39fa4b5`, v8 31/31, v2 10/10, and 435 passed / 74 skipped.
+Both MCP profiles preserve native image content. This third archive keeps the
+earlier two intact and links the unchanged pinned reference result.

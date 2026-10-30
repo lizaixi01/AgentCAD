@@ -263,7 +263,8 @@ class DrawingStore:
             raise busy_error(self.head_path, applied=False)
         cid = None
         # the target sha lets recover tell whether the drawing was replaced before the commit was interrupted
-        marker = {"label": label, "checkpoint": None, "ts": now(), "sha256": digest}
+        revision = self.head().get("revision", 0) + 1
+        marker = {"label": label, "checkpoint": None, "ts": now(), "sha256": digest, "revision": revision}
         try:  # until the drawing is replaced, a busy file means nothing changed
             cid = checkpoint()
             marker["checkpoint"] = cid
@@ -299,6 +300,7 @@ class DrawingStore:
         head = self.head()
         head["pending"] = None
         head["sha256"] = digest
+        head["revision"] = revision
         try:
             self._write_head(head)
         except PermissionError:
@@ -307,7 +309,7 @@ class DrawingStore:
             if attempt is not None:  # the journal needs no head write to take the record
                 self.journal({**attempt, "ok": False, "error": exc.to_dict()})
             raise exc
-        return {"checkpoint_before": cid, "sha256": digest, "bytes": len(data),
+        return {"checkpoint_before": cid, "sha256": digest, "bytes": len(data), "revision": revision,
                 **({"warnings": warnings} if warnings else {})}
 
     def _abandon(self, cid: str | None, marker: dict[str, Any]) -> None:
@@ -366,6 +368,7 @@ class DrawingStore:
         if actual == pend["sha256"]:
             shutil.copy2(self.path, self.committed_path)
             head["sha256"] = actual
+            head["revision"] = pend.get("revision", head.get("revision", 0) + 1)
             outcome = "completed"
         elif actual == head.get("sha256"):
             outcome = "discarded"
@@ -409,6 +412,6 @@ class DrawingStore:
                 readable = False
                 err = exc.to_dict()
         return {"exists": exists, "readable": readable, "parse_error": err, "pending_transaction": head.get("pending"),
-                "committed_sha256": head.get("sha256"), "actual_sha256": actual,
+                "committed_sha256": head.get("sha256"), "actual_sha256": actual, "revision": head.get("revision", 0),
                 "modified_outside_runtime": bool(head.get("sha256") and actual and actual != head["sha256"]),
                 "checkpoints": len(head["checkpoints"])}

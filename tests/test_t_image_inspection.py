@@ -118,20 +118,24 @@ def test_cli_image_uses_the_same_read_only_crop(ws):
     assert decode(json.loads(result.stdout)).size == (80, 160)
 
 
-def test_mcp_returns_metadata_and_inline_image(ws):
+@pytest.mark.parametrize("profile", ["full", "discovery"])
+def test_mcp_returns_metadata_and_inline_image(ws, profile):
     from mcp import ClientSession, StdioServerParameters
     from mcp.client.stdio import stdio_client
 
     drawing(ws / "drawing.png")
 
     async def run():
-        env = {**os.environ, "AGENTCAD_ROOT": str(ws), "AGENTCAD_READ_ONLY": "1", "AGENTCAD_VIEWER": "0"}
+        env = {**os.environ, "AGENTCAD_ROOT": str(ws), "AGENTCAD_READ_ONLY": "1", "AGENTCAD_VIEWER": "0",
+               "AGENTCAD_TOOL_PROFILE": profile}
         params = StdioServerParameters(command=sys.executable, args=["-m", "agentcad.mcp_server"], env=env)
         async with stdio_client(params) as (reader, writer):
             async with ClientSession(reader, writer) as client:
                 await client.initialize()
-                return await client.call_tool("inspect_image", {"path": "drawing.png", "region": [20, 10, 100, 50],
-                                                                "max_size": 160, "rotate": 90})
+                arguments = {"path": "drawing.png", "region": [20, 10, 100, 50], "max_size": 160, "rotate": 90}
+                if profile == "discovery":
+                    return await client.call_tool("call_tool", {"name":"inspect_image", "arguments":arguments})
+                return await client.call_tool("inspect_image", arguments)
     result = asyncio.run(run())
     assert [block.type for block in result.content] == ["text", "image"]
     metadata = json.loads(result.content[0].text)

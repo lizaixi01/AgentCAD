@@ -5,6 +5,9 @@ AGENTCAD_READ_ONLY=1 and AGENTCAD_ALLOWED_OPS=op1,op2. The live viewer starts on
 from __future__ import annotations
 
 import base64
+import os
+import json
+from functools import wraps
 from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import FastMCP, Image
@@ -12,6 +15,7 @@ from pydantic import Field
 
 from .policy import Policy
 from .service import Runtime
+from .worker import CADWorker
 
 INLINE_IMAGE_MAX = 2 * 1024 * 1024  # bytes: a png export larger than this is not returned inline
 
@@ -90,9 +94,22 @@ Path_ = Annotated[str, Field(description="Drawing path (.dxf) or 3D part (.FCStd
                                         "root")]
 
 
-def build_server(policy: Policy | None = None) -> FastMCP:
+class CADServer(FastMCP):
+    """Run all synchronous CAD work on one cancellation-safe worker, keeping SDK validation."""
+    def __init__(self, *args, **kwargs):
+        self.worker = CADWorker()
+        super().__init__(*args, **kwargs)
+
+    def add_tool(self, fn, *args, **kwargs):
+        @wraps(fn)
+        async def serialized(*a, **kw):
+            return await self.worker.run(fn, *a, **kw)
+        return super().add_tool(serialized, *args, **kwargs)
+
+
+def build_server(policy: Policy | None = None, profile: str | None = None) -> FastMCP:
     rt = Runtime(policy or Policy(), auto_viewer=True)
-    mcp = FastMCP("agentcad", instructions=INSTRUCTIONS)
+    mcp = CADServer("agentcad", instructions=INSTRUCTIONS)
 
     @mcp.tool()
     def inspect_image(path: Annotated[str, Field(description="PNG/JPEG/WebP image in the workspace")],
@@ -153,11 +170,13 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                          window: Annotated[list[list[float]] | None, Field(description="[[x0,y0],[x1,y1]] crossing window")] = None,
                          limit: Annotated[int, Field(ge=1, le=5000)] = 200, offset: int = 0, detail: bool = True,
                          layout: Annotated[str | None, Field(description="'Model' (default), a paper layout name "
-                                                                "from read_drawing.layouts, or '*' for all")] = None) -> dict:
+                                                                "from read_drawing.layouts, or '*' for all")] = None,
+                         selection_mode: Literal["crossing", "window"] = "crossing",
+                         polygon: list[list[float]] | None = None) -> dict:
         """List entities with geometry (paginated, filterable). Paper-space entities carry a 'layout' field.
         3D part: filter={kind: features|faces|edges, feature: <ref> (default the Body), selector: {...}} lists
         features, or faces/edges with their geometry; pass the selector you plan to use to see what it picks."""
-        return rt.inspect_entities(path, filter, ids, limit, offset, detail, window, layout)
+        return rt.inspect_entities(path, filter, ids, limit, offset, detail, window, layout, selection_mode, polygon)
 
     @mcp.tool()
     def apply_operations(path: Path_,
@@ -174,14 +193,18 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                          bounds: Annotated[list[list[float]] | None, Field(description="[[x0,y0],[x1,y1]] for the "
                                            "validation")] = None,
                          layout: Annotated[str | None, Field(description="Validate this paper-space sheet instead of "
-                                           "model space (ops choose their own layout)")] = None) -> dict:
+                                           "model space (ops choose their own layout)")] = None,
+                         expected_revision: int | None = None,
+                         preconditions: Annotated[dict | None, Field(description="Carry preview.preconditions "
+                             "back unchanged; stale file/entity fingerprints refuse the edit")] = None) -> dict:
         """Execute an operation batch as one transaction: all params are checked first, any failure aborts with the
         file untouched; success checkpoints the old file, saves atomically, journals, and validates the result.
         The returned 'validation' is the same independent re-read of the saved file as validate_drawing (issues,
         failed requirements, passed ids, recognized counts, coverage): no separate validate_drawing call is needed
         unless you want its detail=true report. With 'create' a new drawing takes one call.
         On a .FCStd part the ops are part_operations (list_operations(category='part'))."""
-        return rt.apply_operations(path, operations, dry_run, requirements, strict, label, create, bounds, layout)
+        return rt.apply_operations(path, operations, dry_run, requirements, strict, label, create, bounds, layout,
+                                   expected_revision, preconditions)
 
     @mcp.tool()
     def apply_batch(jobs: Annotated[list[dict[str, Any]], Field(description="[{path, operations, create?, "
@@ -316,7 +339,7 @@ def build_server(policy: Policy | None = None) -> FastMCP:
 
     @mcp.tool()
     def export_drawing(path: Path_, output: str,
-                       format: Literal["dxf", "svg", "json", "pdf", "dwg", "step", "iges", "brep", "stl", "obj",
+                       format: Literal["dxf", "svg", "json", "pdf", "dwg", "csv", "xlsx", "step", "iges", "brep", "stl", "obj",
                                        "png"] = "dxf",  # noqa: A002
                        dxf_version: Literal["R12", "R2000", "R2004", "R2007", "R2010", "R2013", "R2018"] | None = None,
                        overwrite: bool = False,
@@ -343,17 +366,18 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                            "png then shows per view the reference, our render aligned to its silhouette and a diff; "
                            "the result gives each view's silhouette IoU and mean_iou")] = None,
                        inline_image: Annotated[bool, Field(description="png: also return the image in this result, "
-                           "so you see it without opening the file (not above 2 MB)")] = True) -> Any:
+                           "so you see it without opening the file (not above 2 MB)")] = True,
+                       table: Literal["entities", "pid_lines", "bom"] = "entities") -> Any:
         """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, PDF (plotted without
         external software: one page per layout, paper layouts 1:1 on their sheet, vector output, reports scale and
-        too-small printed text), or DWG (optional AutoCAD backend; dxf_version selects the DWG release).
+        too-small printed text), CSV/XLSX (table: entities, pid_lines or bom), or DWG (optional AutoCAD backend).
         3D parts: step, iges, brep, stl, obj, or png: a shaded preview (parallel projection, part centred and
         filling the frame, edges drawn) to look at what you built, e.g. against a reference image. It renders
         even a part that is not one valid solid, to show what went wrong.
         STEP/IGES/BREP are read back and compared with the part; a part that is not one valid solid is refused.
         A png comes back in the result as an image too (inline_image), after the usual JSON."""
         r = rt.export_drawing(path, output, format, dxf_version, overwrite, layout, paper, scale, orientation,
-                              monochrome, views, image_size, fit, reference)
+                              monochrome, views, image_size, fit, reference, table)
         if format == "png" and inline_image and r.get("ok"):
             png = rt.policy.root / r["output"]
             if png.is_file() and png.stat().st_size <= INLINE_IMAGE_MAX:
@@ -409,7 +433,51 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         """Tool-call counts, durations and payload sizes for this server session (no model calls are made)."""
         return rt.get_metrics()
 
-    return mcp
+    for name in ("preflight", "measure_entities", "verify_dimensions", "refine_drawing", "deliver_drawing", "search_tools",
+                 "read_engineering", "understand_drawing", "plant_takeoff"):
+        mcp.add_tool(getattr(rt, name))
+    profile = profile or os.environ.get("AGENTCAD_TOOL_PROFILE", "full")
+    if profile == "full":
+        return mcp
+    if profile != "discovery":
+        raise ValueError("AGENTCAD_TOOL_PROFILE must be full or discovery")
+    discovery = FastMCP("agentcad", instructions="Search tools and operations, fetch their schema, then call a tool. "
+                        "Operations execute through apply_operations. Paths are relative to the workspace.")
+
+    @discovery.tool()
+    async def search_tools(query: str, limit: int = 3) -> dict:
+        """Find native tools and operations by task description or AutoCAD command name."""
+        return await mcp.worker.run(rt.search_tools, query, limit)
+
+    @discovery.tool()
+    async def tool_schema(name: str) -> dict:
+        """Get the complete input schema for one tool or drawing operation."""
+        for t in await mcp.list_tools():
+            if t.name == name:
+                return t.model_dump(by_alias=True, exclude_none=True)
+        return await mcp.worker.run(rt.list_operations, ops=[name], detail=True)
+
+    @discovery.tool()
+    async def call_tool(name: str, arguments: dict[str, Any]) -> Any:
+        """Call a discovered tool with its schema's arguments; the same validation and policy apply."""
+        result = await mcp.call_tool(name, arguments)
+        if isinstance(result, tuple) and len(result) == 2:
+            content, structured = result
+            if isinstance(structured, dict) and all(block.type == "text" for block in content):
+                return structured
+            result = content
+        if isinstance(result, dict):
+            return result
+        if len(result) == 1 and result[0].type == "text":
+            try:
+                return json.loads(result[0].text)
+            except ValueError:
+                pass
+        # Preserve native image/audio content instead of burying it in a JSON
+        # string. This also handles full-profile tools returning mixed content.
+        return result
+
+    return discovery
 
 
 def serve_stdio(policy: Policy | None = None) -> None:

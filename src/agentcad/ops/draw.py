@@ -195,8 +195,9 @@ def _hatch_loops(ctx: Ctx, boundary, points, holes) -> list[tuple[str, Any]]:
      "pattern": P("string", default="SOLID", description="SOLID or a pattern name (ANSI31, ...)"),
      "pattern_scale": P("number", default=1.0, gt=0, description="Pattern scale"),
      "pattern_angle": P("angle", default=0.0, description="Pattern rotation"),
+     "style": P("enum", enum=["normal", "outer", "ignore"], default="normal"),
      "behind": P("bool", default=True, description="Send the hatch to the back of the draw order")}, common_draw=True)
-def add_hatch(ctx: Ctx, boundary, points, holes, pattern, pattern_scale, pattern_angle, behind, **p):
+def add_hatch(ctx: Ctx, boundary, points, holes, pattern, pattern_scale, pattern_angle, behind, style, **p):
     from ezdxf.tools import pattern as patterns
     if (s := _guard(ctx, p)):
         return s
@@ -209,9 +210,10 @@ def add_hatch(ctx: Ctx, boundary, points, holes, pattern, pattern_scale, pattern
     color = attrs.pop("color", 256)  # ezdxf's fill setters default to color 7: pass it explicitly
     h = ctx.layout.add_hatch(color=color, dxfattribs=attrs)
     if name == "SOLID":
-        h.set_solid_fill(color=color, style=0)
+        h.set_solid_fill(color=color, style={"normal": 0, "outer": 1, "ignore": 2}[style])
     else:  # ezdxf picks the ISO or imperial definition from $MEASUREMENT, which create_drawing sets
-        h.set_pattern_fill(name, color=color, angle=pattern_angle, scale=pattern_scale, style=0)
+        h.set_pattern_fill(name, color=color, angle=pattern_angle, scale=pattern_scale,
+                           style={"normal": 0, "outer": 1, "ignore": 2}[style])
     for i, (kind, data) in enumerate(loops):
         flags = 1 if i == 0 else 0  # first loop external, the rest default (odd-even nesting)
         if kind == "poly":

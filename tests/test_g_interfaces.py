@@ -185,6 +185,7 @@ def test_http_api(ws):
 def test_interfaces_share_one_implementation():
     """CLI / MCP / HTTP contain no CAD logic: they only call Runtime methods."""
     src = Path(__file__).parents[1] / "src" / "agentcad"
+    import ast
     for adapter in ("cli.py", "mcp_server.py", "http_api.py"):
         # Check imports, not prose: "engineering drawing" is not a dependency on engine.py.
         tree = ast.parse((src / adapter).read_text("utf-8"))
