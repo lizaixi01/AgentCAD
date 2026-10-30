@@ -10,6 +10,12 @@ The [machine-readable results](pilot-2026-10-30.json) include hashes and the
 [generated CAD and previews](artifacts/2026-10-30/). No benchmark reference
 models, solutions or input drawings are redistributed here.
 
+The separate [drawing diagnosis and regression](drawing-diagnosis-2026-10-30.md)
+preserves the original two drawing tasks and all attempts: the latest plate
+scores **34.20** and tube **66.67**, for a **50.43** two-task mean. It also records
+the intervening failed plate attempt and distinguishes manually repaired
+diagnostic controls from fresh-agent results.
+
 V3 has 30 text-to-CAD creation tasks, 30 create-and-edit tasks and 40 tasks that
 reconstruct a part from an engineering drawing. The last category evaluates
 **3D reconstruction from a drawing**, rather than production of 2D drawings.
