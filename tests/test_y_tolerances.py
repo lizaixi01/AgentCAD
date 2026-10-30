@@ -277,7 +277,8 @@ def test_clearing_a_tolerance_restores_the_dimension_look(rt, ws, blank):
     assert not any(dims[t].has_xdata(MARK) for t in "bce")
 
 
-def test_a_damaged_mark_never_writes_an_invalid_look(rt, ws, blank):
+@pytest.mark.parametrize("saved", ['{"dimgap": NaN, "dimtolj": 7, "dimtfac": 0}', '{"dimgap": 1' + "0" * 400 + "}"])
+def test_a_damaged_mark_never_writes_an_invalid_look(rt, ws, blank, saved):
     assert rt.apply_operations(blank, [{"op": "add_line", "start": [0, 0], "end": [50, 0]},
                                        *({"op": "add_linear_dim", "p1": [0, 0], "p2": [50, 0], "tag": tag}
                                          for tag in "ab")])["ok"]
@@ -285,7 +286,7 @@ def test_a_damaged_mark_never_writes_an_invalid_look(rt, ws, blank):
                                         "set": {"tolerance": {"lower": -0.1, "upper": 0.1}}}])["ok"]
     doc = ezdxf.readfile(ws / blank)
     damaged = doc.entitydb[Runtime(rt.policy).inspect_entities(blank, {"tag": "b"})["entities"][0]["id"]]
-    damaged.set_xdata(MARK, [(1000, '{"dimgap": NaN, "dimtolj": 7, "dimtfac": 0}')])
+    damaged.set_xdata(MARK, [(1000, saved)])
     doc.saveas(ws / blank)
     assert rt.apply_operations(blank, [{"op": "modify", "target": "tag:b", "set": {"tolerance": None}}])["ok"]
     doc = ezdxf.readfile(ws / blank)
@@ -294,16 +295,17 @@ def test_a_damaged_mark_never_writes_an_invalid_look(rt, ws, blank):
     assert {k: cleared.get(k) for k in LOOK} == {k: plain.get(k) for k in LOOK}
 
 
-def test_clearing_a_tolerance_keeps_the_dimensions_own_gap(rt, ws):
+@pytest.mark.parametrize("gap", [1.25, -1.0])  # half its text height; AutoCAD's boxed text
+def test_clearing_a_tolerance_keeps_the_dimensions_own_gap(rt, ws, gap):
     doc = ezdxf.new("R2010", setup=True, units=4)
     doc.modelspace().add_linear_dim(base=(0, -10), p1=(0, 0), p2=(50, 0), dimstyle="Standard",
-                                    override={"dimgap": 1.25}).render()  # half its text height
+                                    override={"dimgap": gap}).render()
     doc.saveas(ws / "own.dxf")
     handle = rt.inspect_entities("own.dxf", filter={"type": "DIMENSION"})["entities"][0]["id"]
     for tolerance in ({"lower": -0.1, "upper": 0.1}, None):
         assert rt.apply_operations("own.dxf", [{"op": "modify", "target": handle,
                                                 "set": {"tolerance": tolerance}}])["ok"]
-    assert ezdxf.readfile(ws / "own.dxf").entitydb[handle].override().dimstyle_attribs.get("dimgap") == 1.25
+    assert ezdxf.readfile(ws / "own.dxf").entitydb[handle].override().dimstyle_attribs.get("dimgap") == gap
 
 
 def test_sourced_fit_lookup_drives_saved_dimension(rt, blank):

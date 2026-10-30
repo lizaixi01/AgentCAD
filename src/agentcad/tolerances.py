@@ -142,7 +142,10 @@ def _mark(dimension) -> dict | None:
 
 
 def _plausible(key: str, value):
-    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+    try:
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+            return None
+    except OverflowError:  # an integer too large for a float
         return None
     if key == "dimtolj":
         return value if value in (0, 1, 2) else None
