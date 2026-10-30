@@ -1,6 +1,7 @@
 """Explicit signed dimension deviations; no unverified ISO fit-table lookup."""
 from __future__ import annotations
 
+import json
 import math
 
 from ezdxf.lldxf.const import DXFTableEntryError
@@ -9,19 +10,29 @@ from .errors import input_error
 from .units import parse_length
 
 TOLERANCED = {0, 1, 3, 4}  # dimension types AgentCAD tolerances: linear, aligned, diameter, radius
+# XDATA app on a dimension whose tolerance AgentCAD wrote, holding the dimension's own look before it.
+# Its own app, so that setting a tag (which replaces the AGENTCAD xdata) keeps it.
+MARK = "AGENTCAD_TOLERANCE"
+LOOK = ("dimgap", "dimtolj", "dimtfac")
 
 
 def apply_tolerance(override, value, unit: str) -> None:
     """Store native DIMTOL/DIMLIM and render through the caller's normal path."""
+    dimension = override.dimension
     if value is None:
         override.update({"dimtol": 0, "dimlim": 0, "dimtp": 0.0, "dimtm": 0.0})
-        # Undo the display settings below: the style's values again, unless the gap was the dimension's own.
-        del override["dimtolj"]
-        del override["dimtfac"]
-        if math.isclose(float(override.dimstyle_attribs.get("dimgap", -1)), _tolerance_gap(override)):
-            del override["dimgap"]
+        before = _mark(dimension)
+        if before is not None:  # back to the dimension's own look before AgentCAD's tolerance
+            for key, old in before.items():
+                if old is None:
+                    del override[key]
+                else:
+                    override[key] = old
+            dimension.discard_xdata(MARK)
         return
     lower, upper, precision, mode = _validated_values(override, value, unit)
+    if _mark(dimension) is None:
+        _set_mark(dimension, {key: override.dimstyle_attribs.get(key) for key in LOOK})
     method = override.set_limits if mode == "limits" else override.set_tolerance
     # DXF DIMTM is subtracted; the public interface uses signed lower deviations.
     method(upper=upper, lower=-lower, dec=precision, hfactor=0.7, leading_zeros=True, trailing_zeros=True)
@@ -71,15 +82,15 @@ def _validated_values(override, value, unit: str) -> tuple[float, float, int, st
 def check_dimension_tolerance(dimension, unit: str) -> None:
     """Read-only validation shared by redraw and saved-file delivery checks.
 
-    A tolerance AgentCAD could have set (on the dimension itself, of a type it tolerances) is held
-    to the rules it is created under. One inherited from the dimension style, or on another type
-    such as angular, is the drawing author's: only corrupt values are refused."""
+    A tolerance AgentCAD wrote is held to the rules it was created under, also after a foreign
+    edit. Any other tolerance (from the dimension style, or set by another program, for one
+    dimension or on a type such as angular) is the drawing author's: only corrupt values are refused."""
     try:
         override = _override(dimension)
         values = None if override is None else _stored(override)
         if values is None:
             return
-        if _own(override) and (dimension.dxf.dimtype & 15) in TOLERANCED:
+        if _mark(dimension) is not None and _own(override) and (dimension.dxf.dimtype & 15) in TOLERANCED:
             _validated_values(override, values, unit)
         elif not (math.isfinite(values["lower"]) and math.isfinite(values["upper"])):
             raise ValueError("non-finite deviation")
@@ -116,3 +127,21 @@ def _stored(override) -> dict | None:
 def _own(override) -> bool:
     """The flag that turns the tolerance on is set on the dimension, not inherited from its style."""
     return any(override.dimstyle_attribs.get(k) for k in ("dimtol", "dimlim"))
+
+
+def _mark(dimension) -> dict | None:
+    """The dimension's own look before AgentCAD's tolerance; None if AgentCAD did not write its tolerance."""
+    if not dimension.has_xdata(MARK):
+        return None
+    try:
+        saved = json.loads(next(value for code, value in dimension.get_xdata(MARK) if code == 1000))
+        return {key: value for key in LOOK if (value := saved.get(key)) is None or isinstance(value, (int, float))}
+    except (StopIteration, ValueError, TypeError, AttributeError):  # damaged: still AgentCAD's, look unknown
+        return {}
+
+
+def _set_mark(dimension, before: dict) -> None:
+    doc = dimension.doc
+    if doc is not None and MARK not in doc.appids:
+        doc.appids.add(MARK)
+    dimension.set_xdata(MARK, [(1000, json.dumps(before))])

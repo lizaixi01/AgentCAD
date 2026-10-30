@@ -50,6 +50,9 @@ def _finish_dim(ctx: Ctx, dimov, p: dict[str, Any], text: str | None) -> dict[st
     if p.get("tolerance") is not None:
         from ..tolerances import apply_tolerance
         apply_tolerance(dimov, p["tolerance"], ctx.unit)
+    elif text and "<>" not in text and (dimov.get("dimtol", 0) or dimov.get("dimlim", 0)):
+        raise input_error("TOLERANCE_TEXT_OVERRIDE", "This dimension style shows a tolerance, so the text must "
+                          "include the measured value (<>)", hint="Write e.g. '<> REF' instead of a fixed number")
     dimov.render()
     store_measurement(dimov.dimension)
     return {"created": [ctx.finish(dimov.dimension, p)]}

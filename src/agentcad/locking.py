@@ -47,16 +47,24 @@ def remove_legacy_marker(directory: Path, shown: str) -> int:
     ``shown``: the marker's path as the caller reports it."""
     marker = directory / "lock"
     try:
-        pid = int(marker.read_text().strip())
+        text = marker.read_text()
+        pid = int(text.strip())
     except (OSError, ValueError):
-        pid = 0
+        text, pid = None, 0
     if not 0 < pid < 2**31:
         raise AgentCADError("DRAWING_LOCKED", f"{shown} names no process, so its writer cannot be confirmed gone",
                             category="policy", retryable=False,
                             hint=f"Delete {shown} by hand once no older AgentCAD is writing this drawing")
     if _running(pid):
         raise _busy(f"{shown} belongs to process {pid}, which is still running",
-                    hint="Wait for that writer to finish, then call recover again")
+                    hint=f"Wait for that writer to finish, then call recover again. If process {pid} is not an "
+                         f"older AgentCAD, delete {shown} by hand")
+    # An older runtime replaces a marker it thinks stale with its own: delete only the one checked.
+    try:
+        if marker.read_text() != text:
+            raise _busy(f"{shown} changed while it was checked", hint="Call recover again")
+    except FileNotFoundError:
+        return pid
     marker.unlink(missing_ok=True)
     return pid
 
