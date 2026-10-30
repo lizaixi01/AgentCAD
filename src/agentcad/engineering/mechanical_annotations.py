@@ -136,7 +136,12 @@ def _same(actual, expected) -> bool:
         return isinstance(actual, (list, tuple)) and len(actual) == len(expected) and all(
             _same(a, b) for a, b in zip(actual, expected))
     if isinstance(expected, (float, int)) and not isinstance(expected, bool):
-        return isinstance(actual, (float, int)) and math.isfinite(actual) and abs(actual - expected) <= 1e-6
+        if not isinstance(actual, (float, int)) or not math.isfinite(actual) or not math.isfinite(expected):
+            return False
+        # Keep roundtrip floating-point noise, but do not permit a micron-sized
+        # tolerance to conceal changes in a dimension displaying eight decimals.
+        tolerance = max(1e-9, 4 * math.ulp(actual), 4 * math.ulp(expected))
+        return abs(actual - expected) <= tolerance
     return actual == expected
 
 
@@ -268,6 +273,7 @@ def check(doc, contract, part_handle) -> tuple[list[dict], list[dict]]:
             measured = measure_dimension(entity)
             override = entity.override()
             valid = (_same(measured, expected["value"]) and _same(_definition(entity), expected["definition"])
+                     and f"{measured:.{_precision(expected['value'])}f}" == f"{expected['value']:.{_precision(expected['value'])}f}"
                      and entity.dxf.get("text", "") == expected["text"]
                      and override.get("dimlfac", 1) == 1
                      and override.get("dimdec", 2) == _precision(expected["value"])

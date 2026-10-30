@@ -118,6 +118,24 @@ def test_submicron_rounding_increment_cannot_use_geometry_tolerance(rt,blank,ws,
     assert rt.deliver_drawing(blank,'rounded',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
 
 
+@pytest.mark.parametrize('damage',['definition','profile'])
+def test_fine_nominal_changes_cannot_hide_behind_coarse_geometry_tolerance(rt,blank,ws,damage):
+    spec={'parts':[{'name':'fine length','at':[130,190],
+        'segments':[{'length':17.12345678,'d_outer':40}]}]}
+    ok(rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':spec}]))
+    report=ok(rt.read_engineering(blank,'mechanical'));doc=ezdxf.readfile(ws/blank)
+    if damage=='definition':
+        row=next(a for a in report['manufacturing'][0]['annotations'] if a['kind']=='length.0')
+        dim=doc.entitydb[row['handle']];dim.dxf.defpoint3=dim.dxf.defpoint3+(5e-7,0,0)
+    else:
+        body=doc.entitydb[report['parts'][0]['handle']]
+        points=list(body.get_points('xy'));points[1]=(points[1][0]+5e-7,points[1][1]);body.set_points(points)
+    doc.saveas(ws/blank)
+    checked=ok(rt.read_engineering(blank,'mechanical'))
+    assert any(i['code'] in {'MANUFACTURING_ANNOTATION_MISMATCH','MANUFACTURING_GEOMETRY_CHANGED'} for i in checked['critique'])
+    assert rt.deliver_drawing(blank,'fine-error',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
+
+
 def test_pattern_note_is_geometry_bound_and_legacy_coverage_is_explicit(rt,blank,ws):
     report=generated(rt,blank);doc=ezdxf.readfile(ws/blank)
     note=next(a for p in report['manufacturing'] for a in p['annotations'] if a['kind']=='pattern_orientation.0')
