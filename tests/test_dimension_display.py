@@ -1,5 +1,6 @@
 import ezdxf
 import pytest
+from ezdxf.tools.text import MTextEditor
 
 
 def example(ws, precision=1, text=None, diameter=6.4):
@@ -80,3 +81,57 @@ def test_native_tolerance_rendering_retains_verifiable_nominal(rt,blank,mode):
     handle=rt.inspect_entities(blank,{'type':'DIMENSION'})['entities'][0]['id']
     response=rt.verify_dimensions(blank,[{'id':'bore','handle':handle,'value':35}])
     assert response['ok'] and response['accepted'],response
+
+
+@pytest.mark.parametrize('diameter,accepted',[(6.4,True),(6.0,False)])
+def test_numeric_suffix_is_removed_only_at_its_literal_boundary(rt,ws,diameter,accepted):
+    handle=example(ws,diameter=diameter,text='<> 4')
+    doc=ezdxf.readfile(ws/'display.dxf');dim=doc.entitydb[handle]
+    doc.blocks[dim.dxf.geometry].query('MTEXT').first.text='%%c6.4 4'
+    doc.saveas(ws/'display.dxf')
+    response=rt.verify_dimensions('display.dxf',[{'id':'hole','handle':handle,'value':diameter}])
+    assert response['accepted'] is accepted and response['rows'][0]['displayed']==6.4,response
+    if not accepted:
+        assert rt.deliver_drawing('display.dxf','suffix',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
+
+
+@pytest.mark.parametrize('style',['/','#','^'])
+@pytest.mark.parametrize('spacing',[' ',''])
+@pytest.mark.parametrize('diameter,accepted',[(6.5,True),(6.0,False)])
+def test_nominal_stack_is_distinct_from_a_trailing_tolerance_stack(rt,ws,style,spacing,diameter,accepted):
+    handle=example(ws,diameter=diameter)
+    doc=ezdxf.readfile(ws/'display.dxf');dim=doc.entitydb[handle]
+    override=dim.override()
+    override.update({'dimlunit':5,'dimfrac':0,'dimtol':1,'dimtp':.1,'dimtm':.1,'dimtdec':1,
+                     'dimdec':1,'dimrnd':0,'dimlfac':1,'dimdsep':46})
+    override.commit()
+    nominal_stack=str(MTextEditor().stack('1','2',style))
+    deviation_stack=str(MTextEditor().stack('+0.1','-0.1','^'))
+    doc.blocks[dim.dxf.geometry].query('MTEXT').first.text=(
+        '%%c6'+spacing+'{\\H0.7x;'+nominal_stack+'} {\\H0.7x;'+deviation_stack+'}')
+    doc.saveas(ws/'display.dxf')
+    response=rt.verify_dimensions('display.dxf',[{'id':'hole','handle':handle,'value':diameter}])
+    assert response['accepted'] is accepted and response['rows'][0]['displayed']==6.5,response
+    if not accepted:
+        assert rt.deliver_drawing('display.dxf','fraction',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
+
+
+def test_digit_suffix_without_a_delimiter_cannot_certify_an_ambiguous_primary_value(rt,ws):
+    handle=example(ws,diameter=6,text='<>4')
+    response=rt.verify_dimensions('display.dxf',[{'id':'hole','handle':handle,'value':6}])
+    assert not response['accepted'] and response['rows'][0]['displayed'] is None
+
+
+def test_zero_rounding_keeps_fractional_rendering_and_future_precision_changes(rt,blank,ws):
+    result=rt.apply_operations(blank,[{'op':'add_line','start':[0,0],'end':[6.666666,0]},
+        {'op':'add_linear_dim','p1':[0,0],'p2':[6.666666,0]}])
+    assert result['ok'],result
+    doc=ezdxf.readfile(ws/blank);dim=doc.modelspace().query('DIMENSION').first
+    assert dim.override().get('dimrnd',0)==0
+    assert any('6.67' in e.text for e in doc.blocks[dim.dxf.geometry].query('MTEXT'))
+    override=dim.override();override.update({'dimdec':3});override.commit();doc.saveas(ws/blank)
+    modified=rt.apply_operations(blank,[{'op':'modify','target':dim.dxf.handle,'set':{'text_height':3.5}}])
+    assert modified['ok'],modified
+    saved=ezdxf.readfile(ws/blank);updated=saved.entitydb[dim.dxf.handle]
+    assert updated.override().get('dimrnd',0)==0
+    assert any('6.667' in e.text for e in saved.blocks[updated.dxf.geometry].query('MTEXT'))

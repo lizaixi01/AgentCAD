@@ -4,6 +4,8 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from ezdxf.entities.dimstyleoverride import DimStyleOverride
+
 from .. import geom as G
 from ..errors import input_error
 from ..model import select
@@ -50,9 +52,25 @@ def _finish_dim(ctx: Ctx, dimov, p: dict[str, Any], text: str | None) -> dict[st
     if p.get("tolerance") is not None:
         from ..tolerances import apply_tolerance
         apply_tolerance(dimov, p["tolerance"], ctx.unit)
-    dimov.render()
+    render_dimension(dimov)
     store_measurement(dimov.dimension)
     return {"created": [ctx.finish(dimov.dimension, p)]}
+
+
+class _RenderingStyle(DimStyleOverride):
+    def get(self, attribute: str, default=None):
+        value = super().get(attribute, default)
+        # DXF zero means no rounding increment; ezdxf's xround(value, 0)
+        # instead rounds to an integer. None skips xround before DIMDEC.
+        # Only the renderer sees None: the stored override dictionary is intact.
+        return None if attribute == "dimrnd" and value == 0 else value
+
+
+def render_dimension(override) -> None:
+    """Render at native precision without persisting an artificial increment."""
+    renderer = _RenderingStyle(override.dimension, override.dimstyle_attribs)
+    renderer.render()
+    override.dimstyle_attribs.update(renderer.dimstyle_attribs)
 
 
 def store_measurement(dim) -> None:

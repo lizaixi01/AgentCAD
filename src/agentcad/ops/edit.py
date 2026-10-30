@@ -26,7 +26,8 @@ def rerender_dimension(ctx: Ctx, dim) -> None:
     from ..tolerances import check_dimension_tolerance
     check_dimension_tolerance(dim, ctx.unit)
     old = dim.dxf.get("geometry")
-    dim.override().render()
+    from .annotate import render_dimension
+    render_dimension(dim.override())
     from .annotate import store_measurement
     store_measurement(dim)
     new = dim.dxf.get("geometry")

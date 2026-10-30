@@ -8,14 +8,67 @@ from __future__ import annotations
 import math
 import re
 
-from ezdxf.tools.text import plain_mtext
+from ezdxf.tools.text import MTextParser, TokenType, plain_mtext
 
 NUMBER = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?"
+NUMERIC_CHARACTERS = "0123456789.+-Ee/"
 
 
 def _plain(text: str) -> str:
     return re.sub(r"\s+", " ", plain_mtext(text).replace("%%c", "Ø").replace("%%C", "Ø")
-                  .replace("∅", "Ø").replace("%%d", "°")).strip()
+                  .replace("∅", "Ø").replace("%%d", "°").replace("%%p", "±")).strip()
+
+
+def _primary(raw: str, override) -> str | None:
+    """Separate a trailing deviation stack from genuine nominal fractions."""
+    tokens = list(MTextParser(raw))
+    parts = []
+    spacing = {TokenType.SPACE, TokenType.NBSP, TokenType.TABULATOR,
+               TokenType.NEW_PARAGRAPH, TokenType.NEW_COLUMN, TokenType.WRAP_AT_DIMLINE}
+    separator = override.get("dimdsep", 46)
+    separator = chr(separator) if isinstance(separator, int) and 0 < separator <= 0x10ffff else "."
+    for index, token in enumerate(tokens):
+        if token.type == TokenType.WORD:
+            parts.append(token.data)
+        elif token.type in spacing:
+            parts.append(" ")
+        elif token.type == TokenType.STACK:
+            upper, lower, style = token.data
+            # Fractions are part of the nominal. A signed vertical stack is a
+            # deviation only when its values match the native tolerance fields.
+            numeric = [s.strip().replace(separator, ".") for s in (upper, lower)]
+            deviation = (override.get("dimtol", 0) and style == "^"
+                         and (any(s.startswith(("+", "-")) or "." in s for s in numeric)
+                              or numeric[1] == "0"))
+            if deviation:
+                precision = override.get("dimtdec", 3)
+                if not isinstance(precision, int) or not 0 <= precision <= 8:
+                    return None
+                if not all(re.fullmatch(NUMBER, s) for s in numeric):
+                    return None
+                expected = [override.get("dimtp", 0), -override.get("dimtm", 0)]
+                if any(not math.isfinite(float(s)) or abs(float(s) - v) > 10 ** -precision / 2 + 1e-12
+                       for s, v in zip(numeric, expected)):
+                    return None
+                if any(t.type not in spacing for t in tokens[index + 1:]):
+                    return None
+                return _plain("".join(parts))
+            # Keep the fraction separator independently of its visual stacking
+            # style; never discard a numerator/denominator as tolerance text.
+            if style in {"/", "#", "^"} and all(s.strip().isdigit() for s in (upper, lower)):
+                if parts and parts[-1][-1:].isdigit():
+                    parts.append(" ")  # the STACK token separates a mixed-number numerator
+                parts.append(upper + "/" + lower)
+            else:
+                parts.append(upper + " " + lower)
+    text = _plain("".join(parts))
+    if override.get("dimtol", 0) and "±" in text:
+        nominal, deviation = text.rsplit("±", 1)
+        number = _number(deviation.replace(separator, "."))
+        if number is None or abs(number - override.get("dimtp", 0)) > 1e-9 or abs(number - override.get("dimtm", 0)) > 1e-9:
+            return None
+        text = nominal.rstrip()
+    return text
 
 
 def _visible(doc, entity):
@@ -78,28 +131,28 @@ def read_display(dim) -> dict:
         return result
     if not angular:
         result["resolution"] = max(result["resolution"], rounding)
-    text = result["texts"][0]
-    if override.get("dimtol", 0):
-        raw = texts[0].dxf.text if texts[0].dxftype() == "TEXT" else texts[0].text
-        if "\\S" in raw:
-            text = _plain(raw.split("\\S", 1)[0])
-        else:
-            text = text.split("±", 1)[0].rstrip()
+    raw = texts[0].dxf.text if texts[0].dxftype() == "TEXT" else texts[0].text
+    text = _primary(raw, override)
+    if text is None:
+        return result
     # Remove known literal annotation prefixes/suffixes, including their digits
     # (e.g. M14 <> or <> H7). They are not the primary measured value.
     for template in (dim.dxf.get("text", "") or "<>", override.get("dimpost", "") or "<>"):
         if "<>" not in template:
             continue
         prefix, suffix = _plain(template).split("<>", 1)
-        prefix, suffix = prefix.strip(), suffix.strip()
         if prefix:
             if not text.startswith(prefix):
                 return result
+            if prefix[-1] in NUMERIC_CHARACTERS and text[len(prefix):len(prefix)+1] in NUMERIC_CHARACTERS:
+                return result
             text = text[len(prefix):].lstrip()
         if suffix:
-            if suffix not in text:
+            if not text.endswith(suffix):
                 return result
-            text = text.split(suffix, 1)[0].rstrip()
+            if suffix[0] in NUMERIC_CHARACTERS and text[:-len(suffix)][-1:] in NUMERIC_CHARACTERS:
+                return result
+            text = text[:-len(suffix)].rstrip()
     separator = override.get("dimdsep", ord("."))
     if isinstance(separator, int) and 0 < separator <= 0x10ffff:
         text = text.replace(chr(separator), ".")
