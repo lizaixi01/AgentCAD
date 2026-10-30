@@ -13,7 +13,7 @@ from ezdxf.tools.text import plain_mtext
 
 from ..errors import input_error
 from ..model import measure_dimension
-from .records import operations
+from .records import get, operations
 
 
 def _plain(text: str) -> str:
@@ -106,7 +106,7 @@ def _requirements(segments, patterns) -> dict[str, float | None]:
                 required[f"{prefix}.{i}"] = 2 * radius
                 seen.add(radius)
     if len(segments) > 1:
-        required["overall_length"] = sum(s[0] for s in segments)
+        required["overall_length"] = math.fsum(s[0] for s in segments)
     for i, pattern in enumerate(patterns):
         required[f"hole_diameter.{i}"] = pattern["diameter"]
         required[f"pitch_diameter.{i}"] = pattern["pcd"]
@@ -190,7 +190,8 @@ def _source_values(doc, source) -> list[float] | None:
         if source["mode"] == "span":
             return [span_value(source)]
         if source["mode"] == "spans":
-            return [span_value(item) for item in source["items"]]
+            return ([span_value(item) for item in source["items"]]
+                    + [2 * circle(h).dxf.radius for h in source.get("circles", [])])
         if source["mode"] == "extent":
             points = doc.entitydb[source["handle"]].get_points("xy")
             return [float(max(p[0] for p in points) - min(p[0] for p in points))]
@@ -235,6 +236,14 @@ def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=Tr
     body = source_handles[0]
     bores = [h for h in source_handles if ctx.doc.entitydb[h].dxftype() == "LWPOLYLINE"
              and ctx.doc.entitydb[h].dxf.layer == "HIDDEN"]
+    sections, end_circles = [], []
+    for handle in source_handles:
+        entity = ctx.doc.entitydb[handle]
+        record = get(entity, "mech") or {}
+        if entity.dxftype() == "LWPOLYLINE" and record.get("role") == "section":
+            sections.append(handle)
+        if entity.dxftype() == "CIRCLE" and record.get("kind") == "profile":
+            end_circles.append(handle)
 
     def vertex(handle, location):
         points = ctx.doc.entitydb[handle].get_points("xy")
@@ -250,13 +259,28 @@ def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=Tr
         # One diameter label may serve several segments. Check both ends of
         # every occurrence, including the unlabelled side of the front view.
         items, offset = [], 0
-        lower, upper = (body, body) if column == 1 else (bores[1], bores[0])
+        pairs = [(body, body, at)] if column == 1 else [(bores[1], bores[0], at)]
+        if sections:
+            pairs.append((sections[1], sections[0], section_origin))
         for segment in segments:
             if segment[column] == radius:
-                for x in (at[0] + offset, at[0] + offset + segment[0]):
-                    items.append(span(lower, [x, at[1] - radius], upper, [x, at[1] + radius], 1))
+                for lower, upper, origin in pairs:
+                    for x in (origin[0] + offset, origin[0] + offset + segment[0]):
+                        items.append(span(lower, [x, origin[1] - radius], upper, [x, origin[1] + radius], 1))
             offset += segment[0]
-        return {"mode": "spans", "items": items}
+        return {"mode": "spans", "items": items, "circles": [
+            h for h in end_circles if ctx.doc.entitydb[h].dxf.radius == radius]}
+
+    def length_spans(offset, step, outer, inner):
+        edges = [(body, at, outer), (body, at, -outer)]
+        if bores:
+            edges.extend([(bores[0], at, inner), (bores[1], at, -inner)])
+        if sections:
+            edges.extend([(sections[0], section_origin, outer), (sections[0], section_origin, inner),
+                          (sections[1], section_origin, -outer), (sections[1], section_origin, -inner)])
+        return {"mode": "spans", "items": [
+            span(h, [origin[0] + offset, origin[1] + y],
+                 h, [origin[0] + offset + step, origin[1] + y], 0) for h, origin, y in edges]}
 
     def dimension(kind, operation, value, source, location=None):
         handle = operations(ctx, [{**operation, "layer": "DIM"}])[0]["created"][0]
@@ -287,7 +311,7 @@ def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=Tr
             "rendered": [expected_text], "source": source,
         })
 
-    length, radius = sum(s[0] for s in segments), max(s[1] for s in segments)
+    length, radius = math.fsum(s[0] for s in segments), max(s[1] for s in segments)
     cursor = 0
     outer_seen, inner_seen = set(), set()
     for index, (step, outer, inner) in enumerate(segments):
@@ -295,8 +319,7 @@ def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=Tr
             "op": "add_linear_dim", "p1": [at[0] + cursor, at[1] + outer],
             "p2": [at[0] + cursor + step, at[1] + outer],
             "base": [at[0], at[1] + radius + 10]}, step,
-            {"mode": "spans", "items": [span(body, [at[0] + cursor, at[1] + sign * outer],
-                body, [at[0] + cursor + step, at[1] + sign * outer], 0) for sign in (-1, 1)]})
+            length_spans(cursor, step, outer, inner))
         x = at[0] + cursor + step / 2
         if outer not in outer_seen:
             dimension(f"outer_diameter.{index}", {

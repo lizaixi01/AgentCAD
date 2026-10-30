@@ -157,8 +157,9 @@ precision/settings (even when an old rendered cache still looks correct),
 plus orientation leaders, saved profiles, BOM quantities and balloon links. Strict
 delivery rejects missing, altered or stale annotations and changed geometry. A
 dimension's nominal value is also compared with measurements of its actual source:
-both profile edges for lengths, both ends of every repeated outer/bore diameter,
-and the circles/centres for hole patterns. These comparisons use the declared
+front/hidden/section edges for lengths, both ends of every repeated outer/bore
+diameter in front and section views, end-view circles, and the circles/centres for
+hole patterns. These comparisons use the declared
 display precision; coordinate integrity is checked separately so that large offsets
 do not hide a changed final digit or reject unchanged subtraction noise. The
 AutoCAD backend uses binary DXF intermediates to retain database floating-point

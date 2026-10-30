@@ -88,7 +88,7 @@ def _part(ctx, spec):
         segments.append((length, outer / 2, inner / 2))
     if not segments or len(segments) > 50:
         raise input_error("INVALID_PROFILE", "Part needs 1..50 profile segments")
-    length = sum(s[0] for s in segments)
+    length = math.fsum(s[0] for s in segments)
     radius = max(s[1] for s in segments)
     top, bottom, inner_top, inner_bottom = [], [], [], []
     x = 0

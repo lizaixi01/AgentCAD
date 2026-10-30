@@ -98,3 +98,16 @@ def test_eight_decimal_nominal_dimension_survives_native_dwg(rt,blank,ws,origin,
     assert f'{dim.get_measurement():.{precision}f}'==f'{length:.{precision}f}'
     assert dim.override().get('dimlunit')==2 and dim.override().get('dimrnd')==10**-precision
     assert any(str(length) in e.text for e in doc.blocks[dim.dxf.geometry] if e.dxftype()=='MTEXT')
+
+
+def test_many_decimal_segments_and_fine_section_survive_native_dwg(rt,blank):
+    spec={'parts':[{'name':'many fine sections','at':[135,1e7], 'views':['front','section','side'],
+        'segments':[{'length':.58,'d_outer':40,'d_inner':17.12345678} for _ in range(50)]}]}
+    ok(rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':spec}]))
+    assert ok(rt.read_engineering(blank,'mechanical'))['critique']==[]
+    ok(rt.export_drawing(blank,'segments.dwg','dwg'))
+    ok(rt.import_drawing('segments.dwg','segments.dxf'))
+    report=ok(rt.read_engineering('segments.dxf','mechanical'))
+    assert report['critique']==[] and all(p['passed'] for p in report['manufacturing'])
+    audit=ok(rt.autocad_audit('segments.dxf'))
+    assert audit['passed'] and audit['audit_errors']==0

@@ -194,6 +194,46 @@ def test_unrepresentable_annotation_precision_is_refused_atomically(rt,blank,ws,
     assert (ws/blank).read_bytes()==before
 
 
+@pytest.mark.parametrize('step,total',[(.58,29),(1.1,55),(.1,5)])
+def test_many_decimal_segments_keep_their_nominal_overall_length(rt,blank,step,total):
+    spec={'parts':[{'name':'many steps','at':[130,190],
+        'segments':[{'length':step,'d_outer':40} for _ in range(50)]}]}
+    ok(rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':spec}]))
+    report=ok(rt.read_engineering(blank,'mechanical'));assert report['critique']==[]
+    row=next(a for a in report['manufacturing'][0]['annotations'] if a['kind']=='overall_length')
+    assert round(row['measurement'])==total
+    ok(rt.deliver_drawing(blank,'many',formats=['dxf']))
+
+
+@pytest.mark.parametrize('feature',['section_bore','section_outer','section_length','hidden_length'])
+def test_each_drawn_view_is_bound_to_nominal_dimensions(rt,blank,ws,feature):
+    fine=17.12345678
+    vertical=feature in {'section_bore','section_outer'}
+    spec={'parts':[{'name':'views','at':[135,1e7] if vertical else [1e7,190],
+        'views':['front','section','side'],'segments':[{'length':20 if vertical else fine,
+        'd_outer':fine if feature=='section_outer' else 40,
+        'd_inner':fine if feature=='section_bore' else 10}]}]}
+    ok(rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':spec}]))
+    report=ok(rt.read_engineering(blank,'mechanical'));assert report['critique']==[]
+    doc=ezdxf.readfile(ws/blank)
+    if feature=='hidden_length':
+        entity=doc.modelspace().query('LWPOLYLINE[layer=="HIDDEN"]')[0]
+    else:
+        entity=next(e for e in doc.modelspace().query('LWPOLYLINE') if (get(e,'mech') or {}).get('role')=='section')
+    points=list(entity.get_points('xy'));right=max(x for x,y in points)
+    ys=[y for x,y in points if x==right]
+    y=min(ys) if feature in {'section_bore','section_length'} else max(ys)
+    value=y if vertical else right
+    changed=value
+    for _ in range(4):changed=math.nextafter(changed,math.inf)
+    entity.set_points([(x,changed) if vertical and x==right and v==y else
+                       (changed,v) if not vertical and x==right and v==y else (x,v) for x,v in points])
+    doc.saveas(ws/blank)
+    checked=ok(rt.read_engineering(blank,'mechanical'))
+    assert any(i['code']=='MANUFACTURING_ANNOTATION_MISMATCH' for i in checked['critique'])
+    assert rt.deliver_drawing(blank,'view-changed',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
+
+
 def test_pattern_note_is_geometry_bound_and_legacy_coverage_is_explicit(rt,blank,ws):
     report=generated(rt,blank);doc=ezdxf.readfile(ws/blank)
     note=next(a for p in report['manufacturing'] for a in p['annotations'] if a['kind']=='pattern_orientation.0')
