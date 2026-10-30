@@ -1,6 +1,8 @@
 from copy import deepcopy
+import math
 
 import ezdxf
+import pytest
 
 from agentcad.service import Runtime
 
@@ -143,3 +145,59 @@ def test_deleted_last_part_invalidates_retained_bom_and_balloon(rt, blank, ws):
         "EMPTY_ASSEMBLY",
     }
     assert report["quality_score"] < 90
+
+
+@pytest.mark.parametrize("endpoint,connected", [
+    ((500,500), False),  # on the chord, not on the quarter circle
+    ((1000/math.sqrt(2),1000/math.sqrt(2)), True),
+    ((1000,0), True),
+    ((-1000,0), False),  # on the same circle but outside the arc's angular span
+])
+def test_foreign_network_uses_real_arc_for_t_junctions(rt, ws, endpoint, connected):
+    for filename in ("pid.dxf", "layout.dxf"):
+        doc = ezdxf.new(units=4)
+        doc.layers.add("processpipe")
+        for tag, at in [("TK-1",(1000,0)),("TK-2",(0,1000)),("TK-3",(2500,500))]:
+            doc.modelspace().add_circle(at,25)
+            doc.modelspace().add_text(tag, dxfattribs={"insert":at,"height":100})
+        if filename == "pid.dxf":
+            doc.modelspace().add_arc((0,0),1000,0,90,dxfattribs={"layer":"processpipe"})
+            doc.modelspace().add_line(endpoint,(2500,500),dxfattribs={"layer":"processpipe"})
+            doc.modelspace().add_text("DN80", dxfattribs={
+                "insert":(1000/math.sqrt(2),1000/math.sqrt(2)), "height":20})
+        doc.saveas(ws / filename)
+    report = rt.plant_takeoff("pid.dxf", "layout.dxf")
+    assert report["ok"], report
+    runs = report["pipe"]["runs"]
+    if connected:
+        assert len(runs) == 1 and runs[0]["tags"] == ["TK-1","TK-2","TK-3"]
+        assert runs[0]["layout_m"] == 4
+    else:
+        assert {tuple(r["tags"]) for r in runs} == {("TK-1","TK-2"),("TK-3",)}
+        assert next(r for r in runs if r["tags"] == ["TK-3"])["layout_m"] is None
+    arc_run = next(r for r in runs if "TK-1" in r["tags"])
+    assert arc_run["diameters"] == ["DN80"]  # label on actual arc, far from chord
+
+
+def test_foreign_closed_polyline_and_arc_are_not_deduplicated_by_chords():
+    from agentcad.engineering.plant import _segments
+    doc = ezdxf.new(units=4)
+    doc.layers.add("processpipe")
+    doc.modelspace().add_lwpolyline([(1000,0),(0,1000),(0,0)], close=True,
+                                   dxfattribs={"layer":"processpipe"})
+    doc.modelspace().add_arc((0,0),1000,0,90,dxfattribs={"layer":"processpipe"})
+    pieces = _segments(doc)
+    assert len(pieces) == 4 and sum(p["arc"] is not None for p in pieces) == 1
+
+
+def test_unassigned_electrical_callout_is_an_open_item_not_internal_error(rt, ws):
+    pid, layout = ezdxf.new(units=4), ezdxf.new(units=4)
+    pid.layers.add("electrical")
+    callout = pid.modelspace().add_text("5 kW", dxfattribs={"height":100,"layer":"electrical"})
+    pid.saveas(ws / "pid.dxf")
+    layout.saveas(ws / "layout.dxf")
+    report = rt.plant_takeoff("pid.dxf", "layout.dxf")
+    assert report["ok"], report
+    assert report["cable"]["rows"] == [{"tag":None, "panel":None, "kw":5,
+                                         "length_m":None, "cable_m":None, "source_handle":callout.dxf.handle}]
+    assert any("ELECTRICAL_TAG_MISSING" in warning for warning in report["warnings"])

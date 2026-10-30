@@ -164,6 +164,9 @@ Current takeoff requires inferred mm units. Pipe lengths are rectilinear minimum
 spanning estimates; cable lengths use panel/load Manhattan distances plus allowance
 and upward rounding. Missing layout tags produce `C`/null length; inferred sizes
 reduce confidence. These are preliminary quantities, not surveyed installed routes.
+ARC junctions and nearby labels use the finite curve, including its angular span;
+an endpoint on the chord is not treated as a junction. Missing equipment tags leave
+electrical callouts as explicit unresolved rows with null cable lengths and warnings.
 Language/service rules cover the vocabulary exercised by the published plant fixture;
 arbitrary symbol libraries and all drawing conventions are not guaranteed.
 

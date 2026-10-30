@@ -17,6 +17,7 @@ from ezdxf import bbox
 
 from .. import geom as G
 from ..errors import input_error
+from ..model import circle_wcs, lwpoly_wcs
 from ..units import unit_from_insunits
 
 
@@ -238,6 +239,9 @@ def _segments(doc):
         cls = service(e.dxf.layer)
         if cls in {None, "electrical"} or e.dxftype() not in {"LINE", "LWPOLYLINE", "ARC"}:
             continue
+        arc = None
+        if e.dxftype() != "LINE" and (abs(e.dxf.extrusion.x) > 1e-9 or abs(e.dxf.extrusion.y) > 1e-9):
+            raise input_error("UNSUPPORTED_GEOMETRY", "Plant network requires planar XY curves")
         if e.dxftype() == "LINE":
             parts = [(tuple(e.dxf.start)[:2], tuple(e.dxf.end)[:2])]
         elif e.dxftype() == "LWPOLYLINE":
@@ -246,18 +250,31 @@ def _segments(doc):
                     "UNSUPPORTED_GEOMETRY",
                     "Plant network currently requires unbulged polylines; use ARC for bends",
                 )
-            pts = list(e.get_points("xy"))
+            pts = [p[:2] for p in lwpoly_wcs(e)]
             parts = list(zip(pts, pts[1:]))
+            if e.closed and len(pts) > 1:
+                parts.append((pts[-1], pts[0]))
         else:
             parts = [(tuple(e.start_point)[:2], tuple(e.end_point)[:2])]
+            arc = circle_wcs(e)
         for a, b in parts:
-            key = (cls, tuple(sorted((tuple(round(v, 6) for v in a), tuple(round(v, 6) for v in b)))))
+            key = (cls, tuple(sorted((tuple(round(v, 6) for v in a), tuple(round(v, 6) for v in b)))), arc)
             if key not in seen:
                 seen.add(key)
                 pieces.append(
-                    {"a": a, "b": b, "service": cls, "handle": e.dxf.handle, "arc": e.dxftype() == "ARC"}
+                    {"a": a, "b": b, "service": cls, "handle": e.dxf.handle, "arc": arc}
                 )
     return pieces
+
+
+def _piece_distance(point, piece):
+    """Distance to the actual finite curve, never to an ARC's endpoint chord."""
+    if piece["arc"] is None:
+        return G.dist_to_segment(point, piece["a"], piece["b"])
+    center, radius, start, end = piece["arc"]
+    if G.angle_in_arc(G.angle_of(G.sub(point, center)), start, end):
+        return abs(math.dist(point, center) - radius)
+    return min(math.dist(point, piece["a"]), math.dist(point, piece["b"]))
 
 
 def rmst(points):
@@ -294,8 +311,8 @@ def takeoff(pid, layout, services=None, allowance=0.2):
     for i, a in enumerate(pieces):
         for j, b in enumerate(pieces[:i]):
             if a["service"] == b["service"] and (
-                any(G.dist_to_segment(p, b["a"], b["b"]) <= tol for p in (a["a"], a["b"]))
-                or any(G.dist_to_segment(p, a["a"], a["b"]) <= tol for p in (b["a"], b["b"]))
+                any(_piece_distance(p, b) <= tol for p in (a["a"], a["b"]))
+                or any(_piece_distance(p, a) <= tol for p in (b["a"], b["b"]))
             ):
                 uf.join(i, j)
     shapes, fittings = [], []
@@ -328,13 +345,13 @@ def takeoff(pid, layout, services=None, allowance=0.2):
     direct = defaultdict(set)
     for t, size in labels:
         if pieces:
-            distance, i = min((G.dist_to_segment(t["at"], e["a"], e["b"]), i) for i, e in enumerate(pieces))
+            distance, i = min((_piece_distance(t["at"], e), i) for i, e in enumerate(pieces))
             if distance <= max(t["height"] * 3, 1):
                 direct[i].add(size)
     word_service = {}
     for t in words:
         if pieces:
-            distance, i = min((G.dist_to_segment(t["at"], e["a"], e["b"]), i) for i, e in enumerate(pieces))
+            distance, i = min((_piece_distance(t["at"], e), i) for i, e in enumerate(pieces))
             if distance <= max(t["height"] * 3, 1):
                 word_service[uf.find(i)] = (
                     "cip_return" if re.search(r"возврат|return|retour", t["text"], re.I) else "cip_supply"
@@ -387,15 +404,17 @@ def takeoff(pid, layout, services=None, allowance=0.2):
                     for tag, at in layout_positions.items():
                         if math.dist(tip, at) <= tol:
                             panels[tag] = tag_name(match[1])
-    cables = []
+    cables, warnings = [], []
     for t in texts(pid):
         if service(t["layer"]) != "electrical" or not re.search(
             r"кВт|kw|ф\.|phase|нагрев|heater", t["text"], re.I
         ):
             continue
-        distance, tag = min((math.dist(t["at"], p), tag) for tag, p in positions.items())
+        distance, tag = min(((math.dist(t["at"], p), tag) for tag, p in positions.items()),
+                            default=(math.inf, None))
         if distance > t["height"] * 10:
-            continue
+            tag = None
+            warnings.append(f"ELECTRICAL_TAG_MISSING: callout {t['handle']} has no nearby equipment tag; cable length unknown")
         match = re.search(r"(?:P\s*=\s*)?(\d+(?:[.,]\d+)?)\s*(?:кВт|kw)", t["text"], re.I)
         power = float(match[1].replace(",", ".")) if match else None
         panel = panels.get(tag)
@@ -419,6 +438,6 @@ def takeoff(pid, layout, services=None, allowance=0.2):
         "pipe": {"runs": runs, "length_source": "layout_rmst"},
         "cable": {"rows": cables, "allowance": allowance},
         "layout_selection": ls,
-        "warnings": pd["warnings"] + ld["warnings"],
+        "warnings": pd["warnings"] + ld["warnings"] + warnings,
         "method": "Preliminary Manhattan routing; geometry in inferred millimetres, no elevations or installed-route claim",
     }

@@ -39,14 +39,14 @@ def _validated_values(override, value, unit: str) -> tuple[float, float, int, st
         raise input_error("INVALID_TOLERANCE", "Require finite lower <= upper, precision 0..8 and mode deviations|limits")
     if any(abs(v - round(v, precision)) > 1e-10 for v in (lower, upper)):
         raise input_error("TOLERANCE_PRECISION_LOSS", "Increase precision so the displayed deviations retain the supplied values")
+    from .model import measure_dimension
+    nominal = measure_dimension(override.dimension)
+    if nominal is None:
+        raise input_error("INVALID_TOLERANCE", "Dimension has no measurable nominal value")
+    nominal *= float(override.get("dimlfac", 1))
+    if not math.isfinite(nominal):
+        raise input_error("INVALID_TOLERANCE", "Dimension nominal and length factor must be finite")
     if mode == "limits":
-        from .model import measure_dimension
-        nominal = measure_dimension(override.dimension)
-        if nominal is None:
-            raise input_error("INVALID_TOLERANCE", "Dimension has no measurable nominal value")
-        nominal *= float(override.get("dimlfac", 1))
-        if not math.isfinite(nominal):
-            raise input_error("INVALID_TOLERANCE", "Dimension nominal and length factor must be finite")
         if any(abs(v - round(v, precision)) > 1e-10 for v in (nominal + lower, nominal + upper)):
             raise input_error("TOLERANCE_PRECISION_LOSS", "Increase precision so displayed limits retain nominal plus deviations")
     text = override.dimension.dxf.get("text", "")

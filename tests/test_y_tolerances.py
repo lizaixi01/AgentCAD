@@ -129,6 +129,28 @@ def test_nested_and_unused_block_tolerances_are_checked(rt, ws, blank, placement
 
 
 @pytest.mark.parametrize("mode", ["deviations", "limits"])
+@pytest.mark.parametrize("factor", [float("nan"), float("inf"), -float("inf")])
+def test_nonfinite_saved_length_factor_never_passes_tolerance_delivery(rt, ws, blank, mode, factor):
+    assert rt.apply_operations(blank, [
+        {"op":"add_line", "start":[0,0], "end":[10,0]},
+        {"op":"add_linear_dim", "p1":[0,0], "p2":[10,0],
+         "tolerance":{"lower":-.1, "upper":.1, "mode":mode}}])["ok"]
+    doc = ezdxf.readfile(ws / blank)
+    block = doc.blocks.new("BAD_FACTOR")
+    for entity in list(doc.modelspace()):
+        doc.modelspace().move_to_layout(entity, block)
+    doc.modelspace().add_blockref(block.name, (0,0))
+    dim = block.query("DIMENSION").first
+    override = dim.override()
+    override["dimlfac"] = factor
+    override.commit()  # simulate a foreign editor corrupting metadata, not our renderer
+    doc.saveas(ws / blank)
+    result = rt.deliver_drawing(blank, "bad-factor", formats=["dxf"])
+    assert result["error"]["code"] == "DELIVERY_REJECTED", result
+    assert any(i["code"] == "INVALID_TOLERANCE" for i in result["error"]["details"]["validation"]["issues"])
+
+
+@pytest.mark.parametrize("mode", ["deviations", "limits"])
 def test_stacked_tolerance_glyphs_clear_the_radial_dimension_line(rt, ws, blank, mode):
     from ezdxf.addons.drawing import Frontend, RenderContext, recorder
 

@@ -10,12 +10,9 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import sys
 
 import ezdxf
-
-from agentcad.policy import Policy
-from agentcad.service import Runtime
-
 
 MECHANICAL = {
     "sheet": {"title": "STEPPED SLEEVE AND END CAP", "drawing_no": "SC-2026-01", "drawn_by": "AgentCAD"},
@@ -62,14 +59,39 @@ def main():
     parser.add_argument("--out", type=Path, required=True)
     parser.add_argument("--native", action="store_true")
     args = parser.parse_args()
+    repo = Path(__file__).resolve().parents[2]
+    source = (repo / "src").resolve()
+    # This script must exercise this checkout even under an unrelated editable
+    # install or PYTHONPATH. Check every dynamically imported product module too.
+    sys.path.insert(0, str(source))
+    import agentcad
+    from agentcad.policy import Policy
+    from agentcad.service import Runtime
+    from agentcad.model import get_tag
+
+    def source_hashes():
+        return {p.relative_to(repo).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
+                for p in sorted(source.rglob("*.py"))}
+    def imported_modules():
+        paths = {name: str(Path(module.__file__).resolve()) for name, module in sys.modules.copy().items()
+                 if (name == "agentcad" or name.startswith("agentcad.")) and getattr(module, "__file__", None)}
+        assert all(Path(path).is_relative_to(source) for path in paths.values()), paths
+        return paths
+    dirty = subprocess.check_output(["git", "-C", str(repo), "status", "--porcelain",
+                                     "--untracked-files=no", "--", "src", str(Path(__file__).relative_to(repo))], text=True)
+    if dirty:
+        parser.error("Commit product and showcase changes before generating fixed-version evidence")
+    initial_hashes = source_hashes()
+    imported_modules()
     args.out.mkdir(parents=True, exist_ok=False)
     rt = Runtime(Policy(root=args.out.absolute()))
-    repo = Path(__file__).resolve().parents[2]
     report = {"source_commit": subprocess.check_output(["git", "-C", str(repo), "rev-parse", "HEAD"], text=True).strip(),
-              "source_sha256": {p.relative_to(repo).as_posix(): hashlib.sha256(p.read_bytes()).hexdigest()
-                                for p in sorted((repo / "src").rglob("*.py"))},
+              "source_sha256": initial_hashes, "imported_from": str(agentcad.__file__),
+              "harness_sha256": hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
               "native": args.native, "calls": [], "checks": {}, "visual_review": "pending separate inspection"}
     def save():
+        assert source_hashes() == initial_hashes, "Product source changed during the run"
+        report["imported_modules"] = imported_modules()
         (args.out / "report.json").write_text(json.dumps(report, indent=2) + "\n", "utf-8")
     def call(name, **kw):
         result = getattr(rt, name)(**kw)
@@ -94,7 +116,7 @@ def main():
             placed = call("apply_operations", path=path, operations=[
                 {"op":"create_layout", "name":"A3-1to1", "paper":"A3"},
                 {"op":"add_viewport", "layout":"A3-1to1", "center":[210,148.5],
-                 "view_center":[210,148.5], "width":420, "height":297, "scale":1},
+                 "view_center":[210,148.5], "width":420, "height":297, "scale":1, "tag":"sheet.viewport"},
                 {"op":"add_text", "layout":"A3-1to1", "text":"A3 - 1:1", "insert":[24,278], "height":2.5}])
             assert placed["results"][1]["shows_all_model"]
         elif domain == "architecture":
@@ -116,13 +138,32 @@ def main():
                 sheet = native_doc.layouts.get("A3-1to1")
                 assert abs(sheet.dxf_layout.dxf.paper_width - 420) < 1e-6
                 assert abs(sheet.dxf_layout.dxf.paper_height - 297) < 1e-6
-                viewport = next(v for v in sheet.query("VIEWPORT") if v.dxf.id > 1)
+                viewport = next(v for v in sheet.query("VIEWPORT") if get_tag(v) == "sheet.viewport")
                 assert abs(viewport.dxf.height / viewport.dxf.view_height - 1) < 1e-9
                 assert tuple(viewport.dxf.center)[:2] == (210,148.5)
                 assert tuple(viewport.dxf.view_center_point)[:2] == (210,148.5)
                 assert any(t.dxf.text == "A3 - 1:1" and tuple(t.dxf.insert)[:2] == (24,278)
                            for t in sheet.query("TEXT"))
                 report["checks"]["native_A3_page_viewport_1to1"] = "passed"
+                # AutoCAD DXFOUT can leave inactive paper viewports with id/status
+                # zero. Activate the actual native layout, regenerate and save a
+                # witness DXF; never rewrite IDs or geometry to fake visibility.
+                from agentcad.backends.autocad import _run
+                job, _ = _run(args.out.absolute() / "native-activation", {"in.dwg": args.out / "mechanical.dwg"}, [
+                    '(setvar "TILEMODE" 0)', '(setvar "CTAB" "A3-1to1")', '(command "_.REGENALL")',
+                    '(command "_.DXFOUT" "__JOBDIR__/activated.dxf" "_V" "2018" "16")'], open_dwg="in.dwg")
+                witness = ezdxf.readfile(job / "activated.dxf")
+                activated = next(v for v in witness.layouts.get("A3-1to1").query("VIEWPORT")
+                                 if get_tag(v) == "sheet.viewport")
+                assert activated.dxf.id > 1 and activated.dxf.status > 0
+                assert activated.dxf.width == 420 and activated.dxf.height / activated.dxf.view_height == 1
+                assert tuple(activated.dxf.view_center_point)[:2] == (210,148.5)
+                report["native_activation"] = {"job":job.relative_to(args.out.absolute()).as_posix(),
+                    "before": {"id":viewport.dxf.id,"status":viewport.dxf.status},
+                    "after": {"id":activated.dxf.id,"status":activated.dxf.status},
+                    "scope":"Native layout activation and regeneration only; no geometry or viewport ID rewriting"}
+                call("export_drawing", path=(job / "activated.dxf").relative_to(args.out.absolute()).as_posix(),
+                     output="mechanical-native.pdf", format="pdf", layout="A3-1to1")
             audit = call("autocad_audit", path=reopened)
             assert audit["passed"] and audit["audit_errors"] == 0
         report["checks"][domain] = "passed"
