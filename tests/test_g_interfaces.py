@@ -184,10 +184,18 @@ def test_http_api(ws):
 def test_interfaces_share_one_implementation():
     """CLI / MCP / HTTP contain no CAD logic: they only call Runtime methods."""
     src = Path(__file__).parents[1] / "src" / "agentcad"
+    import ast
     for adapter in ("cli.py", "mcp_server.py", "http_api.py"):
         text = (src / adapter).read_text("utf-8")
-        assert "import ezdxf" not in text and "from ezdxf" not in text
-        assert "from .ops" not in text and "engine" not in text
+        modules = []
+        for node in ast.walk(ast.parse(text)):
+            if isinstance(node,ast.Import):
+                modules.extend(n.name for n in node.names)
+            elif isinstance(node,ast.ImportFrom):
+                modules.append(node.module or "")
+                if not node.module:
+                    modules.extend(n.name for n in node.names)
+        assert not any(part in {"ezdxf","ops","engine"} for module in modules for part in module.split("."))
 
 
 def test_operation_catalog_is_compact_by_default(tmp_path):

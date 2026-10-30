@@ -14,6 +14,60 @@ P = Param
 PAPER = {"A0": (1189, 841), "A1": (841, 594), "A2": (594, 420), "A3": (420, 297), "A4": (297, 210)}
 
 
+def page_setup_info(lay):
+    x = lay.dxf_layout.dxf
+    w, h = x.paper_width, x.paper_height
+    return {"paper_size_mm": [w, h], "orientation": "landscape" if w >= h else "portrait",
+            "ctb": x.get("current_style_sheet", ""),
+            "scale": [x.get("scale_numerator", 1), x.get("scale_denominator", 1)]}
+
+
+@op("set_page_setup", "layout", "Change an existing layout's physical paper size and plot style. ISO sizes "
+    "and ANSI B (432 by 279 mm) are supported. monochrome.ctb is rendered by the native PDF exporter.",
+    {"name": P("string", True), "paper": P("enum", enum=[*PAPER, "ANSI_B", "custom"], default="A3"),
+     "orientation": P("enum", enum=["landscape", "portrait"], default="landscape"),
+     "width": P("number", gt=0), "height": P("number", gt=0),
+     "ctb": P("enum", enum=["", "monochrome.ctb"], default="")})
+def set_page_setup(ctx: Ctx, name, paper, orientation, width, height, ctb):
+    if is_model(name) or name not in ctx.doc.layouts:
+        raise input_error("LAYOUT_NOT_FOUND", f"No paper-space layout {name!r}")
+    lay = ctx.doc.layouts.get(name)
+    before = page_setup_info(lay)
+    if paper == "custom":
+        if not width or not height:
+            raise input_error("MISSING_PARAM", "Custom paper needs width and height")
+        size = (width, height)
+    else:
+        size = (432, 279) if paper == "ANSI_B" else PAPER[paper]
+    w, h = sorted(size, reverse=orientation == "landscape")
+    lay.page_setup(size=(w, h), margins=(0, 0, 0, 0), units="mm", scale=(1, 1))
+    lay.dxf_layout.dxf.current_style_sheet = ctb
+    after = page_setup_info(lay)
+    return {"layout": name, "page_setup": after,
+            "changed": {key: {"old": before[key], "new": value} for key, value in after.items()
+                        if before[key] != value}, "ctb_known": ctb in {"", "monochrome.ctb"}}
+
+
+@op("change_space", "layout", "CHSPACE: transfer entities to another layout with an explicit scale and "
+    "translation (paper millimetres per model unit). Original handles are retained.",
+    {"target": P("selector", True), "destination": P("string", True),
+     "scale": P("number", default=1, gt=0), "delta": P("point", default=[0, 0])})
+def change_space(ctx: Ctx, target, destination, scale, delta):
+    from ezdxf.math import Matrix44
+    from ..model import select
+    if destination not in ctx.doc.layouts:
+        raise input_error("LAYOUT_NOT_FOUND", f"No layout {destination!r}")
+    dest = ctx.doc.layouts.get(destination)
+    ents = select(ctx.doc, target, ctx.refs)
+    matrix = Matrix44.scale(scale, scale, 1) @ Matrix44.translate(*delta, 0)
+    for e in ents:
+        e.transform(matrix)
+        if e.get_layout() != dest:
+            e.get_layout().move_to_layout(e, dest)
+        ctx.touched(e)
+    return {"modified": [e.dxf.handle for e in ents], "destination": destination}
+
+
 @op("create_layout", "layout", "Create a paper-space layout (a printed sheet) with its paper size. Draw the frame "
     "and title block into it with the usual ops and layout=<name>, then show the model with add_viewport.",
     {"name": P("string", True), "paper": P("enum", enum=[*PAPER, "custom"], default="A3"),
