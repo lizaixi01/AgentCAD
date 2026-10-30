@@ -186,6 +186,18 @@ const T = {
     doneTitle: "All set!", doneLead: "AgentCAD is ready. A few easy steps left:",
     errTitle: "Almost: something didn't work", errLead: "The parts with a red mark were not set up. Nothing else was changed.",
     retry: "Try again", lastStep: "Last steps",
+    checkBtn: "Already installed? Check it", checkTitle: "Checking your AgentCAD", checking: "Looking at everything…",
+    allGood: "Everything works", someBad: "{n} things need a look", oneBad: "1 thing needs a look",
+    ckCore: "AgentCAD itself", ckCoreOk: "Working (version {v})", ckCoreBad: "Some parts are missing. Download the installer again and run it.",
+    ckFolder: "Your drawings folder", ckFolderBad: "Missing or can't be written to. Tap “Fix it for me”.",
+    ckFc: "3D parts (FreeCAD, optional)", ckFcBad: "Not installed. 2D drawings still work.",
+    ckAc: "DWG files (AutoCAD, optional)", ckAcBad: "Not installed. That's fine.", ckAcSkip: "Only on Windows.",
+    ckApp: "{app}", ckAppOk: "Connected", ckAppBad: "Installed, but not connected. Tap “Fix it for me”.", ckAppSkip: "Not on this computer",
+    fixIt: "Fix it for me", checkAgain: "Check again",
+    stShortcut: "Put an AgentCAD icon on your desktop", scOk: "Done. Double-click it any time to see your drawings.",
+    scDemo: "Demo: would put the icon here", scFail: "Couldn't add the icon. Everything else still works.",
+    iconTip: "From now on, double-click the AgentCAD icon on your desktop to see all your drawings, live.",
+    getFreecad: "Get FreeCAD (free)", fcTip: "Want 3D parts too? Install the free FreeCAD 1.1. Afterwards, open this installer again and tap “Already installed? Check it”.",
     restart_claude_code: "Open a new Claude Code session.", restart_codex: "Open a new Codex session.",
     restart_claude_desktop: "Quit Claude completely (also the icon next to the clock) and open it again.",
     restart_cursor: "Restart Cursor. If AgentCAD is switched off, turn it on in Settings → MCP.",
@@ -199,6 +211,13 @@ const T = {
     bye: "You can close this page now.", byeLead: "The setup window closes by itself. To set up again, double-click the installer.",
     details: "Technical details", lost: "The setup window was closed. Double-click the installer to start again.",
     noFolder: "Couldn't open the folder: {m}",
+    err_BAD_CONFIG: "{app}'s settings file has a mistake in it, so we left it alone rather than risk breaking it. Rename that file to keep a copy, then tap “Try again”. File: {path}",
+    err_NO_PERMISSION: "We weren't allowed to change {app}'s settings. Close {app} and tap “Try again”.",
+    err_WRITE_FAILED: "We couldn't save {app}'s settings. Close {app} and tap “Try again”.",
+    err_TIMEOUT: "{app} took too long to answer. Wait a moment and tap “Try again”.",
+    err_CLAUDE_CLI_FAILED: "Claude Code didn't accept the connection. Check that Claude Code opens normally, then tap “Try again”.",
+    err_FREECAD_NOT_FOUND: "FreeCAD wasn't found in the folder that was given.",
+    err_other: "Something unexpected went wrong. Tap “Try again”. If it keeps happening, send us what is under “Technical details”.",
   },
   zh: {
     title: "AgentCAD 安装", other: "English",
@@ -219,6 +238,18 @@ const T = {
     doneTitle: "装好了！", doneLead: "AgentCAD 已经准备好了，最后几步很简单：",
     errTitle: "差一点：有一项没成功", errLead: "标红的项目没有装好，其他设置都没有被改动。",
     retry: "再试一次", lastStep: "最后几步",
+    checkBtn: "已经装过了？检查一下", checkTitle: "检查你的 AgentCAD", checking: "正在逐项检查…",
+    allGood: "一切正常", someBad: "有 {n} 项需要处理", oneBad: "有 1 项需要处理",
+    ckCore: "AgentCAD 本体", ckCoreOk: "正常（版本 {v}）", ckCoreBad: "缺了一些组件。请重新下载安装程序，再运行一次。",
+    ckFolder: "图纸文件夹", ckFolderBad: "不存在或者不能写入。点「帮我修好」。",
+    ckFc: "3D 零件（FreeCAD，可选）", ckFcBad: "没有安装。二维图纸照样能用。",
+    ckAc: "DWG 文件（AutoCAD，可选）", ckAcBad: "没有安装。没关系。", ckAcSkip: "只在 Windows 上可用。",
+    ckApp: "{app}", ckAppOk: "已连接", ckAppBad: "装了，但还没连上。点「帮我修好」。", ckAppSkip: "这台电脑上没有",
+    fixIt: "帮我修好", checkAgain: "重新检查",
+    stShortcut: "在桌面放一个 AgentCAD 图标", scOk: "放好了。以后双击它，就能看到你所有的图纸。",
+    scDemo: "演示：会在这里放图标", scFail: "没能放上图标，其他功能都不受影响。",
+    iconTip: "以后双击桌面上的 AgentCAD 图标，就能看到你所有的图纸，助手改图时会实时更新。",
+    getFreecad: "下载 FreeCAD（免费）", fcTip: "还想做 3D 零件？装上免费的 FreeCAD 1.1 就行。装好后再打开一次安装程序，点「已经装过了？检查一下」。",
     restart_claude_code: "打开一个新的 Claude Code 会话。", restart_codex: "打开一个新的 Codex 会话。",
     restart_claude_desktop: "完全退出 Claude（包括屏幕右下角托盘里的图标），再重新打开。",
     restart_cursor: "重启 Cursor。如果 AgentCAD 是关着的，在 设置 → MCP 里把它打开。",
@@ -232,9 +263,17 @@ const T = {
     bye: "可以关闭这个页面了。", byeLead: "安装窗口会自己关掉。想重新安装，再双击一次安装程序就行。",
     details: "技术细节", lost: "安装窗口已经关闭。想重新安装，请再双击一次安装程序。",
     noFolder: "没能打开文件夹：{m}",
+    err_BAD_CONFIG: "{app} 的设置文件里有错误，为了不弄坏它，我们没有改动。把这个文件改个名字留作备份，再点「再试一次」。文件位置：{path}",
+    err_NO_PERMISSION: "没有权限修改 {app} 的设置。请先关掉 {app}，再点「再试一次」。",
+    err_WRITE_FAILED: "没能保存 {app} 的设置。请先关掉 {app}，再点「再试一次」。",
+    err_TIMEOUT: "{app} 太久没有回应。稍等一会儿，再点「再试一次」。",
+    err_CLAUDE_CLI_FAILED: "Claude Code 没有接受这次连接。请确认 Claude Code 能正常打开，再点「再试一次」。",
+    err_FREECAD_NOT_FOUND: "在指定的文件夹里没有找到 FreeCAD。",
+    err_other: "遇到了意外的问题。请点「再试一次」；如果一直这样，把「技术细节」里的内容发给我们。",
   },
 };
 const REPO = "https://github.com/lizaixi01/AgentCAD";
+const FREECAD = "https://www.freecad.org/downloads.php";
 const COLORS = { "claude-code": "#d97757", "codex": "#4b5563", "claude-desktop": "#b8613f", "cursor": "#2f6fdf" };
 const INITIALS = { "claude-code": "CC", "codex": "Cx", "claude-desktop": "C", "cursor": "Cu" };
 const ICON = {
@@ -280,8 +319,10 @@ function render() {
       <div class="three"><div><i>👆</i><b>1. ${esc(t("w1"))}</b><span>${esc(t("w1s"))}</span></div>
       <div><i>⚙️</i><b>2. ${esc(t("w2"))}</b><span>${esc(t("w2s"))}</span></div>
       <div><i>💬</i><b>3. ${esc(t("w3"))}</b><span>${esc(t("w3s"))}</span></div></div>
-      <div class="actions"><button class="btn primary" id="go" type="button">${esc(t("start"))} ${ICON.arrow}</button></div>`;
+      <div class="actions"><button class="btn primary" id="go" type="button">${esc(t("start"))} ${ICON.arrow}</button>
+      <button class="btn" id="check" type="button">${esc(t("checkBtn"))}</button></div>`;
     $("go").onclick = () => { view = "pick"; render(); };
+    $("check").onclick = runCheck;
     $("go").focus();
   } else if (view === "pick") {
     const none = !info.apps.some(a => a.found);
@@ -303,6 +344,8 @@ function render() {
     $("back").onclick = () => { view = "welcome"; render(); };
     $("install").onclick = install;
     if ($("again")) $("again").onclick = async () => { await loadInfo(); render(); };
+  } else if (view === "check") {
+    renderCheck();
   } else {
     renderProgress();
   }
@@ -310,22 +353,82 @@ function render() {
 
 function stepText(s) {
   const app = (info.apps.find(a => a.id === s.id) || {}).label;
-  const name = s.id === "workspace" ? t("stWorkspace") : s.id === "freecad" ? t("stFreecad") : s.id === "autocad" ? t("stAutocad") : t("stApp", { app });
+  const name = s.id === "workspace" ? t("stWorkspace") : s.id === "freecad" ? t("stFreecad") : s.id === "autocad" ? t("stAutocad") : s.id === "shortcut" ? t("stShortcut") : t("stApp", { app });
   let sub = t("waiting"), st = s.state;
   if (st === "run") sub = t("running");
   else if (st === "done" || st === "error") {
     const p = s.info && s.info.path;
     if (s.id === "workspace") sub = t("folderReady", { p });
     else if (s.id === "freecad") { sub = p ? t("fcYes") : t("fcNo"); if (!p) st = "opt"; }
+    else if (s.id === "shortcut") { sub = st === "error" ? t("scFail") : (s.info.status || "").startsWith("would") ? t("scDemo") : t("scOk"); if (st === "error") st = "opt"; }
     else if (s.id === "autocad") { sub = p ? t("acYes") : t("acNo"); if (!p) st = "opt"; }
     else {
       const k = s.info.status || "";
-      sub = st === "error" ? t("failed") + (s.info.message ? ": " + s.info.message : "") : k === "unchanged" ? t("already")
+      sub = st === "error" ? friendlyError(s.info.code, app, s.info.target) : k === "unchanged" ? t("already")
         : k.startsWith("would") ? t("wouldConnect") : t("connected");
     }
   }
   const ic = st === "run" ? ICON.spin : st === "done" ? ICON.check : st === "opt" ? ICON.dash : st === "error" ? ICON.x : ICON.dot;
   return `<li data-s="${st}"><span class="ic ${st === "done" || st === "error" ? "pop" : ""}">${ic}</span><div><b>${esc(name)}</b><span>${esc(sub)}</span></div></li>`;
+}
+
+// The health check: doctor's checks folded into a few rows a person can act on.
+let checks = null;
+async function runCheck() {
+  view = "check"; checks = null; render();
+  try { checks = await api("/api/doctor"); } catch (e) { checks = { checks: [] }; }
+  render();
+}
+function checkRows(r) {
+  const by = Object.fromEntries(r.checks.map(c => [c.name, c]));
+  const core = r.checks.filter(c => c.required && c.name !== "Workspace");
+  const ver = ((by.AgentCAD || {}).detail || "").split(" ")[1] || "";
+  const coreOk = core.every(c => c.status === "ok");
+  const rows = [{ name: t("ckCore"), s: coreOk ? "ok" : "bad", sub: coreOk ? t("ckCoreOk", { v: ver }) : t("ckCoreBad") }];
+  const ws = by.Workspace || {};
+  rows.push({ name: t("ckFolder"), s: ws.status === "ok" ? "ok" : "bad", sub: ws.status === "ok" ? ws.detail : t("ckFolderBad") });
+  for (const a of info.apps) {
+    const c = by[a.label + " config"] || { status: "skip" };
+    rows.push({ name: t("ckApp", { app: a.label }), s: c.status === "ok" ? "ok" : c.status === "skip" ? "skip" : "bad",
+      sub: c.status === "ok" ? t("ckAppOk") : c.status === "skip" ? t("ckAppSkip") : t("ckAppBad"), app: a.id });
+  }
+  const fc = by.FreeCAD || {}, ac = by.AutoCAD || {};
+  rows.push({ name: t("ckFc"), s: fc.status === "ok" ? "ok" : "opt", sub: fc.status === "ok" ? fc.detail : t("ckFcBad"), freecad: fc.status !== "ok" });
+  rows.push({ name: t("ckAc"), s: ac.status === "ok" ? "ok" : ac.status === "skip" ? "skip" : "opt",
+    sub: ac.status === "ok" ? ac.detail : ac.status === "skip" ? t("ckAcSkip") : t("ckAcBad") });
+  return rows;
+}
+function renderCheck() {
+  const card = $("card");
+  if (!checks) { card.innerHTML = demo() + `<h1>${esc(t("checkTitle"))}</h1><p class="lead">${ICON.spin.replace("<svg", '<svg width="24" height="24" style="vertical-align:-5px"')} ${esc(t("checking"))}</p>`; return; }
+  const rows = checkRows(checks), bad = rows.filter(r => r.s === "bad");
+  const st = { ok: "done", bad: "error", opt: "opt", skip: "wait" };
+  const ic = { ok: ICON.check, bad: ICON.x, opt: ICON.dash, skip: ICON.dot };
+  card.innerHTML = demo() + `<div class="yay"><div class="ring ${bad.length ? "bad" : ""} pop">${bad.length ? ICON.x : ICON.check}</div>
+    <h1>${esc(bad.length ? (bad.length === 1 ? t("oneBad") : t("someBad", { n: bad.length })) : t("allGood"))}</h1></div>
+    <ul class="steps">${rows.map(r => `<li data-s="${st[r.s]}"><span class="ic">${ic[r.s]}</span><div><b>${esc(r.name)}</b><span>${esc(r.sub)}</span>
+      ${r.freecad ? `<br><button class="btn small" type="button" data-freecad style="margin-top:8px">${esc(t("getFreecad"))}</button>` : ""}</div></li>`).join("")}</ul>
+    <div class="actions">${bad.length ? `<button class="btn primary" id="fix" type="button">${esc(t("fixIt"))} ${ICON.arrow}</button>` : ""}
+      <button class="btn" id="again" type="button">${ICON.redo} ${esc(t("checkAgain"))}</button>
+      <button class="btn" id="back" type="button">${esc(t("back"))}</button></div>`;
+  if ($("fix")) $("fix").onclick = () => {
+    bad.filter(r => r.app).forEach(r => picked.add(r.app)); view = "pick"; render();
+  };
+  $("again").onclick = runCheck;
+  $("back").onclick = () => { view = "welcome"; render(); };
+  wireFreecad(card);
+}
+
+function wireFreecad(root) {
+  root.querySelectorAll("[data-freecad]").forEach(b => b.onclick = () => window.open(FREECAD, "_blank", "noopener"));
+}
+
+// Plain sentences for setup errors; the raw message stays under "Technical details".
+function friendlyError(code, app, path) {
+  const k = "err_" + code;
+  if (!T[lang][k]) return t("err_other");
+  const text = t(k, { app: app || "", path: path || "" });
+  return path ? text : text.replace(/(文件位置：| File: )$/, "");
 }
 
 // The real steps take a second or two in all; reveal them one by one so the progress can be followed.
@@ -358,7 +461,9 @@ function renderProgress() {
   const prompts = ["p1", "p2", "p3"].map(k => `<div class="prompt"><q>${esc(t(k))}</q><button class="btn small" type="button" data-copy="${k}">${esc(t("copy"))}</button></div>`).join("");
   card.innerHTML = demo() + dots(ok ? 3 : 1) + `<div class="done"><div class="yay"><div class="ring ${ok ? "" : "bad"} pop">${ok ? ICON.check : ICON.x}</div>
       <h1>${esc(ok ? t("doneTitle") : t("errTitle"))}</h1><p class="lead">${esc(ok ? t("doneLead") : t("errLead"))}</p></div>
-      ${ok ? "" : `<ul class="steps">${steps.map(stepText).join("")}</ul>${state.error ? `<p class="none">${esc(state.error.message)}${state.error.hint ? " — " + esc(state.error.hint) : ""}</p>` : ""}`}
+      ${ok ? "" : `<ul class="steps">${steps.map(stepText).join("")}</ul>${state.error ? `<p class="none">${esc(friendlyError(state.error.code))}</p>` : ""}`}
+      ${ok && res.shortcut && !/^(error|would)/.test(res.shortcut.status) ? `<div class="folder"><img src="/logo.svg" alt="" width="44" height="44" style="border-radius:10px;flex:none"><div>${esc(t("iconTip"))}</div></div>` : ""}
+      ${ok && !res.freecad ? `<div class="folder">${ICON.arrow}<div>${esc(t("fcTip"))}<br><button class="btn small" type="button" data-freecad style="margin-top:8px">${esc(t("getFreecad"))}</button></div></div>` : ""}
       ${todo ? `<h2>${esc(t("lastStep"))}</h2><ol class="todo">${todo}<li>${esc(t("sayThis"))}</li></ol><div class="prompts" style="margin-top:12px">${prompts}</div>` : ""}
       <div class="actions">${ok ? "" : `<button class="btn primary" id="retry" type="button">${ICON.redo} ${esc(t("retry"))}</button>`}
         <button class="btn" id="folder" type="button">${ICON.folder} ${esc(t("openFolder"))}</button>
@@ -371,6 +476,7 @@ function renderProgress() {
   });
   $("folder").onclick = async () => { const r = await api("/api/open-folder", {}); if (!r.ok) toast(t("noFolder", { m: r.error.message })); };
   $("share").onclick = share;
+  wireFreecad(card);
   if ($("retry")) $("retry").onclick = () => { view = "pick"; render(); };
   if ($("finish")) $("finish").onclick = async () => { try { await api("/api/quit", {}); } catch (e) {} ended = true; render(); };
   if (ok && !renderProgress.celebrated) { renderProgress.celebrated = true; confetti(); }

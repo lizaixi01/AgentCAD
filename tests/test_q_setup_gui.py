@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import http.client
 import json
+import subprocess
 import time
+import os
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -30,9 +32,20 @@ def home(tmp_path: Path, monkeypatch) -> Path:
     return h
 
 
+class FakeRunner:
+    """Stands in for PowerShell (the Windows desktop shortcut), so no test touches the real desktop."""
+
+    def __init__(self):
+        self.calls = []
+
+    def __call__(self, cmd):
+        self.calls.append(cmd)
+        return subprocess.CompletedProcess(cmd, 0, "False\nC:/fake/Desktop/AgentCAD.lnk\n", "")
+
+
 @pytest.fixture
 def wizard(home):
-    w = Wizard(launcher="python").start_background()
+    w = Wizard(launcher="python", runner=FakeRunner()).start_background()
     yield w
     w.stop()
 
@@ -87,7 +100,8 @@ def test_setup_runs_and_reports_each_step(wizard, home):
     assert code == 200 and out["ok"], out
     st = _wait(wizard)
     assert st["phase"] == "done", st
-    assert [s["id"] for s in st["steps"]] == ["workspace", "freecad", "autocad", "cursor", "codex"]
+    assert [s["id"] for s in st["steps"]] == ["workspace", "freecad", "autocad", "cursor", "codex",
+                                                 "shortcut"]
     assert all(s["state"] == "done" for s in st["steps"])
     assert st["steps"][0]["info"]["path"] == str(home / "AgentCAD")
     assert {c["client"]: c["status"] for c in st["result"]["clients"]} == {"cursor": "added", "codex": "added"}
@@ -110,12 +124,14 @@ def test_a_broken_config_is_reported_not_overwritten(wizard, home):
     st = _wait(wizard)
     assert st["phase"] == "error"
     step = st["steps"][-1]
-    assert step["id"] == "cursor" and step["state"] == "error" and "not valid JSON" in step["info"]["message"]
+    step = next(s for s in st["steps"] if s["id"] == "cursor")
+    assert step["state"] == "error" and "not valid JSON" in step["info"]["message"]
+    assert step["info"]["code"] == "BAD_CONFIG"  # the page turns the code into a plain sentence
     assert bad.read_text("utf-8") == "{not json"
 
 
 def test_dry_run_writes_nothing(home):
-    w = Wizard(launcher="python", dry_run=True).start_background()
+    w = Wizard(launcher="python", dry_run=True, runner=FakeRunner()).start_background()
     try:
         assert _call(w, "GET", "/api/info")[1]["dry_run"] is True
         _call(w, "POST", "/api/start", {"clients": ["cursor"]})
@@ -156,3 +172,64 @@ def test_archive_install_keeps_its_source(monkeypatch):
     from importlib import metadata
     monkeypatch.setattr(metadata, "distribution", lambda name: Dist())
     assert install.install_info()["source"] == url
+
+
+def test_doctor_page(wizard, home):
+    code, r = _call(wizard, "GET", "/api/doctor")
+    assert code == 200 and "self_cmd" not in r
+    names = {c["name"] for c in r["checks"]}
+    assert {"Python", "AgentCAD", "Workspace", "FreeCAD", "Cursor config"} <= names
+    assert next(c for c in r["checks"] if c["name"] == "Workspace")["status"] == "missing"  # not set up yet
+
+
+@pytest.mark.parametrize("platform", ["linux", "darwin"])
+def test_desktop_icon_posix(home, platform):
+    root = home / "AgentCAD"
+    out = install.create_shortcut(root, "uvx", "https://example.org/a.zip", platform=platform)
+    path = Path(out["path"])
+    assert out["status"] == "added" and path.parent == home / "Desktop"
+    text = path.read_text("utf-8")
+    assert "https://example.org/a.zip" in text and "viewer" in text and "--open" in text
+    assert str(root) in text and "agentcad-mcp" not in text
+    if platform == "linux":
+        assert text.startswith("[Desktop Entry]") and (root / ".agentcad" / "agentcad.png").is_file()
+    else:
+        assert text.startswith("#!/bin/sh")
+    if os.name != "nt":
+        assert path.stat().st_mode & 0o111
+    assert install.create_shortcut(root, "uvx", platform=platform)["status"] == "updated"
+
+
+def test_desktop_icon_windows_uses_powershell(home):
+    root = home / "AgentCAD"
+    run = FakeRunner()
+    out = install.create_shortcut(root, "python", platform="win32", runner=run)
+    assert out == {"status": "added", "path": "C:/fake/Desktop/AgentCAD.lnk"}
+    script = run.calls[0][-1]
+    assert "GetFolderPath('Desktop')" in script and "CreateShortcut" in script
+    assert "agentcad.cli" in script and "--open" in script and "agentcad.ico" in script
+    assert (root / ".agentcad" / "agentcad.ico").is_file()
+    dry = install.create_shortcut(root, "python", platform="win32", runner=run, dry_run=True)
+    assert dry["status"] == "would be added" and "CreateShortcut" not in run.calls[-1][-1]
+
+
+def test_desktop_icon_failure_does_not_fail_setup(home, monkeypatch):
+    def broken(*a, **k):
+        raise OSError("no desktop here")
+    monkeypatch.setattr(install, "create_shortcut", broken)
+    res = install.setup(["cursor"], launcher="python", shortcut=True)
+    assert res.ok and res.shortcut == {"status": "error", "code": "SHORTCUT_FAILED", "message": "no desktop here"}
+
+
+def test_viewer_open_reuses_a_running_viewer(tmp_path, monkeypatch):
+    import webbrowser
+    from agentcad.policy import Policy
+    from agentcad.viewer import Viewer, open_or_serve
+    opened = []
+    monkeypatch.setattr(webbrowser, "open", lambda url, *a, **k: opened.append(url))
+    v = Viewer(Policy(root=tmp_path), port=0).start()
+    try:
+        assert open_or_serve(Policy(root=tmp_path)) == ({"ok": True}, 0)
+        assert opened == [v.url]
+    finally:
+        v.stop()

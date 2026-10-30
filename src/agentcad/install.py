@@ -312,7 +312,7 @@ def _register_with_claude(name: str, entry: dict[str, Any], run: Runner) -> dict
         restored = cmd_unsafe(back) is None and run(back).returncode == 0
         msg += (" (your previous agentcad registration was restored)" if restored else
                 " (your previous agentcad registration was removed and could not be restored)")
-    return {"status": "error", "message": msg}
+    return {"status": "error", "code": "CLAUDE_CLI_FAILED", "message": msg}
 
 
 def _claude_user_entry(name: str) -> dict[str, Any] | None:
@@ -338,6 +338,75 @@ def open_folder(path: Path) -> None:
         subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", str(path)], shell=False)
 
 
+# --- desktop icon -------------------------------------------------------------------------------------------------
+STATIC = Path(__file__).resolve().parent / "viewer_static"
+
+
+def viewer_command(root: Path, launcher: str, source: str | None = None) -> tuple[str, list[str]]:
+    """(command, args) that starts the live viewer of ``root`` and opens it in the browser: the desktop icon."""
+    command, args = launcher_command(launcher, source)
+    args = args[:-1] + ["agentcad"] if launcher in ("uvx", "pipx") else ["-m", "agentcad.cli"]
+    return command, args + ["--root", str(root), "viewer", "--open"]
+
+
+def _ps_quote(text: str) -> str:
+    return "'" + text.replace("'", "''") + "'"
+
+
+def _desktop_quote(arg: str) -> str:
+    """An Exec= argument of a .desktop file (freedesktop Desktop Entry spec)."""
+    for ch in ("\\", '"', "`", "$"):
+        arg = arg.replace(ch, "\\" + ch)
+    return '"' + arg + '"'
+
+
+def create_shortcut(root: Path, launcher: str, source: str | None = None, *, platform: str = sys.platform,
+                    runner: Runner | None = None, dry_run: bool = False) -> dict[str, Any]:
+    """Put an "AgentCAD" icon on the desktop that opens the user's drawings in the live viewer. Windows: a .lnk
+    (made by PowerShell, which knows a desktop moved by OneDrive); macOS: AgentCAD.command; Linux: a .desktop
+    file. The icon image is copied into <root>/.agentcad, which outlives a uvx cache."""
+    command, args = viewer_command(root, launcher, source)
+    state = root / ".agentcad"
+    if platform == "win32":
+        ico = state / "agentcad.ico"
+        script = ("$d = [Environment]::GetFolderPath('Desktop'); $p = Join-Path $d 'AgentCAD.lnk'; "
+                  "$had = Test-Path $p; "
+                  + ("" if dry_run else
+                     "$s = (New-Object -ComObject WScript.Shell).CreateShortcut($p); "
+                     f"$s.TargetPath = {_ps_quote(command)}; $s.Arguments = {_ps_quote(subprocess.list2cmdline(args))}; "
+                     f"$s.WorkingDirectory = {_ps_quote(str(root))}; $s.IconLocation = {_ps_quote(str(ico))}; "
+                     "$s.Description = 'AgentCAD'; $s.WindowStyle = 7; $s.Save(); ")
+                  + "Write-Output $had; Write-Output $p")
+        if not dry_run:
+            state.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(STATIC / "logo.ico", ico)
+        p = (runner or _run)([shutil.which("powershell") or "powershell.exe", "-NoProfile", "-NonInteractive",
+                              "-Command", script])
+        if p.returncode != 0:
+            raise OSError((p.stderr or p.stdout).strip()[:500] or "PowerShell could not make the shortcut")
+        had, path = (p.stdout.strip().splitlines() + ["", ""])[:2]
+        status = "updated" if had.strip() == "True" else "added"
+    else:
+        desk = Path.home() / "Desktop"
+        if platform == "darwin":
+            import shlex
+            path = desk / "AgentCAD.command"
+            text = "#!/bin/sh\nexec " + " ".join(shlex.quote(a) for a in [command, *args]) + "\n"
+        else:
+            path = desk / "AgentCAD.desktop"
+            text = ("[Desktop Entry]\nType=Application\nName=AgentCAD\nComment=Your drawings, live\n"
+                    f"Exec={' '.join(_desktop_quote(a) for a in [command, *args])}\n"
+                    f"Icon={state / 'agentcad.png'}\nTerminal=false\n")
+        status = "updated" if path.exists() else "added"
+        if not dry_run:
+            desk.mkdir(parents=True, exist_ok=True)
+            state.mkdir(parents=True, exist_ok=True)
+            shutil.copyfile(STATIC / "logo.png", state / "agentcad.png")
+            path.write_text(text, "utf-8")
+            path.chmod(0o755)
+    return {"status": ("would be " + status) if dry_run else status, "path": str(path)}
+
+
 # --- setup -----------------------------------------------------------------------------------------------------
 @dataclass
 class SetupResult:
@@ -349,6 +418,7 @@ class SetupResult:
     freecad: str | None = None
     autocad: str | None = None
     self_cmd: str = "agentcad"
+    shortcut: dict[str, Any] | None = None
 
     @property
     def ok(self) -> bool:
@@ -356,7 +426,8 @@ class SetupResult:
 
     def to_dict(self) -> dict[str, Any]:
         return {"ok": self.ok, "dry_run": self.dry_run, "workspace": str(self.root), "launcher": self.launcher,
-                "server": self.entry, "clients": self.clients, "freecad": self.freecad, "autocad": self.autocad}
+                "server": self.entry, "clients": self.clients, "freecad": self.freecad, "autocad": self.autocad,
+                "shortcut": self.shortcut}
 
 
 def find_freecad_path() -> str | None:
@@ -400,9 +471,10 @@ def find_autocad_path() -> str | None:
 def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher: str = "auto",
           source: str | None = None, freecad: str | None = None, dry_run: bool = False, read_only: bool = False,
           allow_scripts: bool = False, name: str = NAME, runner: Runner | None = None,
-          progress: Callable[[str, str, dict[str, Any]], None] | None = None) -> SetupResult:
+          progress: Callable[[str, str, dict[str, Any]], None] | None = None, shortcut: bool = False) -> SetupResult:
     """``progress(step, state, info)`` is told when each step starts ('run') and ends ('done' / 'error'); steps:
-    'workspace', 'freecad', 'autocad', then one per client (the setup wizard draws its progress bar from them)."""
+    'workspace', 'freecad', 'autocad', one per client, then 'shortcut' (the setup wizard draws its progress bar from
+    them). ``shortcut`` also puts an AgentCAD icon on the desktop that opens the drawings (create_shortcut)."""
     tell = progress or (lambda step, state, info: None)
     info = install_info()
     launcher = choose_launcher(launcher, info)
@@ -456,11 +528,23 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
                 if dry_run and rec["status"] != "unchanged":
                     rec["status"] = "would be " + rec["status"]
         except AgentCADError as exc:  # a config file that is not valid JSON: left alone
-            rec.update(status="error", message=exc.message + (f" ({exc.hint})" if exc.hint else ""))
+            rec.update(status="error", code=exc.code, message=exc.message + (f" ({exc.hint})" if exc.hint else ""))
+        except PermissionError as exc:
+            rec.update(status="error", code="NO_PERMISSION", message=str(exc))
+        except subprocess.TimeoutExpired as exc:
+            rec.update(status="error", code="TIMEOUT", message=str(exc))
         except (OSError, ValueError, subprocess.SubprocessError) as exc:
-            rec.update(status="error", message=str(exc))
+            rec.update(status="error", code="WRITE_FAILED", message=str(exc))
         res.clients.append(rec)
         tell(client, "error" if rec["status"] == "error" else "done", rec)
+    if shortcut:  # a convenience: a failure is reported, but does not fail the setup
+        tell("shortcut", "run", {})
+        try:
+            res.shortcut = create_shortcut(root_path, launcher, source or info["source"], runner=runner,
+                                           dry_run=dry_run)
+        except (OSError, subprocess.SubprocessError) as exc:
+            res.shortcut = {"status": "error", "code": "SHORTCUT_FAILED", "message": str(exc)}
+        tell("shortcut", "error" if res.shortcut["status"] == "error" else "done", res.shortcut)
     return res
 
 
