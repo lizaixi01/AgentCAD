@@ -78,6 +78,7 @@ def _contract_valid(contract, part_handle) -> bool:
             value, rendered = annotation.get("value"), annotation.get("rendered")
             if (type(value) not in {int, float} or not math.isfinite(value) or value <= 0
                     or not isinstance(annotation.get("definition"), dict)
+                    or not isinstance(annotation.get("source"), dict)
                     or not isinstance(rendered, list) or not rendered
                     or not all(isinstance(s, str) for s in rendered)):
                 return False
@@ -86,6 +87,7 @@ def _contract_valid(contract, part_handle) -> bool:
         elif annotation.get("type") == "MTEXT":
             if (not isinstance(annotation.get("leader"), str)
                     or not isinstance(annotation.get("leader_geometry"), dict)
+                    or not isinstance(annotation.get("source_pattern"), dict)
                     or required[annotation["kind"]] is not None):
                 return False
         else:
@@ -154,9 +156,69 @@ def _definition(dim) -> dict[str, Any]:
 
 def _precision(value: float) -> int:
     for digits in range(9):
-        if abs(round(value, digits) - value) <= 1e-9:
+        if abs(round(value, digits) - value) <= min(1e-10, 4 * math.ulp(value)):
             return digits
     raise input_error("ANNOTATION_PRECISION", "Manufacturing dimensions support at most eight decimal places")
+
+
+def _nominal_matches(actual, nominal) -> bool:
+    # Coordinate subtraction can lose low bits even when both source vertices
+    # are unchanged. The declared display precision is the numeric criterion;
+    # source/definition integrity is checked separately, in coordinate space.
+    return (isinstance(actual, (int, float)) and math.isfinite(actual)
+            and f"{actual:.{_precision(nominal)}f}" == f"{nominal:.{_precision(nominal)}f}")
+
+
+def _source_values(doc, source) -> list[float] | None:
+    """Measure actual profiles/circles, independently of DIMENSION definitions."""
+    try:
+        def vertex(ref):
+            entity = doc.entitydb[ref["handle"]]
+            if entity.dxftype() != "LWPOLYLINE" or type(ref["index"]) is not int or ref["index"] < 0:
+                raise ValueError("Invalid profile vertex")
+            return entity.get_points("xy")[ref["index"]]
+        def circle(handle):
+            entity = doc.entitydb[handle]
+            if entity.dxftype() != "CIRCLE":
+                raise ValueError("Invalid source circle")
+            return entity
+        def span_value(item):
+            axis = item["axis"]
+            if type(axis) is not int or axis not in {0, 1}:
+                raise ValueError("Invalid span axis")
+            return float(abs(vertex(item["end"])[axis] - vertex(item["start"])[axis]))
+        if source["mode"] == "span":
+            return [span_value(source)]
+        if source["mode"] == "spans":
+            return [span_value(item) for item in source["items"]]
+        if source["mode"] == "extent":
+            points = doc.entitydb[source["handle"]].get_points("xy")
+            return [float(max(p[0] for p in points) - min(p[0] for p in points))]
+        if source["mode"] == "diameters":
+            return [2 * circle(h).dxf.radius for h in source["handles"]]
+        if source["mode"] == "pitch":
+            center = circle(source["center"]).dxf.center
+            return [2 * circle(source["circle"]).dxf.radius] + [
+                2 * (circle(h).dxf.center - center).magnitude for h in source["holes"]]
+    except (KeyError, TypeError, IndexError, AttributeError, ValueError):
+        pass
+    return None
+
+
+def _orientation_matches(doc, source) -> bool:
+    try:
+        center, hole = doc.entitydb[source["center"]], doc.entitydb[source["first"]]
+        if center.dxftype() != "CIRCLE" or hole.dxftype() != "CIRCLE":
+            return False
+        vector = hole.dxf.center - center.dxf.center
+        actual = math.degrees(math.atan2(vector.y, vector.x)) % 360
+        expected = source["angle"]
+        # Zero and 360 describe the same direction.
+        if actual > 180 and expected == 0:
+            actual -= 360
+        return _nominal_matches(actual, expected) or (expected == 0 and _nominal_matches(abs(actual), expected))
+    except (KeyError, TypeError, AttributeError, ValueError):
+        return False
 
 
 def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=True) -> dict[str, Any]:
@@ -170,7 +232,33 @@ def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=Tr
     if not enabled:
         return contract
 
-    def dimension(kind, operation, value, location=None):
+    body = source_handles[0]
+    bores = [h for h in source_handles if ctx.doc.entitydb[h].dxftype() == "LWPOLYLINE"
+             and ctx.doc.entitydb[h].dxf.layer == "HIDDEN"]
+
+    def vertex(handle, location):
+        points = ctx.doc.entitydb[handle].get_points("xy")
+        index = min(range(len(points)), key=lambda i: math.dist(points[i], location))
+        if not _same(list(points[index]), location):
+            raise input_error("ANNOTATION_SOURCE_MISMATCH", "A dimension has no matching source vertex")
+        return {"handle": handle, "index": index}
+
+    def span(first, p1, second, p2, axis):
+        return {"mode": "span", "start": vertex(first, p1), "end": vertex(second, p2), "axis": axis}
+
+    def diameter_spans(radius, column):
+        # One diameter label may serve several segments. Check both ends of
+        # every occurrence, including the unlabelled side of the front view.
+        items, offset = [], 0
+        lower, upper = (body, body) if column == 1 else (bores[1], bores[0])
+        for segment in segments:
+            if segment[column] == radius:
+                for x in (at[0] + offset, at[0] + offset + segment[0]):
+                    items.append(span(lower, [x, at[1] - radius], upper, [x, at[1] + radius], 1))
+            offset += segment[0]
+        return {"mode": "spans", "items": items}
+
+    def dimension(kind, operation, value, source, location=None):
         handle = operations(ctx, [{**operation, "layer": "DIM"}])[0]["created"][0]
         entity = ctx.doc.entitydb[handle]
         override = entity.override()
@@ -190,10 +278,13 @@ def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=Tr
         expected_text = _plain(operation.get("text", "<>").replace("<>", prefix + number))
         if _rendered(ctx.doc, entity) != [expected_text]:
             raise input_error("ANNOTATION_DISPLAY_MISMATCH", "Rendered dimension differs from the supplied size")
+        measured = _source_values(ctx.doc, source)
+        if not measured or not all(_nominal_matches(m, value) for m in measured):
+            raise input_error("ANNOTATION_SOURCE_MISMATCH", "Source geometry does not express the nominal dimension")
         contract["annotations"].append({
             "kind": kind, "handle": handle, "type": "DIMENSION", "value": value,
             "definition": _definition(entity), "text": entity.dxf.get("text", ""),
-            "rendered": [expected_text],
+            "rendered": [expected_text], "source": source,
         })
 
     length, radius = sum(s[0] for s in segments), max(s[1] for s in segments)
@@ -203,13 +294,16 @@ def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=Tr
         dimension(f"length.{index}", {
             "op": "add_linear_dim", "p1": [at[0] + cursor, at[1] + outer],
             "p2": [at[0] + cursor + step, at[1] + outer],
-            "base": [at[0], at[1] + radius + 10]}, step)
+            "base": [at[0], at[1] + radius + 10]}, step,
+            {"mode": "spans", "items": [span(body, [at[0] + cursor, at[1] + sign * outer],
+                body, [at[0] + cursor + step, at[1] + sign * outer], 0) for sign in (-1, 1)]})
         x = at[0] + cursor + step / 2
         if outer not in outer_seen:
             dimension(f"outer_diameter.{index}", {
                 "op": "add_linear_dim", "orientation": "vertical", "text": "%%c<>",
                 "p1": [x, at[1] - outer], "p2": [x, at[1] + outer],
-                "base": [at[0] + length + 8 + 8 * len(outer_seen), at[1]]}, 2 * outer)
+                "base": [at[0] + length + 8 + 8 * len(outer_seen), at[1]]}, 2 * outer,
+                diameter_spans(outer, 1))
             outer_seen.add(outer)
         if inner and inner not in inner_seen:
             origin = section_origin or at
@@ -221,23 +315,27 @@ def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=Tr
                 "op": "add_linear_dim", "orientation": "vertical",
                 "text": "%%c<> THRU" if through else "%%c<>",
                 "p1": [bx, at[1] - inner], "p2": [bx, at[1] + inner],
-                "base": [base_x, at[1]]}, 2 * inner)
+                "base": [base_x, at[1]]}, 2 * inner,
+                diameter_spans(inner, 2))
             inner_seen.add(inner)
         cursor += step
     if len(segments) > 1:
         dimension("overall_length", {
             "op": "add_linear_dim", "p1": [at[0], at[1]], "p2": [at[0] + length, at[1]],
-            "base": [at[0], at[1] + radius + 20]}, length)
+            "base": [at[0], at[1] + radius + 20]}, length, {"mode": "extent", "handle": body})
 
     for index, pattern in enumerate(patterns):
         center, holes = pattern["center"], pattern["holes"]
         y = center[1] - radius - 12 - index * 25
         dimension(f"hole_diameter.{index}", {
             "op": "add_diameter_dim", "target": holes[0], "angle": 45,
-            "text": f"{len(holes)}X <>"}, pattern["diameter"], [center[0] + radius + 4, y])
+            "text": f"{len(holes)}X <>"}, pattern["diameter"],
+            {"mode": "diameters", "handles": holes}, [center[0] + radius + 4, y])
         dimension(f"pitch_diameter.{index}", {
             "op": "add_diameter_dim", "target": pattern["pitch_circle"], "angle": 135,
-            "text": "PCD <>"}, pattern["pcd"], [center[0] - radius - 4, y])
+            "text": "PCD <>"}, pattern["pcd"],
+            {"mode": "pitch", "center": pattern["center_handle"], "circle": pattern["pitch_circle"], "holes": holes},
+            [center[0] - radius - 4, y])
         count = len(holes)
         spacing = str(360 // count) if 360 % count == 0 else f"360/{count}"
         start = f"{pattern['start_angle']:.{_precision(pattern['start_angle'])}f}"
@@ -248,9 +346,12 @@ def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=Tr
         created = operations(ctx, [{"op": "add_leader", "points": [[first.x + pattern["diameter"] / 2, first.y],
             [end[0] - 5, end[1]], end], "text": note, "layer": "DIM", "color": 7,
             "text_height": 2.5}])[0]["created"]
+        source_pattern = {"center": pattern["center_handle"], "first": holes[0], "angle": pattern["start_angle"]}
+        if not _orientation_matches(ctx.doc, source_pattern):
+            raise input_error("ANNOTATION_SOURCE_MISMATCH", "Source geometry does not express the nominal orientation")
         contract["annotations"].append({"kind": f"pattern_orientation.{index}", "handle": created[1],
             "type": "MTEXT", "text": note, "leader": created[0],
-            "leader_geometry": geometry(ctx.doc.entitydb[created[0]])})
+            "leader_geometry": geometry(ctx.doc.entitydb[created[0]]), "source_pattern": source_pattern})
     return contract
 
 
@@ -269,11 +370,13 @@ def check(doc, contract, part_handle) -> tuple[list[dict], list[dict]]:
         entity = doc.entitydb.get(handle)
         valid = _model_visible(doc, entity) and entity.dxftype() == expected["type"]
         measured = None
+        source_values = None
         if valid and entity.dxftype() == "DIMENSION":
             measured = measure_dimension(entity)
+            source_values = _source_values(doc, expected["source"])
             override = entity.override()
-            valid = (_same(measured, expected["value"]) and _same(_definition(entity), expected["definition"])
-                     and f"{measured:.{_precision(expected['value'])}f}" == f"{expected['value']:.{_precision(expected['value'])}f}"
+            valid = (_nominal_matches(measured, expected["value"]) and _same(_definition(entity), expected["definition"])
+                     and bool(source_values) and all(_nominal_matches(m, expected["value"]) for m in source_values)
                      and entity.dxf.get("text", "") == expected["text"]
                      and override.get("dimlfac", 1) == 1
                      and override.get("dimdec", 2) == _precision(expected["value"])
@@ -288,8 +391,10 @@ def check(doc, contract, part_handle) -> tuple[list[dict], list[dict]]:
             leader = doc.entitydb.get(expected["leader"])
             valid = (_plain(entity.text) == _plain(expected["text"]) and _model_visible(doc, leader)
                      and entity.dxf.char_height > 0
+                     and _orientation_matches(doc, expected["source_pattern"])
                      and _same(geometry(leader), expected["leader_geometry"]))
-        annotations.append({"kind": expected["kind"], "handle": handle, "measurement": measured, "passed": bool(valid)})
+        annotations.append({"kind": expected["kind"], "handle": handle, "measurement": measured,
+                            "source_measurements": source_values, "passed": bool(valid)})
         if not valid:
             issues.append({"code": "MANUFACTURING_ANNOTATION_MISMATCH", "handle": handle,
                            "kind": expected["kind"], "part": part_handle})

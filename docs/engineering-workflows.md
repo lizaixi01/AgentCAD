@@ -156,7 +156,14 @@ the retained list of required roles, actual model-space ownership and native dis
 precision/settings (even when an old rendered cache still looks correct),
 plus orientation leaders, saved profiles, BOM quantities and balloon links. Strict
 delivery rejects missing, altered or stale annotations and changed geometry. A
-legacy part without this record reports `MANUFACTURING_COVERAGE_UNRECORDED`;
+dimension's nominal value is also compared with measurements of its actual source:
+both profile edges for lengths, both ends of every repeated outer/bore diameter,
+and the circles/centres for hole patterns. These comparisons use the declared
+display precision; coordinate integrity is checked separately so that large offsets
+do not hide a changed final digit or reject unchanged subtraction noise. The
+AutoCAD backend uses binary DXF intermediates to retain database floating-point
+precision; workspace imports are still committed as text DXF.
+A legacy part without this record reports `MANUFACTURING_COVERAGE_UNRECORDED`;
 regenerate from its source spec to gain verified coverage. It is not silently certified.
 The record is a consistency check, not a signature against malicious metadata editing.
 Large records use an entity-owned XRECORD with a small XDATA locator to stay below

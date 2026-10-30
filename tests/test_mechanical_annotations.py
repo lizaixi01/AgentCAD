@@ -1,4 +1,5 @@
 from copy import deepcopy
+import math
 
 import ezdxf
 import pytest
@@ -134,6 +135,63 @@ def test_fine_nominal_changes_cannot_hide_behind_coarse_geometry_tolerance(rt,bl
     checked=ok(rt.read_engineering(blank,'mechanical'))
     assert any(i['code'] in {'MANUFACTURING_ANNOTATION_MISMATCH','MANUFACTURING_GEOMETRY_CHANGED'} for i in checked['critique'])
     assert rt.deliver_drawing(blank,'fine-error',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
+
+
+@pytest.mark.parametrize('origin,length',[(1e7,17.12345678),(1e8,6.6),(1e8,17.12345678),(1e8,17.12345682)])
+def test_large_coordinates_preserve_correct_nominal_display(rt,blank,origin,length):
+    spec={'parts':[{'name':'offset part','at':[origin,190],'segments':[{'length':length,'d_outer':40}]}]}
+    ok(rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':spec}]))
+    report=ok(rt.read_engineering(blank,'mechanical'))
+    assert report['critique']==[] and report['manufacturing'][0]['passed']
+    row=next(a for a in report['manufacturing'][0]['annotations'] if a['kind']=='length.0')
+    precision=1 if length==6.6 else 8
+    assert f"{row['source_measurements'][0]:.{precision}f}"==f'{length:.{precision}f}'
+    ok(rt.deliver_drawing(blank,'offset',formats=['dxf']))
+
+
+@pytest.mark.parametrize('origin,length,ulps',[(1e7,17.12345678,4),(1e8,17.12345682,1)])
+@pytest.mark.parametrize('edge',['both','bottom'])
+def test_coordinate_ulp_allowance_cannot_change_source_nominal(rt,blank,ws,origin,length,ulps,edge):
+    spec={'parts':[{'name':'offset part','at':[origin,190],'segments':[{'length':length,'d_outer':40}]}]}
+    ok(rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':spec}]))
+    report=ok(rt.read_engineering(blank,'mechanical'));assert report['critique']==[]
+    doc=ezdxf.readfile(ws/blank);body=doc.entitydb[report['parts'][0]['handle']]
+    points=list(body.get_points('xy'));right=max(p[0] for p in points);changed=right
+    for _ in range(ulps):changed=math.nextafter(changed,math.inf)
+    body.set_points([(changed if x==right and (edge=='both' or y<190) else x,y) for x,y in points]);doc.saveas(ws/blank)
+    checked=ok(rt.read_engineering(blank,'mechanical'))
+    assert any(i['code']=='MANUFACTURING_ANNOTATION_MISMATCH' for i in checked['critique'])
+    assert rt.deliver_drawing(blank,'offset-changed',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
+
+
+@pytest.mark.parametrize('diameter',['outer','bore'])
+def test_every_occurrence_and_end_of_a_repeated_diameter_is_checked(rt,blank,ws,diameter):
+    fine=17.12345678
+    spec={'parts':[{'name':'offset diameters','at':[135,1e7], 'segments':[
+        {'length':17,'d_outer':fine if diameter=='outer' else 40,'d_inner':fine if diameter=='bore' else 0},
+        {'length':23,'d_outer':60,'d_inner':0},
+        {'length':11,'d_outer':fine if diameter=='outer' else 40,'d_inner':fine if diameter=='bore' else 0}]}]}
+    ok(rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':spec}]))
+    report=ok(rt.read_engineering(blank,'mechanical'));assert report['critique']==[]
+    doc=ezdxf.readfile(ws/blank)
+    entity=(doc.entitydb[report['parts'][0]['handle']] if diameter=='outer' else
+            doc.modelspace().query('LWPOLYLINE[layer=="HIDDEN"]')[0])
+    points=list(entity.get_points('xy'));right=max(x for x,y in points)
+    y=next(y for x,y in points if x==right and y>1e7);changed=y
+    for _ in range(4):changed=math.nextafter(changed,math.inf)
+    entity.set_points([(x,changed if x==right and v==y else v) for x,v in points]);doc.saveas(ws/blank)
+    checked=ok(rt.read_engineering(blank,'mechanical'))
+    assert any(i['code']=='MANUFACTURING_ANNOTATION_MISMATCH' for i in checked['critique'])
+    assert rt.deliver_drawing(blank,'diameter-changed',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
+
+
+@pytest.mark.parametrize('length',[17.123456789,1e-9])
+def test_unrepresentable_annotation_precision_is_refused_atomically(rt,blank,ws,length):
+    before=(ws/blank).read_bytes()
+    result=rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':{'parts':[
+        {'name':'too precise','at':[130,190],'segments':[{'length':length,'d_outer':40}]}]}}])
+    assert result['error']['code'] in {'ANNOTATION_PRECISION','DEGENERATE_GEOMETRY'}
+    assert (ws/blank).read_bytes()==before
 
 
 def test_pattern_note_is_geometry_bound_and_legacy_coverage_is_explicit(rt,blank,ws):

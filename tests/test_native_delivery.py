@@ -82,16 +82,19 @@ def test_large_manufacturing_record_survives_native_dwg(rt,blank):
     assert audit['passed'] and audit['audit_errors']==0
 
 
-def test_eight_decimal_nominal_dimension_survives_native_dwg(rt,blank,ws):
-    spec={'parts':[{'name':'fine length','at':[130,190],
-        'segments':[{'length':17.12345678,'d_outer':40}]}]}
+@pytest.mark.parametrize('origin,length',[(130,17.12345678),(1e8,6.6),(1e8,17.12345678)])
+def test_eight_decimal_nominal_dimension_survives_native_dwg(rt,blank,ws,origin,length):
+    spec={'parts':[{'name':'fine length','at':[origin,190],
+        'segments':[{'length':length,'d_outer':40}]}]}
     ok(rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':spec}]))
     ok(rt.export_drawing(blank,'fine.dwg','dwg'))
     ok(rt.import_drawing('fine.dwg','fine.dxf'))
+    assert not (ws/'fine.dxf').read_bytes().startswith(b'AutoCAD Binary DXF')
     report=ok(rt.read_engineering('fine.dxf','mechanical'))
     assert report['critique']==[]
     row=next(a for a in report['manufacturing'][0]['annotations'] if a['kind']=='length.0')
     doc=ezdxf.readfile(ws/'fine.dxf');dim=doc.entitydb[row['handle']]
-    assert dim.get_measurement()==pytest.approx(17.12345678,abs=1e-10)
-    assert dim.override().get('dimlunit')==2 and dim.override().get('dimrnd')==1e-8
-    assert any('17.12345678' in e.text for e in doc.blocks[dim.dxf.geometry] if e.dxftype()=='MTEXT')
+    precision=1 if length==6.6 else 8
+    assert f'{dim.get_measurement():.{precision}f}'==f'{length:.{precision}f}'
+    assert dim.override().get('dimlunit')==2 and dim.override().get('dimrnd')==10**-precision
+    assert any(str(length) in e.text for e in doc.blocks[dim.dxf.geometry] if e.dxftype()=='MTEXT')

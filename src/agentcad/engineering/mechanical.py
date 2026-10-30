@@ -247,7 +247,7 @@ def _part(ctx, spec):
                         "diameter": diameter,
                     },
                 )
-            patterns.append({"center": center, "holes": holes, "pitch_circle": pitch_circle,
+            patterns.append({"center": center, "center_handle": circles[0], "holes": holes, "pitch_circle": pitch_circle,
                              "diameter": diameter, "pcd": pcd, "start_angle": start_angle})
         # One centre cross per physical circle, as required by the view engine.
         for h in circles:
