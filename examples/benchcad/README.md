@@ -201,6 +201,125 @@ Next:
 - Smaller compare results, to cut Claude's cost. The images and tool results each turn writes to its cache are
   the largest part of the extra cost.
 
+## A comparison that sees inside the outline (2026-10-30)
+
+The hybrid run's match score was optimistic. It compared silhouettes only, and it misjudged views that cut the part
+off. #31 changes what `export_drawing(..., reference=...)` scores and returns:
+
+- **Score per view = (outline + edges) / 2.**
+  - `outline` is the silhouette IoU, as before.
+  - `edges` compares the edge pixels inside each silhouette: drawn lines and steps in the shading, found the same
+    way in the reference and in the part's render. It is their F1, with a pixel matched when the other image has
+    one within about 1/128 of the view.
+  - A reference with nothing inside its outlines, such as a flat silhouette, is scored on outlines alone.
+- **Cut-off views are aligned.**
+  - BenchCAD clips blocky parts at the edge of each 256 px view, inside a 4 px white gutter. The old alignment
+    missed that cut and scaled the part wrong, so a true part could score 0.70 against its own picture.
+  - A silhouette that ends on a straight line within the gutter now counts as cut there.
+  - Scale and position are then refined to the best overlap. Whatever the alignment pushes out of the picture
+    still counts against the part.
+- **A smaller result.**
+  - The image is one diff per view, laid out like the reference: 512 × 512 px for four views, instead of a
+    768 × 1024 px sheet of reference, render and diff.
+  - The JSON drops the shape summary, legend and alignment text: about 920 characters per compare, instead of about
+    1,580.
+- **The scale is stated.** AgentCAD's instructions say that a matching part usually scores 0.95 or more, that thin
+  flanges, springs and hollow parts can score lower, and that below 0.9 the place to look is where the diff shows red
+  or blue. The rerun used an earlier wording, "about 0.95 or more", which was too absolute: 11 of the 100 reference
+  parts score below 0.95 against their own picture.
+
+### Offline check
+
+`compare_check.py` replays the old and the new comparison on the graded submissions in `runs/`, and on each task's
+reference part against its own picture. It covers 1,298 of the 1,300 graded parts, including both runs below;
+two took more than ten minutes to render and are left out. A render whose opposite views (mirror images of one
+silhouette) differ in area by more than a few pixels is made again: seven were broken in a batch of eight parallel
+renders.
+
+| | Old score | New score |
+|---|---|---|
+| Two parts of one task, graded ≥ 0.1 apart: ranked the grader's way | 83.3% | **89.7%** |
+| Correlation with the graded IoU (Pearson r) | 0.48 | 0.66 |
+| Parts scoring ≥ 0.9 that are graded below 0.7 | 166 of 937 | 71 of 735 |
+| Reference part against its own picture: mean, 10th percentile | 0.945, 0.835 | 0.970, 0.943 |
+
+- The ranking gain is 6.4 points: +2.8 to +10.4 with a 95% bootstrap interval over tasks, from 3,978 pairs.
+- The score still cannot see what no view shows: hollow insides (Gridfinity bins, duct elbows, hollow tubes).
+- On very thin flanges, such as an I-beam's, even the true part's edges match poorly. The same goes for springs.
+
+### Rerun
+
+Both agents ran the 100 tasks again at medium effort. They used AgentCAD `8fb0f95` (PR #31), loaded from a frozen
+copy of its `src/`.
+
+| Medium effort, 100 tasks | Mean IoU | ≥ 0.9 | < 0.5 | Median time | Median input tokens | Cost |
+|---|---|---|---|---|---|---|
+| Claude Code + AgentCAD, old compare (#26) | **0.754** | 29 | 11 | 84 s | 209k | $36.2 |
+| Claude Code + AgentCAD, new compare | 0.745 | 32 | 15 | 89 s | 190k | $28.9 |
+| Claude Code writing CadQuery | 0.682 | 20 | 23 | 77 s | 75k | $15.6 |
+| Codex + AgentCAD, old compare (#26) | 0.857 | 60 | 6 | 180 s | 289k | — |
+| Codex + AgentCAD, new compare | 0.876 | 59 | 3 | 199 s | 343k | — |
+| Codex writing CadQuery | **0.918** | 73 | 1 | 294 s | 281k | — |
+
+Paired by task, with 95% bootstrap intervals:
+
+- **Accuracy did not move.**
+  - Against the old compare, Claude changed by −0.009 (−0.048 to +0.031) and Codex by +0.020 (−0.019 to +0.056).
+  - Single runs vary a lot: Claude was better by more than 0.02 on 40 tasks and worse on 35.
+- **Claude still leads writing CadQuery**, by 0.063 (+0.028 to +0.099). It is better on 55 tasks and worse on 22.
+- **Codex still trails writing CadQuery**, by 0.042 (−0.074 to −0.016), against 0.061 with the old compare. It
+  took 30% less time in total, and 199 s against 294 s median (a paired median ratio of 0.62).
+- **Claude costs a fifth less.**
+  - It cost $28.9, against $36.2, which is now 1.85× the code arm instead of 2.3×.
+  - At the prices fitted earlier, the $7.3 saving splits into $5.0 of cache writes, $1.5 of output and $0.8 of
+    cache reads.
+
+What the logs show:
+
+- **The score now tracks the result.**
+  - For submitted parts that were compared with the target, the score correlates with the graded IoU at r = 0.57
+    for Claude (0.41 with the old score) and 0.53 for Codex (0.48).
+  - Submitted parts that scored 0.9 or more but were graded below 0.7: 4 of 48 for Claude (17 of 61 before) and
+    2 of 67 for Codex (4 of 60).
+- **Codex used it to iterate more, Claude less.**
+  - Codex ran 6.5 scripts and 6.2 compares per task (5.5 and 5.1 before), and its best score reached 0.9 in 93
+    tasks. Its input tokens rose by a fifth.
+  - Claude ran 5.2 scripts and 5.0 compares (5.7 and 5.5), and its best score reached 0.9 in 54 tasks. Under the
+    old, looser score that was 81.
+- **Compare results shrank by 42%.** A successful compare now returns about 924 characters for either agent,
+  against 1,582 and 1,581.
+
+Caveats, and how the run was handled:
+
+- **A first rerun was discarded.**
+  - It loaded AgentCAD from the working tree, which changed during the run as review fixes went in. Only its first
+    32 Claude and 17 Codex tasks ran the commit under test.
+  - In it, Claude often submitted parts that the new score rated below 0.9. That is why the instructions now state
+    the scale (`8fb0f95`, which the clean run used).
+- **Machine failures were rerun.** 13 Claude and 19 Codex tasks failed for reasons outside the agent and were run
+  again with the same settings (`control_meta.json`):
+  - Early in the run, other jobs (tests, renders for the offline check) used the machine's memory. CadQuery could
+    not load in 5 tasks, 7 agent processes crashed, and 2 AgentCAD servers did not start.
+  - 10 Codex tasks were killed when the session driving the harness restarted.
+  - In 9 more tasks a single script or FreeCAD job ran out of memory, or ended without a result. The independent
+    review found these after the first round of reruns. Their first logs are kept in `v2c/replaced/`, with two Codex
+    attempts that the harness retried after "model at capacity". Leaving them out would have moved the contrasts by
+    at most 0.003.
+  - Scoring failed under the same load: 18 Codex parts scored 0 until they were scored again on an idle machine.
+- **One Codex part scores 0 for a reason of its own.** BenchCAD's scorer cannot mesh that cotter pin's STEP file,
+  although AgentCAD's own read-back of the file passed.
+- **No run is flagged as a leak.** Four first attempts were flagged, all among the tasks run again. The frozen
+  AgentCAD copy was stored under the data directory, so its path appeared in their tracebacks; no log names a
+  reference file. `run.py` now ignores that path.
+- **As before:** each task ran once per arm, CadQuery is 2.8 in AgentCAD and 2.3 in the code arm, and the times are
+  noisy.
+
+Next:
+
+- `run_script`'s results are now the largest text in each turn, at about 1,560 characters per call. About a third
+  of that is JSON indentation, which every MCP result carries.
+- Codex's remaining gap to writing CadQuery itself.
+
 ## Files
 
 - `prepare.py`: draws the sample and writes each task's input composite and reference STEP into the data directory
@@ -212,6 +331,8 @@ Next:
 - `score.py`: scores the submissions with BenchCAD's scorer (BenchCAD's venv) into `runs/<label>/<suite>.scores.jsonl`.
 - `summarize_control.py`: the control experiment's numbers and paired intervals, into `control_summary.json`.
 - `strip_logs.py`: replaces the inline preview images in the run logs with a placeholder, to keep the logs small.
+- `compare_check.py`: replays the reference comparison, old and new, on every graded part in `runs/` against
+  BenchCAD's grade (`render` under FreeCAD's interpreter, `score` in AgentCAD's venv), into `compare_check.json`.
 - `runs/<label>/v2c/<id>.jsonl`: each task's event stream (images stripped); `<id>.stderr.log`: its stderr. In the
   pilot, Claude's `Read` calls (187 in all, all inside the task's own workspace) are not counted as AgentCAD tool
   calls.
