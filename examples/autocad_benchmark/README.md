@@ -129,3 +129,8 @@ results or README measurements are replaced.
 contains task-specific retained deliverables, both runners, protocol transcripts,
 source hashes, regression-test output, and rendered architectural/mechanical previews.
 Intermediate development runs are not counted as additional independent trials.
+
+Its `recheck/` subdirectory contains the clean `514de72` run after independent
+review fixes: v8 31/31, v2 10/10 and 416 passed / 73 skipped regression tests.
+The original full-pass evidence and reference result remain unchanged; the recheck
+manifest links their hashes instead of claiming another reference rerun.
