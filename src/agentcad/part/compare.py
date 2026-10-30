@@ -57,6 +57,7 @@ from ..errors import input_error
 IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".bmp", ".webp")
 BG_THRESHOLD = 28  # max channel difference from the background colour that still counts as background
 EDGE_STEP = 30     # max channel difference to a neighbour that makes an edge pixel
+DETAIL_SHARE = 0.01  # a reference shows detail inside its outlines when this much of a view's inside is off its colour
 CUT_NEAR = 0.016   # a silhouette side this close to the cell border (BenchCAD: a 4 px gutter in a 262 px cell) ...
 CUT_RUN = 0.05     # ... with this much of the silhouette's extent on its last row or column ...
 CUT_DEPTH = 0.01   # ... and at least CUT_STRAIGHT of the width it has this far (fraction of the cell) inside ...
@@ -395,9 +396,10 @@ def diff_image(ref: np.ndarray, ours: np.ndarray, ref_e: np.ndarray | None = Non
 def compare_views(cells: list[tuple[np.ndarray, np.ndarray | None]], names: list[str],
                   renders: list[tuple]) -> tuple[list[dict[str, Any]], list[np.ndarray], str]:
     """Per-view results and diff images. ``cells`` from load_reference; ``renders`` (image, silhouette[, seams]) of
-    each view, seams being the pixels of the seam lines our render leaves out (or None). A reference that shows no
-    edge inside any of its outlines (a flat silhouette, a bare outline) says nothing about the inside: then no view
-    has an edge score, and each scores its outline."""
+    each view, seams being the pixels of the seam lines our render leaves out (or None). A reference whose outlines
+    are all one colour inside (a flat silhouette, a bare outline, also as a JPEG) says nothing about the inside: in
+    no view does DETAIL_SHARE of the inside differ from its median colour. Then no view has an edge score, and each
+    scores its outline."""
     views, modes = [], set()
     for name, (rgb, alpha), (img, mask, *rest) in zip(names, cells, renders):
         seams = rest[0] if rest else None
@@ -410,14 +412,18 @@ def compare_views(cells: list[tuple[np.ndarray, np.ndarray | None]], names: list
         placed, ours, (seams,), info, outside = align(img, mask, ref, (seams,))
         ours = opening(fill_holes(ours) if mode == "lines" else ours, r)
         # edges inside each silhouette, away from its border (the outline is scored on its own)
-        ref_e = edge_pixels(rgb) & _morph(ref, 2 * r, "min")
+        inside = _morph(ref, 2 * r, "min")
+        ref_e = edge_pixels(rgb) & inside
         our_e = edge_pixels(placed) & _morph(ours, 2 * r, "min")
         if seams is not None:
             seams = _morph(seams, 1, "max") & _morph(ours, 2 * r, "min")
-        views.append((name, ref, ours, iou(ref, ours, outside), ref_e, our_e, seams, r, info))
-    detailed = any(v[4].any() for v in views)
+        # how much of the inside differs from its usual colour: shading, lines (JPEG noise is no detail)
+        px = rgb[inside].astype(np.int16)
+        detail = float((np.abs(px - np.median(px, axis=0)).max(axis=1) > EDGE_STEP).mean()) if len(px) else 0.0
+        views.append((name, ref, ours, iou(ref, ours, outside), ref_e, our_e, seams, r, info, detail))
+    detailed = any(v[-1] >= DETAIL_SHARE for v in views)
     results, diffs = [], []
-    for name, ref, ours, outline, ref_e, our_e, seams, r, info in views:
+    for name, ref, ours, outline, ref_e, our_e, seams, r, info, _ in views:
         edges, ref_hit, our_hit = edge_score(ref_e, our_e, seams, r) if detailed else (None, None, None)
         entry: dict[str, Any] = {"view": name, "score": None, "outline": outline,
                                  "edges": None if edges is None else round(edges, 3)}

@@ -5,6 +5,7 @@ itself is tested on synthetic images without either."""
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 import math
 import os
@@ -404,14 +405,14 @@ def test_curves_and_tight_framing_are_not_cuts():
         assert "cut" not in r and r["outline"] < 0.8
 
 
-def ribbed(lines, size=(256, 256), scale=3.0, offset=(30, 40)):
+def ribbed(lines, size=(256, 256), scale=3.0, offset=(30, 40), width=2):
     """An L shape with its outline and the given inner lines drawn in red, as a renderer that draws edges would."""
     im = draw(L_SHAPE, size, scale, offset, (110, 190, 185))
     d = ImageDraw.Draw(im)
     d.polygon([(offset[0] + x * scale, offset[1] + y * scale) for x, y in L_SHAPE], outline=(200, 30, 30))
     for (x0, y0), (x1, y1) in lines:
         d.line([(offset[0] + x0 * scale, offset[1] + y0 * scale), (offset[0] + x1 * scale, offset[1] + y1 * scale)],
-               fill=(200, 30, 30), width=2)
+               fill=(200, 30, 30), width=width)
     return im
 
 
@@ -440,8 +441,8 @@ def test_edges_see_inside_the_outline():
     seam = np.asarray(im).astype(bool)
     matched = compare.compare_views(cells, ["v"], [ours(inner[:1], seam)])
     assert matched[0][0]["edges"] > one[0][0]["edges"] + 0.1
-    # ... and where the reference has no line, it costs nothing
-    ref_one = [(np.asarray(ribbed(inner[:1])), None)]
+    # ... and where the reference has no line, it costs nothing (a wider line: enough detail to compare edges)
+    ref_one = [(np.asarray(ribbed(inner[:1], width=4)), None)]
     assert compare.compare_views(ref_one, ["v"], [ours(inner[:1], seam)])[0][0]["edges"] == \
         compare.compare_views(ref_one, ["v"], [ours(inner[:1])])[0][0]["edges"]
     # a seam is our only line inside the outline (a cylinder seen from the side) and the reference draws it
@@ -456,14 +457,18 @@ def test_edges_see_inside_the_outline():
 def test_a_flat_silhouette_reference_is_scored_on_outlines():
     """Reviewed: a reference with nothing drawn inside its outlines (one colour, or a transparent background) gave a
     correct part edges 0 and half its score, all of its own edges counting as extra. Such a sheet says nothing about
-    the inside, so every view scores its outline; one detailed view is enough to compare edges everywhere."""
-    lines = [((20, 3), (20, 17))]
+    the inside, so every view scores its outline; one detailed view is enough to compare edges everywhere. JPEG noise
+    in a flat silhouette is not detail (at quality 75 it switched edges back on, re-review)."""
+    lines = [((20, 3), (20, 17)), ((3, 10), (17, 45))]
     ours = (np.asarray(ribbed(lines, scale=2.5, offset=(50, 60))),
             np.asarray(draw(L_SHAPE, (256, 256), 2.5, (50, 60), (0, 0, 0))).max(axis=2) < 128)
     flat = np.asarray(draw(L_SHAPE, (256, 256), 3.0, (30, 40), (90, 90, 90)))
     rgba = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
     ImageDraw.Draw(rgba).polygon([(30 + x * 3, 40 + y * 3) for x, y in L_SHAPE], fill=(250, 250, 250, 255))
-    for cell in ((flat, None), (np.asarray(rgba.convert("RGB")), np.asarray(rgba)[:, :, 3])):
+    buf = io.BytesIO()
+    Image.fromarray(flat).save(buf, "JPEG", quality=75)
+    jpeg = np.asarray(Image.open(buf).convert("RGB"))
+    for cell in ((flat, None), (np.asarray(rgba.convert("RGB")), np.asarray(rgba)[:, :, 3]), (jpeg, None)):
         (v,), (diff,), _ = compare.compare_views([cell], ["v"], [ours])
         assert v["edges"] is None and v["score"] == v["outline"] > 0.95
         assert not np.all(diff == compare.LINE_OURS, axis=2).any()  # no edge of ours painted as extra
