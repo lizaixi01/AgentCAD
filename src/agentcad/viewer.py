@@ -742,10 +742,13 @@ class Viewer:
         self._write_info()
         return self
 
-    def serve(self) -> None:
+    def serve(self, open_browser: bool = False) -> None:
         self.feed.start()
         self._write_info()
         print(json.dumps({"ok": True, "viewer": self.url, "root": str(self.ws.policy.root)}), flush=True)
+        if open_browser:
+            import webbrowser
+            webbrowser.open(self.url)
         try:
             self.httpd.serve_forever()
         except KeyboardInterrupt:
@@ -791,6 +794,28 @@ def start_background(policy: Policy) -> Viewer | None:
                 pass
         return v
     return None
+
+
+def open_or_serve(policy: Policy, port: int = 8770) -> tuple[dict[str, Any], int]:
+    """The desktop icon: open the viewer of this root if one already runs, else start one (``port``, else the next
+    free of the following nine, else any) and open it."""
+    import webbrowser
+    try:
+        url = json.loads((policy.state_dir() / INFO_FILE).read_text("utf-8"))["url"]
+    except (OSError, ValueError, KeyError, TypeError):
+        url = None
+    if isinstance(url, str) and serves_root(url, policy):
+        webbrowser.open(url)
+        print(json.dumps({"ok": True, "viewer": url, "root": str(policy.root), "reused": True}), flush=True)
+        return {"ok": True}, 0
+    for p in [*range(port, port + 10), 0]:
+        try:
+            v = Viewer(policy, port=p)
+        except OSError:
+            continue
+        v.serve(open_browser=True)
+        return {"ok": True}, 0
+    return {"ok": False, "error": {"code": "PORT_IN_USE", "category": "input", "message": "No free port"}}, 2
 
 
 def serves_root(url: str, policy: Policy) -> bool:
