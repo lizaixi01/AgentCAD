@@ -17,6 +17,7 @@ Angular dimension from vertex 'center' between rays to p1 and p2 (measured CCW f
 | `p2` | point | 是 |  |  |
 | `radius` | length >0 |  |  | Radius of the dimension arc (default: 0.6 x shorter ray) |
 | `text` | string |  |  | Text override; '<>' stands for the measured value |
+| `tolerance` | object |  |  | Signed lower/upper deviations in displayed drawing units (or unit strings); optional precision=3 and mode=deviations\|limits. Linear/radius/diameter dimensions only. |
 | `text_height` | length >0 |  |  | Override text height |
 | `length_factor` | number >0 |  |  | DIMLFAC: displayed value = measured length x factor, e.g. 1/0.325 on a sheet that shows the part at scale 0.325 |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
@@ -54,6 +55,7 @@ Diameter dimension of a circle/arc.
 | `radius` | length >0 |  |  |  |
 | `angle` | angle |  | 45.0 | Direction of the leader |
 | `text` | string |  |  | Text override; '<>' stands for the measured value |
+| `tolerance` | object |  |  | Signed lower/upper deviations in displayed drawing units (or unit strings); optional precision=3 and mode=deviations\|limits. Linear/radius/diameter dimensions only. |
 | `text_height` | length >0 |  |  | Override text height |
 | `length_factor` | number >0 |  |  | DIMLFAC: displayed value = measured length x factor, e.g. 1/0.325 on a sheet that shows the part at scale 0.325 |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
@@ -94,6 +96,7 @@ Linear dimension between two points. orientation: horizontal | vertical | aligne
 | `offset` | length |  | 10.0 | Distance of the dimension line from the points (sign = side) |
 | `base` | point |  |  | Explicit location of the dimension line |
 | `text` | string |  |  | Text override; '<>' stands for the measured value |
+| `tolerance` | object |  |  | Signed lower/upper deviations in displayed drawing units (or unit strings); optional precision=3 and mode=deviations\|limits. Linear/radius/diameter dimensions only. |
 | `text_height` | length >0 |  |  | Override text height |
 | `length_factor` | number >0 |  |  | DIMLFAC: displayed value = measured length x factor, e.g. 1/0.325 on a sheet that shows the part at scale 0.325 |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
@@ -134,6 +137,7 @@ Ordinate (datum) dimension: the X or Y distance of 'feature' from 'origin', writ
 | `axis` | enum ['x', 'y'] | 是 |  | 'x' measures the X distance (vertical leader), 'y' the Y distance |
 | `origin` | point |  | (0.0, 0.0) | Datum point (UCS origin of the ordinates) |
 | `text` | string |  |  | Text override; '<>' stands for the measured value |
+| `tolerance` | object |  |  | Signed lower/upper deviations in displayed drawing units (or unit strings); optional precision=3 and mode=deviations\|limits. Linear/radius/diameter dimensions only. |
 | `text_height` | length >0 |  |  | Override text height |
 | `length_factor` | number >0 |  |  | DIMLFAC: displayed value = measured length x factor, e.g. 1/0.325 on a sheet that shows the part at scale 0.325 |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
@@ -155,6 +159,7 @@ Radius dimension of a circle/arc.
 | `radius` | length >0 |  |  |  |
 | `angle` | angle |  | 45.0 | Direction of the leader |
 | `text` | string |  |  | Text override; '<>' stands for the measured value |
+| `tolerance` | object |  |  | Signed lower/upper deviations in displayed drawing units (or unit strings); optional precision=3 and mode=deviations\|limits. Linear/radius/diameter dimensions only. |
 | `text_height` | length >0 |  |  | Override text height |
 | `length_factor` | number >0 |  |  | DIMLFAC: displayed value = measured length x factor, e.g. 1/0.325 on a sheet that shows the part at scale 0.325 |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
@@ -246,6 +251,17 @@ Set the plot scale 1:scale for annotations: dimension arrows/text/gaps (DIMSCALE
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ## block
+
+### `block_from_entities`
+
+WBLOCK: define a reusable block by copying selected drawing entities; sources remain.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `name` | string | 是 |  |  |
+| `target` | selector | 是 |  |  |
+| `base_point` | point |  | (0.0, 0.0) |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `define_block`
 
@@ -378,6 +394,7 @@ Fill an area (AutoCAD HATCH). Boundary: 'boundary' = closed LWPOLYLINE / CIRCLE 
 | `pattern` | string |  | SOLID | SOLID or a pattern name (ANSI31, ...) |
 | `pattern_scale` | number >0 |  | 1.0 | Pattern scale |
 | `pattern_angle` | angle |  | 0.0 | Pattern rotation |
+| `style` | enum ['normal', 'outer', 'ignore'] |  | normal |  |
 | `behind` | bool |  | True | Send the hatch to the back of the draw order |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
 | `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
@@ -525,6 +542,22 @@ Construction line infinite in both directions (AutoCAD XLINE). Not counted in ex
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
+### `trace_boundary`
+
+BPOLY / BOUNDARY: trace a simple closed LINE/ARC/open-polyline chain around an interior point. Sources remain. Intersecting or branching networks require trimming first.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `point` | point | 是 |  |  |
+| `tolerance` | length >0 |  | 1e-06 |  |
+| `layer` | string |  |  | Layer name (created on the fly if missing) |
+| `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
+| `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
+| `lineweight` | int |  |  | Lineweight in 1/100 mm (e.g. 50 = 0.50 mm), -1 = BYLAYER |
+| `tag` | string |  |  | Semantic tag for later reference as 'tag:<name>' |
+| `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
 ## edit
 
 ### `array_polar`
@@ -613,6 +646,16 @@ AutoCAD DRAWORDER: show the targets on top of ('front') or under ('back') every 
 |---|---|---|---|---|
 | `target` | selector | 是 |  | Entities to operate on |
 | `order` | enum ['front', 'back'] | 是 |  | Where to put the targets |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `edit_hatch`
+
+Change HATCH island style, preserving its boundaries.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `target` | selector | 是 |  |  |
+| `style` | enum ['normal', 'outer', 'ignore'] | 是 |  |  |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `explode`
@@ -723,6 +766,16 @@ AutoCAD PURGE: delete layers, blocks, text styles and linetypes that nothing use
 | `kinds` | list |  |  | Subset of ['layers', 'blocks', 'text_styles', 'linetypes'] (default: all) |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
+### `remove_duplicates`
+
+OVERKILL: remove exact duplicate geometry on each layout, keeping the first.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `tolerance` | length >0 |  | 1e-06 |  |
+| `confirm_large` | bool |  | False |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
 ### `rotate`
 
 Rotate entities about a center point (degrees, CCW).
@@ -778,6 +831,35 @@ AutoCAD TRIM: remove the part of the target (LINE, ARC or CIRCLE) that contains 
 | `target` | selector | 是 |  | Single LINE / ARC / CIRCLE to trim |
 | `edges` | selector | 是 |  | Cutting edges |
 | `pick` | point | 是 |  | A point on the portion to remove |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+## engineering
+
+### `draw_arch_plan`
+
+Draw an orthogonal wall plan with hosted doors/windows, stairs, measured room labels, dimensions and schedules. Room detection reads wall solids and opening thresholds.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `spec` | object | 是 |  |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `draw_mechanical_assembly`
+
+Draw revolved parts with front/end/longitudinal-section views, chain dimensions, standard fasteners, an A3 sheet, a drawing-derived BOM and linked balloons.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `spec` | object | 是 |  |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `draw_pid`
+
+Create a port-connected P&ID from equipment, valves, instruments, connectors and lines. Entity-local semantic records survive DXF; read_engineering reconstructs and checks the graph.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `spec` | object | 是 |  |  |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ## layer
@@ -842,6 +924,18 @@ Add a viewport to a paper-space layout (pass layout=<name>) that shows model spa
 | `if_tag_exists` | enum ['error', 'skip', 'replace'] |  | error | Behaviour when an entity with this tag already exists (use 'skip' for idempotent replays) |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
+### `change_space`
+
+CHSPACE: transfer entities to another layout with an explicit scale and translation (paper millimetres per model unit). Original handles are retained.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `target` | selector | 是 |  |  |
+| `destination` | string | 是 |  |  |
+| `scale` | number >0 |  | 1 |  |
+| `delta` | point |  | [0, 0] |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
 ### `create_layout`
 
 Create a paper-space layout (a printed sheet) with its paper size. Draw the frame and title block into it with the usual ops and layout=<name>, then show the model with add_viewport.
@@ -854,6 +948,20 @@ Create a paper-space layout (a printed sheet) with its paper size. Draw the fram
 | `width` | number >0 |  |  | Paper width in mm (paper='custom') |
 | `height` | number >0 |  |  | Paper height in mm (paper='custom') |
 | `if_exists` | enum ['error', 'skip'] |  | error |  |
+| `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
+
+### `set_page_setup`
+
+Change an existing layout's physical paper size and plot style. ISO sizes and ANSI B (432 by 279 mm) are supported. monochrome.ctb is rendered by the native PDF exporter.
+
+| 参数 | 类型 | 必需 | 默认 | 说明 |
+|---|---|---|---|---|
+| `name` | string | 是 |  |  |
+| `paper` | enum ['A0', 'A1', 'A2', 'A3', 'A4', 'ANSI_B', 'custom'] |  | A3 |  |
+| `orientation` | enum ['landscape', 'portrait'] |  | landscape |  |
+| `width` | number >0 |  |  |  |
+| `height` | number >0 |  |  |  |
+| `ctb` | enum ['', 'monochrome.ctb'] |  |  |  |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ## library
@@ -1022,7 +1130,7 @@ Create or change named parameters (a FreeCAD spreadsheet 'Params'). Reference th
 
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
-| `params` | object | 是 |  | {name: number | '8mm' | '=expression'} |
+| `params` | object | 是 |  | {name: number \| '8mm' \| '=expression'} |
 
 ## part_feature
 
@@ -1032,7 +1140,7 @@ Bevel edges of the solid
 
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
-| `edges` | any | 是 |  | edge selector, re-resolved after every edit: 'all', 'Edge3', or an object with any of type (line|circle|...), direction (x|y|z|-z|[x,y,z], lines parallel to it), axis (circles around it), radius|diameter, length, x|y|z (all points on that coordinate), box [[x0,y0,z0],[x1,y1,z1]], face (a face selector: edges of those faces), near [x,y,z] + count (nearest ones); a list unites selectors |
+| `edges` | any | 是 |  | edge selector, re-resolved after every edit: 'all', 'Edge3', or an object with any of type (line\|circle\|...), direction (x\|y\|z\|-z\|[x,y,z], lines parallel to it), axis (circles around it), radius\|diameter, length, x\|y\|z (all points on that coordinate), box [[x0,y0,z0],[x1,y1,z1]], face (a face selector: edges of those faces), near [x,y,z] + count (nearest ones); a list unites selectors |
 | `size` | dim | 是 |  | Chamfer distance |
 | `size2` | dim |  |  | Second distance (unequal chamfer) |
 | `angle` | dim |  |  | Angle in degrees (distance-and-angle chamfer) |
@@ -1045,7 +1153,7 @@ Round edges of the solid
 
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
-| `edges` | any | 是 |  | edge selector, re-resolved after every edit: 'all', 'Edge3', or an object with any of type (line|circle|...), direction (x|y|z|-z|[x,y,z], lines parallel to it), axis (circles around it), radius|diameter, length, x|y|z (all points on that coordinate), box [[x0,y0,z0],[x1,y1,z1]], face (a face selector: edges of those faces), near [x,y,z] + count (nearest ones); a list unites selectors |
+| `edges` | any | 是 |  | edge selector, re-resolved after every edit: 'all', 'Edge3', or an object with any of type (line\|circle\|...), direction (x\|y\|z\|-z\|[x,y,z], lines parallel to it), axis (circles around it), radius\|diameter, length, x\|y\|z (all points on that coordinate), box [[x0,y0,z0],[x1,y1,z1]], face (a face selector: edges of those faces), near [x,y,z] + count (nearest ones); a list unites selectors |
 | `radius` | dim | 是 |  | Fillet radius |
 | `body` | string |  |  | Body to add to (default: the part's only Body, created on first use) |
 | `tag` | string |  |  | Name for later reference as 'tag:<name>' |
@@ -1057,7 +1165,7 @@ Revolve a sketch's profile around an axis and cut it out of the solid
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
 | `sketch` | string | 是 |  | Sketch feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
-| `axis` | string |  | V | 'V' / 'H' (the sketch's vertical / horizontal axis), 'X'|'Y'|'Z' (origin axes) or 'sketch_edge:<i>' (a line of the sketch) |
+| `axis` | string |  | V | 'V' / 'H' (the sketch's vertical / horizontal axis), 'X'\|'Y'\|'Z' (origin axes) or 'sketch_edge:<i>' (a line of the sketch) |
 | `angle` | dim |  | 360 | Degrees |
 | `symmetric` | bool |  | False | Revolve half to each side |
 | `reversed` | bool |  | False | Revolve the other way |
@@ -1071,7 +1179,7 @@ Sweep a sketch's profile along a helix (springs, threads)
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
 | `sketch` | string | 是 |  | Profile sketch feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
-| `axis` | string |  | V | 'V'|'H' (sketch axes) or 'X'|'Y'|'Z' |
+| `axis` | string |  | V | 'V'\|'H' (sketch axes) or 'X'\|'Y'\|'Z' |
 | `pitch` | dim | 是 |  | Rise per turn |
 | `height` | dim | 是 |  | Total height |
 | `left_handed` | bool |  | False | Left-hand helix |
@@ -1106,7 +1214,7 @@ Repeat features along an axis
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
 | `features` | list | 是 |  | Features to repeat, each a feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
-| `direction` | string |  | X | 'X'|'Y'|'Z' |
+| `direction` | string |  | X | 'X'\|'Y'\|'Z' |
 | `length` | dim |  |  | Distance from the first to the last copy (or spacing) |
 | `spacing` | dim |  |  | Distance between neighbouring copies (or length) |
 | `occurrences` | dim | 是 |  | Number of copies including the original (>= 2) |
@@ -1172,7 +1280,7 @@ Repeat features around an axis
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
 | `features` | list | 是 |  | Features to repeat, each a feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
-| `axis` | string |  | Z | 'X'|'Y'|'Z' (through the origin) |
+| `axis` | string |  | Z | 'X'\|'Y'\|'Z' (through the origin) |
 | `angle` | dim |  | 360 | Total angle in degrees (360 = evenly around) |
 | `occurrences` | dim | 是 |  | Number of copies including the original (>= 2) |
 | `reversed` | bool |  | False | Repeat clockwise |
@@ -1200,7 +1308,7 @@ Revolve a sketch's profile into solid around an axis
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
 | `sketch` | string | 是 |  | Sketch feature reference: 'tag:<name>', '$<op index in this batch>' or an object name such as 'Pad001' |
-| `axis` | string |  | V | 'V' / 'H' (the sketch's vertical / horizontal axis), 'X'|'Y'|'Z' (origin axes) or 'sketch_edge:<i>' (a line of the sketch) |
+| `axis` | string |  | V | 'V' / 'H' (the sketch's vertical / horizontal axis), 'X'\|'Y'\|'Z' (origin axes) or 'sketch_edge:<i>' (a line of the sketch) |
 | `angle` | dim |  | 360 | Degrees |
 | `symmetric` | bool |  | False | Revolve half to each side |
 | `reversed` | bool |  | False | Revolve the other way |
@@ -1226,7 +1334,7 @@ Shell the solid: remove the selected faces and keep walls of a thickness
 
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
-| `faces` | any | 是 |  | face selector, re-resolved after every edit: 'top'|'bottom'|'front'|'back'|'left'|'right' (outermost planar face), 'Face2', or an object with any of type (plane|cylinder|...), normal (+z|-x|[x,y,z]), extreme (max|min along the normal), axis, radius|diameter, inner (holes), x|y|z, box, near + count (the faces to open) |
+| `faces` | any | 是 |  | face selector, re-resolved after every edit: 'top'\|'bottom'\|'front'\|'back'\|'left'\|'right' (outermost planar face), 'Face2', or an object with any of type (plane\|cylinder\|...), normal (+z\|-x\|[x,y,z]), extreme (max\|min along the normal), axis, radius\|diameter, inner (holes), x\|y\|z, box, near + count (the faces to open) |
 | `thickness` | dim | 是 |  | Wall thickness |
 | `outward` | bool |  | False | Grow walls outward instead of inward |
 | `join` | enum ['arc', 'intersection'] |  | arc | Corner style |
@@ -1241,10 +1349,10 @@ Add a sketch: placed on an origin plane (plane + offset), on a planar face of th
 
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
-| `shapes` | list | 是 |  | closed profiles (or construction geometry), each {type, ...}: rectangle {corner [x,y] (lower left) | center, width, height, name}; circle {center, diameter | radius, name}; polygon {points: [[x,y] | [x,y,bulge], ...]}; polyline {points, closed}; regular_polygon {center, sides, circumradius | across_flats, rotation}; slot {start, end, width}; line {start, end}; arc {center, radius, start_angle, end_angle}; point {at}. Any shape: construction=true. Rectangle sizes and circle diameters accept expressions ('=Params.w'). End points that touch are joined; every shape is fully constrained. Coordinates are in the sketch plane |
+| `shapes` | list | 是 |  | closed profiles (or construction geometry), each {type, ...}: rectangle {corner [x,y] (lower left) \| center, width, height, name}; circle {center, diameter \| radius, name}; polygon {points: [[x,y] \| [x,y,bulge], ...]}; polyline {points, closed}; regular_polygon {center, sides, circumradius \| across_flats, rotation}; slot {start, end, width}; line {start, end}; arc {center, radius, start_angle, end_angle}; point {at}. Any shape: construction=true. Rectangle sizes and circle diameters accept expressions ('=Params.w'). End points that touch are joined; every shape is fully constrained. Coordinates are in the sketch plane |
 | `plane` | enum ['XY', 'XZ', 'YZ'] |  |  | Origin plane (default XY). XY: x=X, y=Y, normal +Z. XZ: x=X, y=Z, normal -Y. YZ: x=Y, y=Z, normal +X |
 | `offset` | dim |  |  | Distance along the plane's normal |
-| `on_face` | any |  |  | face selector, re-resolved after every edit: 'top'|'bottom'|'front'|'back'|'left'|'right' (outermost planar face), 'Face2', or an object with any of type (plane|cylinder|...), normal (+z|-x|[x,y,z]), extreme (max|min along the normal), axis, radius|diameter, inner (holes), x|y|z, box, near + count; must match one planar face |
+| `on_face` | any |  |  | face selector, re-resolved after every edit: 'top'\|'bottom'\|'front'\|'back'\|'left'\|'right' (outermost planar face), 'Face2', or an object with any of type (plane\|cylinder\|...), normal (+z\|-x\|[x,y,z]), extreme (max\|min along the normal), axis, radius\|diameter, inner (holes), x\|y\|z, box, near + count; must match one planar face |
 | `origin` | list |  |  | [x, y, z] of the sketch origin (with normal) |
 | `normal` | list |  |  | [x, y, z] sketch normal (with origin) |
 | `x_dir` | list |  |  | [x, y, z] sketch x axis (default: global X projected) |

@@ -203,26 +203,9 @@ class Runtime:
 
     @contextmanager
     def _lock(self, store: DrawingStore):
-        store.dir.mkdir(parents=True, exist_ok=True)
-        lock = store.dir / "lock"
-        try:
-            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        except FileExistsError:
-            age = time.time() - lock.stat().st_mtime
-            if age < 120:
-                raise AgentCADError("DRAWING_LOCKED", "Another operation is modifying this drawing", category="policy",
-                                    retryable=True, hint="Retry shortly")
-            os.remove(lock)  # stale lock from a crashed process
-            fd = os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY)
-        try:
-            os.write(fd, str(os.getpid()).encode())
-            os.close(fd)
+        from .locking import drawing_lock
+        with drawing_lock(store.dir):
             yield
-        finally:
-            try:
-                os.remove(lock)
-            except OSError:
-                pass
 
     def _save_failure(self, store: DrawingStore, doc, label: str) -> str | None:
         try:
@@ -689,23 +672,33 @@ class Runtime:
         if part.is_part(path):
             return part.validate(self, path, requirements, detail)
         p, store = self._drawing(path)
+        report = self._drawing_validation(p, requirements, use_stored_spec, bounds, tolerance,
+                                          contour_layers, layout)
+        return {"drawing": self._rel(p), "validation": report if detail else compact_report(report)}
+
+    def _drawing_validation(self, p, requirements=None, use_stored_spec=True, bounds=None,
+                            tolerance=1e-6, contour_layers=None, layout=None):
+        """One stored-intent path for explicit validation and final delivery."""
         reqs = requirements
-        source = "explicit" if requirements else None
+        source = "explicit" if requirements is not None else None
         if reqs is None and use_stored_spec and is_model(layout):
             try:
                 doc = read_dxf(p, self.policy)
-                stored = get_meta(doc, "part_spec")
-                if stored:
+            except AgentCADError:
+                doc = None  # unreadable: validate_file reports it
+            if doc is not None:
+                absent = object()
+                stored = get_meta(doc, "part_spec", absent, strict=True)
+                if stored is not absent:
+                    # Invalid stored intent must fail closed, not silently become zero requirements.
                     reqs = specmod.compile_spec(stored)["requirements"]
                     source = "stored_part_spec"
                     contour_layers = contour_layers or ["OUTLINE"]
-            except AgentCADError:
-                pass  # unreadable: validate_file reports it
         report = validate_file(p, requirements=reqs, bounds=bounds, tolerance=tolerance, contour_layers=contour_layers,
                                layout=layout)
         report["file"] = self._rel(p)
         report["requirements_source"] = source
-        return {"drawing": self._rel(p), "validation": report if detail else compact_report(report)}
+        return report
 
     @tool
     def apply_constraints(self, path: str, constraints: list[dict], mode: str = "check",
@@ -1276,6 +1269,7 @@ class Runtime:
                          drawing: str | None = None) -> dict[str, Any]:
         """Industry libraries (stdlib.py). No arguments: a compact index of P&ID symbols, GD&T characteristics,
         standard parts and holes with their sizes. ``item`` (with optional ``size``): that item's dimensions.
+        ``item="iso_fit", size="25 H7/g6"``: sourced hole/shaft limits in mm (H7, h6, g6; 10 < size <= 500).
         ``drawing``: the parts list of a drawing (standard parts by part/standard/size, P&ID symbols with tags)."""
         from . import stdlib
         from .ops import REGISTRY

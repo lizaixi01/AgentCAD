@@ -330,7 +330,7 @@ GEOM_FIELDS = {
 }
 
 
-DIM_FIELDS = {"text": "text", "text_height": "dimtxt", "length_factor": "dimlfac"}
+DIM_FIELDS = {"text": "text", "text_height": "dimtxt", "length_factor": "dimlfac", "tolerance": None}
 
 
 def _modify_dimension(ctx: Ctx, e, fields: dict[str, Any]) -> dict[str, Any]:
@@ -343,6 +343,8 @@ def _modify_dimension(ctx: Ctx, e, fields: dict[str, Any]) -> dict[str, Any]:
                           hint=f"Editable: {sorted(DIM_FIELDS)}", entities=[e.dxf.handle])
     ov = e.override()
     for k, v in fields.items():
+        if k == "tolerance":
+            continue  # apply after text so order of JSON keys cannot change validation
         if k == "text":
             e.dxf.text = "" if v is None else str(v)
             continue
@@ -350,6 +352,11 @@ def _modify_dimension(ctx: Ctx, e, fields: dict[str, Any]) -> dict[str, Any]:
         if val <= 0:
             raise input_error("OUT_OF_RANGE", f"{k} must be > 0", entities=[e.dxf.handle])
         ov[DIM_FIELDS[k]] = val
+    if "tolerance" in fields:
+        from ..tolerances import apply_tolerance
+        apply_tolerance(ov, fields["tolerance"], ctx.unit)
+    elif (ov.get("dimtol", 0) or ov.get("dimlim", 0)) and e.dxf.get("text", "") and "<>" not in e.dxf.text:
+        raise input_error("TOLERANCE_TEXT_OVERRIDE", "Toleranced dimensions must display the measured value (<>)")
     ov.commit()
     rerender_dimension(ctx, e)
     ctx.touched(e)

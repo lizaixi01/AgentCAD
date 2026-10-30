@@ -3,10 +3,11 @@
 from __future__ import annotations
 
 import json
+import math
 
 from .errors import AgentCADError, input_error
+from .delivery import verify_artifact
 from .store import now, sha256_file
-from .validate import validate_file
 
 
 def score(report):
@@ -16,10 +17,46 @@ def score(report):
     )
 
 
+def assess(rt, p, doc):
+    """Reopen the source, restore its intent, and check every saved native domain."""
+    report = rt._drawing_validation(p)
+    if not report["readable"]:
+        return report
+    # Generic validation is layout-scoped; delivery checks every nonempty paper layout too.
+    layouts = [s.name for s in doc.layouts if s.name != "Model" and len(s)]
+    issues = [i for i in report["issues"] if i["code"] != "LAYOUT_NOT_VALIDATED"]
+    seen = {json.dumps(i, sort_keys=True) for i in issues}
+    for layout in layouts:
+        other = rt._drawing_validation(p, use_stored_spec=False, layout=layout)
+        for issue in other["issues"]:
+            key = json.dumps(issue, sort_keys=True)
+            if issue["code"] != "LAYOUT_NOT_VALIDATED" and key not in seen:
+                issues.append({**issue, "layout": layout})
+                seen.add(key)
+    from .engineering import architecture, mechanical, pid
+    domains = {}
+    for name, app, reader in (("architecture", "ARCH", architecture.read),
+                              ("mechanical", "MECH", mechanical.read), ("pid", "PID", pid.read)):
+        if "AGENTCAD_" + app in doc.appids:
+            critique = reader(doc)["critique"]
+            domains[name] = {"critique": critique, "passed": not critique}
+            issues.extend({"code": i["code"], "severity": "error", "category": "engineering",
+                           "message": f"{name}: {i['code']}", "entities": [i["handle"]] if i.get("handle") else [],
+                           "details": i, "domain": name} for i in critique)
+    report["issues"] = issues
+    report["engineering"] = domains
+    report["coverage"] = {"checked_layouts": ["Model", *layouts], "unchecked_layouts": []}
+    report["summary"].update(errors=sum(i["severity"] == "error" for i in issues),
+                             warnings=sum(i["severity"] == "warning" for i in issues))
+    report["passed"] = not report["summary"]["errors"] and not report["summary"].get("requirements_failed", 0)
+    return report
+
+
 def deliver(rt, path, output_dir, formats, min_score, strict):
     rt.policy.check_write()
     if (
-        not 0 <= min_score <= 100
+        isinstance(min_score, bool) or not isinstance(min_score, (int, float))
+        or not math.isfinite(min_score) or not 0 <= min_score <= 100
         or not formats
         or set(formats) - {"dxf", "pdf", "svg", "json", "csv", "xlsx"}
     ):
@@ -30,7 +67,8 @@ def deliver(rt, path, output_dir, formats, min_score, strict):
         raise input_error("FILE_EXISTS", "Delivery directory must be empty; earlier manifests are preserved")
     with rt._lock(store):
         source = sha256_file(p)
-        report = validate_file(p)
+        doc = store.load()
+        report = assess(rt, p, doc)
         quality = score(report)
         if quality < min_score or strict and not report["passed"]:
             raise AgentCADError(
@@ -48,22 +86,21 @@ def deliver(rt, path, output_dir, formats, min_score, strict):
                 raise AgentCADError(
                     "DELIVERY_EXPORT_FAILED", f"Export {fmt} failed", category="file", details=result
                 )
-            reread = validate_file(target)["readable"] if fmt == "dxf" else target.stat().st_size > 0
-            if not reread:
-                raise input_error("DELIVERY_UNREADABLE", f"Cannot reread {target.name}")
+            verification = verify_artifact(doc, target, fmt, result)
             files.append(
                 {
                     "path": rt._rel(target),
                     "sha256": sha256_file(target),
                     "bytes": target.stat().st_size,
                     "format": fmt,
-                    "reread_ok": reread,
+                    "reread_ok": True,
+                    "verification": verification,
                 }
             )
         if sha256_file(p) != source:
             raise input_error("STALE_REVISION", "Source changed during export; no delivery manifest issued")
         manifest = {
-            "version": 1,
+            "version": 2,
             "created": now(),
             "source": rt._rel(p),
             "source_sha256": source,

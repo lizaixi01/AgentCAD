@@ -42,7 +42,11 @@ function Initialize-Checkout([string]$path) {
     try {
         if (Get-Command uv -ErrorAction SilentlyContinue) {
             Invoke-Checked "uv venv" { uv venv -q .venv }
-            Invoke-Checked "uv pip install" { uv pip install -q --python .venv\Scripts\python.exe -e ".[dev]" }
+            if (Test-Path uv.lock) {
+                Invoke-Checked "uv sync" { uv sync -q --locked --extra dev }
+            } else {
+                Invoke-Checked "uv pip install" { uv pip install -q --python .venv\Scripts\python.exe -e ".[dev]" }
+            }
         } else {
             Invoke-Checked "python -m venv" { python -m venv .venv }
             Invoke-Checked "pip install" { .venv\Scripts\python.exe -m pip install -q -e ".[dev]" }
