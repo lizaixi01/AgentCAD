@@ -2116,7 +2116,9 @@ def _camera(d):
 
 
 def render_view(sh, d, size, fit, ss=2, with_mask=False):
-    """The shaded image (size * ss pixels square); with_mask, also the silhouette (pixels the solid covers)."""
+    """The shaded image (size * ss pixels square); with_mask, also the silhouette (pixels the solid covers) and the
+    visible seam lines, which the image leaves out (a reference comparison lets them match a renderer that draws
+    them)."""
     import numpy as np
     right, up, fwd = _camera(d)
     bb = tight_box(sh)
@@ -2157,9 +2159,11 @@ def render_view(sh, d, size, fit, ss=2, with_mask=False):
         zb[rows[win], cols[win]] = zz[win]
         img[rows[win], cols[win]] = base * sv
     eps = 2.5 * ss / k  # depth slack: an edge on a visible face is drawn, one behind the solid is not
+    seams = np.zeros((n, n), bool) if with_mask else None
     for e in sh.Edges:
         # a cylinder's parametric seam is not an edge anyone would draw, nor a sphere's or cone's pole
-        if e.Degenerated or _is_seam(sh, e):
+        seam = not e.Degenerated and _is_seam(sh, e)
+        if e.Degenerated or seam and seams is None:
             continue
         pe = np.array([[q.x, q.y, q.z] for q in e.discretize(Deflection=max(span, 1e-9) / 800)], float)
         if len(pe) < 2:
@@ -2177,8 +2181,11 @@ def render_view(sh, d, size, fit, ss=2, with_mask=False):
             for ox in range(ss):  # line width: one output pixel
                 for oy in range(ss):
                     xx, yy = np.clip(lx[vis] + ox - ss // 2, 0, n - 1), np.clip(ly[vis] + oy - ss // 2, 0, n - 1)
-                    img[yy, xx] = EDGE_RGB
-    return (img, np.isfinite(zb)) if with_mask else img
+                    if seam:
+                        seams[yy, xx] = True
+                    else:
+                        img[yy, xx] = EDGE_RGB
+    return (img, np.isfinite(zb), seams) if with_mask else img
 
 
 def _scanline(x, y, z, n):
@@ -2273,13 +2280,14 @@ def action_render(job):
     if fit not in ("view", "uniform"):
         raise OpError("BAD_VALUE", "fit must be 'view' or 'uniform'")
     names = [nm for nm, _ in views]
-    if job.get("raw"):  # export with a reference image: per-view renders and silhouettes, composed by AgentCAD
+    if job.get("raw"):  # export with a reference image: per-view renders, silhouettes and seams, compared by AgentCAD
         arrays = {}
         for i, (_, d) in enumerate(views):
-            img, mask = render_view(body.Shape, d, size, "view", with_mask=True)
+            img, mask, seams = render_view(body.Shape, d, size, "view", with_mask=True)
             arrays[f"img{i}"] = np.clip(_downsample(img, 2), 0, 255).astype("uint8")
             m = mask.astype(float)
             arrays[f"mask{i}"] = m.reshape(size, 2, size, 2).mean(axis=(1, 3)) >= 0.5
+            arrays[f"seam{i}"] = seams.reshape(size, 2, size, 2).any(axis=(1, 3))
         with open(job["raw"], "wb") as f:
             np.savez_compressed(f, **arrays)
         return {"views": names, "cell_size": size, "shape": shape_summary(body.Shape)}

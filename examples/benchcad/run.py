@@ -99,7 +99,8 @@ be a single solid.
 To compare your part with the target, export_drawing("part.FCStd", "compare.png", "png",
 views=[[-1,-1,-1],[1,1,1],[1,-1,1],[-1,1,-1]], reference="composite.png", overwrite=true) renders the same four
 camera positions in the same 2x2 order (a views vector is the camera position), aligned to the target's
-silhouettes, and returns a match score per view (compare.views[].iou, compare.mean_iou) with a diff image.
+silhouettes, and returns a match score (compare.score; per view, compare.views[]: outline and edges inside it)
+with a diff image.
 submission.step is scored by voxel IoU against the real part when you finish; there is no other output."""
 
 LOOK = {"claude": "Look at preview.png next to composite.png with the Read tool.",

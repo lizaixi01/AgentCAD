@@ -69,8 +69,10 @@ Basics
   rebuilds those ops on the new solid).
 - Compare with a reference image: export_drawing(path, "cmp.png", "png", views=[...], reference="ref.png"),
   views in the reference's order and grid (2 columns up to 4 views). Each view is scaled and centred onto the
-  reference's silhouette, so overall size is not compared, only shape and proportions. The image shows the
-  reference, ours and a diff (red: only reference, blue: only ours); compare.views[].iou and mean_iou score it.
+  reference's silhouette, so overall size is not compared, only shape and proportions. compare.score (per view:
+  views[].score) is the mean of outline (silhouette IoU) and edges (lines and shading steps inside the part). The
+  image is a diff per view: grey where both have material, light red / light blue where only the reference / only
+  ours has; red edges only in the reference (a feature yours lacks or misplaces), blue only in yours.
 
 Live viewer: results that change a file carry viewer_url, a page on this computer where the user watches the
 work step by step and can save or share it. Give the user that link once, the first time you change something."""
@@ -312,8 +314,8 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                            "one scale for every view")] = None,
                        reference: Annotated[str | None, Field(description="png of a 3D part: a reference image in the "
                            "workspace laid out as the same grid of views (same order; 2 columns up to 4 views). The "
-                           "png then shows per view the reference, our render aligned to its silhouette and a diff; "
-                           "the result gives each view's silhouette IoU and mean_iou")] = None,
+                           "png is then a diff of each view, aligned to the reference's silhouette; the result scores "
+                           "each view (outline, edges inside it) and their mean, compare.score")] = None,
                        inline_image: Annotated[bool, Field(description="png: also return the image in this result, "
                            "so you see it without opening the file (not above 2 MB)")] = True) -> Any:
         """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, PDF (plotted without

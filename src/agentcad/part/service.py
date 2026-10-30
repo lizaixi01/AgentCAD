@@ -372,8 +372,8 @@ def export(rt: "Runtime", path: str, output: str, format: str, overwrite: bool, 
     """png: a shaded preview (parallel projection, part centred and filling the frame) of one view, or a labelled
     grid of several. views: names (iso, front, back, right, left, top, bottom, iso_back, iso_bottom) or [x, y, z]
     directions from the part towards the camera. fit 'view' fills each view; 'uniform' uses one scale for all.
-    reference: an image in the workspace laid out as the same grid of views; the png then shows, per view, the
-    reference, our render aligned to it and a diff, and the result holds each view's silhouette IoU (compare.py)."""
+    reference: an image in the workspace laid out as the same grid of views; the png is then a diff of each view,
+    laid out the same way, and the result scores each view's outline and the edges inside it (compare.py)."""
     rt.policy.check_write()
     p, store = store_for(rt, path)
     store.load()
@@ -425,26 +425,25 @@ def _export_compare(rt: "Runtime", p: Path, store: DrawingStore, out: Path, view
         res = _run(rt, {"action": "render", "views": views, "size": size}, inputs={"input": p},
                    outputs={"raw": tmp.with_suffix(".npz")})
         with np.load(tmp.with_suffix(".npz")) as z:
-            renders = [(z[f"img{i}"], z[f"mask{i}"]) for i in range(len(views))]
+            renders = [(z[f"img{i}"], z[f"mask{i}"], z[f"seam{i}"]) for i in range(len(views))]
         names = res["views"]
-        results, rows, mode = compare.compare_views(cells, names, renders)
-        labels = [[f"reference: {n}", "ours (aligned)",
-                   f"diff  IoU {r['iou']:.3f}" if r["iou"] is not None else "diff"] for n, r in zip(names, results)]
-        grid, cell = compare.save_sheet(rows, labels, tmp.with_suffix(".png"), cell)
+        results, diffs, mode = compare.compare_views(cells, names, renders)
+        labels = [f"{n}  {r['score']:.2f}" if r["score"] is not None else n for n, r in zip(names, results)]
+        grid, cell = compare.save_sheet(diffs, labels, tmp.with_suffix(".png"), cell)
         shutil.move(str(tmp.with_suffix(".png")), out)
     finally:
         tmp.with_suffix(".npz").unlink(missing_ok=True)
         tmp.with_suffix(".png").unlink(missing_ok=True)
-    scores = [r["iou"] for r in results if r["iou"] is not None]
-    summary = {"reference": rt._rel(ref), "views": results,
-               "mean_iou": round(sum(scores) / len(scores), 4) if scores else None,
-               "alignment": compare.ALIGNMENT, "legend": compare.LEGEND}
+    scores = [r["score"] for r in results if r["score"] is not None]
+    summary = {"reference": rt._rel(ref), "score": round(sum(scores) / len(scores), 3) if scores else None,
+               "views": results}
     if mode != "filled":
         summary["reference_mode"] = mode
     store.journal({"tool": "export_drawing", "kind": "part", "ok": True, "output": rt._rel(out), "format": "png",
-                   "reference": rt._rel(ref), "mean_iou": summary["mean_iou"]})
+                   "reference": rt._rel(ref), "score": summary["score"]})
+    # no shape summary and no legend: the diff is what this call is for, and every later turn pays for its result
     return {"drawing": rt._rel(p), "output": rt._rel(out), "format": "png", "bytes": out.stat().st_size,
-            "shape": res["shape"], "views": names, "grid": grid, "cell_size": cell, "compare": summary}
+            "grid": grid, "cell_size": cell, "compare": summary}
 
 
 def diff(rt: "Runtime", path: str, against: str) -> dict[str, Any]:
