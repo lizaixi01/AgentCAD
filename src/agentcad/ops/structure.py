@@ -87,6 +87,28 @@ DRAW_OPS_IN_BLOCK = {"add_line", "add_polyline", "add_rectangle", "add_circle", 
                      "add_spline", "add_point", "add_text", "add_mtext", "add_polygon", "add_donut", "add_hatch"}
 
 
+@op("block_from_entities", "block", "WBLOCK: define a reusable block by copying selected drawing entities; sources remain.",
+    {"name": P("string", True), "target": P("selector", True), "base_point": P("point", default=(0.0, 0.0))})
+def block_from_entities(ctx: Ctx, name, target, base_point):
+    from ..model import select
+    if name.startswith("*"):
+        raise input_error("INVALID_NAME", "Anonymous block names are reserved")
+    if name in ctx.doc.blocks:
+        raise input_error("BLOCK_EXISTS", f"Block {name!r} already exists")
+    entities = select(ctx.doc, target, ctx.refs)
+    supported = {"LINE", "LWPOLYLINE", "CIRCLE", "ARC", "TEXT", "MTEXT", "ELLIPSE", "SPLINE", "POINT", "INSERT", "HATCH"}
+    if not entities or any(e.dxftype() not in supported for e in entities):
+        raise input_error("UNSUPPORTED_BLOCK_CONTENT", "Select supported 2D geometry, text, hatches or block references")
+    block = ctx.doc.blocks.new(name, base_point=base_point)
+    copies = []
+    for entity in entities:
+        copied = entity.copy()
+        block.add_entity(copied)
+        ctx.created(copied)
+        copies.append(copied.dxf.handle)
+    return {"block": name, "created": copies, "sources": [e.dxf.handle for e in entities], "entity_count": len(copies)}
+
+
 @op("define_block", "block", "Define (or redefine) a block from a list of draw operations and attribute definitions.",
     {"name": P("string", True), "base_point": P("point", default=(0.0, 0.0)),
      "entities": P("list", True, description=f"Draw ops ({sorted(DRAW_OPS_IN_BLOCK)}) in block coordinates"),

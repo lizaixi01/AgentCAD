@@ -14,7 +14,7 @@ Your coding agent creates, edits, checks and exports real engineering drawings a
 
 AgentCAD is an open-source program you install on your machine. It is not a GUI app and not a prompt or skill. It is the CAD engine your agent calls:
 
-- **An MCP server** (the main way to use it). Claude Code, Codex or any MCP client gets 24 CAD tools. You talk to your agent; the agent uses AgentCAD.
+- **An MCP server** (the main way to use it). Claude Code, Codex or any MCP client gets 25 CAD tools. You talk to your agent; the agent uses AgentCAD.
 - **A CLI, a Python library and an HTTP API** with the same tools, for scripts and pipelines.
 
 Behind those tools:
@@ -47,6 +47,7 @@ AgentCAD gives the agent a CAD runtime instead of a blank Python file:
 - **Every change is reversible.** Checkpoints before every edit, a diff of what changed, and a durable journal, so a new session can see and undo what an earlier one did.
 - **Checked by something other than the agent.** An independent validator re-reads the file from disk and reports problems as structured errors the agent can act on: geometry that doesn't close, dimensions that disagree with the part, text that will print too small, sheets it didn't check. For 3D parts: one valid solid, its size and volume, the holes it has, and features that failed to rebuild.
 - **The agent can see its work.** 3D parts export shaded PNG previews from any view direction, returned inline to the agent so it can compare them with what it was asked to build. Given a reference image, each view comes back aligned to it, with a match score for its outline and the edges inside it, and a diff. A live browser viewer shows you the same drawings and parts as they change.
+- **It can inspect the source drawing closely.** `inspect_image` magnifies a region of a PNG/JPEG/WebP drawing, including small dimension callouts and section hatching. It returns an inline image and source pixel coordinates without changing the input. Section depths and the side of each feature still need to be interpreted from the drawing.
 - **Real drawings, not just new ones.** Paper-space layouts, title blocks with attributes, DWG import/export and AutoCAD AUDIT through an optional headless AutoCAD backend.
 - **Safe by default.** Workspace sandbox, read-only mode, operation allow-lists. Scripts (ezdxf for drawings; CadQuery or FreeCAD Part code for 3D parts) run as transactions and are off unless you turn them on.
 
@@ -72,6 +73,7 @@ Samples are small (2–3 runs per task, one run per BenchCAD task). The full rep
 - [vs. AutoCAD MCP Pro](docs/comparison-autocad-mcp-pro.md)
 - [native DWG in AutoCAD 2027](docs/comparison-native-dwg.md)
 - [BenchCAD](examples/benchcad/README.md)
+- [Parametric CAD Bench V3 pilot: six tasks with native PartDesign operations](examples/parametric_cad_bench/README.md)
 
 ## Get started in two minutes
 
@@ -116,7 +118,7 @@ More prompts to try: [playground/README.md](playground/README.md).
 
 ## Prefer the command line?
 
-Every tool is also a CLI command that prints one JSON envelope:
+Core drawing tools are also available as CLI commands that print one JSON envelope:
 
 ```bash
 agentcad --root ./work create part.dxf --units mm
@@ -135,11 +137,14 @@ The same `Runtime` is available from Python and over HTTP (`agentcad --root work
 
 ## What's inside
 
+The fixed [U-C4N v8 execution matrix](docs/comparison-upstream-benchmark-v8.md) now passes 31/31 through AgentCAD's native MCP workflows, tying the locally rerun reference. This is independent local evidence, not an official leaderboard listing.
+
 | | |
 |---|---|
-| Operations | 62: draw (lines to splines, hatches, polygons), edit (trim, fillet, offset, arrays, break/join, purge), annotate (linear, radial, angular, ordinate dimensions, leaders, tables, title blocks), layers, blocks with attributes, sheets and viewports, and industry libraries |
+| Operations | 71: draw (lines to splines, hatches, polygons), edit (trim, fillet, offset, arrays, break/join, purge), annotate (linear, radial, angular, ordinate dimensions, leaders, tables, title blocks), layers, blocks with attributes, sheets and viewports, and industry libraries |
 | Industry libraries | P&ID (ISO 10628 / ISA-5.1): 24 symbols, process and signal lines; a valve placed on a pipe cuts the pipe itself. GD&T (ISO 1101): feature control frames with all 14 characteristics, modifiers and datums, datum feature and surface texture symbols. ISO parts: bolts, nuts, washers, cap screws (M3–M24) and 60xx/62xx/63xx bearings, clearance, tapped and counterbored holes. One op each, sized to the annotation scale; `standard_library` looks up sizes and lists a drawing's parts |
-| Agent tools (MCP) | 24, including `apply_operations`, `apply_batch` (several drawings in one call), `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`, `standard_library`, `autocad_live`. `list_operations` returns a compact index and full schemas on request, so it fits in an agent's context |
+| Agent tools (MCP) | 34 in the default profile, including `apply_operations`, `apply_batch`, `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`, `standard_library`, `autocad_live`, `inspect_image`. Optional discovery profile advertises 3 tools; fetch complete schemas on demand |
+| Engineering workflows | Native P&ID connectivity/readback, orthogonal plans with measured room areas, revolved-part views with BOM/balloons, and preliminary foreign-plant takeoff. Guarded edits, physical dimension verification and formula-safe table exports. [Contracts and limits](docs/engineering-workflows.md) |
 | Live AutoCAD | `autocad_live` works next to the user's running AutoCAD (Windows, COM): shows the agent's drawing there, reloads it after every change (`AGENTCAD_LIVE_SYNC=1`), and pulls the user's edits back as a normal checkpointed, validated change. Raw command lines are off unless `AGENTCAD_ALLOW_LIVE_COMMANDS=1` |
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
 | 3D parts | Parametric FreeCAD parts (`.FCStd`) through the same tools: sketches, pad, pocket, revolve, holes, fillets, chamfers, shells, patterns, lofts, sweeps, helices, driven by named parameters. Edge and face selections survive edits. STEP/STL export and shaded PNG previews. Needs FreeCAD 1.1 (optional) — see [docs/part-3d.md](docs/part-3d.md) |

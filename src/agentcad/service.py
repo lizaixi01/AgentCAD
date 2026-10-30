@@ -20,7 +20,7 @@ from typing import Any, Callable
 import ezdxf
 from ezdxf import bbox
 
-from . import engine, progress, spec as specmod
+from . import engine, guards, progress, spec as specmod
 from .constraints import ENFORCE_TYPES, CHECK_TYPES, check_constraints, enforce_one
 from .errors import AgentCADError, input_error, policy_error
 from .metadata import all_meta, get_meta, set_meta
@@ -137,7 +137,8 @@ def _paper_layouts(doc) -> list[dict[str, Any]]:
             types[e.dxftype()] = types.get(e.dxftype(), 0) + 1
         content = sum(n for t, n in types.items() if t != "VIEWPORT")
         ext = bbox.extents((e for e in lay if e.dxftype() != "VIEWPORT"), fast=True)
-        out.append({"name": name, "entity_count": content, "entity_types": types,
+        from .ops.sheet import page_setup_info
+        out.append({"name": name, "entity_count": content, "entity_types": types, "page_setup": page_setup_info(lay),
                     "viewports": max(0, types.get("VIEWPORT", 0) - 1),
                     "extents": None if not ext.has_data else [[round(ext.extmin.x, 6), round(ext.extmin.y, 6)],
                                                               [round(ext.extmax.x, 6), round(ext.extmax.y, 6)]]})
@@ -361,7 +362,7 @@ class Runtime:
         if detail or category is not None:
             full = [o for o in catalog() if category is None or o["category"] == category]
             return {"operations": full, "count": len(full), "detail": True, "constraint_types": constraints}
-        index = [{"op": d.name, "category": d.category, "summary": d.description.split(". ")[0].rstrip("."),
+        index = [{"op": d.name, "category": d.category, "summary": d.description.split(". ")[0].rstrip(".")[:100],
                   "params": [k + ("*" if p.required else "") for k, p in d.params.items()],
                   **({"draw_params": True} if d.common_draw else {})}
                  for d in (REGISTRY[k] for k in sorted(REGISTRY))]
@@ -402,6 +403,17 @@ class Runtime:
         return {"drawing": self._rel(p), "units": u, "dxf_version": dxf_version, "journal_seq": seq, **info}
 
     @tool
+    def inspect_image(self, path: str, region: list[int] | None = None, max_size: int = 1536,
+                      rotate: int = 0) -> dict[str, Any]:
+        """Read a workspace image or magnify a region; return a PNG without writing files.
+
+        region is [left, top, right, bottom] in displayed source pixels (top-left origin).
+        The longest preview side is max_size. Pixel magnification adds no missing detail.
+        """
+        from .images import inspect_image
+        return inspect_image(self.policy, path, region, max_size, rotate)
+
+    @tool
     def read_drawing(self, path: str) -> dict[str, Any]:
         if part.is_part(path):
             return part.read(self, path)
@@ -436,7 +448,8 @@ class Runtime:
     @tool
     def inspect_entities(self, path: str, filter: dict | None = None, ids: list[str] | None = None,  # noqa: A002
                          limit: int = 200, offset: int = 0, detail: bool = True,
-                         window: list | None = None, layout: str | None = None) -> dict[str, Any]:
+                         window: list | None = None, layout: str | None = None,
+                         selection_mode: str = "crossing", polygon: list | None = None) -> dict[str, Any]:
         if part.is_part(path):
             return part.inspect(self, path, filter, limit, offset)
         p, store = self._drawing(path)
@@ -447,32 +460,31 @@ class Runtime:
             ents = select(doc, {"layout": layout, **filter} if layout else filter, allow_empty=True)
         else:
             ents = [e for sp in layout_spaces(doc, layout) for e in sp]
-        if window:
-            (x0, y0), (x1, y1) = window
-            lo, hi = (min(x0, x1), min(y0, y1)), (max(x0, x1), max(y0, y1))
-            keep = []
-            for e in ents:
-                ext = bbox.extents([e], fast=True)
-                if ext.has_data and ext.extmax.x >= lo[0] and ext.extmin.x <= hi[0] and ext.extmax.y >= lo[1] and ext.extmin.y <= hi[1]:
-                    keep.append(e)
-            ents = keep
+        if window is not None or polygon is not None:
+            from .measure import spatial_filter
+            ents = spatial_filter(ents, window, polygon, selection_mode)
         limit = max(1, min(int(limit), 5000))
         page = ents[offset:offset + limit]
         return {"drawing": self._rel(p), "units": _units_of(doc), "total": len(ents), "offset": offset,
-                "returned": len(page), "entities": [entity_to_dict(e, detail=detail) for e in page],
+                "returned": len(page), "entities": [{**entity_to_dict(e, detail=detail),
+                    **({"fingerprint": guards.fingerprint(e)} if detail else {})} for e in page],
+                "filtered_by": list((filter or {}).keys()),
                 "next_offset": offset + limit if offset + limit < len(ents) else None}
 
     @tool
     def apply_operations(self, path: str, operations: list[dict], dry_run: bool = False,
                          requirements: list[dict] | None = None, strict: bool = False,
                          label: str | None = None, create: dict | None = None, bounds: list | None = None,
-                         layout: str | None = None) -> dict[str, Any]:
+                         layout: str | None = None, expected_revision: int | None = None,
+                         preconditions: dict | None = None) -> dict[str, Any]:
         """Run a batch atomically. ``strict``: abort (no save) if post-validation finds errors.
         ``create``: create the drawing first if it does not exist ({units, template, dxf_version, annotation_scale}),
         so a new drawing needs one call. The returned validation is the same independent re-read of the saved file
         as validate_drawing (``requirements``, ``bounds``, ``layout``), so a separate validate_drawing call is only
         needed for its detail=true report."""
         if part.is_part(path):
+            if expected_revision is not None or preconditions is not None:
+                raise input_error("UNSUPPORTED_GUARD", "Revision guards currently support DXF drawings")
             return part.apply(self, path, operations, dry_run, requirements, strict, label, create)
         if not dry_run:
             self.policy.check_write()
@@ -481,7 +493,11 @@ class Runtime:
             created = self._create_if_missing(path, create, dry_run)
         p, store = self._drawing(path)
         with self._lock(store):
+            loaded_sha = sha256_file(p)
             doc = store.load()
+            before = guards.check(store, doc, expected_revision, preconditions)
+            if before["sha256"] != loaded_sha:
+                raise input_error("STALE_REVISION", "Drawing changed while it was being read; retry the preview")
             unit = _units_of(doc)
             try:
                 res = engine.execute(doc, operations, unit, self.policy)
@@ -491,7 +507,8 @@ class Runtime:
                 raise
             if dry_run:
                 return {"drawing": self._rel(p), "dry_run": True, "would_change": _changes(res),
-                        "results": res["results"]}
+                        "results": res["results"], "preview": {"revision": before["revision"],
+                            "preconditions": {"sha256": before["sha256"], "entities": before["entities"]}}}
             # without strict the pre-commit report is unused; the file is validated once, after the commit
             tmp_report = self._validate_doc(doc, requirements, bounds, layout) if strict else None
             if tmp_report is not None and not tmp_report["passed"]:
@@ -503,6 +520,8 @@ class Runtime:
                                     details={"validation": compact_report(tmp_report), "failure_snapshot": fail},
                                     hint="Inspect validation.issues; fix the operations and retry")
             attempt = {"tool": "apply_operations", "label": label, "operations": operations, "changes": _changes(res)}
+            # Also refuse an external edit made during geometry computation or strict validation.
+            guards.check(store, store.load(), before["revision"], {"sha256": before["sha256"]})
             info = store.commit(doc, label=label or "apply_operations", attempt=attempt)
             seq = store.journal({**attempt, "ok": True, **info})
         progress.checking()
@@ -956,9 +975,10 @@ class Runtime:
                        dxf_version: str | None = None, overwrite: bool = False, layout: str | None = None,
                        paper: str | None = None, scale: float | None = None, orientation: str = "auto",
                        monochrome: bool = False, views: list | None = None, image_size: int | None = None,
-                       fit: str | None = None, reference: str | None = None) -> dict[str, Any]:
+                       fit: str | None = None, reference: str | None = None, table: str = "entities") -> dict[str, Any]:
         """Export to dxf (optionally another DXF version, incl. R12 via ezdxf.addons.r12export), svg, json,
-        pdf, or dwg (optional AutoCAD backend; ``dxf_version`` then selects the DWG release, default 2018).
+        pdf, csv/xlsx, or dwg (optional AutoCAD backend; ``dxf_version`` then selects the DWG release, default 2018).
+        CSV/XLSX tables: entities (text/attributes), pid_lines, or bom, reconstructed from the saved drawing.
 
         pdf (plot.py, no external software): ``layout`` 'Model', a paper layout, or '*' for every paper layout
         (default: every paper layout with content, else model space), one page each. Paper layouts print 1:1 on
@@ -967,6 +987,8 @@ class Runtime:
 
         3D parts (.FCStd): step, iges, brep, stl, obj, or png (shaded preview: ``views``, ``image_size``,
         ``fit``; ``reference``: compare with a reference image of the same views; see part.service.export)."""
+        if table not in {"entities", "pid_lines", "bom"} or table != "entities" and format.lower() not in {"csv", "xlsx"}:
+            raise input_error("INVALID_TABLE", "pid_lines and bom tables require CSV or XLSX export")
         if part.is_part(path):
             return part.export(self, path, output, format, overwrite, views, image_size, fit, reference)
         if views or image_size or fit or reference:
@@ -975,10 +997,11 @@ class Runtime:
         self.policy.check_write()
         p, store = self._drawing(path)
         fmt = format.lower()
-        suffix = {"dxf": ".dxf", "svg": ".svg", "json": ".json", "dwg": ".dwg", "pdf": ".pdf"}.get(fmt)
+        suffix = {"dxf": ".dxf", "svg": ".svg", "json": ".json", "dwg": ".dwg", "pdf": ".pdf",
+                  "csv": ".csv", "xlsx": ".xlsx"}.get(fmt)
         if suffix is None:
             raise input_error("UNSUPPORTED_FORMAT", f"Unsupported export format {format!r}",
-                              hint="dxf | svg | json | pdf | dwg")
+                              hint="dxf | svg | json | pdf | dwg | csv | xlsx")
         out = self.policy.resolve(output, suffixes=(suffix,))
         if out.exists() and not overwrite:
             raise input_error("FILE_EXISTS", f"{output} exists", hint="overwrite=true")
@@ -1024,7 +1047,12 @@ class Runtime:
                     **({"warnings": warn[:20]} if warn else {})}
         finalize(doc)
         out.parent.mkdir(parents=True, exist_ok=True)
-        if fmt == "dxf":
+        if fmt in {"csv", "xlsx"}:
+            from .tabular import drawing_rows, write_table
+            rows = drawing_rows(doc, table)
+            write_table(out, fmt, rows)
+            extra = {"rows": len(rows) - 1, "formula_policy": "CSV apostrophe; XLSX explicit string cells; numbers preserved"}
+        elif fmt == "dxf":
             ver = dxf_version or doc.acad_release
             if ver == "R12":
                 from ezdxf.addons import r12export
@@ -1264,6 +1292,113 @@ class Runtime:
             if item in known:
                 raise input_error("INVALID_SIZE", f"{item} has no size {size!r}", hint="See standard_library()")
             raise input_error("UNKNOWN_ITEM", f"No library item {item!r}", hint=f"Items: {known}")
+
+    @tool
+    def understand_drawing(self, path: str) -> dict[str, Any]:
+        """Describe foreign drawing units, distant clusters, outlier handles and process services with evidence."""
+        from .engineering.plant import describe
+        p, store = self._drawing(path)
+        return {"drawing":self._rel(p), **describe(store.load())}
+
+    @tool
+    def plant_takeoff(self, pid: str, layout: str, services: list[str] | None = None,
+                      allowance: float = .2) -> dict[str, Any]:
+        """Read pipe networks, sizes and stated electrical loads/circuits; estimate layout routing with an RMST.
+
+        Supports millimetre plant drawings, orthogonal straight polylines and arc bends. Returns uncertainty,
+        missing tags and chosen plan copy; cable allowance is a fraction, not a percent.
+        """
+        from .engineering.plant import takeoff
+        _, ps = self._drawing(pid)
+        _, ls = self._drawing(layout)
+        return takeoff(ps.load(),ls.load(),services,allowance)
+
+    @tool
+    def read_engineering(self, path: str, kind: str) -> dict[str, Any]:
+        """Reconstruct saved engineering records and geometry. kind: pid, architecture or mechanical."""
+        p, store = self._drawing(path)
+        if kind == "pid":
+            from .engineering.pid import read
+        elif kind == "architecture":
+            from .engineering.architecture import read
+        elif kind == "mechanical":
+            from .engineering.mechanical import read
+        else:
+            raise input_error("UNKNOWN_DOMAIN", f"Unknown engineering kind {kind!r}")
+        result = read(store.load())
+        if kind in {"architecture", "mechanical"}:
+            from .quality import score
+            validation = validate_file(p)
+            result.update(validation=validation, quality_score=max(0,score(validation)-15*len(result["critique"])))
+        return {"drawing":self._rel(p), **result}
+
+    @tool
+    def preflight(self, spec: dict[str, Any]) -> dict[str, Any]:
+        """Validate a design specification before drawing; hash the exact accepted intent."""
+        raw = json.dumps(spec, ensure_ascii=False, sort_keys=True, separators=(",", ":"), allow_nan=False)
+        try:
+            compiled = specmod.compile_spec(spec)
+        except AgentCADError as exc:
+            return {"ready": False, "issues": [exc.to_dict()], "spec_hash": None}
+        return {"ready": True, "spec_hash": "sha256:" + hashlib.sha256(raw.encode()).hexdigest(),
+                "operation_count": len(compiled["operations"]), "requirements": compiled["requirements"]}
+
+    @tool
+    def measure_entities(self, path: str, target: Any) -> dict[str, Any]:
+        """Exact line, arc, circle, bulged-polyline and hatch measurements by handle or selector."""
+        from .measure import measure_entity
+        p, store = self._drawing(path)
+        doc = store.load()
+        return {"drawing": self._rel(p), "units": _units_of(doc),
+                "measurements": [measure_entity(e) for e in select(doc, target)]}
+
+    @tool
+    def verify_dimensions(self, path: str, requirements: list[dict]) -> dict[str, Any]:
+        """Verify physical geometry bound to DIMENSION handles; flag misleading text and DIMLFAC separately.
+
+        Each requirement: {id, handle, value, tolerance?}. This explicitly compares physical drawing units;
+        normal validate_drawing dimension requirements retain their displayed-value semantics.
+        """
+        from .verification import verify_dimensions
+        p, store = self._drawing(path)
+        return {"drawing": self._rel(p), **verify_dimensions(store.load(), requirements)}
+
+    @tool
+    def refine_drawing(self, path: str, max_iterations: int = 3) -> dict[str, Any]:
+        """Score independent file validation and remove exact duplicates until no supported repair remains."""
+        from .quality import score
+        if not 1 <= max_iterations <= 10:
+            raise input_error("BAD_PARAMETER", "max_iterations must be between 1 and 10")
+        p, _ = self._drawing(path)
+        report = validate_file(p)
+        initial = score(report)
+        iterations = []
+        for _ in range(max_iterations):
+            if not any(i["code"] == "DUPLICATE_ENTITY" for i in report["issues"]):
+                break
+            result = self.apply_operations(path, [{"op": "remove_duplicates"}])
+            if not result["ok"]:
+                return {"initial_score": initial, "final_score": score(report), "iterations": iterations,
+                        "repair_error": result["error"], "validation": report}
+            report = validate_file(p)
+            iterations.append({"changes": result["changes"], "score": score(report)})
+            if not result["changes"].get("deleted"):
+                break
+        return {"initial_score": initial, "final_score": score(report), "iterations": iterations,
+                "validation": report}
+
+    @tool
+    def deliver_drawing(self, path: str, output_dir: str, formats: list[str] | None = None,
+                        min_score: float = 90, strict: bool = True) -> dict[str, Any]:
+        """Export, reread and hash delivery artifacts; write a manifest tied to a validated source revision."""
+        from .quality import deliver
+        return deliver(self, path, output_dir, formats or ["dxf"], min_score, strict)
+
+    @tool
+    def search_tools(self, query: str, limit: int = 3) -> dict[str, Any]:
+        """Rank tool and operation descriptions, names and AutoCAD command aliases."""
+        from .discovery import search
+        return {"results": search(query, limit, TOOLS)}
 
     @tool
     def get_metrics(self) -> dict[str, Any]:

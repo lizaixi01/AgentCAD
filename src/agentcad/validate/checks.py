@@ -317,6 +317,11 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
         out.append(issue("UNITS_UNDEFINED", "warning", f"$INSUNITS={ins} is not a supported explicit length unit"))
 
     seen: dict[tuple, str] = {}
+    for space in doc.layouts:
+        for entity in space:
+            if entity.dxf.layer.upper() in {"CONSTRUCTION", "DEFPOINTS"} or entity.dxftype() in {"XLINE", "RAY"}:
+                out.append(issue("CONSTRUCTION_GEOMETRY", "warning", "Construction geometry remains in the drawing",
+                                 [entity.dxf.handle], layout=space.name))
     for e in msp:
         t = e.dxftype()
         h = e.dxf.handle

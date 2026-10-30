@@ -1,0 +1,1719 @@
+{
+  "archive": "evidence.zip",
+  "sha256": "57fb6d01d11e749caa92d25ef37e36cc6cc869379b4a2269a96ce6de860929c9",
+  "size_bytes": 1839557,
+  "verification": {
+    "product_commit": "c2cd0f509a2e0e6e92e773d587d548742a18be1c",
+    "pytest": {
+      "passed": 409,
+      "skipped": 73,
+      "command": "python -m pytest -p no:cacheprovider --basetemp=<isolated-directory>"
+    },
+    "benchmark": {
+      "v8_passed": 31,
+      "v8_total": 31,
+      "v2_passed": 10,
+      "reference_v8_passed": 31
+    },
+    "upstream_unmodified": true,
+    "source_bytes_match_report": true,
+    "previews_visually_checked": true
+  },
+  "entries": [
+    {
+      "path": "adapter/cancel_worker.py",
+      "size_bytes": 1854,
+      "sha256": "9679302f13bd9a8373e9af7fb4348e3ef79249642f2485eb1b77f6e42076fbf8"
+    },
+    {
+      "path": "adapter/capture_reference.py",
+      "size_bytes": 2995,
+      "sha256": "a4241eb6753a973f0ed821959d36585c1872e7c690e3358aa5b2273df84a29e3"
+    },
+    {
+      "path": "adapter/run.py",
+      "size_bytes": 60725,
+      "sha256": "ed6d6c468b2c5328a2df803ce1be4d2976eb393e1df6ee91289a1d6eef9df081"
+    },
+    {
+      "path": "agentcad/artifacts/cancel-worker.stderr.log",
+      "size_bytes": 513,
+      "sha256": "920d2b63b41726529f91ae20f0d8ef743fbe5d6712e202e2556ea51dd288b30f"
+    },
+    {
+      "path": "agentcad/artifacts/discovery-tools.json",
+      "size_bytes": 1620,
+      "sha256": "71c6359133d5a7330def5fb0b883151d01eb7f273b908aae99b0b2265cacfd6c"
+    },
+    {
+      "path": "agentcad/artifacts/events.jsonl",
+      "size_bytes": 327101,
+      "sha256": "3da0f223ae723b2efd608c6fbcae98c1f429d9d47effdfee6190fca4fca7cf89"
+    },
+    {
+      "path": "agentcad/artifacts/progress.json",
+      "size_bytes": 76984,
+      "sha256": "344a723fa95f872936c3592d53029558e469ab260bbdd912229e07324ca2b92c"
+    },
+    {
+      "path": "agentcad/artifacts/retained/arch_roundtrip/arch_roundtrip.dxf",
+      "size_bytes": 76218,
+      "sha256": "5b463ada4ad6132e4253101edc97359dcf8a7241fbcb675dc9988aee40efc490"
+    },
+    {
+      "path": "agentcad/artifacts/retained/auditable_delivery/auditable_delivery.dxf",
+      "size_bytes": 37154,
+      "sha256": "acc84e0dbe7c12fdeb445d6b8d44fee278adb2a8585199a402f22a8297160b06"
+    },
+    {
+      "path": "agentcad/artifacts/retained/auditable_delivery/delivery/auditable_delivery.dxf",
+      "size_bytes": 44520,
+      "sha256": "ae869b5edd8ca50ea4ca0beb9355baa0c137ce9cccdffb4ce0d5a83e24817aba"
+    },
+    {
+      "path": "agentcad/artifacts/retained/auditable_delivery/delivery/manifest.json",
+      "size_bytes": 1147,
+      "sha256": "3fc2dd4f1b2cdeb9c68a8500da1a106650159fa364558040352575b8fb0b27f5"
+    },
+    {
+      "path": "agentcad/artifacts/retained/cancel_safety/cancel_safety.dxf",
+      "size_bytes": 37154,
+      "sha256": "f58977660ef1b9c367202e8f0c3bc8698ded543a672807a6948203a75c4307f2"
+    },
+    {
+      "path": "agentcad/artifacts/retained/core_geometry/core_geometry.dxf",
+      "size_bytes": 37374,
+      "sha256": "6c4393c52ce1876b4be6c98a18ac0e4c1c6519da2d3d1139c67ba541b6e6dcc3"
+    },
+    {
+      "path": "agentcad/artifacts/retained/damaged_dxf_refusal/damaged_dxf_refusal.dxf",
+      "size_bytes": 37154,
+      "sha256": "1091c761f993e4cb56ebcac2138ea1a054f934e4fe6a060af1f549e886971ea4"
+    },
+    {
+      "path": "agentcad/artifacts/retained/damaged_dxf_refusal/intact.dxf",
+      "size_bytes": 24889,
+      "sha256": "59bd86febcdc9b35c7d247aeaf70cdc595b87a7a2600c36a1f6ed39140e5fd24"
+    },
+    {
+      "path": "agentcad/artifacts/retained/damaged_dxf_refusal/not-a-drawing.dxf",
+      "size_bytes": 176,
+      "sha256": "6d800db0cf8c6f288f522e9a9f424b91ad2e9eccebe628de8e15462950db0955"
+    },
+    {
+      "path": "agentcad/artifacts/retained/damaged_dxf_refusal/truncated.dxf",
+      "size_bytes": 12444,
+      "sha256": "80659b93e5b57e164b91beb945088e63697d3b35f39f4bacf4ec498d25aa36ff"
+    },
+    {
+      "path": "agentcad/artifacts/retained/dimension_binding/dimension_binding.dxf",
+      "size_bytes": 51223,
+      "sha256": "01ba140bc09e78add3ad1675aa5b66bd0e3425fac2ae816e9ce55cee9b5689c5"
+    },
+    {
+      "path": "agentcad/artifacts/retained/dimensions/dimensions.dxf",
+      "size_bytes": 38674,
+      "sha256": "58dea11b2a792fdf949e9b2d3947c505b43c418fbf994e96d97412b1f5c9fade"
+    },
+    {
+      "path": "agentcad/artifacts/retained/dxf_roundtrip/dxf_roundtrip.dxf",
+      "size_bytes": 37157,
+      "sha256": "be5b071156871766a02779fb13aaf09f889442bde1fbe6be0dc4f3d4edf96b55"
+    },
+    {
+      "path": "agentcad/artifacts/retained/dxf_roundtrip/roundtrip-export.dxf",
+      "size_bytes": 44523,
+      "sha256": "8b3e000e6a785201d8f71094fc94a2c6bff8e83e8c0e63f52747d857c93aab71"
+    },
+    {
+      "path": "agentcad/artifacts/retained/export_safety/export-bom.dxf",
+      "size_bytes": 41327,
+      "sha256": "75a579ab9635ecc2828887e2fdb8efd2be2afdcdfe3c4e092f240ca3b52f5f06"
+    },
+    {
+      "path": "agentcad/artifacts/retained/export_safety/export.csv",
+      "size_bytes": 171,
+      "sha256": "9e3dca03acab70d9a1eae345237364b7e5969721cecad7f3fe8a51c7b69e9960"
+    },
+    {
+      "path": "agentcad/artifacts/retained/export_safety/export.xlsx",
+      "size_bytes": 1633,
+      "sha256": "c193d98c0f87840471c8f3dfd6bc749e829cf7c2e041aa3c4af7a85fa6d56a7d"
+    },
+    {
+      "path": "agentcad/artifacts/retained/export_safety/export_safety.dxf",
+      "size_bytes": 47313,
+      "sha256": "a94a161a32256c7e2c5cd053d01ee504abf9c1a53ec6bc523f47e0d367e54eb1"
+    },
+    {
+      "path": "agentcad/artifacts/retained/export_safety/lines.csv",
+      "size_bytes": 221,
+      "sha256": "0e8f84a2d52d01791841eb430f951242a6203c534e4b29073ad7d91fea38fde0"
+    },
+    {
+      "path": "agentcad/artifacts/retained/foreign_edit_verified/foreign-original.dxf",
+      "size_bytes": 19127,
+      "sha256": "fd46c3c9ca7ac30f0b24ac82bfe9b972a7c4a5498cb0d7b612b9c6da7125f663"
+    },
+    {
+      "path": "agentcad/artifacts/retained/foreign_edit_verified/foreign_edit_verified.dxf",
+      "size_bytes": 15917,
+      "sha256": "28d49fbeb7872f7f6659c14610d68e9e40496155ea324b68cd248013b1ca4059"
+    },
+    {
+      "path": "agentcad/artifacts/retained/hatch_islands/hatch_islands.dxf",
+      "size_bytes": 37781,
+      "sha256": "2bea18422023b7e5c24ae0fbed8fd872135e84efad15aa2ca91429e22a852d53"
+    },
+    {
+      "path": "agentcad/artifacts/retained/layers_linetypes/layers_linetypes.dxf",
+      "size_bytes": 37345,
+      "sha256": "edc627799ca7405b2173500c218d373831ce437103d8eeee02e92354265a9962"
+    },
+    {
+      "path": "agentcad/artifacts/retained/measure_from_handle/measure_from_handle.dxf",
+      "size_bytes": 37789,
+      "sha256": "717f97b15aa0e19171c914222498c444256f785092ac2f24b3c9d9242b42fb57"
+    },
+    {
+      "path": "agentcad/artifacts/retained/mech_assembly/mech_assembly.dxf",
+      "size_bytes": 73903,
+      "sha256": "7fcb94e1e34c09558046dfab25c1947d325fa62cbcbcf3f499632f4a0bd0b545"
+    },
+    {
+      "path": "agentcad/artifacts/retained/modify_query/modify_query.dxf",
+      "size_bytes": 37278,
+      "sha256": "e28410ae113179bca932ee2cc141ca835cf8ce8f9b16cf2293f13ae4b2602eee"
+    },
+    {
+      "path": "agentcad/artifacts/retained/page_setup_truth/ansi-b.pdf",
+      "size_bytes": 615,
+      "sha256": "c76529608911a4599fdfd8a5f5c6d8180630c44c0ca02f9e37e363eecca39e8f"
+    },
+    {
+      "path": "agentcad/artifacts/retained/page_setup_truth/iso-a3.pdf",
+      "size_bytes": 615,
+      "sha256": "4721ee09e664bb185c170bb20686bc6b59230471774f52054ab451d0f8714aae"
+    },
+    {
+      "path": "agentcad/artifacts/retained/page_setup_truth/page_setup_truth.dxf",
+      "size_bytes": 37742,
+      "sha256": "70f356539b7645dcc78d8825cc62fd8d8482b111d38c112d5d74ccbf4604ad35"
+    },
+    {
+      "path": "agentcad/artifacts/retained/pid_file_roundtrip/pid_file_roundtrip.dxf",
+      "size_bytes": 47355,
+      "sha256": "d52581669506241f79076b10e295a886ec7c1650f48bfeabd9ae5831ac1b0958"
+    },
+    {
+      "path": "agentcad/artifacts/retained/pid_roundtrip/pid_roundtrip.dxf",
+      "size_bytes": 47355,
+      "sha256": "84b76ecc116041f3eb64820eb05925ae0c81b6b5f78af0bca19f4e3a6eb2be3a"
+    },
+    {
+      "path": "agentcad/artifacts/retained/preflight/preflight.dxf",
+      "size_bytes": 37078,
+      "sha256": "4c2ea61cef44d884c5530073cb4bd0a42ded9d8880a3ef4376112dc8fd6cd2d9"
+    },
+    {
+      "path": "agentcad/artifacts/retained/qa_large_drawing/qa_large_drawing.dxf",
+      "size_bytes": 1517171,
+      "sha256": "d893b0531a8a7fd7d0e6d2a5adde584d5b91deba4485a32a15243493efcfc858"
+    },
+    {
+      "path": "agentcad/artifacts/retained/quality_refiner/quality_refiner.dxf",
+      "size_bytes": 37156,
+      "sha256": "987e4932500f82656bd04bd070ed3ceb555d4fdbdb24dbc0b64683cb4094f215"
+    },
+    {
+      "path": "agentcad/artifacts/retained/requirements_roundtrip/requirements_roundtrip.dxf",
+      "size_bytes": 46461,
+      "sha256": "74ebbb2ba5f3d403914428b77c53527aac1759edcdd84933cc1b835f2f64bb08"
+    },
+    {
+      "path": "agentcad/artifacts/retained/revision_guarded_edit/revision_guarded_edit.dxf",
+      "size_bytes": 37278,
+      "sha256": "11c0decee4adfb14763f849c6ac3b9aa5a5d7e9cc8f7396bd1dbe8ec51e2c394"
+    },
+    {
+      "path": "agentcad/artifacts/retained/selection_filter/selection_filter.dxf",
+      "size_bytes": 37430,
+      "sha256": "99f7330ba9168beb3b5e1af0af83a51ea74ff46d2f2cf987226d5fb337940141"
+    },
+    {
+      "path": "agentcad/artifacts/retained/stale_preview/stale_preview.dxf",
+      "size_bytes": 37282,
+      "sha256": "892c71e99ef3d9ff85720fb9e0b90f8ddbd17898726567aaf879fd2822758931"
+    },
+    {
+      "path": "agentcad/artifacts/retained/table_mleader/table_mleader.dxf",
+      "size_bytes": 38763,
+      "sha256": "cc11d601175a4ba6f8b514a9a2bd36c59c1718424ffca8595c47395959114252"
+    },
+    {
+      "path": "agentcad/artifacts/retained/takeoff_roundtrip/takeoff_roundtrip.dxf",
+      "size_bytes": 37078,
+      "sha256": "6cdf207494bbe0723c51fe598a373ae61f73caaf2526232b8f423fb30b8bdc2c"
+    },
+    {
+      "path": "agentcad/artifacts/retained/takeoff_roundtrip/takeoff_roundtrip/layout.dxf",
+      "size_bytes": 40503,
+      "sha256": "82c5e07259762d5990a0c93fe83e64739aa6502dbd5fe3c346d4ea47a6289aa3"
+    },
+    {
+      "path": "agentcad/artifacts/retained/takeoff_roundtrip/takeoff_roundtrip/pid.dxf",
+      "size_bytes": 33769,
+      "sha256": "2505efe4ffbb4f7323cf35a0368c40a7e60b1a4b5d182769bc3869ac055e7321"
+    },
+    {
+      "path": "agentcad/artifacts/retained/transactions/transactions.dxf",
+      "size_bytes": 37066,
+      "sha256": "a31a9886cbd5c4a81c4610994dfe3961a5918aed1dfc87dc3c52d120ff9df96d"
+    },
+    {
+      "path": "agentcad/artifacts/retained/understand_foreign/understand_foreign.dxf",
+      "size_bytes": 37070,
+      "sha256": "3565b1e0f28e8218c3f485522d5a09b2b3c0f14ba505498aa3977a366992fbdd"
+    },
+    {
+      "path": "agentcad/artifacts/retained/understand_foreign/understand_foreign/layout.dxf",
+      "size_bytes": 40495,
+      "sha256": "342bc8f9933a0d3958dc6ba92df350b77f7bc4a9f0ae148aed885e0df42e47fe"
+    },
+    {
+      "path": "agentcad/artifacts/retained/understand_foreign/understand_foreign/pid.dxf",
+      "size_bytes": 33761,
+      "sha256": "747a71cde5be5e26708543026480ed9d427399f7c2146dc3c81bd383d48aaa2a"
+    },
+    {
+      "path": "agentcad/artifacts/server.stderr.log",
+      "size_bytes": 22674,
+      "sha256": "d7d92ee6ff06fad4a3cb7ae51b8a5dc472c3b2f353fc46611d9b3043af337d58"
+    },
+    {
+      "path": "agentcad/artifacts/tools.json",
+      "size_bytes": 54560,
+      "sha256": "d617f03e091b8b338325b675bf3d9cf6a02563e1061280dea3e740e7a33a239c"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/activity.jsonl",
+      "size_bytes": 38599,
+      "sha256": "b8b5048b3949c4ab69bd116042fe2c05947f944c0805b01780b9eb166fa8eb2d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/arch_roundtrip.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37078,
+      "sha256": "ba52d1f1e7a4709c3d90d31361276a5fd958db4016e262afdb51b736cbf6131f"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/arch_roundtrip.dxf/committed.dxf",
+      "size_bytes": 76218,
+      "sha256": "5b463ada4ad6132e4253101edc97359dcf8a7241fbcb675dc9988aee40efc490"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/arch_roundtrip.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "a9e97fcfc50c488f74d07ea4a90b6fad8e6ebbe5a38552c0185b326b81f21d23"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/arch_roundtrip.dxf/journal.jsonl",
+      "size_bytes": 2694,
+      "sha256": "94f6449ae901d1bd83b78a7d84058573d113cf1f6aef98d61d4a82c6d965e6ca"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/auditable_delivery.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "9a975b7353d800155bd59465c05cc99fd3363ff57a6850b2066ff7b097623f70"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/auditable_delivery.dxf/committed.dxf",
+      "size_bytes": 37154,
+      "sha256": "acc84e0dbe7c12fdeb445d6b8d44fee278adb2a8585199a402f22a8297160b06"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/auditable_delivery.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "320b47aa5b3ff77407e2f0ec1133c9775853a6de0f624cf3ae7cf2769dd18f72"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/auditable_delivery.dxf/journal.jsonl",
+      "size_bytes": 1186,
+      "sha256": "e60fd9adbe968e47e4d44d19fd720826eae27e334d614777773f3d7129757e8d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/cancel_safety.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "eddcb478ba693bad1f72d3859b8b9dc528a4c221ed9e329c48b2e321a11e71fb"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/cancel_safety.dxf/committed.dxf",
+      "size_bytes": 37154,
+      "sha256": "f58977660ef1b9c367202e8f0c3bc8698ded543a672807a6948203a75c4307f2"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/cancel_safety.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "62e0de8763085d04feedf7e1c719defb1c89c8bdd9fe20a5e2f353638c0ffaf3"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/cancel_safety.dxf/journal.jsonl",
+      "size_bytes": 914,
+      "sha256": "0be3ba4592d95e104247b347bdde5547954ba9fccca1bf87adbd3365f5fe2f33"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/core_geometry.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37078,
+      "sha256": "56a3e247599b27e3872a8be158ea3120ca3815e01055fa33fa8eb23881e23ca6"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/core_geometry.dxf/committed.dxf",
+      "size_bytes": 37374,
+      "sha256": "6c4393c52ce1876b4be6c98a18ac0e4c1c6519da2d3d1139c67ba541b6e6dcc3"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/core_geometry.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "920054ddd82d2ab4661fb47833004d871af4dba7780ef65a98c5917419d621a2"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/core_geometry.dxf/journal.jsonl",
+      "size_bytes": 989,
+      "sha256": "94aad72e691c2dace28e8e049dfb0e7259f9553d19eb7bcb407afea2d1fc90f8"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/damaged_dxf_refusal.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "1f612430f5e706d68295ca2a03914655ea5b6cb3786758909236e99691b91456"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/damaged_dxf_refusal.dxf/committed.dxf",
+      "size_bytes": 37154,
+      "sha256": "1091c761f993e4cb56ebcac2138ea1a054f934e4fe6a060af1f549e886971ea4"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/damaged_dxf_refusal.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "293143e8fd7c1bac64086e9d2723c6dfdacbde1880979a58fd43ad4871f70e50"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/damaged_dxf_refusal.dxf/journal.jsonl",
+      "size_bytes": 926,
+      "sha256": "3d033b6b165db4b4fb7b689fb96d9ffddcf909c86cd315169f27ec5e408957c6"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/dimension_binding.dxf/committed.dxf",
+      "size_bytes": 37078,
+      "sha256": "56d7b149b9174623c7f3986b11b6c70d4d5a5453596fab2c56a14f3c16f932df"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/dimension_binding.dxf/head.json",
+      "size_bytes": 152,
+      "sha256": "aeb86f973497a4231fd9265a0e8ddc610d0bedf0ccfa9f4d9a5726dfb67ae901"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/dimension_binding.dxf/journal.jsonl",
+      "size_bytes": 435,
+      "sha256": "de17e78dcf2f059fd5710176ea7ec7f4b083c1f8086a464b88ffb91306334653"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/dimensions.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "6bfd8a8657d2b98ce4235d8ddb26466b61514316dfaca108fdc0bd1c176c51fd"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/dimensions.dxf/committed.dxf",
+      "size_bytes": 38674,
+      "sha256": "58dea11b2a792fdf949e9b2d3947c505b43c418fbf994e96d97412b1f5c9fade"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/dimensions.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "a33a6f10826632f92e7c0193a88f793666ec422b0617f96bd3c2bb7c929674b7"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/dimensions.dxf/journal.jsonl",
+      "size_bytes": 944,
+      "sha256": "ac26e82a16984bbbf7139d0b5299862c4c8bb7000b23b5ba43fcb6bb1454dc8e"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/dxf_roundtrip.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "811560e21f5a4ded3456fa0a3111f81a3d8103d96b3f28cc57718304f22ecde2"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/dxf_roundtrip.dxf/committed.dxf",
+      "size_bytes": 37157,
+      "sha256": "be5b071156871766a02779fb13aaf09f889442bde1fbe6be0dc4f3d4edf96b55"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/dxf_roundtrip.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "305a9c4f4bf503e22a60d078cbf22494dfee873e46231bac30d7a32ed51e8453"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/dxf_roundtrip.dxf/journal.jsonl",
+      "size_bytes": 1161,
+      "sha256": "c180317c5da91bfd3211102cb00e4ad12ba2733f53f6294ad07b21700ca61f38"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/export-bom.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "6effbaf2b7256f295c624531699f57b5ddda34d29f38d45485fa8455a007229d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/export-bom.dxf/committed.dxf",
+      "size_bytes": 41327,
+      "sha256": "75a579ab9635ecc2828887e2fdb8efd2be2afdcdfe3c4e092f240ca3b52f5f06"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/export-bom.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "37993adf2d8e37924fe5850b2c56fcfa6a9c1a722b90bac56dc076dd27baae52"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/export-bom.dxf/journal.jsonl",
+      "size_bytes": 2200,
+      "sha256": "d849aa31ead384261c57bd67dd4e974a2ce92c341bab1848fc190a1415ca1df1"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/export_safety.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "6db1d88c54a763fbae768f74af955bb65cec921c64cca5fd27c871ccc9f23b67"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/export_safety.dxf/committed.dxf",
+      "size_bytes": 47313,
+      "sha256": "a94a161a32256c7e2c5cd053d01ee504abf9c1a53ec6bc523f47e0d367e54eb1"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/export_safety.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "987e86210bafefa81d80ab10e2cf95f1e658f52842d06daebbe5201116557343"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/export_safety.dxf/journal.jsonl",
+      "size_bytes": 2305,
+      "sha256": "ceee2a6eba1355ea06129e30c419febca629cad95e276cdfabacd6469b314b60"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/foreign_edit_verified.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 19127,
+      "sha256": "d21892decc2a5bd4dd25f2d20749fd51fbc3ec2bd562521af147489f58f529e8"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/foreign_edit_verified.dxf/committed.dxf",
+      "size_bytes": 15917,
+      "sha256": "28d49fbeb7872f7f6659c14610d68e9e40496155ea324b68cd248013b1ca4059"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/foreign_edit_verified.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "d567ef06f2d7b2e120f66a0422892c67f3e8db0a7f9b9037e30afaada3676ea6"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/foreign_edit_verified.dxf/journal.jsonl",
+      "size_bytes": 933,
+      "sha256": "9a495586a23a99ea29113b45a57299fadf0d01b71c8c1fb514e88fbff17da21f"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/hatch_islands.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "2f7381ce060405d5ab55350b5665e8c34f7b9a74cb34e0621561338aebad53c0"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/hatch_islands.dxf/checkpoints/cp-0002.dxf",
+      "size_bytes": 37785,
+      "sha256": "e4824b32f8c86436c13e531bd0f0b3a687700e179da5b5fada56dddf63d291da"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/hatch_islands.dxf/committed.dxf",
+      "size_bytes": 37781,
+      "sha256": "2bea18422023b7e5c24ae0fbed8fd872135e84efad15aa2ca91429e22a852d53"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/hatch_islands.dxf/head.json",
+      "size_bytes": 546,
+      "sha256": "6c716a01250df3214b83ea47a0aaa71e8d17d7e4e18bd0cbd488499e7d1689b6"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/hatch_islands.dxf/journal.jsonl",
+      "size_bytes": 1505,
+      "sha256": "49758949906f518ea3dfe25868871026ae547750e9311abb6ec2ef661a1f699a"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/layers_linetypes.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37078,
+      "sha256": "7d95aab07c7f221d8edb0b0bfe2b98613828441589e6ec678f23e1854d1fd593"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/layers_linetypes.dxf/committed.dxf",
+      "size_bytes": 37345,
+      "sha256": "edc627799ca7405b2173500c218d373831ce437103d8eeee02e92354265a9962"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/layers_linetypes.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "6efc3fe7b33b3152b25fd894112b65b3baeb5df627a7c75bef07eef610f7d6b2"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/layers_linetypes.dxf/journal.jsonl",
+      "size_bytes": 975,
+      "sha256": "3d89175913bf2495714811c152fab8b2b533cd65e73a10e8d43a881c3571392d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/measure_from_handle.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37078,
+      "sha256": "3ebeef58ee73b494b6d0300ca3413b09c8d5439b23e00929670a59ae44f3b02e"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/measure_from_handle.dxf/checkpoints/cp-0002.dxf",
+      "size_bytes": 37493,
+      "sha256": "3d213cf4ff4be9bbeb2129d88cba3e7310f96dab7d062d01110502e31288371e"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/measure_from_handle.dxf/committed.dxf",
+      "size_bytes": 37789,
+      "sha256": "717f97b15aa0e19171c914222498c444256f785092ac2f24b3c9d9242b42fb57"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/measure_from_handle.dxf/head.json",
+      "size_bytes": 546,
+      "sha256": "a3ba8f4f616ae2fa107faa30d383af8cc73970a99fb7a875f71270e4900960c6"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/measure_from_handle.dxf/journal.jsonl",
+      "size_bytes": 1637,
+      "sha256": "ed350e25a91386559f3967e6e023f39a56a4cc63d6be439a3860fb08804f8a49"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/mech_assembly.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "83176bfef2586773187900d6c492b5e5f1549f668ea04041bda83cdcfcb95157"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/mech_assembly.dxf/committed.dxf",
+      "size_bytes": 73903,
+      "sha256": "7fcb94e1e34c09558046dfab25c1947d325fa62cbcbcf3f499632f4a0bd0b545"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/mech_assembly.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "295f8b4892ed537a241f6030904d77914754b8303052284809f814a79472456f"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/mech_assembly.dxf/journal.jsonl",
+      "size_bytes": 2661,
+      "sha256": "d85c4c8e90c81aa88ae03193b0bd8038a996ff2159245ad5d0294597dd8e47a2"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/modify_query.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37078,
+      "sha256": "85f9e8a1acd93ee24e27242354a1cfad481be88b45f1f82c7e0f3bb16979b401"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/modify_query.dxf/checkpoints/cp-0002.dxf",
+      "size_bytes": 37278,
+      "sha256": "421dcaf13fd70b9f17ac6b797f9de19803d869c8bf2ebda5d0a41d08ed12d686"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/modify_query.dxf/committed.dxf",
+      "size_bytes": 37278,
+      "sha256": "e28410ae113179bca932ee2cc141ca835cf8ce8f9b16cf2293f13ae4b2602eee"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/modify_query.dxf/head.json",
+      "size_bytes": 546,
+      "sha256": "769453785b10361b630c0af4ac48fd0a9ea01102ac33d8042e35fc62540bae8c"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/modify_query.dxf/journal.jsonl",
+      "size_bytes": 1411,
+      "sha256": "13765de2a61e43814a469f13218bfebac8402ee39c576ee7e42e430a471b98d1"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/page_setup_truth.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "0724e86fd995f4f4d57f0766832ef60499d337f4b8b71fa8490bb94111d9689d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/page_setup_truth.dxf/checkpoints/cp-0002.dxf",
+      "size_bytes": 37728,
+      "sha256": "b119b5ddbe99da1e5914b4047c21d4ec8fc36967d86f4f5d8eb3f71d11b01645"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/page_setup_truth.dxf/committed.dxf",
+      "size_bytes": 37742,
+      "sha256": "70f356539b7645dcc78d8825cc62fd8d8482b111d38c112d5d74ccbf4604ad35"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/page_setup_truth.dxf/head.json",
+      "size_bytes": 546,
+      "sha256": "1c830e96e4944f2c24ac8198fbb294e614c72f53baf067ec337a5697e542335a"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/page_setup_truth.dxf/journal.jsonl",
+      "size_bytes": 2002,
+      "sha256": "4d12f9b5afb6d990eb895584e155fadc81de7d9d7664b9bf1bead5beebd55519"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/pid_file_roundtrip.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37078,
+      "sha256": "af09a6d2d79bf2785f433ebee3cc8c3d5bc34787690e1e3bf234bd57b2394290"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/pid_file_roundtrip.dxf/committed.dxf",
+      "size_bytes": 47355,
+      "sha256": "d52581669506241f79076b10e295a886ec7c1650f48bfeabd9ae5831ac1b0958"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/pid_file_roundtrip.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "1d560d2c42bda65833e7abfd7db42285c6a3d2fc9941a363cd780b7443b15320"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/pid_file_roundtrip.dxf/journal.jsonl",
+      "size_bytes": 2100,
+      "sha256": "4f94d2b97e68756b8dadf9c081eb8c1988529b07378afc2074ff20684988c617"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/pid_roundtrip.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37078,
+      "sha256": "f15d19077bc2d0f54bd13ba43f7fea70f5f60f03c405119002a405fdac9bdc75"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/pid_roundtrip.dxf/committed.dxf",
+      "size_bytes": 47355,
+      "sha256": "84b76ecc116041f3eb64820eb05925ae0c81b6b5f78af0bca19f4e3a6eb2be3a"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/pid_roundtrip.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "c87d74e4787633b53f94659d441892b9be1bff38f1049b1679d5c478521ebb56"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/pid_roundtrip.dxf/journal.jsonl",
+      "size_bytes": 2090,
+      "sha256": "0c1c95f5c941a4b2fcca8c5a20123ad8985a3dd6cdff003a347fe0c0694236d7"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/preflight.dxf/committed.dxf",
+      "size_bytes": 37078,
+      "sha256": "4c2ea61cef44d884c5530073cb4bd0a42ded9d8880a3ef4376112dc8fd6cd2d9"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/preflight.dxf/head.json",
+      "size_bytes": 152,
+      "sha256": "f73f853ba9cc43848d9b23a5c4ef3fe436e1610c4431c03e5029cf42455728e1"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/preflight.dxf/journal.jsonl",
+      "size_bytes": 427,
+      "sha256": "fd7ea27a6f4156f7048cb79f68faa75c0c1acd85ee5641dafa42d124436012b5"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/qa_large_drawing.dxf/committed.dxf",
+      "size_bytes": 37076,
+      "sha256": "26995fe5aa986f5bb253af879b48c36d1f2476478ae5012fc740196ae51ba044"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/qa_large_drawing.dxf/head.json",
+      "size_bytes": 152,
+      "sha256": "fda7d09825edeef59df4f0df2b1bc1e0c1801c11aa4283876dcbc3329dac5cd3"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/qa_large_drawing.dxf/journal.jsonl",
+      "size_bytes": 434,
+      "sha256": "73ccba2545c0069cbab22f22cb79d06253f993ed26fbd7c5046fb609b8c9925f"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/quality_refiner.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37078,
+      "sha256": "0742b4e70fd8b4eff525bb9e5802832c47ac0371ca31e7cc3f067a9509799421"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/quality_refiner.dxf/checkpoints/cp-0002.dxf",
+      "size_bytes": 37262,
+      "sha256": "de245f578ba3b68c0c24b6b61fcb2d81384520a1fbdeb36e48d7f5817723996d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/quality_refiner.dxf/committed.dxf",
+      "size_bytes": 37156,
+      "sha256": "987e4932500f82656bd04bd070ed3ceb555d4fdbdb24dbc0b64683cb4094f215"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/quality_refiner.dxf/head.json",
+      "size_bytes": 546,
+      "sha256": "4296c81be3d0853ca7da348c6ba8a1a259918dfcf7f276197c452644870fbad9"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/quality_refiner.dxf/journal.jsonl",
+      "size_bytes": 1438,
+      "sha256": "9d71658c25baed34b83241cef6adcd651b3e5dfa985878a9d73d31ca61287215"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/requirements_roundtrip.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "2a23b98b46eee421fe53c1fb7790c027365ebfb48c969c00647c776aa672951d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/requirements_roundtrip.dxf/committed.dxf",
+      "size_bytes": 38885,
+      "sha256": "f1a0bcd6d1f41ec06c44b5302c5bee29449f54f097e4bf88fff7e690f474cda3"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/requirements_roundtrip.dxf/head.json",
+      "size_bytes": 348,
+      "sha256": "bf559023482d67f24157c7dfe030283c066800f0485e7ca76cc756a3f2d3f8d8"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/requirements_roundtrip.dxf/journal.jsonl",
+      "size_bytes": 2749,
+      "sha256": "a90772428767cbe27e4bcfa67bef5562e4cb26746bcb24bccd01a7d699a41841"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/revision_guarded_edit.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37078,
+      "sha256": "a9a915bddc2393d903a4f15ead1803c3d1265c1cc71b9827ea287e582155ba32"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/revision_guarded_edit.dxf/checkpoints/cp-0002.dxf",
+      "size_bytes": 37278,
+      "sha256": "d1f4a4eb3ed808b9f54d911d79c83f95fa1edf7d3b28d91d3c7e8bdf65f9cfc4"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/revision_guarded_edit.dxf/checkpoints/cp-0003.dxf",
+      "size_bytes": 37278,
+      "sha256": "9ccb32fa90402607c07c672cc1b29e8d743de8f7eb31b5a06e57d429fe16b443"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/revision_guarded_edit.dxf/committed.dxf",
+      "size_bytes": 37278,
+      "sha256": "11c0decee4adfb14763f849c6ac3b9aa5a5d7e9cc8f7396bd1dbe8ec51e2c394"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/revision_guarded_edit.dxf/head.json",
+      "size_bytes": 742,
+      "sha256": "82b4d4449de1a236726e9c71455f69dc7ce11461642209b6c0433ed9a1a7e88d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/revision_guarded_edit.dxf/journal.jsonl",
+      "size_bytes": 1931,
+      "sha256": "c443e74610653573d05997a383a82a2fa65bdf9f84d6e76bc5ac070b7a04a642"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/selection_filter.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "8e1eaa42966d31d702c4f7bd99a97936e0d47e46fc57e6c1b33899ab1880e7db"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/selection_filter.dxf/committed.dxf",
+      "size_bytes": 37430,
+      "sha256": "99f7330ba9168beb3b5e1af0af83a51ea74ff46d2f2cf987226d5fb337940141"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/selection_filter.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "23634035ce8f97329a17fbe73f0ef99a01ee5e638b9b9724df6a12daee868310"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/selection_filter.dxf/journal.jsonl",
+      "size_bytes": 1121,
+      "sha256": "939e8f6e7bf499174e39ddcf6875f92422eb86c0aa87a569010fe20c98134277"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/stale_preview.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "36f608b8f19b3ccf250c384d164e6517f9dda91d9e8e5a1cacb3064f1bac9dc7"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/stale_preview.dxf/checkpoints/cp-0002.dxf",
+      "size_bytes": 44668,
+      "sha256": "27468b6c66078f2584865382c5c992e40c770eaa1f80c6bfc69a8a1f7d3c3148"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/stale_preview.dxf/committed.dxf",
+      "size_bytes": 37282,
+      "sha256": "892c71e99ef3d9ff85720fb9e0b90f8ddbd17898726567aaf879fd2822758931"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/stale_preview.dxf/head.json",
+      "size_bytes": 546,
+      "sha256": "a3f2efcb0049f879fc61ad4c7f00787a834516b23606baebbe0b125c22a2b6e9"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/stale_preview.dxf/journal.jsonl",
+      "size_bytes": 1414,
+      "sha256": "4c0430f04a0240e277d1cd55cf74c07991a1cd35b6b377166256ff90af69338f"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/table_mleader.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37076,
+      "sha256": "747cf345e1908511aa618e25467f66f3748d9f02b5a9de7ed2a7fa8a5b2fd703"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/table_mleader.dxf/committed.dxf",
+      "size_bytes": 38763,
+      "sha256": "cc11d601175a4ba6f8b514a9a2bd36c59c1718424ffca8595c47395959114252"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/table_mleader.dxf/head.json",
+      "size_bytes": 350,
+      "sha256": "027d92770cf97b98d875ac32c219bec10f428c81ebc43a2f15485ebe81d95f6e"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/table_mleader.dxf/journal.jsonl",
+      "size_bytes": 1114,
+      "sha256": "1f396a9a6df50642b77bee260e1ab2c73860622c59a7cb0ea482addff05954fa"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/takeoff_roundtrip.dxf/committed.dxf",
+      "size_bytes": 37078,
+      "sha256": "6cdf207494bbe0723c51fe598a373ae61f73caaf2526232b8f423fb30b8bdc2c"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/takeoff_roundtrip.dxf/head.json",
+      "size_bytes": 152,
+      "sha256": "d79925dcedaceff1b6aae805337702e1927d65f1850e3389c2a41b6c4d897dea"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/takeoff_roundtrip.dxf/journal.jsonl",
+      "size_bytes": 435,
+      "sha256": "50a88fc8f4e5feee76c69a910fec011c7b03dca1014ac3af2608d2f971983555"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/transactions.dxf/checkpoints/cp-0001.dxf",
+      "size_bytes": 37066,
+      "sha256": "a31a9886cbd5c4a81c4610994dfe3961a5918aed1dfc87dc3c52d120ff9df96d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/transactions.dxf/checkpoints/cp-0002.dxf",
+      "size_bytes": 37143,
+      "sha256": "8f5a92dcd67ca4a25b71c0e4f74f956f6ceb0669e416e2359f958d4410c521e1"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/transactions.dxf/committed.dxf",
+      "size_bytes": 37066,
+      "sha256": "a31a9886cbd5c4a81c4610994dfe3961a5918aed1dfc87dc3c52d120ff9df96d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/transactions.dxf/head.json",
+      "size_bytes": 549,
+      "sha256": "b96dbdb4ec8ac57008518ba525cf73cd90e94e1a27e1076d3a955755b77cc246"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/transactions.dxf/journal.jsonl",
+      "size_bytes": 1258,
+      "sha256": "3791bfa165e2a77746767b825446a3946165d2026a8d1ee9cbb1d11ef894152f"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/understand_foreign.dxf/committed.dxf",
+      "size_bytes": 37070,
+      "sha256": "3565b1e0f28e8218c3f485522d5a09b2b3c0f14ba505498aa3977a366992fbdd"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/understand_foreign.dxf/head.json",
+      "size_bytes": 152,
+      "sha256": "15f822ffee18368a6e067093e23542628bc76d1c451010f5dad81621ee10a882"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/.agentcad/drawings/understand_foreign.dxf/journal.jsonl",
+      "size_bytes": 436,
+      "sha256": "1fb7f870789f9afda606b02c2b9a6987834b033bdbdfcd4b1066a55758e9dd65"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/ansi-b.pdf",
+      "size_bytes": 615,
+      "sha256": "c76529608911a4599fdfd8a5f5c6d8180630c44c0ca02f9e37e363eecca39e8f"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/arch_roundtrip.dxf",
+      "size_bytes": 76218,
+      "sha256": "5b463ada4ad6132e4253101edc97359dcf8a7241fbcb675dc9988aee40efc490"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/auditable_delivery.dxf",
+      "size_bytes": 37154,
+      "sha256": "acc84e0dbe7c12fdeb445d6b8d44fee278adb2a8585199a402f22a8297160b06"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/cancel_safety.dxf",
+      "size_bytes": 37154,
+      "sha256": "f58977660ef1b9c367202e8f0c3bc8698ded543a672807a6948203a75c4307f2"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/core_geometry.dxf",
+      "size_bytes": 37374,
+      "sha256": "6c4393c52ce1876b4be6c98a18ac0e4c1c6519da2d3d1139c67ba541b6e6dcc3"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/damaged_dxf_refusal.dxf",
+      "size_bytes": 37154,
+      "sha256": "1091c761f993e4cb56ebcac2138ea1a054f934e4fe6a060af1f549e886971ea4"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/delivery/auditable_delivery.dxf",
+      "size_bytes": 44520,
+      "sha256": "ae869b5edd8ca50ea4ca0beb9355baa0c137ce9cccdffb4ce0d5a83e24817aba"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/delivery/manifest.json",
+      "size_bytes": 1147,
+      "sha256": "3fc2dd4f1b2cdeb9c68a8500da1a106650159fa364558040352575b8fb0b27f5"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/dimension_binding.dxf",
+      "size_bytes": 51223,
+      "sha256": "01ba140bc09e78add3ad1675aa5b66bd0e3425fac2ae816e9ce55cee9b5689c5"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/dimensions.dxf",
+      "size_bytes": 38674,
+      "sha256": "58dea11b2a792fdf949e9b2d3947c505b43c418fbf994e96d97412b1f5c9fade"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/dxf_roundtrip.dxf",
+      "size_bytes": 37157,
+      "sha256": "be5b071156871766a02779fb13aaf09f889442bde1fbe6be0dc4f3d4edf96b55"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/export-bom.dxf",
+      "size_bytes": 41327,
+      "sha256": "75a579ab9635ecc2828887e2fdb8efd2be2afdcdfe3c4e092f240ca3b52f5f06"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/export.csv",
+      "size_bytes": 171,
+      "sha256": "9e3dca03acab70d9a1eae345237364b7e5969721cecad7f3fe8a51c7b69e9960"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/export.xlsx",
+      "size_bytes": 1633,
+      "sha256": "c193d98c0f87840471c8f3dfd6bc749e829cf7c2e041aa3c4af7a85fa6d56a7d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/export_safety.dxf",
+      "size_bytes": 47313,
+      "sha256": "a94a161a32256c7e2c5cd053d01ee504abf9c1a53ec6bc523f47e0d367e54eb1"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/foreign-original.dxf",
+      "size_bytes": 19127,
+      "sha256": "fd46c3c9ca7ac30f0b24ac82bfe9b972a7c4a5498cb0d7b612b9c6da7125f663"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/foreign_edit_verified.dxf",
+      "size_bytes": 15917,
+      "sha256": "28d49fbeb7872f7f6659c14610d68e9e40496155ea324b68cd248013b1ca4059"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/hatch_islands.dxf",
+      "size_bytes": 37781,
+      "sha256": "2bea18422023b7e5c24ae0fbed8fd872135e84efad15aa2ca91429e22a852d53"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/intact.dxf",
+      "size_bytes": 24889,
+      "sha256": "59bd86febcdc9b35c7d247aeaf70cdc595b87a7a2600c36a1f6ed39140e5fd24"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/iso-a3.pdf",
+      "size_bytes": 615,
+      "sha256": "4721ee09e664bb185c170bb20686bc6b59230471774f52054ab451d0f8714aae"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/layers_linetypes.dxf",
+      "size_bytes": 37345,
+      "sha256": "edc627799ca7405b2173500c218d373831ce437103d8eeee02e92354265a9962"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/lines.csv",
+      "size_bytes": 221,
+      "sha256": "0e8f84a2d52d01791841eb430f951242a6203c534e4b29073ad7d91fea38fde0"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/measure_from_handle.dxf",
+      "size_bytes": 37789,
+      "sha256": "717f97b15aa0e19171c914222498c444256f785092ac2f24b3c9d9242b42fb57"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/mech_assembly.dxf",
+      "size_bytes": 73903,
+      "sha256": "7fcb94e1e34c09558046dfab25c1947d325fa62cbcbcf3f499632f4a0bd0b545"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/modify_query.dxf",
+      "size_bytes": 37278,
+      "sha256": "e28410ae113179bca932ee2cc141ca835cf8ce8f9b16cf2293f13ae4b2602eee"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/not-a-drawing.dxf",
+      "size_bytes": 176,
+      "sha256": "6d800db0cf8c6f288f522e9a9f424b91ad2e9eccebe628de8e15462950db0955"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/page_setup_truth.dxf",
+      "size_bytes": 37742,
+      "sha256": "70f356539b7645dcc78d8825cc62fd8d8482b111d38c112d5d74ccbf4604ad35"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/pid_file_roundtrip.dxf",
+      "size_bytes": 47355,
+      "sha256": "d52581669506241f79076b10e295a886ec7c1650f48bfeabd9ae5831ac1b0958"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/pid_roundtrip.dxf",
+      "size_bytes": 47355,
+      "sha256": "84b76ecc116041f3eb64820eb05925ae0c81b6b5f78af0bca19f4e3a6eb2be3a"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/preflight.dxf",
+      "size_bytes": 37078,
+      "sha256": "4c2ea61cef44d884c5530073cb4bd0a42ded9d8880a3ef4376112dc8fd6cd2d9"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/qa_large_drawing.dxf",
+      "size_bytes": 1517171,
+      "sha256": "d893b0531a8a7fd7d0e6d2a5adde584d5b91deba4485a32a15243493efcfc858"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/quality_refiner.dxf",
+      "size_bytes": 37156,
+      "sha256": "987e4932500f82656bd04bd070ed3ceb555d4fdbdb24dbc0b64683cb4094f215"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/requirements_roundtrip.dxf",
+      "size_bytes": 46461,
+      "sha256": "74ebbb2ba5f3d403914428b77c53527aac1759edcdd84933cc1b835f2f64bb08"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/revision_guarded_edit.dxf",
+      "size_bytes": 37278,
+      "sha256": "11c0decee4adfb14763f849c6ac3b9aa5a5d7e9cc8f7396bd1dbe8ec51e2c394"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/roundtrip-export.dxf",
+      "size_bytes": 44523,
+      "sha256": "8b3e000e6a785201d8f71094fc94a2c6bff8e83e8c0e63f52747d857c93aab71"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/selection_filter.dxf",
+      "size_bytes": 37430,
+      "sha256": "99f7330ba9168beb3b5e1af0af83a51ea74ff46d2f2cf987226d5fb337940141"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/stale_preview.dxf",
+      "size_bytes": 37282,
+      "sha256": "892c71e99ef3d9ff85720fb9e0b90f8ddbd17898726567aaf879fd2822758931"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/table_mleader.dxf",
+      "size_bytes": 38763,
+      "sha256": "cc11d601175a4ba6f8b514a9a2bd36c59c1718424ffca8595c47395959114252"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/takeoff_roundtrip.dxf",
+      "size_bytes": 37078,
+      "sha256": "6cdf207494bbe0723c51fe598a373ae61f73caaf2526232b8f423fb30b8bdc2c"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/takeoff_roundtrip/layout.dxf",
+      "size_bytes": 40503,
+      "sha256": "82c5e07259762d5990a0c93fe83e64739aa6502dbd5fe3c346d4ea47a6289aa3"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/takeoff_roundtrip/pid.dxf",
+      "size_bytes": 33769,
+      "sha256": "2505efe4ffbb4f7323cf35a0368c40a7e60b1a4b5d182769bc3869ac055e7321"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/transactions.dxf",
+      "size_bytes": 37066,
+      "sha256": "a31a9886cbd5c4a81c4610994dfe3961a5918aed1dfc87dc3c52d120ff9df96d"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/truncated.dxf",
+      "size_bytes": 12444,
+      "sha256": "80659b93e5b57e164b91beb945088e63697d3b35f39f4bacf4ec498d25aa36ff"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/understand_foreign.dxf",
+      "size_bytes": 37070,
+      "sha256": "3565b1e0f28e8218c3f485522d5a09b2b3c0f14ba505498aa3977a366992fbdd"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/understand_foreign/layout.dxf",
+      "size_bytes": 40495,
+      "sha256": "342bc8f9933a0d3958dc6ba92df350b77f7bc4a9f0ae148aed885e0df42e47fe"
+    },
+    {
+      "path": "agentcad/artifacts/workspace/understand_foreign/pid.dxf",
+      "size_bytes": 33761,
+      "sha256": "747a71cde5be5e26708543026480ed9d427399f7c2146dc3c81bd383d48aaa2a"
+    },
+    {
+      "path": "agentcad/report.json",
+      "size_bytes": 102388,
+      "sha256": "ba464ccb438fc3e084e4620638b77e016a1d472ef9e6900bd2c64077f4349f65"
+    },
+    {
+      "path": "evaluator/source-sha256.json",
+      "size_bytes": 20299,
+      "sha256": "381ccb3cd81eb554131a0a9f752dc972775841998fe05a5eb8f5f1850f782fbc"
+    },
+    {
+      "path": "previews/architecture.png",
+      "size_bytes": 42739,
+      "sha256": "22ff2282eabcb28c5051f6c9e08cd35fd10c1e79d96d31ec80c71b34192a083b"
+    },
+    {
+      "path": "previews/mechanical.png",
+      "size_bytes": 47376,
+      "sha256": "8364b267dc286ed77bb869fbf8d6cf994c3fb132632f2a7dc48114a7a453d7ba"
+    },
+    {
+      "path": "product/src/agentcad/__init__.py",
+      "size_bytes": 101,
+      "sha256": "0cf3c6b11a60837047df4ef8ff581ebbe32ea447ac6f1e8a59efed1ac1c1efd0"
+    },
+    {
+      "path": "product/src/agentcad/_script_runner.py",
+      "size_bytes": 3645,
+      "sha256": "36256bc268d029ef52ecdbc308a1de68f5c119364f6c86ff05816e9867a41616"
+    },
+    {
+      "path": "product/src/agentcad/backends/__init__.py",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "product/src/agentcad/backends/acad_live.py",
+      "size_bytes": 11833,
+      "sha256": "3e5ac5487eaa6217de61af7afdc15005f995dd717e160c54d2430a6c464bfcd3"
+    },
+    {
+      "path": "product/src/agentcad/backends/autocad.py",
+      "size_bytes": 9136,
+      "sha256": "1d8d3815f39caca7da75249b6a8164003eb01db587a9d2996100c115a0b7cbf2"
+    },
+    {
+      "path": "product/src/agentcad/backends/freecad.py",
+      "size_bytes": 9575,
+      "sha256": "8eaa6ec237fc87f75730417d569111d19937ff7eb97cac2170b17616c4ae08c3"
+    },
+    {
+      "path": "product/src/agentcad/cli.py",
+      "size_bytes": 21438,
+      "sha256": "d936e7fc5d61bf2e679626937da97c3070f7477aeca72d8f573d69a041516f44"
+    },
+    {
+      "path": "product/src/agentcad/constraints.py",
+      "size_bytes": 12978,
+      "sha256": "b5789b985bf4a742ebe52337cdb919961d26bd17da0b958f619dda95e4b8335c"
+    },
+    {
+      "path": "product/src/agentcad/discovery.py",
+      "size_bytes": 2066,
+      "sha256": "c616eb2ae55044de77f5ab2fb1985bf89b0ca84f76b28abce94d5776dcdab9a3"
+    },
+    {
+      "path": "product/src/agentcad/docspec.py",
+      "size_bytes": 16787,
+      "sha256": "17fd570a4167c5dfa6eb303dab7fbb132cc9dacec9f298ac145b6cdea099bced"
+    },
+    {
+      "path": "product/src/agentcad/engine.py",
+      "size_bytes": 8482,
+      "sha256": "00f50d0d57ca11441012e5ff4f7059af7a55c887b16c51310ffd29334ea6299e"
+    },
+    {
+      "path": "product/src/agentcad/engineering/__init__.py",
+      "size_bytes": 88,
+      "sha256": "5b06b9c38eab7386358aad2d172fefd006b1f9a3182fe5f3d2a3b4039352b29f"
+    },
+    {
+      "path": "product/src/agentcad/engineering/architecture.py",
+      "size_bytes": 18440,
+      "sha256": "5a3ad5be5fa6e4fc52abf77b0d739e35e1e8494f2e14f53e29e029bce3456464"
+    },
+    {
+      "path": "product/src/agentcad/engineering/mechanical.py",
+      "size_bytes": 18001,
+      "sha256": "50d17a5b008bc334dbd8d71850abbdef3bd74d7f6c70b251deebc852c0661a6f"
+    },
+    {
+      "path": "product/src/agentcad/engineering/pid.py",
+      "size_bytes": 11508,
+      "sha256": "2dc78ab6b2ec554a26d6943d21023ba52a6c791fe6b34fcdcb6aae0a0c28cd13"
+    },
+    {
+      "path": "product/src/agentcad/engineering/plant.py",
+      "size_bytes": 16230,
+      "sha256": "2bddb080961152a702e140b8d486bd43c0e7b48ea92c9760b0a6d315ccad7f94"
+    },
+    {
+      "path": "product/src/agentcad/engineering/records.py",
+      "size_bytes": 2838,
+      "sha256": "8ce78f3fe2b53ae74359a3b22a78afb14c4f8b759be39c1a859345a2e5e783f9"
+    },
+    {
+      "path": "product/src/agentcad/errors.py",
+      "size_bytes": 3097,
+      "sha256": "3cb481be20980080b601410cb55ec4d9913dedee4d8de3d0f83c779b354f471a"
+    },
+    {
+      "path": "product/src/agentcad/geom.py",
+      "size_bytes": 6324,
+      "sha256": "c189948de9fe0bbff71e7871c42dec70b04d3d4bb4fe09a970f8a7ba2335ca9b"
+    },
+    {
+      "path": "product/src/agentcad/guards.py",
+      "size_bytes": 2423,
+      "sha256": "4ae6d689b808169217b577915a8d88c3ef1b2a09d70ef10253872f4b1b23a41a"
+    },
+    {
+      "path": "product/src/agentcad/http_api.py",
+      "size_bytes": 2863,
+      "sha256": "8df40f7a7e1970ad9a3c757009aaaa482cf3789f2612e14af54945e94785a9e5"
+    },
+    {
+      "path": "product/src/agentcad/install.py",
+      "size_bytes": 29681,
+      "sha256": "02330db0e399479e0bf242c5ec4cf9983eaf3c90a29c654597d3c6b9c1259ae0"
+    },
+    {
+      "path": "product/src/agentcad/mcp_config.py",
+      "size_bytes": 3579,
+      "sha256": "118c17938f14a3492210469af103ff97ba83b3c29c01e34e57578c27691ac0ce"
+    },
+    {
+      "path": "product/src/agentcad/mcp_server.py",
+      "size_bytes": 34884,
+      "sha256": "4dc1a9fa26cbd4fe7ace43681d6eb1070470dc00afd48cec5ed253266aa5d2bb"
+    },
+    {
+      "path": "product/src/agentcad/measure.py",
+      "size_bytes": 6812,
+      "sha256": "9867223b8cfc17c3253421a6f386707976c66f2099f3db9a05a1c5b7cee1ea89"
+    },
+    {
+      "path": "product/src/agentcad/metadata.py",
+      "size_bytes": 1264,
+      "sha256": "57d76e666fd8b308430080443e4261d512c09c836ab3c287700786f8c8d04807"
+    },
+    {
+      "path": "product/src/agentcad/model.py",
+      "size_bytes": 14482,
+      "sha256": "c3846d4cb2691adc43b99fdb763d3a27fd4e731a14824e0f41e82891739554aa"
+    },
+    {
+      "path": "product/src/agentcad/ops/__init__.py",
+      "size_bytes": 283,
+      "sha256": "47fa69ed995be1e6533d057fef849920c65040149ec8b7ec1940139bfe2fa2a0"
+    },
+    {
+      "path": "product/src/agentcad/ops/analysis.py",
+      "size_bytes": 4833,
+      "sha256": "ad7cc33156ff5c0ce159ee090cc0a7d63d87c0a1c1a1bcd1c2bf6fc5733bb6d8"
+    },
+    {
+      "path": "product/src/agentcad/ops/annotate.py",
+      "size_bytes": 20496,
+      "sha256": "3c1b61bf3d5d4bb9975625d97a1afb6cd0a316c5e22263a9399535d8f0213278"
+    },
+    {
+      "path": "product/src/agentcad/ops/draw.py",
+      "size_bytes": 23143,
+      "sha256": "a57d92439085c188a1b42b4ece5645d543c061213b933ff9d88b58496804f7dd"
+    },
+    {
+      "path": "product/src/agentcad/ops/edit.py",
+      "size_bytes": 48952,
+      "sha256": "1740a55dd9a3c99322de0beda0c402a2f2aedcecd760e0422153325318022d4b"
+    },
+    {
+      "path": "product/src/agentcad/ops/engineering.py",
+      "size_bytes": 1273,
+      "sha256": "2de1a64cb610ad4a1f492a6461c83d90cdc6c99fac9be66b3b12b4c894dadec6"
+    },
+    {
+      "path": "product/src/agentcad/ops/library.py",
+      "size_bytes": 37692,
+      "sha256": "41ae6802d9bae49cf5d2d986545141ff014638c4f24d2c9ecf9b4979182fc88f"
+    },
+    {
+      "path": "product/src/agentcad/ops/registry.py",
+      "size_bytes": 15929,
+      "sha256": "eff0b13154094bb6cc6231795a3806863f2505bb0400c781b6a2a7c04a0a83df"
+    },
+    {
+      "path": "product/src/agentcad/ops/sheet.py",
+      "size_bytes": 8041,
+      "sha256": "13a58a342873b9936c515cd6d2daf60c3cf30cd39481a0f67945fe4d68d40f96"
+    },
+    {
+      "path": "product/src/agentcad/ops/structure.py",
+      "size_bytes": 10205,
+      "sha256": "145c4df12a29941f548f876fe21108e2d90dc85735b7cd99174dd83444548cf9"
+    },
+    {
+      "path": "product/src/agentcad/part/__init__.py",
+      "size_bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "product/src/agentcad/part/_cq_runner.py",
+      "size_bytes": 6417,
+      "sha256": "6121069dc85a7c4e5c59c4591361fc218eb09f6a1bc4cf0ef0946873199b6434"
+    },
+    {
+      "path": "product/src/agentcad/part/_fc_runner.py",
+      "size_bytes": 114702,
+      "sha256": "edf5c1ac4a9430f2f89cc560cbd3828411d1c3415f5873f86fe8d4733f576ef6"
+    },
+    {
+      "path": "product/src/agentcad/part/compare.py",
+      "size_bytes": 15248,
+      "sha256": "61647e2c3d1d8a2c6d20aff9c346243952baf906b394fbbd2595518bc30d2b4d"
+    },
+    {
+      "path": "product/src/agentcad/part/ops.py",
+      "size_bytes": 20453,
+      "sha256": "aa1b03d81fe6e3718abc84753a0ba4b689a57573c4a4869cd2814a12cc2faabc"
+    },
+    {
+      "path": "product/src/agentcad/part/service.py",
+      "size_bytes": 27643,
+      "sha256": "8334e08962b594f40d1fe6fbde4615096f3147a13422e8101923083d2733f48a"
+    },
+    {
+      "path": "product/src/agentcad/plot.py",
+      "size_bytes": 13728,
+      "sha256": "312802b53e3eda223d52dd10f196c24b230d6ff9d5b7d4500c5f41fd478e95fd"
+    },
+    {
+      "path": "product/src/agentcad/policy.py",
+      "size_bytes": 4874,
+      "sha256": "cb5a17796ae0392b36e2f151b0540a233fc93975db3e2601681a9444d901b774"
+    },
+    {
+      "path": "product/src/agentcad/progress.py",
+      "size_bytes": 9198,
+      "sha256": "bfd6d55a6ea26afac2c802f2ab618ae2064a01cc0235c0a89d73208936b6c39b"
+    },
+    {
+      "path": "product/src/agentcad/quality.py",
+      "size_bytes": 3071,
+      "sha256": "c5ebc62058469e9153df903d04d4800d050ecd20203b788edacab1ae67484c43"
+    },
+    {
+      "path": "product/src/agentcad/scripting.py",
+      "size_bytes": 10181,
+      "sha256": "6bc1b8ac866b5e5b9ebfe962e0689e5f41c860fca19e6a90795dd10b21a759df"
+    },
+    {
+      "path": "product/src/agentcad/service.py",
+      "size_bytes": 95498,
+      "sha256": "71935ddf90fb255b4554a5ae60990e3baabcd41cdb6cb67c2508ec4af8728bdd"
+    },
+    {
+      "path": "product/src/agentcad/spec.py",
+      "size_bytes": 16894,
+      "sha256": "67530f986f3efb4a4e65c8046af103364e1b484d878d82b257f614ecbe3f33e7"
+    },
+    {
+      "path": "product/src/agentcad/stdlib.py",
+      "size_bytes": 18797,
+      "sha256": "fa9f12e7233bf911c08c064b1ee86c6774f0e2caaeca2ae030ffeb91f1366367"
+    },
+    {
+      "path": "product/src/agentcad/store.py",
+      "size_bytes": 20623,
+      "sha256": "2746f6f2777cc4c80383f47a8427f8a9d213e217c63bd591823b7b24991ef4a5"
+    },
+    {
+      "path": "product/src/agentcad/tabular.py",
+      "size_bytes": 5584,
+      "sha256": "60d4272e10769bcd36a8e4e376be5c38fa46c3f6a124e75f8ff5e97f146dabb6"
+    },
+    {
+      "path": "product/src/agentcad/units.py",
+      "size_bytes": 2919,
+      "sha256": "625072a448cf679f50237837120ea031ff1884ffa1deef1c167dc900b7538bf0"
+    },
+    {
+      "path": "product/src/agentcad/validate/__init__.py",
+      "size_bytes": 5835,
+      "sha256": "12e1baa69967172b240cbb41dd6dd44974fc7be06e19dc76c294d924a69fe927"
+    },
+    {
+      "path": "product/src/agentcad/validate/checks.py",
+      "size_bytes": 22336,
+      "sha256": "dd992a69928da25f41d4c71a32c2675265a184af7fd8117f7e023d251eed0d50"
+    },
+    {
+      "path": "product/src/agentcad/validate/features.py",
+      "size_bytes": 11354,
+      "sha256": "cef4f2d99d738294b8944e3d7343abb1d62a923b7708b950720c8814ccf1cebe"
+    },
+    {
+      "path": "product/src/agentcad/validate/requirements.py",
+      "size_bytes": 9546,
+      "sha256": "cadf1b07f71bb1813cb469b83c8d1b64ce3edf48090f67e9f58dc59d840b4149"
+    },
+    {
+      "path": "product/src/agentcad/verification.py",
+      "size_bytes": 3610,
+      "sha256": "469c366cbb2887d3c4f8f632ea767fa6fc1cc3bfb0990719aa00da83707fa13c"
+    },
+    {
+      "path": "product/src/agentcad/viewer.py",
+      "size_bytes": 40848,
+      "sha256": "ba19fbce9110b2731f26ff5a498cfb595e9ada37151cc55b7e38085e44fc0292"
+    },
+    {
+      "path": "product/src/agentcad/worker.py",
+      "size_bytes": 766,
+      "sha256": "da04dc1ee688c99f7761f309781333e62a664afdfc125b99105e86a099106888"
+    },
+    {
+      "path": "reference/artifacts/arch_roundtrip.dxf",
+      "size_bytes": 82829,
+      "sha256": "e6c44daa1c7e1d78ce3518a97b26d085e15109111fb4c435541088e92540242c"
+    },
+    {
+      "path": "reference/artifacts/delivery/drawing.dxf",
+      "size_bytes": 21136,
+      "sha256": "01e2b86a4a24de7c642904d0211f20d564f37a9044aabd7d643ad96d9bd52536"
+    },
+    {
+      "path": "reference/artifacts/delivery/manifest.json",
+      "size_bytes": 8910,
+      "sha256": "2eedb0cfb6f30e0aa203a28a2f502314273c6fae85dd3b427ed262e1b2adb269"
+    },
+    {
+      "path": "reference/artifacts/delivery/validation.json",
+      "size_bytes": 1379,
+      "sha256": "bcb1608220399fa121c854d2bd39d29fcff03079b60ff67d544579d8139d4ba2"
+    },
+    {
+      "path": "reference/artifacts/dimension_binding.dxf",
+      "size_bytes": 51217,
+      "sha256": "bbaac4e775be8c42d29686812e9eced98c8f52712f7f11c783b34a28e3c9d2bb"
+    },
+    {
+      "path": "reference/artifacts/export_safety/bom.csv",
+      "size_bytes": 167,
+      "sha256": "9fa6874359e3d12f20ea61e35b0eb56e08fe59b3c8209e92f0e99c9f499bea51"
+    },
+    {
+      "path": "reference/artifacts/export_safety/bom.xlsx",
+      "size_bytes": 5085,
+      "sha256": "75970812415c458df485901b5cb89574b94a4885a6b76e182856e7096eba641d"
+    },
+    {
+      "path": "reference/artifacts/export_safety/lines.csv",
+      "size_bytes": 363,
+      "sha256": "e82c7cfc2d800fd9630afd3c0377905a2ebb3f16333b982ea1d585a7f79c10e0"
+    },
+    {
+      "path": "reference/artifacts/foreign_plate.dxf",
+      "size_bytes": 19123,
+      "sha256": "3a9d25b2c762427694d05dcaeab01a82d90f50d20013fabc0947fdff2e9404df"
+    },
+    {
+      "path": "reference/artifacts/foreign_plate_repaired.dxf",
+      "size_bytes": 19123,
+      "sha256": "e1416c657fd852d8edd8e0bac96ca138242454f852c348663d633cad28428992"
+    },
+    {
+      "path": "reference/artifacts/intact.dxf",
+      "size_bytes": 24885,
+      "sha256": "9f86c3cddffc0b7d9073388f80c74939a23e18f4ea9ebbe40668652ce5686f9f"
+    },
+    {
+      "path": "reference/artifacts/mech_assembly.dxf",
+      "size_bytes": 107972,
+      "sha256": "a4c1287e5ce862466bced72defc27bc7658b9914af03259732630c76e01d17db"
+    },
+    {
+      "path": "reference/artifacts/not_a_drawing.dxf",
+      "size_bytes": 176,
+      "sha256": "6d800db0cf8c6f288f522e9a9f424b91ad2e9eccebe628de8e15462950db0955"
+    },
+    {
+      "path": "reference/artifacts/page_setup_truth/untitled-Layout1-ansi_b.pdf",
+      "size_bytes": 1287,
+      "sha256": "30f55c530331cfdc2b60096bb08fb4857981e41489de9190ea45a4f4d8d0abb4"
+    },
+    {
+      "path": "reference/artifacts/page_setup_truth/untitled-Layout1-iso_a3.pdf",
+      "size_bytes": 1287,
+      "sha256": "05dabcf254980ef965e8d4a2d67f229c006ff841bbb7bce46f1715845fcea8fa"
+    },
+    {
+      "path": "reference/artifacts/pid_file_roundtrip.dxf",
+      "size_bytes": 39236,
+      "sha256": "bdf161f0b9a1d0846f4ff96fa80d659aae8a5f6e1fb4ea72fffd584ca1f16f26"
+    },
+    {
+      "path": "reference/artifacts/plant_pair/layout.dxf",
+      "size_bytes": 40503,
+      "sha256": "8709d1ab4e20c03671b34759ce06e76d2999f94c02fd06e29097e77a4b50d1d1"
+    },
+    {
+      "path": "reference/artifacts/plant_pair/pid.dxf",
+      "size_bytes": 33769,
+      "sha256": "676e1c06b143b44cf6b6feb9ad654032f91447f97557af6eed66741d68f7061d"
+    },
+    {
+      "path": "reference/artifacts/requirements_roundtrip.dxf",
+      "size_bytes": 26880,
+      "sha256": "73b4fdc94306dfb92f943be062e89187a52ab4327b1e37d3c679ab97a9fc94e8"
+    },
+    {
+      "path": "reference/artifacts/roundtrip.dxf",
+      "size_bytes": 18446,
+      "sha256": "2756773a82c3c81e0c4a87f699a673d4d0fcbc7e8b5f94d1058d3ec88dc2af96"
+    },
+    {
+      "path": "reference/artifacts/truncated.dxf",
+      "size_bytes": 12442,
+      "sha256": "c4e5892175bffea050177c52b01b079933e20694deff990877f9a26bab38b719"
+    },
+    {
+      "path": "reference/report.json",
+      "size_bytes": 33057,
+      "sha256": "a63a18b45094b0ba540c330697f8958d8f965076ac53a761f4d1c1901feaf954"
+    },
+    {
+      "path": "reference/retained/arch_roundtrip/0/arch_roundtrip.dxf",
+      "size_bytes": 82829,
+      "sha256": "e6c44daa1c7e1d78ce3518a97b26d085e15109111fb4c435541088e92540242c"
+    },
+    {
+      "path": "reference/retained/auditable_delivery/0/manifest.json",
+      "size_bytes": 8910,
+      "sha256": "2eedb0cfb6f30e0aa203a28a2f502314273c6fae85dd3b427ed262e1b2adb269"
+    },
+    {
+      "path": "reference/retained/damaged_dxf_refusal/0/truncated.dxf",
+      "size_bytes": 12442,
+      "sha256": "c4e5892175bffea050177c52b01b079933e20694deff990877f9a26bab38b719"
+    },
+    {
+      "path": "reference/retained/damaged_dxf_refusal/1/not_a_drawing.dxf",
+      "size_bytes": 176,
+      "sha256": "6d800db0cf8c6f288f522e9a9f424b91ad2e9eccebe628de8e15462950db0955"
+    },
+    {
+      "path": "reference/retained/dimension_binding/0/dimension_binding.dxf",
+      "size_bytes": 51217,
+      "sha256": "bbaac4e775be8c42d29686812e9eced98c8f52712f7f11c783b34a28e3c9d2bb"
+    },
+    {
+      "path": "reference/retained/dxf_roundtrip/0/roundtrip.dxf",
+      "size_bytes": 18446,
+      "sha256": "2756773a82c3c81e0c4a87f699a673d4d0fcbc7e8b5f94d1058d3ec88dc2af96"
+    },
+    {
+      "path": "reference/retained/export_safety/0/lines.csv",
+      "size_bytes": 363,
+      "sha256": "e82c7cfc2d800fd9630afd3c0377905a2ebb3f16333b982ea1d585a7f79c10e0"
+    },
+    {
+      "path": "reference/retained/export_safety/1/bom.csv",
+      "size_bytes": 167,
+      "sha256": "9fa6874359e3d12f20ea61e35b0eb56e08fe59b3c8209e92f0e99c9f499bea51"
+    },
+    {
+      "path": "reference/retained/export_safety/2/bom.xlsx",
+      "size_bytes": 5085,
+      "sha256": "75970812415c458df485901b5cb89574b94a4885a6b76e182856e7096eba641d"
+    },
+    {
+      "path": "reference/retained/foreign_edit_verified/0/foreign_plate.dxf",
+      "size_bytes": 19123,
+      "sha256": "3a9d25b2c762427694d05dcaeab01a82d90f50d20013fabc0947fdff2e9404df"
+    },
+    {
+      "path": "reference/retained/foreign_edit_verified/1/foreign_plate_repaired.dxf",
+      "size_bytes": 19123,
+      "sha256": "e1416c657fd852d8edd8e0bac96ca138242454f852c348663d633cad28428992"
+    },
+    {
+      "path": "reference/retained/mech_assembly/0/mech_assembly.dxf",
+      "size_bytes": 107972,
+      "sha256": "a4c1287e5ce862466bced72defc27bc7658b9914af03259732630c76e01d17db"
+    },
+    {
+      "path": "reference/retained/page_setup_truth/0/untitled-Layout1-ansi_b.pdf",
+      "size_bytes": 1287,
+      "sha256": "30f55c530331cfdc2b60096bb08fb4857981e41489de9190ea45a4f4d8d0abb4"
+    },
+    {
+      "path": "reference/retained/page_setup_truth/1/untitled-Layout1-iso_a3.pdf",
+      "size_bytes": 1287,
+      "sha256": "05dabcf254980ef965e8d4a2d67f229c006ff841bbb7bce46f1715845fcea8fa"
+    },
+    {
+      "path": "reference/retained/pid_file_roundtrip/0/pid_file_roundtrip.dxf",
+      "size_bytes": 39236,
+      "sha256": "bdf161f0b9a1d0846f4ff96fa80d659aae8a5f6e1fb4ea72fffd584ca1f16f26"
+    },
+    {
+      "path": "reference/retained/requirements_roundtrip/0/requirements_roundtrip.dxf",
+      "size_bytes": 26880,
+      "sha256": "73b4fdc94306dfb92f943be062e89187a52ab4327b1e37d3c679ab97a9fc94e8"
+    },
+    {
+      "path": "reference/retained/takeoff_roundtrip/0/pid.dxf",
+      "size_bytes": 33769,
+      "sha256": "0aab2c6577e4756ae4fa3cbf1283ac954283b800e9f5c3c6743966be58f7f68e"
+    },
+    {
+      "path": "reference/retained/takeoff_roundtrip/1/layout.dxf",
+      "size_bytes": 40503,
+      "sha256": "0fcb6640720b19c5d1d75cdbe753f111a4b5802a699c83a64f65116448daafc7"
+    },
+    {
+      "path": "reference/retained/understand_foreign/0/layout.dxf",
+      "size_bytes": 40503,
+      "sha256": "8709d1ab4e20c03671b34759ce06e76d2999f94c02fd06e29097e77a4b50d1d1"
+    },
+    {
+      "path": "reference/retained/understand_foreign/1/pid.dxf",
+      "size_bytes": 33769,
+      "sha256": "676e1c06b143b44cf6b6feb9ad654032f91447f97557af6eed66741d68f7061d"
+    },
+    {
+      "path": "tests/test_s_upstream_benchmark.py",
+      "size_bytes": 4718,
+      "sha256": "6b8281aa34770f49d9fee7ec660f5919561284ed736ed3d9e6f7a18ec49ec922"
+    },
+    {
+      "path": "tests/test_t_workflow_guards.py",
+      "size_bytes": 8721,
+      "sha256": "1582048c30f139c7c7f19db95a61402ba5f20a9bef92c71aa0cb6a730310a69d"
+    },
+    {
+      "path": "tests/test_u_engineering.py",
+      "size_bytes": 4500,
+      "sha256": "328568c0061f16dbd466b8ccdb4c0a87f98e558f42164070f0fd77ee751336d8"
+    },
+    {
+      "path": "verification/benchmark-final.log",
+      "size_bytes": 2234,
+      "sha256": "321286a363c72a67c9b5903dfa38c53eaf0b53d97876acb9e3c3ffa104887429"
+    },
+    {
+      "path": "verification/pytest-final.log",
+      "size_bytes": 612,
+      "sha256": "a23be18dcf649e55d6172376eff4af975097dcdf46b8b19972f05d473239115d"
+    },
+    {
+      "path": "verification/summary.json",
+      "size_bytes": 429,
+      "sha256": "24f68978ef3fd314baf37bf5ea0546c0d69074e37820bbf3ab37e1817d29d523"
+    }
+  ]
+}
