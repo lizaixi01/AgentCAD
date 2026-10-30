@@ -3143,10 +3143,10 @@ L 576.288 451.149623
    <g id="matplotlib.axis_6"/>
    <g id="patch_37">
     <path d="M 248.088 466.514209 
-L 487.8384 466.514209 
-Q 490.8384 466.514209 490.8384 463.514209 
-L 490.8384 462.634543 
-Q 490.8384 459.634543 487.8384 459.634543 
+L 488.832 466.514209 
+Q 491.832 466.514209 491.832 463.514209 
+L 491.832 462.634543 
+Q 491.832 459.634543 488.832 459.634543 
 L 248.088 459.634543 
 Q 245.088 459.634543 245.088 462.634543 
 L 245.088 463.514209 
@@ -3156,8 +3156,8 @@ z
    </g>
    <g id="patch_38">
     <path d="M 245.088 466.514209 
-L 487.8384 466.514209 
-L 487.8384 459.634543 
+L 488.832 466.514209 
+L 488.832 459.634543 
 L 245.088 459.634543 
 z
 " clip-path="url(#p3e6d321179)" style="fill: #2a78d6"/>
@@ -3231,8 +3231,8 @@ L 635.904 511.92
 " style="fill: none; stroke: #e4e7eb; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
    </g>
    <g id="text_49">
-    <!-- 0.742 -->
-    <g style="fill: #1f2328" transform="translate(493.964928 465.412267) scale(0.09 -0.09)">
+    <!-- 0.745 -->
+    <g style="fill: #1f2328" transform="translate(494.958528 465.412267) scale(0.09 -0.09)">
      <defs>
       <path id="DejaVuSans-Bold-1a" d="M 428 4666 
 L 3944 4666 
@@ -3244,12 +3244,37 @@ L 428 3781
 L 428 4666 
 z
 " transform="scale(0.015625)"/>
+      <path id="DejaVuSans-Bold-18" d="M 678 4666 
+L 3669 4666 
+L 3669 3781 
+L 1638 3781 
+L 1638 3059 
+Q 1775 3097 1914 3117 
+Q 2053 3138 2203 3138 
+Q 3056 3138 3531 2711 
+Q 4006 2284 4006 1522 
+Q 4006 766 3489 337 
+Q 2972 -91 2053 -91 
+Q 1656 -91 1267 -14 
+Q 878 63 494 219 
+L 494 1166 
+Q 875 947 1217 837 
+Q 1559 728 1863 728 
+Q 2300 728 2551 942 
+Q 2803 1156 2803 1522 
+Q 2803 1891 2551 2103 
+Q 2300 2316 1863 2316 
+Q 1603 2316 1309 2248 
+Q 1016 2181 678 2041 
+L 678 4666 
+z
+" transform="scale(0.015625)"/>
      </defs>
      <use xlink:href="#DejaVuSans-Bold-13"/>
      <use xlink:href="#DejaVuSans-Bold-11" transform="translate(69.578125 0)"/>
      <use xlink:href="#DejaVuSans-Bold-1a" transform="translate(107.5625 0)"/>
      <use xlink:href="#DejaVuSans-Bold-17" transform="translate(177.140625 0)"/>
-     <use xlink:href="#DejaVuSans-Bold-15" transform="translate(246.71875 0)"/>
+     <use xlink:href="#DejaVuSans-Bold-18" transform="translate(246.71875 0)"/>
     </g>
    </g>
    <g id="text_50">

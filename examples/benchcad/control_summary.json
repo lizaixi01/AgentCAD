@@ -59,16 +59,16 @@
   "claude-hybrid3-medium": {
    "n": 100,
    "submitted": 100,
-   "iou_mean": 0.7425,
+   "iou_mean": 0.745,
    "iou_median": 0.8239,
-   "iou_ge_0_9": 31,
+   "iou_ge_0_9": 32,
    "iou_lt_0_5": 15,
    "seconds_median": 89.4,
-   "input_tokens_median": 196271,
-   "cost_usd": 29.17,
-   "tool_calls": 1238,
-   "tool_calls_failed": 100,
-   "leak_suspect": 3
+   "input_tokens_median": 189833,
+   "cost_usd": 28.93,
+   "tool_calls": 1216,
+   "tool_calls_failed": 88,
+   "leak_suspect": 0
   },
   "claude-code-medium": {
    "n": 100,
@@ -129,16 +129,16 @@
   "codex-hybrid3-medium": {
    "n": 100,
    "submitted": 100,
-   "iou_mean": 0.8764,
+   "iou_mean": 0.8761,
    "iou_median": 0.9295,
-   "iou_ge_0_9": 58,
+   "iou_ge_0_9": 59,
    "iou_lt_0_5": 3,
    "seconds_median": 198.6,
-   "input_tokens_median": 359423,
+   "input_tokens_median": 343415,
    "cost_usd": null,
-   "tool_calls": 1479,
-   "tool_calls_failed": 10,
-   "leak_suspect": 1
+   "tool_calls": 1458,
+   "tool_calls_failed": 2,
+   "leak_suspect": 0
   },
   "codex-code-medium": {
    "n": 100,
@@ -280,32 +280,32 @@
   {
    "a": "claude-hybrid3-medium",
    "b": "claude-code-medium",
-   "mean_diff": 0.0606,
+   "mean_diff": 0.0632,
    "ci95": [
-    0.0259,
-    0.0961
+    0.0284,
+    0.0993
    ],
    "a_better": 55,
-   "b_better": 23
+   "b_better": 22
   },
   {
    "a": "claude-hybrid3-medium",
    "b": "claude-hybrid-medium",
-   "mean_diff": -0.0116,
+   "mean_diff": -0.009,
    "ci95": [
-    -0.0507,
-    0.0289
+    -0.0476,
+    0.0306
    ],
    "a_better": 40,
-   "b_better": 37
+   "b_better": 35
   },
   {
    "a": "codex-hybrid3-medium",
    "b": "codex-code-medium",
-   "mean_diff": -0.0413,
+   "mean_diff": -0.0415,
    "ci95": [
-    -0.0737,
-    -0.0156
+    -0.0741,
+    -0.0159
    ],
    "a_better": 13,
    "b_better": 37
@@ -313,10 +313,10 @@
   {
    "a": "codex-hybrid3-medium",
    "b": "codex-hybrid-medium",
-   "mean_diff": 0.0198,
+   "mean_diff": 0.0195,
    "ci95": [
-    -0.0189,
-    0.0558
+    -0.0193,
+    0.0557
    ],
    "a_better": 32,
    "b_better": 22

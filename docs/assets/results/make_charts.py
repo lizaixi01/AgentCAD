@@ -34,7 +34,7 @@ RELIABILITY = [
 # BenchCAD Vision2Code, 100 tasks at medium effort, mean voxel IoU: AgentCAD with CadQuery scripts and the
 # reference comparison (#31) vs. the same agent writing CadQuery itself      # examples/benchcad/README.md
 BENCH = [
-    ("Claude Code · Opus 5.5", "vs. writing CadQuery itself", 0.742, 0.682),
+    ("Claude Code · Opus 5.5", "vs. writing CadQuery itself", 0.745, 0.682),
     ("Codex · gpt-6.1-sol", "vs. writing CadQuery itself", 0.876, 0.918),
 ]
 

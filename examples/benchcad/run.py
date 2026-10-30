@@ -164,6 +164,12 @@ def _run_once(task: Path, agent: str, arm: str, label: str, effort: str, timeout
     # the hybrid arm is the AgentCAD arm with scripts enabled (CadQuery in AgentCAD's venv: the [cadquery] extra)
     cmd = command(agent, "mcp" if arm == "hybrid" else arm, ws.as_posix(), effort, logs / "_mcp",
                   python=str(BENCH_PY), scripts=arm == "hybrid", images=[(ws / i).as_posix() for i in images])
+    if (logs / f"{tid}.jsonl").exists():  # run again: keep the earlier attempt's logs, in a folder the summaries skip
+        n = 1 + len(list((logs / "replaced").glob(f"{tid}.*.jsonl")))
+        (logs / "replaced").mkdir(exist_ok=True)
+        for ext in (".jsonl", ".stderr.log"):
+            if (logs / f"{tid}{ext}").exists():
+                (logs / f"{tid}{ext}").replace(logs / "replaced" / f"{tid}.{n}{ext}")
     t0 = time.time()
     status = "done"
     with open(logs / f"{tid}.jsonl", "wb") as out, open(logs / f"{tid}.stderr.log", "wb") as err:

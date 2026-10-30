@@ -55,7 +55,7 @@ AgentCAD gives the agent a CAD runtime instead of a blank Python file:
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/results/results-dark.svg">
-    <img src="docs/assets/results/results-light.svg" alt="Results chart. Typical minutes per run, AgentCAD vs. the alternative: five-round revision 4.1 vs 12.9 (writing code); real DWG edit 2.9 vs 6.0 (writing code); layer cleanup 1.0 vs 1.7 and dimensioning 1.8 vs 3.2 (AutoCAD MCP Pro); native DWG with AutoCAD open 3.0 vs 5.7 (AutoCAD MCP Pro). Runs that fully succeeded: undo across sessions 3/3 vs 0/3; native DWG 11/12 vs 10/12; 12 drafting tasks 24/24 vs 23/24. BenchCAD Vision2Code mean IoU, AgentCAD vs. the same agent writing CadQuery itself: Claude Code 0.742 vs 0.682; Codex 0.876 vs 0.918." width="860">
+    <img src="docs/assets/results/results-light.svg" alt="Results chart. Typical minutes per run, AgentCAD vs. the alternative: five-round revision 4.1 vs 12.9 (writing code); real DWG edit 2.9 vs 6.0 (writing code); layer cleanup 1.0 vs 1.7 and dimensioning 1.8 vs 3.2 (AutoCAD MCP Pro); native DWG with AutoCAD open 3.0 vs 5.7 (AutoCAD MCP Pro). Runs that fully succeeded: undo across sessions 3/3 vs 0/3; native DWG 11/12 vs 10/12; 12 drafting tasks 24/24 vs 23/24. BenchCAD Vision2Code mean IoU, AgentCAD vs. the same agent writing CadQuery itself: Claude Code 0.745 vs 0.682; Codex 0.876 vs 0.918." width="860">
   </picture>
 </p>
 
@@ -63,7 +63,7 @@ Every comparison keeps the agent and model the same and changes only the tools.
 
 - **Faster.** On most tasks, runs were 1.4–3× faster than the same agent writing ezdxf code. They were 1.7–1.9× faster than the same agent using AutoCAD MCP Pro, including with AutoCAD 2027 open.
 - **Undo that survives a new session.** In a five-round revision, AgentCAD restored an earlier hole size from its journal 3/3 times. With AutoCAD MCP Pro the agent could not, 0/3.
-- **3D from pictures.** On 100 [BenchCAD](https://arxiv.org/abs/2605.10865) Vision2Code tasks, Claude Code rebuilt parts from four views more accurately through AgentCAD than by writing CadQuery itself: mean IoU 0.742 vs 0.682. Through AgentCAD it still wrote CadQuery, but each script ran as a checked transaction, and it could compare its part with the target and get a match score that also checks the edges inside the outline. This is our own run, not the BenchCAD leaderboard, where models write CadQuery in one shot.
+- **3D from pictures.** On 100 [BenchCAD](https://arxiv.org/abs/2605.10865) Vision2Code tasks, Claude Code rebuilt parts from four views more accurately through AgentCAD than by writing CadQuery itself: mean IoU 0.745 vs 0.682. Through AgentCAD it still wrote CadQuery, but each script ran as a checked transaction, and it could compare its part with the target and get a match score that also checks the edges inside the outline. This is our own run, not the BenchCAD leaderboard, where models write CadQuery in one shot.
 - **Where it doesn't win yet:** Codex still rebuilt those parts more accurately by writing CadQuery itself (0.918 vs 0.876), though through AgentCAD it took a third less time. For a batch of near-identical drawings, one generated script is faster and cheaper. AgentCAD sessions also read about 2× the input tokens.
 
 Samples are small (2–3 runs per task, one run per BenchCAD task). The full reports with logs and graders:
