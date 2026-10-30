@@ -36,7 +36,7 @@
 16. **版面与制图规范不检查**：标注互相重叠、文字压线、轴类的台阶/倒角轮廓线等，验证器发现不了，需要出图目视检查（`examples/trials/render_png.py`）。
 17. **字体**：新图默认 `gbenor.shx` + `gbcbig.shx`。没有安装这两个字体的 CAD 软件会做字体替换。
 
-19. **三维零件**（2026-10-29）：一个零件一个 Body，没有装配；不能从三维生成二维工程图（预览图已有：`export_drawing` 的 png）；Agent 三维实验目前只有 BenchCAD Vision2Code 的 100 题试点（每题一次，见 [examples/benchcad/README.md](../examples/benchcad/README.md)），图纸到零件（T1）还没跑。详见 [part-3d.md](part-3d.md)。
+19. **三维零件**（2026-10-29；实验列表 2026-10-31 更新）：一个零件一个 Body，没有装配；不能从三维生成二维工程图（预览图已有：`export_drawing` 的 png）；Agent 三维实验都是小样本，不是官方排行榜成绩：BenchCAD Vision2Code 的 100 题试点（每题一次，见 [examples/benchcad/README.md](../examples/benchcad/README.md)）、BenchCAD 2 的 9 个公开开发样例（含图纸到零件 T1，见 [examples/benchcad2/README.md](../examples/benchcad2/README.md)）和 Parametric CAD Bench V3 的 6 题本地试点（见 [examples/parametric_cad_bench/README.md](../examples/parametric_cad_bench/README.md)），汇总见 [benchmarks.md](benchmarks.md)。详见 [part-3d.md](part-3d.md)。
 20. **三维脚本与参考图比较**（2026-10-30）：`run_script` 可以用 CadQuery / FreeCAD Part 脚本建零件的基体，之后的操作建在它上面；基体本身不是特征树（`SCRIPT_BASE_SOLID` 警告，CADBench 会拒收），只能整段重跑脚本来改。和二维脚本一样默认关闭，检查只防误操作，不是沙箱。`export_drawing(..., reference=...)` 比较轮廓和轮廓里的边线（整体尺寸不比较），看不到任何视图都看不出的差别（空心内部、正面背后的壁厚）；参考图必须按预览的网格排法，且有大小上限（32 MB、2500 万像素、每格不超过 8:1，每格先缩到 1024 px）。Agent 实测见 [examples/benchcad/README.md](../examples/benchcad/README.md)。
 
 ## 路线图
