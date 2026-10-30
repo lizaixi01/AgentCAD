@@ -141,10 +141,33 @@ to distinguish architectural marks from ISA instrument tags.
 
 `draw_mechanical_assembly` accepts an A3 `sheet`, named revolved `parts` (segment
 length/outer diameter/bore), optional end-view hole circles, and ISO library
-`fasteners`. It creates front/end/full longitudinal-section views, real dimensions,
-a parts list and linked balloons. `read_engineering(..., "mechanical")` rechecks
-saved profiles, quantities and links; deleting a fastener invalidates the old BOM
-and its balloon. Through-bore sections and the documented revolved profiles are
+`fasteners`. By default it dimensions each segment and overall length, each distinct
+outer and bore diameter, hole count/diameter, pitch-circle diameter, equal spacing
+and first-hole orientation (CCW from drawing +X). Diameter callouts retain native
+DIMENSION geometry; fractional sizes must also appear correctly in the rendered
+dimension block. `hole_circle` requires an end (`side`) view. A simultaneous
+section and end view occupy separate positions. `dimension: false` explicitly
+disables automatic annotations for that part and is reported as such.
+
+The saved manufacturing record binds the actual profile, bore, view and hole
+geometry to the expected annotation entities. `read_engineering(..., "mechanical")`
+checks native dimension definition points, measurements, display text and visibility,
+plus orientation leaders, saved profiles, BOM quantities and balloon links. Strict
+delivery rejects missing, altered or stale annotations and changed geometry. A
+legacy part without this record reports `MANUFACTURING_COVERAGE_UNRECORDED`;
+regenerate from its source spec to gain verified coverage. It is not silently certified.
+The record is a consistency check, not a signature against malicious metadata editing.
+Large records use an entity-owned XRECORD with a small XDATA locator to stay below
+AutoCAD's per-entity XDATA limit; missing record storage is an explicit read error.
+
+Annotations cover the supplied nominal dimensions. An end-view hole circle has no
+depth input, so it receives **no invented THRU/depth**, tolerance, fit, finish or
+process requirement. A uniform positive bore across all profile segments can be
+labelled THRU. Hole-pattern counts with non-integer spacing retain an exact `360/N`
+expression. Decimal dimensions/orientation support up to eight decimal places;
+greater precision is refused. Sheet positions remain caller-controlled and should
+be visually checked for the chosen part sizes and annotation density.
+Through-bore sections and the documented revolved profiles are
 supported; this is a 2D drawing workflow, not a general 3D assembly solver or a
 certificate of full ISO drawing compliance.
 

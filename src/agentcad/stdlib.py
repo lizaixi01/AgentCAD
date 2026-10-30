@@ -24,9 +24,9 @@ CLEARANCE = {  # ISO 273: fine, medium, coarse
     "M16": (17.0, 17.5, 18.5), "M20": (21.0, 22.0, 24.0), "M24": (25.0, 26.0, 28.0)}
 TAP_DRILL = {"M3": 2.5, "M4": 3.3, "M5": 4.2, "M6": 5.0, "M8": 6.8, "M10": 8.5, "M12": 10.2, "M14": 12.0,
              "M16": 14.0, "M20": 17.5, "M24": 21.0}  # Cutting taps, not forming taps; see source notes.
-COUNTERBORE = {  # cap-screw diameter/depth; M14 is NOT verified against a DIN 974-1 row.
+COUNTERBORE = {  # Nominal cap-screw diameter/depth; M14 uses GOST 12876-67 table 4, not DIN.
     "M3": (6.5, 3.4), "M4": (8.0, 4.4), "M5": (10.0, 5.4), "M6": (11.0, 6.4), "M8": (15.0, 8.6),
-    "M10": (18.0, 10.6), "M12": (20.0, 12.6), "M14": (24.0, 14.6), "M16": (26.0, 16.6), "M20": (33.0, 20.6),
+    "M10": (18.0, 10.6), "M12": (20.0, 12.6), "M14": (24.0, 15.0), "M16": (26.0, 16.6), "M20": (33.0, 20.6),
     "M24": (40.0, 24.8)}
 FITS = ("fine", "medium", "coarse")
 
@@ -77,7 +77,7 @@ def provenance(item: str) -> dict[str, Any]:
         "ball_bearing": "Timken E10857-GB, table 1, page 2; copyright 2023; checked 2026-10-30",
         "clearance": "NBK clearance table / ISO 273 note, published 2015-06-18; checked 2026-10-30",
         "tapped": "EXACT GS52 (2020-10-01) M3-M12; Thurmer recommended core sizes M14-M24",
-        "counterbore": "Ifanger 03/2006 DIN 974-1 diameter table except M14; depth recommendations separately sourced",
+        "counterbore": "Ifanger 03/2006 DIN 974-1 diameters except M14; M14 D/t: GOST 12876-67, amendment 4 (1983), table 4; other depths are recommendations",
     }
     return {"reference": references[item], "details": "docs/standard-tables.md",
             "scope": "Listed nominal dimensions only; not full standards or manufacturing certification"}
@@ -130,10 +130,27 @@ def hole_dims(size: str, kind: str, fit: str = "medium") -> dict[str, Any]:
                 "callout": f"{size}-6H", "tap_drill": drill,
                 "reference_status": "recommended_cutting_tap_drill"}
     cb, depth = COUNTERBORE[size]
+    if size == "M14":
+        return {
+            "diameter": CLEARANCE[size][1], "counterbore_diameter": cb, "counterbore_depth": depth,
+            "standard": "ISO 273 through hole / GOST 12876-67 nominal counterbore",
+            "reference_status": "dimensions_checked_mixed_references",
+            "component_references": {
+                "diameter": "ISO 273 medium clearance: 15.5 mm",
+                "counterbore_diameter": "GOST 12876-67, amendment 4 (1983), table 4 M14, D: 24 mm",
+                "counterbore_depth": "GOST 12876-67, amendment 4 (1983), table 4 M14, t: 15 mm; figure 4, socket head without washer",
+            },
+            "note": "Nominal dimensions from mixed references, not full GOST conformity. The source specifies H14 for D/t, "
+                    "a 0.5 x 45 degree seat/through-hole chamfer (clause 4), and GOST 11284 through holes (clause 6). "
+                    "This 2D symbol retains ISO 273 clearance and does not apply those tolerances or model the chamfer. "
+                    "The internal corner radius is limited to 0.3 mm by clause 4 and is not modelled. "
+                    "New M14 depth is 15 mm; existing drawings with the earlier 14.6 mm recommendation are unchanged.",
+            "callout": f"%%c{CLEARANCE[size][1]:g}, %%c{cb:g} depth {depth:g}",
+        }
     return {"diameter": CLEARANCE[size][1], "counterbore_diameter": cb, "counterbore_depth": depth,
-            "standard": "ISO 273 / DIN 974-1 diameter" if size != "M14" else "ISO 273 / engineering counterbore",
-            "reference_status": "diameter_checked_depth_recommended" if size != "M14" else "unverified_counterbore",
-            "note": "Depth is a clearance recommendation without a washer; M14 counterbore has no verified DIN row.",
+            "standard": "ISO 273 / DIN 974-1 diameter",
+            "reference_status": "diameter_checked_depth_recommended",
+            "note": "Depth is a clearance recommendation without a washer.",
             "callout": f"%%c{CLEARANCE[size][1]:g}, %%c{cb:g} depth {depth:g}"}
 
 
