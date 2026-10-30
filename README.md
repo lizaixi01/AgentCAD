@@ -14,7 +14,7 @@ Your coding agent creates, edits, checks and exports real engineering drawings a
 
 AgentCAD is an open-source program you install on your machine. It is not a GUI app and not a prompt or skill. It is the CAD engine your agent calls:
 
-- **An MCP server** (the main way to use it). Claude Code, Codex or any MCP client gets 24 CAD tools. You talk to your agent; the agent uses AgentCAD.
+- **An MCP server** (the main way to use it). Claude Code, Codex or any MCP client gets 25 CAD tools. You talk to your agent; the agent uses AgentCAD.
 - **A CLI, a Python library and an HTTP API** with the same tools, for scripts and pipelines.
 
 Behind those tools:
@@ -47,6 +47,7 @@ AgentCAD gives the agent a CAD runtime instead of a blank Python file:
 - **Every change is reversible.** Checkpoints before every edit, a diff of what changed, and a durable journal, so a new session can see and undo what an earlier one did.
 - **Checked by something other than the agent.** An independent validator re-reads the file from disk and reports problems as structured errors the agent can act on: geometry that doesn't close, dimensions that disagree with the part, text that will print too small, sheets it didn't check. For 3D parts: one valid solid, its size and volume, the holes it has, and features that failed to rebuild.
 - **The agent can see its work.** 3D parts export shaded PNG previews from any view direction, returned inline to the agent so it can compare them with what it was asked to build. Given a reference image, each view comes back aligned to it, with a match score and a diff. A live browser viewer shows you the same drawings and parts as they change.
+- **It can inspect the source drawing closely.** `inspect_image` magnifies a region of a PNG/JPEG/WebP drawing, including small dimension callouts and section hatching. It returns an inline image and source pixel coordinates without changing the input. Section depths and the side of each feature still need to be interpreted from the drawing.
 - **Real drawings, not just new ones.** Paper-space layouts, title blocks with attributes, DWG import/export and AutoCAD AUDIT through an optional headless AutoCAD backend.
 - **Safe by default.** Workspace sandbox, read-only mode, operation allow-lists. Scripts (ezdxf for drawings; CadQuery or FreeCAD Part code for 3D parts) run as transactions and are off unless you turn them on.
 
