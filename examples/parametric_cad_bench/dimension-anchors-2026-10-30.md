@@ -172,3 +172,18 @@ integrated branch, all affected image, dimension, CADBench pilot and new
 BenchCAD 2 checks pass: **82 passed, 2 optional CadQuery tests skipped** in
 16.07 seconds. The 529-test full-suite result above precedes this main update;
 it is not represented as a full run of the newly expanded suite.
+
+Independent review then found that a global fifth-percentile ink estimate can
+discard clear one-pixel lines occupying under 5% of the probe. Commit
+`2bdc67593fff85641b8f0affaa25e9241757c725` falls back to the darkest sample
+only when that estimate reports insufficient contrast; continuous crossing
+runs still reject isolated speckles. Four new synthetic cases cover black and
+gray lines in both orientations. The integrated focused suite now passes
+**86 tests, 2 optional CadQuery skips** in 14.32 seconds.
+
+This robustness fix is after the model attempts and does not change their
+recorded product pins. A [read-only replay](sparse-raster-replay-2026-10-30.json)
+of all **20 successful image calls** from the final attempt returns identical
+recorded source, crop, dimension and panel metadata, including the plate's
+section graph. Source and submitted native hashes remain unchanged. This is
+a tool-output regression, not another model attempt or a new benchmark score.
