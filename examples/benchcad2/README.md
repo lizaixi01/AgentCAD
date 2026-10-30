@@ -32,6 +32,13 @@ model-only graph reasoning. These remain development-sample results, not Core ra
 [Sealed first nine](results-astra-first-attempts-2026-10-30.json) and
 [all-attempt archive](results-astra-2026-10-30.json) preserve the distinction.
 
+## Native-tool control
+
+[Control design and reproducible runner](native-control.md) describe the native
+Python workbench comparison against the original AgentCAD + Astra attempts.
+The tool-specific interface and runtime differ; model, inputs, evaluator and
+per-case time/call caps are held fixed. Results are recorded as a separate experiment.
+
 ## Protocol
 
 - Model explicitly pinned to `gpt-6.1-sol`, reasoning effort `max`, using the

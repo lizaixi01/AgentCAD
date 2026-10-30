@@ -1,0 +1,15 @@
+# Match the measured AgentCAD CadQuery interpreter where applicable.
+# BenchCAD's tools.py/sitecustomize.py are staged unchanged from its pinned source.
+cadquery==2.8.0
+cadquery-ocp==7.9.3.1.1
+cadquery-ocp-proxy==7.9.3.1.1
+casadi==3.8.2
+ezdxf==1.4.5
+matplotlib==3.11.2
+nlopt==2.11.0
+numpy==2.4.6
+pillow==13.0.0
+scipy==1.17.1
+vtk==9.6.2
+# Native Python offers this library; AgentCAD's model interpreter did not.
+trimesh==5.1.0
