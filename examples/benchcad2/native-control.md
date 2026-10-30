@@ -1,5 +1,10 @@
 # BenchCAD native-tool control for AgentCAD + Astra
 
+[Completed 2026-10-31 comparison](comparison-native-astra-2026-10-31.md): native
+71.77 vs AgentCAD 56.79 overall, and 66.63 vs 58.15 on T1–T5. The original eight
+valid AgentCAD submissions were rescored without changes; nine fresh oracle checks
+passed. The fixed design below preceded the model requests.
+
 This experiment holds GPT-6 Astra / max, Codex CLI 0.163.0 and its existing
 ChatGPT login, the nine development cases, initial images, task briefs, evaluator,
 3,600-second / 100-tool-call per-case limits and maximum two model episodes fixed.
