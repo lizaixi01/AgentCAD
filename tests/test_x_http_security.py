@@ -100,3 +100,13 @@ def test_malformed_json_and_arguments_are_recoverable(server, ws):
     status, result = request(server, body=b'{"unknown":1}')
     assert status == 400 and result["error"]["code"] == "INVALID_ARGUMENTS"
     assert not (ws / "x.dxf").exists()
+
+
+def test_early_refusals_keep_their_response_when_body_arrives(server, ws):
+    # Exercise header/body delivery races on Windows, including the size branch.
+    for _ in range(15):
+        status, result = request(server, headers={"Content-Length": str(MAX_BODY + 1)})
+        assert status == 413 and result["error"]["code"] == "BODY_TOO_LARGE"
+        status, result = request(server, path="/v1/missing")
+        assert status == 404 and result["error"]["code"] == "UNKNOWN_TOOL"
+    assert not (ws / "x.dxf").exists()

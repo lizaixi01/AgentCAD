@@ -51,7 +51,7 @@ def make_handler(rt: Runtime, *, token: str | None = None,
             self.end_headers()
             self.wfile.write(data)
 
-        def _refuse(self, status, code, message):
+        def _refuse(self, status, code, message, category="policy"):
             # Closing a socket with unread request bytes can reset it on Windows,
             # discarding the JSON refusal. Drain only a bounded body, with a short
             # timeout; authorization still precedes parsing or Runtime execution.
@@ -68,7 +68,7 @@ def make_handler(rt: Runtime, *, token: str | None = None,
                     pass
                 finally:
                     self.connection.settimeout(10)
-            self._send(status, {"ok": False, "error": {"code": code, "category": "policy", "message": message}})
+            self._send(status, {"ok": False, "error": {"code": code, "category": category, "message": message}})
             return False
 
         def _authorized(self):
@@ -108,8 +108,7 @@ def make_handler(rt: Runtime, *, token: str | None = None,
                 return self._refuse(415, "CONTENT_TYPE_REQUIRED", "Use application/json")
             name = self.path.strip("/").removeprefix("v1/")
             if name not in TOOLS:
-                return self._send(404, {"ok": False, "error": {"code": "UNKNOWN_TOOL", "category": "input",
-                                                                "message": f"No tool {name!r}"}})
+                return self._refuse(404, "UNKNOWN_TOOL", f"No tool {name!r}", category="input")
             lengths = self.headers.get_all("Content-Length", [])
             if self.headers.get("Transfer-Encoding") or len(lengths) != 1 or not lengths[0].isascii() or not lengths[0].isdigit():
                 return self._refuse(400, "INVALID_BODY_LENGTH", "One nonnegative Content-Length is required")
@@ -117,7 +116,7 @@ def make_handler(rt: Runtime, *, token: str | None = None,
                 return self._refuse(413, "BODY_TOO_LARGE", "Request exceeds the body limit")
             n = int(lengths[0])
             if n > MAX_BODY:
-                return self._send(413, {"ok": False, "error": {"code": "BODY_TOO_LARGE", "category": "policy", "message": str(n)}})
+                return self._refuse(413, "BODY_TOO_LARGE", str(n))
             try:
                 raw = self.rfile.read(n)
                 if len(raw) != n:

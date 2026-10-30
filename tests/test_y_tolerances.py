@@ -63,6 +63,37 @@ def test_limit_precision_cannot_round_away_nominal_digits(rt, blank):
     assert result["error"]["code"] == "TOLERANCE_PRECISION_LOSS"
 
 
+@pytest.mark.parametrize("edit", [
+    {"op": "modify", "target": "tag:limit", "set": {"length_factor": 1.234}},
+    {"op": "stretch", "window": [[0.9, -0.1], [1.1, 0.1]], "delta": [0.234, 0]},
+])
+def test_existing_limits_cannot_lose_precision_during_edits(rt, ws, blank, edit):
+    assert rt.apply_operations(blank, [
+        {"op": "add_line", "start": [0, 0], "end": [1, 0]},
+        {"op": "add_linear_dim", "p1": [0, 0], "p2": [1, 0], "tag": "limit",
+         "tolerance": {"lower": -0.1, "upper": 0.1, "precision": 1, "mode": "limits"}}])["ok"]
+    before = (ws / blank).read_bytes()
+    result = rt.apply_operations(blank, [edit])
+    assert result["error"]["code"] == "TOLERANCE_PRECISION_LOSS", result
+    assert (ws / blank).read_bytes() == before
+
+
+def test_external_limit_precision_corruption_blocks_delivery(rt, ws, blank):
+    assert rt.apply_operations(blank, [
+        {"op": "add_line", "start": [0, 0], "end": [1, 0]},
+        {"op": "add_linear_dim", "p1": [0, 0], "p2": [1, 0], "tag": "limit",
+         "tolerance": {"lower": -0.1, "upper": 0.1, "precision": 1, "mode": "limits"}}])["ok"]
+    doc = ezdxf.readfile(ws / blank)
+    dim = doc.modelspace().query("DIMENSION").first
+    override = dim.override()
+    override["dimlfac"] = 1.234
+    override.render()
+    doc.saveas(ws / blank)
+    report = rt.validate_drawing(blank)
+    assert any(i["code"] == "TOLERANCE_PRECISION_LOSS" for i in report["validation"]["issues"])
+    assert rt.deliver_drawing(blank, "bad-limit", formats=["dxf"])["error"]["code"] == "DELIVERY_REJECTED"
+
+
 def test_sourced_fit_lookup_drives_saved_dimension(rt, blank):
     fit = rt.standard_library(item="iso_fit", size="25 H7/g6")
     assert fit["ok"] and fit["source_page"] == 74

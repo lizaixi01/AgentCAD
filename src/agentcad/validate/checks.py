@@ -372,6 +372,12 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
     # dimensions: stored text / measurement consistent with definition points
     blocks = BlockSnaps(doc, layout)
     for d in feats.dimensions:
+        from ..errors import AgentCADError
+        from ..tolerances import check_dimension_tolerance
+        try:
+            check_dimension_tolerance(doc.entitydb[d["id"]], unit_from_insunits(ins) or "mm")
+        except AgentCADError as exc:
+            out.append(issue(exc.code, "error", exc.message, [d["id"]]))
         if d["measurement"] is None:
             out.append(issue("DIMENSION_UNMEASURABLE", "warning", "Dimension type cannot be re-measured", [d["id"]]))
             continue

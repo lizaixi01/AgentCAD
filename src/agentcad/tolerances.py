@@ -12,6 +12,13 @@ def apply_tolerance(override, value, unit: str) -> None:
     if value is None:
         override.update({"dimtol": 0, "dimlim": 0, "dimtp": 0.0, "dimtm": 0.0})
         return
+    lower, upper, precision, mode = _validated_values(override, value, unit)
+    method = override.set_limits if mode == "limits" else override.set_tolerance
+    # DXF DIMTM is subtracted; the public interface uses signed lower deviations.
+    method(upper=upper, lower=-lower, dec=precision, leading_zeros=True, trailing_zeros=True)
+
+
+def _validated_values(override, value, unit: str) -> tuple[float, float, int, str]:
     if (not isinstance(value, dict) or not {"lower", "upper"} <= value.keys()
             or value.keys() - {"lower", "upper", "precision", "mode"}):
         raise input_error("INVALID_TOLERANCE", "tolerance needs signed lower/upper deviations, optional precision and mode")
@@ -39,9 +46,15 @@ def apply_tolerance(override, value, unit: str) -> None:
     text = override.dimension.dxf.get("text", "")
     if text and "<>" not in text:
         raise input_error("TOLERANCE_TEXT_OVERRIDE", "Toleranced dimensions must display the measured value (<>)")
-    method = override.set_limits if mode == "limits" else override.set_tolerance
-    # DXF DIMTM is subtracted; the public interface uses signed lower deviations.
-    method(upper=upper, lower=-lower, dec=precision, leading_zeros=True, trailing_zeros=True)
+    return lower, upper, precision, mode
+
+
+def check_dimension_tolerance(dimension, unit: str) -> None:
+    """Read-only validation shared by redraw and saved-file delivery checks."""
+    values = tolerance_info(dimension)
+    if values is not None:
+        values.pop("units")
+        _validated_values(dimension.override(), values, unit)
 
 
 def tolerance_info(dimension) -> dict | None:
