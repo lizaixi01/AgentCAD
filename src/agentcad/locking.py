@@ -17,9 +17,9 @@ def drawing_lock(directory: Path):
     directory.mkdir(parents=True, exist_ok=True)
     # Never guess that a pre-upgrade runtime has died based only on elapsed time.
     if (directory / "lock").exists():
-        raise AgentCADError("DRAWING_LOCKED", "An older AgentCAD's 'lock' marker exists; it is not safe to steal it",
-                            category="policy", retryable=False,
-                            hint="Call recover: it removes the marker once the process it names has exited")
+        raise _busy("An older AgentCAD's 'lock' marker exists; it is not safe to steal it",
+                    hint="Retry shortly. If the marker stays, call recover: it removes the marker once the "
+                         "process it names has exited")
     # Keep the inode: unlinking after unlock can split locks between two files on POSIX.
     with (directory / "write.lock").open("a+b") as stream:
         try:

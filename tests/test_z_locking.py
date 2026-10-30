@@ -65,7 +65,7 @@ def test_recover_removes_a_legacy_marker_only_once_its_writer_exited(rt, ws, bla
     line = [{"op": "add_line", "start": [0, 0], "end": [10, 0]}]
     for content in ("old runtime", str(os.getpid())):  # no PID; a writer that is still running
         marker.write_text(content)
-        assert rt.apply_operations(blank, line)["error"]["hint"].startswith("Call recover")
+        assert "call recover" in rt.apply_operations(blank, line)["error"]["hint"]
         assert rt.recover(blank)["error"]["code"] == "DRAWING_LOCKED"
         assert marker.read_text() == content
     gone = subprocess.run([sys.executable, "-c", "import os; print(os.getpid())"], capture_output=True, text=True)
