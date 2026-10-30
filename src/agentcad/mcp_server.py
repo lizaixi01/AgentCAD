@@ -70,7 +70,8 @@ Basics
 - Compare with a reference image: export_drawing(path, "cmp.png", "png", views=[...], reference="ref.png"),
   views in the reference's order and grid (2 columns up to 4 views). Each view is scaled and centred onto the
   reference's silhouette, so overall size is not compared, only shape and proportions. compare.score (per view:
-  views[].score) is the mean of outline (silhouette IoU) and edges (lines and shading steps inside the part). The
+  views[].score) is the mean of outline (silhouette IoU) and edges (lines and shading steps inside the part). A part
+  that matches scores about 0.95 or more; below 0.9 it still differs where the diff shows red or blue. The
   image is a diff per view: grey where both have material, light red / light blue where only the reference / only
   ours has; red edges only in the reference (a feature yours lacks or misplaces), blue only in yours. views[].cut
   names sides where the reference runs out of its picture: nothing beyond them is compared.
@@ -316,7 +317,8 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                        reference: Annotated[str | None, Field(description="png of a 3D part: a reference image in the "
                            "workspace laid out as the same grid of views (same order; 2 columns up to 4 views). The "
                            "png is then a diff of each view, aligned to the reference's silhouette; the result scores "
-                           "each view (outline, edges inside it) and their mean, compare.score")] = None,
+                           "each view (outline, edges inside it) and their mean, compare.score: about 0.95 or more "
+                           "when the part matches")] = None,
                        inline_image: Annotated[bool, Field(description="png: also return the image in this result, "
                            "so you see it without opening the file (not above 2 MB)")] = True) -> Any:
         """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, PDF (plotted without
