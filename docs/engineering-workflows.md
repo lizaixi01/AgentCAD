@@ -63,11 +63,43 @@ semantics, so existing clients do not silently change meaning.
 removal. Differing styles, attributes and domain records are retained. Large deletions
 still require the operation's `confirm_large`. It is not a general automatic repairer.
 
-`deliver_drawing` requires a new/empty directory, validates the source, exports the
-requested formats, hashes outputs and the source revision, and writes a manifest only
-if the source stayed unchanged. DXF is parsed again; other formats currently receive
-a nonempty-file check, not a format-specific semantic parity check. A failed export
-can leave partial files without a manifest; retry in a fresh directory.
+`deliver_drawing` requires a new/empty directory. It restores stored part-spec
+requirements, checks every layout's generic integrity, and merges native P&ID,
+architecture and mechanical critique into its quality gate. Each error or failed
+requirement costs 15 points; each warning costs 3. Default `strict=true` also rejects
+any error or failed requirement regardless of `min_score`. An explicit non-strict,
+lower-threshold diagnostic delivery retains every failure in its manifest.
+Domain reconstruction currently supports model space. Native domain records in
+paper space or block definitions are explicitly rejected as unverified instead
+of being labelled as passed; generic layout validation still runs.
+
+Manifest version 2 records format-specific readback checks. DXF compares all layout
+entities, block definitions, attributes, styles, page settings, selected drawing
+variables and AgentCAD metadata. JSON compares its model-space projection; CSV/XLSX
+compare saved cells with source text/attributes, preserving formula protections.
+PDF checks page count, MediaBox, drawing content and clipping; SVG checks XML,
+viewBox and drawing content. PDF/SVG checks are structural, not full geometry or
+pixel equivalence. Source hashes are checked again before issuing the manifest.
+A failed export can leave partial files without a manifest; retry in a fresh directory.
+
+Linear/aligned, radius and diameter dimensions accept native numeric tolerances:
+`tolerance={"lower": -0.012, "upper": 0.025, "precision": 3, "mode": "deviations"}`.
+Lower/upper are signed deviations in displayed drawing units; unit strings are also
+accepted. `mode="limits"` prints limits. `modify(set={"tolerance": ...})` updates and
+rerenders; `null` clears it. Reopening `inspect_entities` returns the native values.
+Insufficient decimal precision and fixed numeric text overrides are rejected.
+Angular/ordinate tolerances are explicitly unsupported.
+Precision is rechecked when an existing dimension changes, and on saved dimensions
+throughout the entity database, including nested and unreferenced block definitions.
+That integrity check does not certify the physical placement/scaling of every block
+instance. New stacked tolerance text uses a 0.7 height factor, centred alignment and
+at least half a nominal text height of line clearance; numeric values stay native.
+
+`standard_library(item="iso_fit", size="25 H7/g6")` returns sourced hole/shaft
+limits and clearance in mm. The bounded table covers **H7, h6 and g6, 10 < nominal
+<= 500 mm**, with size steps upper-inclusive. Other classes/ranges are refused.
+Use the returned lower/upper values as dimension tolerances (convert units for a
+non-mm drawing). Data provenance and tested scope are in [fit tables](fit-tables.md).
 
 CSV/XLSX export supports `table="entities"`, `"pid_lines"`, and `"bom"`. Values are
 read from saved text, attributes and domain records. CSV prefixes formula-like text;
@@ -132,6 +164,9 @@ Current takeoff requires inferred mm units. Pipe lengths are rectilinear minimum
 spanning estimates; cable lengths use panel/load Manhattan distances plus allowance
 and upward rounding. Missing layout tags produce `C`/null length; inferred sizes
 reduce confidence. These are preliminary quantities, not surveyed installed routes.
+ARC junctions and nearby labels use the finite curve, including its angular span;
+an endpoint on the chord is not treated as a junction. Missing equipment tags leave
+electrical callouts as explicit unresolved rows with null cable lengths and warnings.
 Language/service rules cover the vocabulary exercised by the published plant fixture;
 arbitrary symbol libraries and all drawing conventions are not guaranteed.
 

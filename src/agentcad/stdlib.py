@@ -2,8 +2,8 @@
 
 - P&ID symbols in the style of ISO 10628 / ISA-5.1, drawn in a unit box and scaled on insertion.
 - GD&T characteristic symbols (ISO 1101 / ASME Y14.5), drawn in a unit cell of the feature control frame.
-- ISO metric fasteners, deep groove ball bearings and hole sizes. Values are the nominal dimensions of the
-  cited standards (nut heights: the maximum), which is what a drawing shows.
+- Metric fasteners, deep groove ball bearings and hole sizes. See docs/standard-tables.md for the
+  checked source editions, nominal/max dimensions and explicitly unverified recommendations.
 
 Geometry primitives (unit coordinates):
     ("line", p, q)  ("poly", [p...], closed)  ("circle", c, r)  ("arc", c, r, a0, a1)
@@ -15,7 +15,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-# --- metric threads and holes (ISO 261 coarse pitch, ISO 273 clearance, ISO 2306 tap drills) -----------------
+# --- metric threads and holes (coarse pitch, clearance and cutting-tap recommendations) ----------------------
 PITCH = {"M3": 0.5, "M4": 0.7, "M5": 0.8, "M6": 1.0, "M8": 1.25, "M10": 1.5, "M12": 1.75, "M14": 2.0,
          "M16": 2.0, "M20": 2.5, "M24": 3.0}
 CLEARANCE = {  # ISO 273: fine, medium, coarse
@@ -23,8 +23,8 @@ CLEARANCE = {  # ISO 273: fine, medium, coarse
     "M8": (8.4, 9.0, 10.0), "M10": (10.5, 11.0, 12.0), "M12": (13.0, 13.5, 14.5), "M14": (15.0, 15.5, 16.5),
     "M16": (17.0, 17.5, 18.5), "M20": (21.0, 22.0, 24.0), "M24": (25.0, 26.0, 28.0)}
 TAP_DRILL = {"M3": 2.5, "M4": 3.3, "M5": 4.2, "M6": 5.0, "M8": 6.8, "M10": 8.5, "M12": 10.2, "M14": 12.0,
-             "M16": 14.0, "M20": 17.5, "M24": 21.0}  # ISO 2306
-COUNTERBORE = {  # for ISO 4762 cap screws (DIN 974-1 row 1): diameter, depth
+             "M16": 14.0, "M20": 17.5, "M24": 21.0}  # Cutting taps, not forming taps; see source notes.
+COUNTERBORE = {  # cap-screw diameter/depth; M14 is NOT verified against a DIN 974-1 row.
     "M3": (6.5, 3.4), "M4": (8.0, 4.4), "M5": (10.0, 5.4), "M6": (11.0, 6.4), "M8": (15.0, 8.6),
     "M10": (18.0, 10.6), "M12": (20.0, 12.6), "M14": (24.0, 14.6), "M16": (26.0, 16.6), "M20": (33.0, 20.6),
     "M24": (40.0, 24.8)}
@@ -65,6 +65,22 @@ PARTS = {
                      "describe": "Deep groove ball bearing, series 60xx / 62xx / 63xx"},
 }
 HOLE_KINDS = ("clearance", "tapped", "counterbore")
+
+
+def provenance(item: str) -> dict[str, Any]:
+    """Bounded dimensional references, not a manufacturing conformity certificate."""
+    references = {
+        "hex_bolt": "JF Engineering ISO 4017 datasheet; revision not stated; checked 2026-10-30",
+        "hex_nut": "ISO 4032:2012, tables 1 and 2; nut height is maximum",
+        "washer": "WASI DIN 125 A / similar ISO 7089 datasheet; revision not stated; checked 2026-10-30",
+        "socket_head_cap_screw": "WASI DIN 912 / EN ISO 4762, BPL2005 catalogue",
+        "ball_bearing": "Timken E10857-GB, table 1, page 2; copyright 2023; checked 2026-10-30",
+        "clearance": "NBK clearance table / ISO 273 note, published 2015-06-18; checked 2026-10-30",
+        "tapped": "EXACT GS52 (2020-10-01) M3-M12; Thurmer recommended core sizes M14-M24",
+        "counterbore": "Ifanger 03/2006 DIN 974-1 diameter table except M14; depth recommendations separately sourced",
+    }
+    return {"reference": references[item], "details": "docs/standard-tables.md",
+            "scope": "Listed nominal dimensions only; not full standards or manufacturing certification"}
 
 
 def thread_length(d: float, length: float) -> float:
@@ -109,11 +125,15 @@ def hole_dims(size: str, kind: str, fit: str = "medium") -> dict[str, Any]:
                 "callout": f"%%c{CLEARANCE[size][FITS.index(fit)]:g}"}
     if kind == "tapped":
         drill = TAP_DRILL[size]
-        return {"diameter": drill, "thread_diameter": d, "pitch": PITCH[size], "standard": "ISO 261 / ISO 2306",
-                "callout": f"{size}-6H", "tap_drill": drill}
+        return {"diameter": drill, "thread_diameter": d, "pitch": PITCH[size],
+                "standard": "ISO 261 thread; cutting-tap drill recommendation",
+                "callout": f"{size}-6H", "tap_drill": drill,
+                "reference_status": "recommended_cutting_tap_drill"}
     cb, depth = COUNTERBORE[size]
     return {"diameter": CLEARANCE[size][1], "counterbore_diameter": cb, "counterbore_depth": depth,
-            "standard": "ISO 273 / DIN 974-1",
+            "standard": "ISO 273 / DIN 974-1 diameter" if size != "M14" else "ISO 273 / engineering counterbore",
+            "reference_status": "diameter_checked_depth_recommended" if size != "M14" else "unverified_counterbore",
+            "note": "Depth is a clearance recommendation without a washer; M14 counterbore has no verified DIN row.",
             "callout": f"%%c{CLEARANCE[size][1]:g}, %%c{cb:g} depth {depth:g}"}
 
 
@@ -255,7 +275,10 @@ MODIFIERS = ("M", "L", "S", "P", "F", "T", "U")
 
 def index() -> dict[str, Any]:
     """Compact catalogue for the standard_library tool."""
+    from .fits import catalog
     return {
+        "iso_fits": catalog(),
+        "dimensional_reference_notes": "docs/standard-tables.md; listed dimensions, not full standards certification",
         "pid_symbols": sorted(PID),
         "pid_line_kinds": sorted(LINE_KINDS),
         "gdt_characteristics": sorted(GDT),
@@ -267,15 +290,19 @@ def index() -> dict[str, Any]:
 
 def table(item: str, size: str | None = None) -> dict[str, Any]:
     """Rows of one library item (all sizes, or one)."""
+    if item == "iso_fit":
+        from .fits import table as fit_table
+        return fit_table(size)
     if item in PARTS:
         sizes = [size] if size else PARTS[item]["sizes"]
         return {"item": item, "standard": PARTS[item]["standard"], "describe": PARTS[item]["describe"],
+                "provenance": provenance(item),
                 "rows": {s: part_dims(item, s) for s in sizes}}
     if item in HOLE_KINDS:
         sizes = [size] if size else list(CLEARANCE)
         rows = {s: ({f: hole_dims(s, item, f) for f in FITS} if item == "clearance" else hole_dims(s, item))
                 for s in sizes}
-        return {"item": item, "rows": rows}
+        return {"item": item, "rows": rows, "provenance": provenance(item)}
     if item in PID:
         return {"item": item, "describe": PID[item]["describe"], "inline": PID[item]["inline"],
                 "attributes": ["FUNC", "LOOP"] if PID[item].get("instrument") else ([] if PID[item].get("no_tag")

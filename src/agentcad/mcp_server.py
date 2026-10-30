@@ -144,7 +144,7 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
     rt = Runtime(policy or Policy(), auto_viewer=True)
     mcp = CADServer("agentcad", instructions=INSTRUCTIONS)
 
-    @mcp.tool()
+    @mcp.tool(structured_output=False)
     def inspect_image(path: Annotated[str, Field(description="PNG/JPEG/WebP image in the workspace")],
                       region: Annotated[list[int] | None, Field(description="[left, top, right, bottom] in source "
                           "pixels, top-left origin; omit for an overview showing source dimensions")] = None,
@@ -379,7 +379,7 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
         """Restore the last valid checkpoint if the file is corrupt or a transaction was interrupted."""
         return rt.recover(path)
 
-    @mcp.tool()
+    @mcp.tool(structured_output=False)
     def export_drawing(path: Path_, output: str,
                        format: Literal["dxf", "svg", "json", "pdf", "dwg", "csv", "xlsx", "step", "iges", "brep", "stl", "obj",
                                        "png"] = "dxf",  # noqa: A002
@@ -500,7 +500,7 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
                 return t.model_dump(by_alias=True, exclude_none=True)
         return await mcp.worker.run(rt.list_operations, ops=[name], detail=True)
 
-    @discovery.tool()
+    @discovery.tool(structured_output=False)
     async def call_tool(name: str, arguments: dict[str, Any]) -> Any:
         """Call a discovered tool with its schema's arguments; the same validation and policy apply."""
         result = await mcp.call_tool(name, arguments)

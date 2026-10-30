@@ -3,6 +3,9 @@ import asyncio
 from copy import deepcopy
 import importlib.util
 import math
+import json
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -13,6 +16,27 @@ SOURCE = Path(__file__).resolve().parents[1] / "examples" / "autocad_benchmark" 
 SPEC = importlib.util.spec_from_file_location("upstream_benchmark", SOURCE)
 benchmark = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(benchmark)
+
+
+@pytest.mark.parametrize("defect", [None, "fail", "partial", "environment_blocked", "not_run", "score", "missing", "duplicate", "summary"])
+def test_release_cli_rejects_incomplete_benchmark_reports(tmp_path, defect):
+    root = SOURCE.parents[2]
+    report = json.loads((root / "examples/autocad_benchmark/results/2026-10-30-v8/reference.json").read_text("utf-8"))
+    if defect in {"fail", "partial", "environment_blocked", "not_run"}:
+        report["results"][0]["status"] = defect
+    elif defect == "score":
+        report["results"][0]["score"] = 99
+    elif defect == "missing":
+        report["results"].pop()
+    elif defect == "duplicate":
+        report["results"][0] = report["results"][1]
+    elif defect == "summary":
+        report["summary"]["passed"] = 30
+    path = tmp_path / "report.json"
+    path.write_text(json.dumps(report), "utf-8")
+    process = subprocess.run([sys.executable, str(root / "scripts/check_benchmark.py"), str(path)],
+                             capture_output=True, text=True, timeout=20)
+    assert process.returncode == (0 if defect is None else 1), process.stdout + process.stderr
 
 
 def roundtrip_reports():

@@ -1,0 +1,64 @@
+name: Verify AgentCAD
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verify-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            python: "3.10"
+          - os: ubuntu-latest
+            python: "3.12"
+          - os: windows-latest
+            python: "3.11"
+          - os: macos-latest
+            python: "3.12"
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    env:
+      AGENTCAD_VIEWER: "0"
+      PYTHONUTF8: "1"
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e # v6
+        with:
+          version: "0.12.16"
+          python-version: ${{ matrix.python }}
+      - run: uv sync --locked --extra dev
+      - run: uv run --locked python scripts/gen_docs.py --check
+      - name: Regressions (optional native backends report skips)
+        run: uv run --locked python -m pytest -p no:cacheprovider --basetemp="${{ runner.temp }}/agentcad-tests" --junitxml="${{ runner.temp }}/pytest.xml"
+      - name: Original v8 benchmark
+        if: matrix.os == 'ubuntu-latest' && matrix.python == '3.12'
+        shell: bash
+        run: |
+          git clone --filter=blob:none https://github.com/U-C4N/Autocad-MCP.git "$RUNNER_TEMP/upstream"
+          git -C "$RUNNER_TEMP/upstream" checkout 58a05ddfc34a9832c626e82cd88ecdce8e16a62a
+          uv run --project "$RUNNER_TEMP/upstream" --locked --extra pdf --extra office --with pypdf==6.21.4 python "$GITHUB_WORKSPACE/examples/autocad_benchmark/run.py" --upstream "$RUNNER_TEMP/upstream" --python "$GITHUB_WORKSPACE/.venv/bin/python" --out "$RUNNER_TEMP/v8"
+          uv run --locked python scripts/check_benchmark.py "$RUNNER_TEMP/v8/report.json"
+      - name: Retain test and benchmark evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: evidence-${{ matrix.os }}-py${{ matrix.python }}
+          path: |
+            ${{ runner.temp }}/pytest.xml
+            ${{ runner.temp }}/v8
+          if-no-files-found: error
+          retention-days: 30

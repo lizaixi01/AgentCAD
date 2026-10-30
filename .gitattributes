@@ -3,6 +3,7 @@
 *.dxf -text
 *.svg -text
 *.dwg binary
+examples/source_capability/results/** -text whitespace=blank-at-eol,blank-at-eof,space-before-tab,cr-at-eol
 docs/comparison-native-dwg.md export-ignore
 docs/assets/native-dwg-times.svg export-ignore
 docs/assets/native-dwg-repeat-outcomes.svg export-ignore

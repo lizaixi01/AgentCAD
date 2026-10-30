@@ -10,7 +10,9 @@ from ezdxf.document import Drawing
 from ezdxf.math import Vec3
 
 from .. import geom as G
+from ..errors import AgentCADError
 from ..model import circle_wcs, get_tag
+from ..tolerances import check_dimension_tolerance
 from ..units import unit_from_insunits
 from .features import Features, measure_dimension
 
@@ -58,12 +60,14 @@ class BlockSnaps:
     """Vertices of geometry inside block references, built only when a dimension anchor is not on top-level
     geometry: real drawings dimension walls and parts that are blocks (examples/trials/real_dwg_survey)."""
 
-    def __init__(self, doc: Drawing) -> None:
+    def __init__(self, doc: Drawing, layout: str | None = None) -> None:
+        from ..model import layout_spaces
         self.doc = doc
+        self.space = layout_spaces(doc, layout)[0]
         self.has_xref = any(b.block.is_xref for b in doc.blocks if b.block is not None and
                             not b.name.startswith("*")) and any(
             i.dxf.name in doc.blocks and doc.blocks.get(i.dxf.name).block.is_xref
-            for i in doc.modelspace().query("INSERT"))
+            for i in self.space.query("INSERT"))
         self._grid: dict[tuple[int, int], list] | None = None
         self._cell = 1.0
 
@@ -99,7 +103,7 @@ class BlockSnaps:
                 else:
                     pts.extend(snap_points(v))
 
-        for ins in self.doc.modelspace().query("INSERT"):
+        for ins in self.space.query("INSERT"):
             walk(ins, 0)
         self._grid = {}
         for p in pts:
@@ -195,10 +199,11 @@ def _text_items(msp):
             yield a, a.dxf.get("style", "Standard"), a.dxf.text
 
 
-def annotation_issues(doc: Drawing) -> list[dict[str, Any]]:
+def annotation_issues(doc: Drawing, layout: str | None = None) -> list[dict[str, Any]]:
     """Readability problems seen only when AutoCAD plots the drawing (examples/trials)."""
     out = []
-    msp = doc.modelspace()
+    from ..model import layout_spaces
+    msp = layout_spaces(doc, layout)[0]
     bad: dict[str, list[str]] = {}
     for e, style, text in _text_items(msp):
         if not text or not CJK_RE.search(text) or style not in doc.styles:
@@ -309,9 +314,11 @@ def _ratio(s: float) -> str:
 
 
 def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = None,
-                       tolerance: float = 1e-6, contour_layers: list[str] | None = None) -> list[dict[str, Any]]:
+                       tolerance: float = 1e-6, contour_layers: list[str] | None = None,
+                       layout: str | None = None) -> list[dict[str, Any]]:
     out: list[dict[str, Any]] = []
-    msp = doc.modelspace()
+    from ..model import layout_spaces
+    msp = layout_spaces(doc, layout)[0]
     ins = doc.header.get("$INSUNITS", 0)
     if unit_from_insunits(ins) is None:
         out.append(issue("UNITS_UNDEFINED", "warning", f"$INSUNITS={ins} is not a supported explicit length unit"))
@@ -361,11 +368,22 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
             else:
                 seen[k] = h
 
-    out.extend(annotation_issues(doc))
+    out.extend(annotation_issues(doc, layout))
     out.extend(printed_text_issues(doc))
 
+    # Tolerance declarations are document integrity, including nested/unreferenced
+    # blocks. Walk stored entities once, not virtual INSERT copies (which can be
+    # repeated, transformed or cyclic). This does not certify block placement.
+    for entity in doc.entitydb.values():
+        if entity.dxftype() != "DIMENSION":
+            continue
+        try:
+            check_dimension_tolerance(entity, unit_from_insunits(ins) or "mm")
+        except AgentCADError as exc:
+            out.append(issue(exc.code, "error", exc.message, [entity.dxf.handle]))
+
     # dimensions: stored text / measurement consistent with definition points
-    blocks = BlockSnaps(doc)
+    blocks = BlockSnaps(doc, layout)
     for d in feats.dimensions:
         if d["measurement"] is None:
             out.append(issue("DIMENSION_UNMEASURABLE", "warning", "Dimension type cannot be re-measured", [d["id"]]))

@@ -238,7 +238,11 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         return {"ok": True}, 0
     if a.cmd == "serve":
         from .http_api import serve
-        serve(policy, a.host, a.port)
+        from .errors import AgentCADError
+        try:
+            serve(policy, a.host, a.port)
+        except AgentCADError as exc:
+            return {"ok": False, "error": exc.to_dict()}, EXIT.get(exc.category, 5)
         return {"ok": True}, 0
     if a.cmd == "viewer":
         from .errors import AgentCADError

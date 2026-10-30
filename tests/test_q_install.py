@@ -14,7 +14,10 @@ import pytest
 from agentcad import install
 
 PY = sys.executable
-tomllib = pytest.importorskip("tomllib")
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
 
 
 @pytest.fixture

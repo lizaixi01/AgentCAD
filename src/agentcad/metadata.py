@@ -24,14 +24,17 @@ def set_meta(doc: Drawing, key: str, value: Any) -> None:
     xr.reset([(1, s[i:i + CHUNK]) for i in range(0, len(s), CHUNK)] or [(1, "")])
 
 
-def get_meta(doc: Drawing, key: str, default: Any = None) -> Any:
+def get_meta(doc: Drawing, key: str, default: Any = None, *, strict: bool = False) -> Any:
     d = doc.rootdict.get(DICT)
     if d is None or key not in d:
         return default
     xr = d.get(key)
     try:
         return json.loads("".join(v for code, v in xr.tags if code == 1))
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, AttributeError):
+        if strict:
+            from .errors import input_error
+            raise input_error("INVALID_METADATA", f"Stored {key!r} is not valid JSON metadata")
         return default
 
 

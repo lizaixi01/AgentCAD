@@ -67,7 +67,7 @@ def validate_file(path: Path, *, requirements: list[dict[str, Any]] | None = Non
         feats = extract(doc)
         layout = None
     report["issues"].extend(run_generic_checks(doc, feats, bounds=bounds, tolerance=tolerance,
-                                               contour_layers=contour_layers))
+                                               contour_layers=contour_layers, layout=layout))
     # Say what was not looked at: on real drawings the printed sheet often holds its own scaled copy of the part,
     # and a check of model space alone would pass while the sheet still shows the old geometry.
     skipped = unchecked_layouts(doc, layout)
