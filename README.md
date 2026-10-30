@@ -30,7 +30,9 @@ AgentCAD is an open-source program you install on your machine, the CAD engine y
 
 ## Get started in two minutes
 
-Install from this repository. The `agentcad` package on PyPI is an unrelated project. When AgentCAD is published there, it will be as `agentcad-runtime`. To let the agent build 3D parts from CadQuery scripts, as in the BenchCAD run, install with `-e ".[dev,cadquery]"` and add `--allow-scripts` before `mcp-config` in the commands below.
+**Not a programmer?** Download the installer ([Windows](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup.cmd) · [macOS / Linux](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup-mac.zip)) and double-click it. A setup page with a progress bar opens in your browser; no terminal needed. Details: [docs/install.md](docs/install.md).
+
+From a clone, for development: install from this repository. The `agentcad` package on PyPI is an unrelated project. When AgentCAD is published there, it will be as `agentcad-runtime`. To let the agent build 3D parts from CadQuery scripts, as in the BenchCAD run, install with `-e ".[dev,cadquery]"` and add `--allow-scripts` before `mcp-config` in the commands below.
 
 ```bash
 git clone https://github.com/lizaixi01/AgentCAD.git

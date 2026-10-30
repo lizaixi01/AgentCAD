@@ -174,6 +174,10 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--name", default="agentcad", help="Server name in the configs")
     s.add_argument("--dry-run", action="store_true", help="Show what would change; write nothing")
     s.add_argument("-y", "--yes", action="store_true", help="Do not ask; configure every app found")
+    s.add_argument("--gui", action="store_true", help="Run setup as a page in your web browser (big buttons, a "
+                                                      "progress bar; what the double-click installers start)")
+    s.add_argument("--no-browser", action="store_true", help="With --gui: print the link, do not open a browser")
+    s.add_argument("--port", type=int, default=0, help="With --gui: port to listen on (default: any free one)")
     s.add_argument("--json", action="store_true", help="Print the result as JSON")
     s = sub.add_parser("doctor", help="Check Python, AgentCAD, FreeCAD, AutoCAD, Pillow and each app's MCP config",
                        description="Each check says ok, missing or skip, with a one-line fix.")
@@ -201,6 +205,15 @@ def _setup_or_doctor(a: argparse.Namespace) -> tuple[dict[str, Any], int]:
         r = install.doctor(root)
         print(json.dumps(r, ensure_ascii=False, indent=1) if a.json else install.render_doctor(r))
         return {"ok": True}, 0 if r["ok"] else 1
+    if a.gui:
+        from .setup_gui import Wizard
+        try:
+            wiz = Wizard(root, dry_run=a.dry_run, launcher=a.launcher, source=a.source, freecad=a.freecad,
+                         name=a.name, read_only=a.read_only, allow_scripts=a.allow_scripts, port=a.port)
+        except OSError as exc:
+            return {"ok": False, "error": {"code": "PORT_IN_USE", "message": str(exc)}}, 2
+        wiz.serve(open_browser=not a.no_browser)
+        return {"ok": True}, 0
     clients = [c for c in (a.client or []) if c != "all"]
     if a.client and "all" in a.client:
         clients = list(install.CLIENTS)
