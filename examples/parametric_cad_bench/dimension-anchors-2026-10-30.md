@@ -4,6 +4,62 @@ This continues the [face-measurement iteration](section-evidence-2026-10-30.md)
 on the **same two drawing tasks**. It tests a general way to associate dimensions
 with physical surfaces, without putting either task's answer in AgentCAD.
 
+**The final fresh run fixes the plate's section assignment and raises its
+score to 67.21/100.** The tube remains at 66.89; the two-task mean rises from
+48.83 to **67.05**. An intermediate version still misread the plate; its
+complete result is retained below, not replaced by the better attempt.
+
+| Task | Previous face-measurement run | Anchors only (`08a4ef1`) | Raster witnesses + arrow guidance (`a6c673b`) |
+|---|---:|---:|---:|
+| Plate `freecad-6fd69bd0c4` | 30.77 | 32.44 | **67.21** |
+| Tube `freecad-686f17ce17` | 66.89 | 66.89 | **66.89** |
+| Two-task mean | 48.83 | 49.67 | **67.05** |
+
+All scores are canonical `reward.json` rewards multiplied by 100. The original
+pilot's plate score was 29.20; its six-task mean remains the original 55.43.
+
+## Final attempt: the section relationship survives construction
+
+The new plate agent maps the short dimension to the plate underside and boss
+bottom before building, then derives 4.1 mm main thickness and 2.1 mm remaining
+floor from the linked 5.6 mm overall, 1.5 mm boss and 2 mm recess callouts.
+These are readings made by the fresh model, not constants supplied by the tool.
+Its final measured plane levels are `[-1.5, 0, 2.1, 4.1]` mm. The native
+parameter tree also preserves main thickness as `TotalThickness - BossProjection`.
+Both the pre-build interpretation and final solid retain the correct association.
+
+The canonical reward is **0.672149**, with geometry **0.50619** and specification
+**1.0 (37/37)**. Volume difference falls from the previous run's 18.791% to
+**1.155%**; surface-area difference is 0.562% and principal-moment difference
+0.276%. Geometry is still imperfect. The scorer's volume component is zero at
+this difference, and the spatial component is 0.636; neither the thresholds nor
+the official reward were adjusted to make this result look better.
+
+The tube again checks and corrects its projection orientation. Its reward is
+**0.668902**, geometry **0.50252**, specification **1.0 (12/12)** and volume
+difference **0.091%**. The spatial component remains 0.005. The previous report's
+discussion of face-center alignment remains relevant, but this iteration does
+not replace the official metric with a custom score.
+
+Both agents submit one valid, editable PartDesign Body/solid: plate in
+350.45 seconds / 24 tool calls, tube in 406.45 seconds / 22 calls. The plate
+contains seven sketches, two Pads and five Pockets; the tube contains seven
+sketches, three Pads, two Revolutions and two Grooves. The final plate's three
+local face-distance checks pass. The tube recovers from a failed revolve request;
+both agents also recover from requesting an image above the size limit, and
+the plate from an unknown operation. Both correct failed feature-count
+requirements that used the wrong type spelling. The tube's passing volume
+requirement copies its measured volume, so it is not independent drawing
+evidence. These errors and validation calls remain in the ledger.
+
+The [final-attempt ledger](dimension-witnesses-2026-10-30.json) and
+[native files/previews](artifacts/dimension-witnesses-2026-10-30/) preserve the
+submissions and actual image evidence. There is no manual model repair or
+selection of scores across versions. One attempt on each of two known tasks
+cannot establish reliability or separate the effects of the new raster probe,
+arrow guidance and model sampling. It demonstrates a successful reading and
+construction in this run, not general recognition of dimension semantics.
+
 ## First attempt: consistent coordinates are not enough
 
 Product `08a4ef1cc2da570ebeb9ef5f667da331725277b4` adds source-coordinate
@@ -93,3 +149,18 @@ both versions' results must be reported, without selecting the best task from
 different runs. The original six-task mean and all earlier reports remain
 unchanged. Official packaging and protocol gaps remain as listed in the
 [adapter README](README.md#differences-from-a-leaderboard-run).
+
+## Verification
+
+The final product passes **529 tests, 6 optional CadQuery tests skipped** in
+422.67 seconds, excluding unrelated AutoCAD live integration tests. The earlier
+anchor-only product passed 524 tests with the same six skips. Focused image,
+anchor and harness checks passed; the final 21 anchor tests include inconsistent
+surface assignments, derived gaps, cycles, units, rotations, independent raster
+crossings, unreadable scans, resource bounds, malformed inputs and real CLI/MCP
+round trips. No benchmark drawing or answer is used as a test fixture.
+
+For all four submissions, the archived native bytes match the immutable saved
+stages, the public images match the frozen baseline hashes, and read-only final
+validation leaves the native files unchanged. All four final previews were
+visually inspected. Earlier reports and artifacts remain unchanged.
