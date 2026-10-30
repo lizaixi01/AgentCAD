@@ -1,0 +1,1741 @@
+{
+  "dataset": "BenchCAD 2 v2.1 nine public development samples",
+  "complete": true,
+  "leaderboard_comparable": false,
+  "direction": "Astra minus Sol; positive differences favor Astra",
+  "primary_aggregation": "Original nine first attempts, including transport no-submission zero; mean of six task means as in Sol report. Recovery is supplementary and never substituted into primary.",
+  "primary": {
+    "sol": 0.534526241272082,
+    "astra": 0.5678961798133888,
+    "delta_percentage_points": 3.3369938541306765
+  },
+  "supplementary_after_infrastructure_recovery": {
+    "sol": 0.534526241272082,
+    "astra": 0.5678961798133889,
+    "delta_percentage_points": 3.3369938541306876,
+    "task_means": {
+      "task1": {
+        "scored": 1,
+        "total": 1,
+        "mean": 0.7164093063491801
+      },
+      "task2": {
+        "scored": 2,
+        "total": 2,
+        "mean": 0.535074
+      },
+      "task3": {
+        "scored": 2,
+        "total": 2,
+        "mean": 0.5911091853053814
+      },
+      "task4": {
+        "scored": 1,
+        "total": 1,
+        "mean": 0.16218979503657144
+      },
+      "task5": {
+        "scored": 1,
+        "total": 1,
+        "mean": 0.9025947921892
+      },
+      "task6": {
+        "scored": 2,
+        "total": 2,
+        "mean": 0.5
+      }
+    },
+    "additional_attempts": 1,
+    "recovery_plan": {
+      "case": "task6_case2",
+      "initial_attempt": 1,
+      "reason": "TLS EOF followed by five websocket disconnect retries; HTTP fallback ended with Bad Request/turn.failed; exit 1, no submission, no tool errors",
+      "first_attempt_is_primary": true,
+      "primary": "Nine original first attempts, including this no-submission score of 0; no retry is substituted into primary",
+      "supplementary": "One explicit --retry-infra attempt using the unchanged 3600-second/100-call per-attempt protocol; report separately regardless of score",
+      "resources": "Report both original nine attempts and every attempt including recovery; failed-attempt token usage is unavailable",
+      "no_best_attempt_selection": true,
+      "frozen_before_recovery": true,
+      "first_score_sha256": "267f089ddcb13a630216eff6025cd0a3de96f92d88e28dd3760b93e01eb93256"
+    },
+    "case_outcomes": {
+      "astra_higher": 5,
+      "equal": 1,
+      "sol_higher": 3
+    },
+    "recovery_episode": {
+      "case": "task6_case2",
+      "kind": "ecad",
+      "model": "gpt-6-astra",
+      "effort": "max",
+      "attempt": 2,
+      "status": "agent_error",
+      "exit_code": 1,
+      "seconds": 1257.2,
+      "submitted": false,
+      "timeout_s": 3600,
+      "tool_call_limit": 100,
+      "tool_calls": 17,
+      "tool_errors": 0,
+      "tool_error_codes": {},
+      "tool_calls_started": 17,
+      "tool_calls_by_name": {
+        "read_workspace": 17
+      },
+      "submitted_after_calls": null,
+      "unexpected_tools": [],
+      "usage": null
+    },
+    "recovery_case_score": 0.0
+  },
+  "secondary_T1_T5": {
+    "description": "Five task means excluding model-only T6; still includes model assembly reasoning and adapter effects",
+    "sol": 0.4426308895264986,
+    "astra": 0.5814754157760667,
+    "delta_percentage_points": 13.884452624956806
+  },
+  "case_outcomes": {
+    "astra_higher": 5,
+    "equal": 1,
+    "sol_higher": 3
+  },
+  "task_means": {
+    "task1": {
+      "case_count": 1,
+      "sol": 0.7822058471725757,
+      "astra": 0.7164093063491801,
+      "delta_percentage_points": -6.579654082339559
+    },
+    "task2": {
+      "case_count": 2,
+      "sol": 0.11787299999999999,
+      "astra": 0.535074,
+      "delta_percentage_points": 41.7201
+    },
+    "task3": {
+      "case_count": 2,
+      "sol": 0.5845815968155457,
+      "astra": 0.5911091853053814,
+      "delta_percentage_points": 0.6527588489835701
+    },
+    "task4": {
+      "case_count": 1,
+      "sol": 0.13686760685357144,
+      "astra": 0.16218979503657144,
+      "delta_percentage_points": 2.5322188183
+    },
+    "task5": {
+      "case_count": 1,
+      "sol": 0.5916263967908001,
+      "astra": 0.9025947921892,
+      "delta_percentage_points": 31.096839539839994
+    },
+    "task6": {
+      "case_count": 2,
+      "sol": 0.994003,
+      "astra": 0.5,
+      "delta_percentage_points": -49.400299999999994
+    }
+  },
+  "paired_cases": [
+    {
+      "case": "task1_case1",
+      "sol_score": 0.7822058471725757,
+      "astra_score": 0.7164093063491801,
+      "delta_percentage_points": -6.579654082339559,
+      "sol_episode": {
+        "case": "task1_case1",
+        "kind": "part",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2381.4,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 44,
+        "tool_errors": 2,
+        "tool_error_codes": {
+          "SCRIPT_FAILED": 2
+        },
+        "tool_calls_started": 44,
+        "tool_calls_by_name": {
+          "read_workspace": 22,
+          "run_script": 11,
+          "export_drawing": 10,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 44,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 3296824,
+          "cached_input_tokens": 3196928,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 54935,
+          "reasoning_output_tokens": 47500
+        }
+      },
+      "astra_episode": {
+        "case": "task1_case1",
+        "kind": "part",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2226.8,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 38,
+        "tool_errors": 1,
+        "tool_error_codes": {},
+        "tool_calls_started": 38,
+        "tool_calls_by_name": {
+          "read_workspace": 25,
+          "run_script": 5,
+          "export_drawing": 7,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 38,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 2301745,
+          "cached_input_tokens": 2202240,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 44488,
+          "reasoning_output_tokens": 37289
+        }
+      },
+      "astra_latest_score": 0.7164093063491801,
+      "astra_latest_episode": {
+        "case": "task1_case1",
+        "kind": "part",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2226.8,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 38,
+        "tool_errors": 1,
+        "tool_error_codes": {},
+        "tool_calls_started": 38,
+        "tool_calls_by_name": {
+          "read_workspace": 25,
+          "run_script": 5,
+          "export_drawing": 7,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 38,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 2301745,
+          "cached_input_tokens": 2202240,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 44488,
+          "reasoning_output_tokens": 37289
+        }
+      },
+      "astra_first_attempt_additional_evidence_sha256": {},
+      "prompt_identical": true,
+      "inputs_identical": true,
+      "command_identical_except_model_and_paths": true,
+      "astra_latest_prompt_file_sha256": "8e43fcef6c9796b2e2a0267426c03f17adaa8ed5d8728803ed67ba95652678b4",
+      "astra_latest_command_sha256": "053c5173726cad909b0a036c896a01c31428871949386e9ea7018545f39d26f0",
+      "astra_latest_answer_marker_sha256": "d9f7e615055f229555ed8706d3043e477c5711839c4513c12a962c04a541ac24",
+      "astra_latest_sealed_submission_sha256": {
+        ".agentcad/benchcad2-submission-dcs4i5n8/submission.step": "fe62af9353f60101391502698c4c88b4a55d2db31d6203ae601375254453a12c"
+      }
+    },
+    {
+      "case": "task2_case1",
+      "sol_score": 0.206806,
+      "astra_score": 0.387411,
+      "delta_percentage_points": 18.0605,
+      "sol_episode": {
+        "case": "task2_case1",
+        "kind": "assembly",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2777.8,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 48,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 48,
+        "tool_calls_by_name": {
+          "read_workspace": 16,
+          "inspect_step": 23,
+          "preview_assembly": 8,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 48,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 4528618,
+          "cached_input_tokens": 4370304,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 47725,
+          "reasoning_output_tokens": 41489
+        }
+      },
+      "astra_episode": {
+        "case": "task2_case1",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 1534.2,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 43,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 43,
+        "tool_calls_by_name": {
+          "read_workspace": 17,
+          "inspect_step": 21,
+          "preview_assembly": 4,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 43,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 2716350,
+          "cached_input_tokens": 2563840,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 30131,
+          "reasoning_output_tokens": 24939
+        }
+      },
+      "astra_latest_score": 0.387411,
+      "astra_latest_episode": {
+        "case": "task2_case1",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 1534.2,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 43,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 43,
+        "tool_calls_by_name": {
+          "read_workspace": 17,
+          "inspect_step": 21,
+          "preview_assembly": 4,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 43,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 2716350,
+          "cached_input_tokens": 2563840,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 30131,
+          "reasoning_output_tokens": 24939
+        }
+      },
+      "astra_first_attempt_additional_evidence_sha256": {},
+      "prompt_identical": true,
+      "inputs_identical": true,
+      "command_identical_except_model_and_paths": true,
+      "astra_latest_prompt_file_sha256": "5604b080a3e24c3c5dda2dbfe678584b6760b2736e57a58442d0a79e600c0ebf",
+      "astra_latest_command_sha256": "b317a5bab90660b25928f3001693b064166390beceba27aae1e1ff6908efca11",
+      "astra_latest_answer_marker_sha256": "56777a95ca0555f0c3fcb94ebc868fd2f8fbe5995f2a2220c60f8b25b6cca66f",
+      "astra_latest_sealed_submission_sha256": {
+        ".agentcad/benchcad2-submission-3a533ljh/submission/assembly/instances.json": "d03253867f679c085fe5fa93afd721d5151ad6d256f232a91f960853c6c24b67",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_01.step": "aaa4d568a57fdb1634d1791e7310fea9bad5790ef341e3d2062b5a008fe8f72a",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_02.step": "f6deea9b9c8216d9fd21f97fb370acb8b254d587812d342ddc2db068f5f7f507",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_03.step": "275b984f2d87dec3195455538cda167e92d1c528f94ea4f88e015115d01aea78",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_04.step": "e13a29d0d038dcc0f659c8ec4bafcb7b632c74d66ed65b98eaa1c3f19f25c70b",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_05.step": "f77b0b0af4a8d5f2c443ee23071c7cbf7137d0e4c0e19d88733eec093309d3ff",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_06.step": "c2773a2e7f824e1f61f7036c68e0c54d2d2d2dddc4718386bfd4543868b40525",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_07.step": "bfc6c92e0f9238787d13ecd27286b3554e532a401e9e1045ca796af59e78bd14",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_08.step": "a6396ac2dc2971775ec3a70329cc97c33f05badd01c8b4fd10fae64f681272eb",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_09.step": "b422fbd20448e84a14d6e7d9f6e08c9c40fb6314b9517f6488ba8103d8bbfd58",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_10.step": "c2fa56d70c7c77c5db17b3c1e59c8907a16f389ccf9faabfc7b8b810903af71b",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_11.step": "d89d293f57f683d3d1aa74507ce6171ff8f8cbb3e14d95ed7682e6bad583aad4",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_12.step": "93b8758ad64212fc9b09486c6a0ef5c1e1fc08822e9142bb3e85d5f72de5d18d",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_13.step": "de06dbc7617b4b6e12e0dcef9863cad58bea6d1ade75a673f12b3e3f1e3f3fd6",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_14.step": "38228494cd6fe8f0f21bc243d950c76f72fc5c0992cfe70872bb45c702f5ccdd",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_15.step": "c9753100db780ede0ad8c425e0b5fada3e80dd6aa86a205f773e5239559b3cde",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_16.step": "90d241085f7e205c022d18cb37a80c0d0fe41473f4bc52b00a41b553ac42faac",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_17.step": "21e6b0dec66c875807740f422af92d0d9b02c56fe680ddde445b9092eff69c55",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_18.step": "a6436a28b12eddfe27ee55cb684facfe24f7fa054b278193784bc35837f915a3",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_19.step": "9f0d3dbd6cde1d5de84d23f3e43dfe276c74b8286e1d8c398357c3fa5231eebc",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_20.step": "5ebff705d805495966bd612d76049ffc2a208de1ed18454a34b51389809e1d58",
+        ".agentcad/benchcad2-submission-3a533ljh/submission/parts/part_21.step": "f12a3d1a7bb6574ab3ed33dc5a43da5b78d1fa725ecaf80cac3ccaa6d16dd1fa"
+      }
+    },
+    {
+      "case": "task2_case2",
+      "sol_score": 0.02894,
+      "astra_score": 0.682737,
+      "delta_percentage_points": 65.37970000000001,
+      "sol_episode": {
+        "case": "task2_case2",
+        "kind": "assembly",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2442.7,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 56,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 56,
+        "tool_calls_by_name": {
+          "read_workspace": 30,
+          "inspect_step": 21,
+          "preview_assembly": 4,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 56,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 5827189,
+          "cached_input_tokens": 5649920,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 53979,
+          "reasoning_output_tokens": 44778
+        }
+      },
+      "astra_episode": {
+        "case": "task2_case2",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2348.2,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 48,
+        "tool_errors": 1,
+        "tool_error_codes": {},
+        "tool_calls_started": 48,
+        "tool_calls_by_name": {
+          "read_workspace": 22,
+          "inspect_step": 21,
+          "preview_assembly": 4,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 48,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 3150760,
+          "cached_input_tokens": 3032576,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 30757,
+          "reasoning_output_tokens": 20677
+        }
+      },
+      "astra_latest_score": 0.682737,
+      "astra_latest_episode": {
+        "case": "task2_case2",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2348.2,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 48,
+        "tool_errors": 1,
+        "tool_error_codes": {},
+        "tool_calls_started": 48,
+        "tool_calls_by_name": {
+          "read_workspace": 22,
+          "inspect_step": 21,
+          "preview_assembly": 4,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 48,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 3150760,
+          "cached_input_tokens": 3032576,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 30757,
+          "reasoning_output_tokens": 20677
+        }
+      },
+      "astra_first_attempt_additional_evidence_sha256": {},
+      "prompt_identical": true,
+      "inputs_identical": true,
+      "command_identical_except_model_and_paths": true,
+      "astra_latest_prompt_file_sha256": "a6874b143a3a997258668bd879e6ae3a496e667ea432232c0756951b88a4230c",
+      "astra_latest_command_sha256": "07a8a9ee6c2b61b4dd908737c9c32978d01fad823aebeb1fbc53c7581e56c73f",
+      "astra_latest_answer_marker_sha256": "f9e529276da2af620c4bc76c260c9d47dd93293f564bbe1cd4c179bf7cb62df0",
+      "astra_latest_sealed_submission_sha256": {
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/assembly/instances.json": "bdfc796e9a3e9575323c016ca376901027d3863e8cbe707575b65e7678ed4ad7",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_01.step": "233fc21abf8ce141e488cf534a320d43e50c3592d708f60ecbae56a53adf97d1",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_02.step": "c3b9d9188efe2a96f08de3ff376c9d2f351c79a2e907d19d6e04ec743d187e19",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_03.step": "acf0b7b8d4a8f607abf20d61c05b2a7504ce3427d0510e356fb0bfd75e11ef5b",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_04.step": "bdfa7e2725bc86ddb6ed1a6bd9d625a5994705b968970d142cf212ac8b2f3068",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_05.step": "21516d414542d08b34eb8fd237e6e87c7bcd0662f4ee0048c0338ed91abc2525",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_06.step": "edfb8e3463348b78f251afb55082caf61dc81560bc0f7d7b782468ac7693871a",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_07.step": "f40da9e0970f5d1a5eaa75be1ce37324cfcd95c7b0f1daac3727548530a85e4f",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_08.step": "b82877a2190258f300f1ef6671ea7b4d1e57a4a5f280260d603f1ced5b3bb2f6",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_09.step": "283de5e2fdd6983eab237a2a0516615ba569e3ba66b276bea1fcf087aede6ddd",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_10.step": "f7f2972a200a6619477d810ab76103670ad24e0f1a341d3b14338c7e18cf40a0",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_11.step": "cbc5955d5cff204028e5ac27d528ac0ad8cf49b1fd912175619323c319f1438b",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_12.step": "0b74b48f26c10f7b94d1d2c0fed741bcc61ae9f44b3fa1880cab2f9e70a6f285",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_13.step": "88adae7675ca17abc6e96a7025facc8001a85717053a7c5c3e68f3b945053088",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_14.step": "076788ba66117357f689ee388f3806f398b2abbff718f57540ac06614fb1a485",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_15.step": "c4bf8428b52bbaeccaedeb94b75bf852fe51254d3265b13f6491014bb5d9aad2",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_16.step": "94ff6ff30c949b8d54f8926a92eb5d936db47f8d0c362ab7d419df0c67e52934",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_17.step": "364eef12eec3d8b05034205eb08812086700d3980630c1391dbee5a582578fd9",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_18.step": "aba145bf6899b2a98ab45b4da78e342cf103205762f0f858908fb06a64676e5b",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_19.step": "1b98d2c6b4f35498bc8468a1b672d3b6845870bef232ecf11e90ffee2b7fe7d0",
+        ".agentcad/benchcad2-submission-emxh3b5f/submission/parts/part_20.step": "f96b222014be459db31b5f430cbe8e01a053ba0e8ceabc7ec0de2d1a0c6cffe3"
+      }
+    },
+    {
+      "case": "task3_case1",
+      "sol_score": 0.6968195186345928,
+      "astra_score": 0.6414587422231595,
+      "delta_percentage_points": -5.536077641143333,
+      "sol_episode": {
+        "case": "task3_case1",
+        "kind": "part",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2934.8,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 69,
+        "tool_errors": 12,
+        "tool_error_codes": {
+          "UNKNOWN_PARAM": 1,
+          "SCRIPT_CRASHED": 2,
+          "SCRIPT_TIMEOUT": 2,
+          "FEATURE_FAILED": 2,
+          "EXPORT_MISMATCH": 5
+        },
+        "tool_calls_started": 69,
+        "tool_calls_by_name": {
+          "read_workspace": 25,
+          "run_script": 21,
+          "export_drawing": 19,
+          "list_operations": 1,
+          "apply_operations": 2,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 69,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 8027643,
+          "cached_input_tokens": 7910400,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 68290,
+          "reasoning_output_tokens": 54985
+        }
+      },
+      "astra_episode": {
+        "case": "task3_case1",
+        "kind": "part",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2119.2,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 34,
+        "tool_errors": 5,
+        "tool_error_codes": {
+          "SCRIPT_FAILED": 4,
+          "SCRIPT_REJECTED": 1
+        },
+        "tool_calls_started": 34,
+        "tool_calls_by_name": {
+          "read_workspace": 8,
+          "run_script": 13,
+          "export_drawing": 12,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 34,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 2383002,
+          "cached_input_tokens": 2313088,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 42136,
+          "reasoning_output_tokens": 35283
+        }
+      },
+      "astra_latest_score": 0.6414587422231595,
+      "astra_latest_episode": {
+        "case": "task3_case1",
+        "kind": "part",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2119.2,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 34,
+        "tool_errors": 5,
+        "tool_error_codes": {
+          "SCRIPT_FAILED": 4,
+          "SCRIPT_REJECTED": 1
+        },
+        "tool_calls_started": 34,
+        "tool_calls_by_name": {
+          "read_workspace": 8,
+          "run_script": 13,
+          "export_drawing": 12,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 34,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 2383002,
+          "cached_input_tokens": 2313088,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 42136,
+          "reasoning_output_tokens": 35283
+        }
+      },
+      "astra_first_attempt_additional_evidence_sha256": {},
+      "prompt_identical": true,
+      "inputs_identical": true,
+      "command_identical_except_model_and_paths": true,
+      "astra_latest_prompt_file_sha256": "a6e0f6d237a9cb6c311036e947a3a07cf302f567b585836364ee85c890b4a92e",
+      "astra_latest_command_sha256": "32be4049f5fd44063e02a0f7a5caa6b5dbad5f7c15c9a8584c75c5b02e3bddad",
+      "astra_latest_answer_marker_sha256": "252ad82f604c3b8d8c34f9c1f79a84236ed34793c8cfd17f4eee253c45fa38d4",
+      "astra_latest_sealed_submission_sha256": {
+        ".agentcad/benchcad2-submission-ioxqdlox/submission.step": "875ce36b9f344474a8938a1e8810aa7a4c837484d14f836e671ef606e3b4fd1f"
+      }
+    },
+    {
+      "case": "task3_case2",
+      "sol_score": 0.47234367499649854,
+      "astra_score": 0.5407596283876034,
+      "delta_percentage_points": 6.8415953391104845,
+      "sol_episode": {
+        "case": "task3_case2",
+        "kind": "part",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 3056.5,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 55,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 55,
+        "tool_calls_by_name": {
+          "read_workspace": 14,
+          "run_script": 20,
+          "export_drawing": 20,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 55,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 4684206,
+          "cached_input_tokens": 4581504,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 62856,
+          "reasoning_output_tokens": 53097
+        }
+      },
+      "astra_episode": {
+        "case": "task3_case2",
+        "kind": "part",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2597.6,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 44,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "UNKNOWN_PARAM": 1
+        },
+        "tool_calls_started": 44,
+        "tool_calls_by_name": {
+          "read_workspace": 13,
+          "run_script": 15,
+          "export_drawing": 15,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 44,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 3422023,
+          "cached_input_tokens": 3345280,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 43591,
+          "reasoning_output_tokens": 35082
+        }
+      },
+      "astra_latest_score": 0.5407596283876034,
+      "astra_latest_episode": {
+        "case": "task3_case2",
+        "kind": "part",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2597.6,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 44,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "UNKNOWN_PARAM": 1
+        },
+        "tool_calls_started": 44,
+        "tool_calls_by_name": {
+          "read_workspace": 13,
+          "run_script": 15,
+          "export_drawing": 15,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 44,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 3422023,
+          "cached_input_tokens": 3345280,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 43591,
+          "reasoning_output_tokens": 35082
+        }
+      },
+      "astra_first_attempt_additional_evidence_sha256": {},
+      "prompt_identical": true,
+      "inputs_identical": true,
+      "command_identical_except_model_and_paths": true,
+      "astra_latest_prompt_file_sha256": "a6e0f6d237a9cb6c311036e947a3a07cf302f567b585836364ee85c890b4a92e",
+      "astra_latest_command_sha256": "2bed25ccbc35f14391f070027574b9e5eb0e40821cbfc5d781b9caf04489e0e9",
+      "astra_latest_answer_marker_sha256": "8437319d659e97a68aa631b23f9ad1cb10a2f838023976e1309204badb2691a6",
+      "astra_latest_sealed_submission_sha256": {
+        ".agentcad/benchcad2-submission-jzobewhq/submission.step": "2ddce6e2de5f4fe2cd465f30a3dfc21b64dccdf78bdcc77ced9c3276e2de19f8"
+      }
+    },
+    {
+      "case": "task4_case1",
+      "sol_score": 0.13686760685357144,
+      "astra_score": 0.16218979503657144,
+      "delta_percentage_points": 2.5322188183,
+      "sol_episode": {
+        "case": "task4_case1",
+        "kind": "assembly",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 1981.7,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 63,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "SCRIPT_FAILED": 1
+        },
+        "tool_calls_started": 63,
+        "tool_calls_by_name": {
+          "read_workspace": 20,
+          "run_script": 16,
+          "export_drawing": 23,
+          "preview_assembly": 2,
+          "inspect_step": 1,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 63,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 6588495,
+          "cached_input_tokens": 6453632,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 61107,
+          "reasoning_output_tokens": 46609
+        }
+      },
+      "astra_episode": {
+        "case": "task4_case1",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 3048.8,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 60,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "UNKNOWN_PARAM": 1
+        },
+        "tool_calls_started": 60,
+        "tool_calls_by_name": {
+          "read_workspace": 17,
+          "run_script": 17,
+          "export_drawing": 23,
+          "preview_assembly": 2,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 60,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 5203513,
+          "cached_input_tokens": 5036416,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 44422,
+          "reasoning_output_tokens": 33815
+        }
+      },
+      "astra_latest_score": 0.16218979503657144,
+      "astra_latest_episode": {
+        "case": "task4_case1",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 3048.8,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 60,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "UNKNOWN_PARAM": 1
+        },
+        "tool_calls_started": 60,
+        "tool_calls_by_name": {
+          "read_workspace": 17,
+          "run_script": 17,
+          "export_drawing": 23,
+          "preview_assembly": 2,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 60,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 5203513,
+          "cached_input_tokens": 5036416,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 44422,
+          "reasoning_output_tokens": 33815
+        }
+      },
+      "astra_first_attempt_additional_evidence_sha256": {},
+      "prompt_identical": true,
+      "inputs_identical": true,
+      "command_identical_except_model_and_paths": true,
+      "astra_latest_prompt_file_sha256": "f7233bf76d84c46e16d43e7403ce13bd96fadb6bfa70f6305b6a2df655d9c929",
+      "astra_latest_command_sha256": "7cbf88be956f041582eee106d9d0ea91ae225f3e51f02767737a93304f23828b",
+      "astra_latest_answer_marker_sha256": "5a9ade164051c9cc1e122a42342bffc2732915ab2130a231201b9f22d6dfcdc4",
+      "astra_latest_sealed_submission_sha256": {
+        ".agentcad/benchcad2-submission-kh6jisea/submission/assembly/instances.json": "fa954b29b2fda126e538113d03e6d36b4b5b9fa7b40a0b56c9b3680761737aae",
+        ".agentcad/benchcad2-submission-kh6jisea/submission/parts/body.step": "cba71536bb363490ff0bfca9ae3c7d19f282cc6536036cd5f4641dd11cbd1cb0",
+        ".agentcad/benchcad2-submission-kh6jisea/submission/parts/cover.step": "94dd2bb5c59fc550a4ffd64de48a4ee09b78b75dd5b16ee6de6cf35faf985a7a",
+        ".agentcad/benchcad2-submission-kh6jisea/submission/parts/jaw_1.step": "07770090db3ba64bd52892d79674140bec82ecda25eaa9bdfbf50480a77db759",
+        ".agentcad/benchcad2-submission-kh6jisea/submission/parts/jaw_2.step": "cd0ee3e2caabe9ecdc8fd1d3f156494e7bc207330e7c7ec920991bfb169cbfc2",
+        ".agentcad/benchcad2-submission-kh6jisea/submission/parts/jaw_3.step": "1f84e6753b982efdae1587483a7a152f5ff9ae7c002e933b35d8f374510554a0",
+        ".agentcad/benchcad2-submission-kh6jisea/submission/parts/pinion.step": "b0513f0fd519b4fe8f359af21dadb5a38a17c2b346672cee26fdcf866ccfc218",
+        ".agentcad/benchcad2-submission-kh6jisea/submission/parts/scroll_plate.step": "7a0c4420cba621e4751bb26249a12f789bb1636b39f09e7bebac86fb8928a263"
+      }
+    },
+    {
+      "case": "task5_case1",
+      "sol_score": 0.5916263967908001,
+      "astra_score": 0.9025947921892,
+      "delta_percentage_points": 31.096839539839994,
+      "sol_episode": {
+        "case": "task5_case1",
+        "kind": "assembly",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 1763.1,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 53,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "SCRIPT_REJECTED": 1
+        },
+        "tool_calls_started": 53,
+        "tool_calls_by_name": {
+          "read_workspace": 14,
+          "inspect_step": 16,
+          "run_script": 8,
+          "export_drawing": 7,
+          "preview_assembly": 7,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 53,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 4123608,
+          "cached_input_tokens": 3983360,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 40173,
+          "reasoning_output_tokens": 32705
+        }
+      },
+      "astra_episode": {
+        "case": "task5_case1",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 1705.8,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 42,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "SCRIPT_REJECTED": 1
+        },
+        "tool_calls_started": 42,
+        "tool_calls_by_name": {
+          "read_workspace": 11,
+          "inspect_step": 16,
+          "run_script": 6,
+          "export_drawing": 5,
+          "preview_assembly": 3,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 42,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 3398217,
+          "cached_input_tokens": 3265536,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 33855,
+          "reasoning_output_tokens": 27446
+        }
+      },
+      "astra_latest_score": 0.9025947921892,
+      "astra_latest_episode": {
+        "case": "task5_case1",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 1705.8,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 42,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "SCRIPT_REJECTED": 1
+        },
+        "tool_calls_started": 42,
+        "tool_calls_by_name": {
+          "read_workspace": 11,
+          "inspect_step": 16,
+          "run_script": 6,
+          "export_drawing": 5,
+          "preview_assembly": 3,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 42,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 3398217,
+          "cached_input_tokens": 3265536,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 33855,
+          "reasoning_output_tokens": 27446
+        }
+      },
+      "astra_first_attempt_additional_evidence_sha256": {},
+      "prompt_identical": true,
+      "inputs_identical": true,
+      "command_identical_except_model_and_paths": true,
+      "astra_latest_prompt_file_sha256": "14baa943e7dbf1882e250c9224a5a10fcf80bd4fbd8ffd84e78231fd5ec697c1",
+      "astra_latest_command_sha256": "7736a2078f7a96352671ec39cd4eb7091176d08caab77afe78166d42a29c8e72",
+      "astra_latest_answer_marker_sha256": "9e3ee6dac30da37e6c109545c05275d04ad78007343e99fd9cfa0a81535670f6",
+      "astra_latest_sealed_submission_sha256": {
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/assembly/instances.json": "4f43a2b480495db53ee238115ae6097a09b8fbf6ab64cf80d9d023b461903bd8",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_01.step": "d0c9877144f375464e75231555f4c2b9961d2003e3901a2c7aa7d5b24785b44c",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_02.step": "28ce15af6390b7f7c660cc1cb24b7e6eedfa12b40671181e4ca895ce22fa7326",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_03.step": "8b3cc7cb5e9d4cbb09368dd4af99174ab63c0cafe39a1c166c735f08b509c460",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_04.step": "81b8e839ddd43f9d6c1faa8426fba2e983471367ea0a5787967ebeab7f2b402c",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_05.step": "f97a9cc4b3e4c1b9c847cefc5946ffd2fd963f95397ddb9ec73f6800e12e079c",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_06.step": "4e6b5c3ffe26954de782d4e1fd4c5a7df6dfa91fdb2f945b2f72566214bb052d",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_07.step": "d2a1bda743298901d739e8a930d6461f7267d694f3d06bbb84fe47e025b9240e",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_08.step": "ee6c9222010643e8b38db5c2f613dafc0d4045a334f897439c6efc86ed609773",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_09.step": "0b68d921d53f4af6e06a9fdd8dcd4c4943dc5f2c6e6938799d895593fc210b89",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_10.step": "329566ccda324fecf62cf7fcd180ddf682aa1e5de0dc0289901738f7d4995138",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_11.step": "074f57c41e62b7884bdcb5e327340fc4a0aa7408e153260c770f372b8e83d451",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_12.step": "455d2151aa71df70e52fc98617fbd3d3277a0b4f840bf870c10554f20c1eb3df",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_13.step": "d7df0a340a633a04eeaeb8f34d5cddbb2942da635e45c3a05d0f4c919df70495",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_14.step": "14b31c5b16cc3c3e123ee8db1eeed1a7b28446f22a633ee082831b40defec169",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_15.step": "50cac96ddf8408894113770d68c4122dacdb1b498c961b90bbba64db39c07de1",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_16.step": "7289c408e9f5495f7a0c3b43ec8fd9bd55442a7b2cdb57cbdd54811909a90a44",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_17.step": "d8beb79603bcf9aba714bac0bc7cb9adef3c90b50d98d335eea17dbc3a3b8067",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_18.step": "9dcd760f6a456ca538ac0f767716306d514d7bb245ffe292cfd694363a1d3d2d",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_19.step": "354d0ee0d76695c2dacf946c77e11bef0cc07ebca35d92339f4c3ece7fe31413",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_20.step": "bf7274daf00141b8ca9e311799d4a3dc296514b5366efb0c25acfceaaba3fe13",
+        ".agentcad/benchcad2-submission-78m7cp0e/submission/parts/part_21.step": "76e02a000532418d3bc0e73d608f2cd602b562b2315ed9c41fdd9f3d7b3a763d"
+      }
+    },
+    {
+      "case": "task6_case1",
+      "sol_score": 1.0,
+      "astra_score": 1.0,
+      "delta_percentage_points": 0.0,
+      "sol_episode": {
+        "case": "task6_case1",
+        "kind": "ecad",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 220.3,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 14,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 14,
+        "tool_calls_by_name": {
+          "read_workspace": 13,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 14,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 227792,
+          "cached_input_tokens": 194944,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 6157,
+          "reasoning_output_tokens": 4692
+        }
+      },
+      "astra_episode": {
+        "case": "task6_case1",
+        "kind": "ecad",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 312.0,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 11,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 11,
+        "tool_calls_by_name": {
+          "read_workspace": 10,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 11,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 188061,
+          "cached_input_tokens": 152192,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4021,
+          "reasoning_output_tokens": 2847
+        }
+      },
+      "astra_latest_score": 1.0,
+      "astra_latest_episode": {
+        "case": "task6_case1",
+        "kind": "ecad",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 312.0,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 11,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 11,
+        "tool_calls_by_name": {
+          "read_workspace": 10,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 11,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 188061,
+          "cached_input_tokens": 152192,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4021,
+          "reasoning_output_tokens": 2847
+        }
+      },
+      "astra_first_attempt_additional_evidence_sha256": {},
+      "prompt_identical": true,
+      "inputs_identical": true,
+      "command_identical_except_model_and_paths": true,
+      "astra_latest_prompt_file_sha256": "674568cb81db4554a376a924bbd9c69fb188c3bfff9d00a82f7cef06df8d3ea6",
+      "astra_latest_command_sha256": "ccaae5eca619f5072b36d018c49cf3cff4c6f9cd1130803e102afae3528a2ae9",
+      "astra_latest_answer_marker_sha256": "0b3966f62d06627b9c33f9c1871e8175fbc5cdd1f8c74bd8486b77ee29258c24",
+      "astra_latest_sealed_submission_sha256": {
+        ".agentcad/benchcad2-submission-2q49rft0/pred_graph.json": "2cc83c0118fd0160d745e12788e8f34be05154cec48e1e8fe00cc158efe43e7b"
+      }
+    },
+    {
+      "case": "task6_case2",
+      "sol_score": 0.988006,
+      "astra_score": 0.0,
+      "delta_percentage_points": -98.8006,
+      "sol_episode": {
+        "case": "task6_case2",
+        "kind": "ecad",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2120.9,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 37,
+        "tool_errors": 1,
+        "tool_error_codes": {},
+        "tool_calls_started": 37,
+        "tool_calls_by_name": {
+          "read_workspace": 36,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 37,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 2178763,
+          "cached_input_tokens": 2106496,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 57780,
+          "reasoning_output_tokens": 45834
+        }
+      },
+      "astra_episode": {
+        "case": "task6_case2",
+        "kind": "ecad",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "agent_error",
+        "exit_code": 1,
+        "seconds": 371.4,
+        "submitted": false,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 17,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 17,
+        "tool_calls_by_name": {
+          "read_workspace": 17
+        },
+        "submitted_after_calls": null,
+        "unexpected_tools": [],
+        "usage": null
+      },
+      "astra_latest_score": 0.0,
+      "astra_latest_episode": {
+        "case": "task6_case2",
+        "kind": "ecad",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 2,
+        "status": "agent_error",
+        "exit_code": 1,
+        "seconds": 1257.2,
+        "submitted": false,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 17,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 17,
+        "tool_calls_by_name": {
+          "read_workspace": 17
+        },
+        "submitted_after_calls": null,
+        "unexpected_tools": [],
+        "usage": null
+      },
+      "astra_first_attempt_additional_evidence_sha256": {
+        "run.json": "7c495f270f26fd6c420c252cb5e1caf2abbddd2061b258bdd02b92ccf34bd546",
+        "events.jsonl": "bf6fdaaf6553989486db9a55e4ea89c207511307a94e9588b9877640355a8440",
+        "stderr.log": "60792cb297635ea5c12f5a4d4e5802aa5d8d84a16fd225386b1149d22d747ae5",
+        "prompt.txt": "674568cb81db4554a376a924bbd9c69fb188c3bfff9d00a82f7cef06df8d3ea6",
+        "command.json": "b0b738c933d6427f11854e82bf6c02289ae8709b65c14e2ef5cc12daa6202264",
+        "first-attempt-run.json": "7c495f270f26fd6c420c252cb5e1caf2abbddd2061b258bdd02b92ccf34bd546",
+        "first-attempt-score.json": "267f089ddcb13a630216eff6025cd0a3de96f92d88e28dd3760b93e01eb93256"
+      },
+      "prompt_identical": true,
+      "inputs_identical": true,
+      "command_identical_except_model_and_paths": true,
+      "astra_latest_prompt_file_sha256": "674568cb81db4554a376a924bbd9c69fb188c3bfff9d00a82f7cef06df8d3ea6",
+      "astra_latest_command_sha256": "7183a867e1ddddc06a4cb7f19f2a7df2b5fad568441d04ad7f892035fd92eba0",
+      "astra_latest_answer_marker_sha256": null,
+      "astra_latest_sealed_submission_sha256": {}
+    }
+  ],
+  "resources": {
+    "sol_first_attempts": {
+      "episode_count": 9,
+      "submitted": 9,
+      "total_tool_calls": 439,
+      "total_tool_errors": 17,
+      "cumulative_episode_seconds": 19679.2,
+      "usage_episodes_reported": 9,
+      "model_stream_retry_events": 7,
+      "model_catalog_refresh_timeouts": 67,
+      "cli_reported_cumulative_usage": {
+        "input_tokens": 39483138,
+        "cached_input_tokens": 38447488,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 453002,
+        "reasoning_output_tokens": 371689
+      }
+    },
+    "astra_first_attempts": {
+      "episode_count": 9,
+      "submitted": 8,
+      "total_tool_calls": 337,
+      "total_tool_errors": 10,
+      "cumulative_episode_seconds": 16264.0,
+      "usage_episodes_reported": 8,
+      "model_stream_retry_events": 20,
+      "model_catalog_refresh_timeouts": 22,
+      "cli_reported_cumulative_usage": {
+        "input_tokens": 22763671,
+        "cached_input_tokens": 21911168,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 273401,
+        "reasoning_output_tokens": 217378
+      }
+    },
+    "astra_latest_selected_attempts": {
+      "episode_count": 9,
+      "submitted": 8,
+      "total_tool_calls": 337,
+      "total_tool_errors": 10,
+      "cumulative_episode_seconds": 17149.8,
+      "usage_episodes_reported": 8,
+      "model_stream_retry_events": 22,
+      "model_catalog_refresh_timeouts": 24,
+      "cli_reported_cumulative_usage": {
+        "input_tokens": 22763671,
+        "cached_input_tokens": 21911168,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 273401,
+        "reasoning_output_tokens": 217378
+      }
+    },
+    "astra_all_attempts_including_recovery": {
+      "episode_count": 10,
+      "submitted": 8,
+      "total_tool_calls": 354,
+      "total_tool_errors": 10,
+      "cumulative_episode_seconds": 17521.2,
+      "usage_episodes_reported": 8,
+      "model_stream_retry_events": 27,
+      "model_catalog_refresh_timeouts": 24,
+      "cli_reported_cumulative_usage": {
+        "input_tokens": 22763671,
+        "cached_input_tokens": 21911168,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 273401,
+        "reasoning_output_tokens": 217378
+      }
+    }
+  },
+  "only_metadata_difference": {
+    "model": [
+      "gpt-6.1-sol",
+      "gpt-6-astra"
+    ]
+  },
+  "equality_verification": {
+    "prompts": 9,
+    "commands": 9,
+    "staged_files": 130,
+    "raw_archive_files_checked": 142
+  },
+  "frozen_comparison_protocol": {
+    "reference_directory": "D:\\Projects\\AgentCAD-output\\benchcad2-sol-max-20261030-final",
+    "reference_metadata_sha256": "3884c8a62c15665997618f95f5275298a54da682d2fb2a6ad93658c2cc75f436",
+    "reference_model": "gpt-6.1-sol",
+    "model": "gpt-6-astra",
+    "effort": "max",
+    "product_sha": "25835161de291daa4035e81a7e8ba501e1474a63",
+    "runner_sha256": "21c6b557492f9165dceb1094428f3a29c6d31a2faa149b7b33ae9b890f15c23a",
+    "tool_adapter_sha256": "4852f9d26ef7d40ce45cd850aa1ef1a345837878e3a57a77aa98ca22c7d1c4af",
+    "launcher_sha256": "cb648cd0f7c1ffa7ae7be63df2d9df6825291e0cde267a6344058b1a85e2bfe0",
+    "timeout_s": 3600,
+    "tool_call_limit": 100,
+    "jobs": 2,
+    "scoring_protocol": {
+      "benchcad_sha": "70b7aaeb3a031851d058252e4ebe4ed30ca41f77",
+      "mesh_guard": "0",
+      "threads": {
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      }
+    },
+    "python": "3.11.16",
+    "packages": {
+      "agentcad-runtime": "0.1.0",
+      "aiohappyeyeballs": "2.7.1",
+      "aiohttp": "3.14.5",
+      "aiosignal": "1.4.0",
+      "annotated-types": "0.8.0",
+      "anyio": "4.15.1",
+      "attrs": "26.1.0",
+      "cadquery": "2.8.0",
+      "cadquery-ocp": "7.9.3.1.1",
+      "cadquery-ocp-proxy": "7.9.3.1.1",
+      "casadi": "3.8.2",
+      "certifi": "2026.10.23",
+      "cffi": "2.1.1",
+      "click": "8.5.0",
+      "colorama": "0.4.6",
+      "contourpy": "1.3.3",
+      "cryptography": "50.0.2",
+      "cycler": "0.12.1",
+      "ezdxf": "1.4.5",
+      "fonttools": "4.68.0",
+      "frozenlist": "1.8.0",
+      "h11": "0.16.0",
+      "httpcore": "1.0.9",
+      "httpx": "0.28.1",
+      "httpx-sse": "0.4.3",
+      "idna": "3.20",
+      "iniconfig": "2.3.1",
+      "jsonschema": "4.26.0",
+      "jsonschema-specifications": "2025.9.1",
+      "kiwisolver": "1.5.1",
+      "llvmlite": "0.50.0",
+      "matplotlib": "3.11.2",
+      "mcp": "1.30.0",
+      "more-itertools": "11.2.1",
+      "msgpack": "1.2.4",
+      "multidict": "7.2.1",
+      "multimethod": "1.12",
+      "nlopt": "2.11.0",
+      "numba": "0.68.1",
+      "numpy": "2.4.6",
+      "packaging": "26.3",
+      "pillow": "13.0.0",
+      "pluggy": "1.7.0",
+      "propcache": "0.5.4",
+      "pycparser": "3.12",
+      "pydantic": "2.14.2",
+      "pydantic_core": "2.50.2",
+      "pydantic-settings": "2.16.2",
+      "Pygments": "2.21.0",
+      "PyJWT": "2.15.1",
+      "pyparsing": "3.3.3",
+      "pypdf": "6.21.4",
+      "pytest": "9.2.0",
+      "python-dateutil": "3.0.0",
+      "python-dotenv": "1.2.4",
+      "python-multipart": "0.0.32",
+      "pywin32": "312",
+      "PyYAML": "6.0.3",
+      "referencing": "0.37.0",
+      "rpds-py": "2026.9.1",
+      "runtype": "0.5.3",
+      "scipy": "1.17.1",
+      "six": "1.17.0",
+      "sse-starlette": "3.6.0",
+      "starlette": "1.10.0",
+      "trame": "4.0.0",
+      "trame-client": "4.1.4",
+      "trame-common": "1.2.9",
+      "trame-components": "2.5.0",
+      "trame-server": "4.1.0",
+      "trame-vtk": "2.11.17",
+      "trame-vuetify": "3.3.0",
+      "typing_extensions": "4.16.0",
+      "typing-inspection": "0.4.4",
+      "tzdata": "2026.6",
+      "uvicorn": "0.54.0",
+      "vtk": "9.6.2",
+      "wslink": "2.6.0",
+      "yarl": "1.25.1"
+    },
+    "standard_answers_reused": "Unchanged canonical cases, scorer and scoring protocol; nine original 1.0 checks copied outside model workspaces",
+    "cases": [
+      {
+        "case": "task1_case1",
+        "prompt_sha256": "5fdfaa95e598fc7209018754b865fd0412e2344cc0d35e6e63bea250427bf0af",
+        "prompt_identical": true,
+        "staged_inputs_identical": true,
+        "command_identical_except_model_and_paths": true,
+        "seed_images": [
+          "drawing.png"
+        ],
+        "staged_input_sha256": {
+          "drawing.png": "6918ef3ac8cca0a47458ad6578e342e33136f55e16ea0f64993c363c8fd5367e",
+          "hires/drawing.png": "6dd022ce0132e043af838ce5b1faed4acfc67392aa879f832c5e88c930722dd5"
+        }
+      },
+      {
+        "case": "task2_case1",
+        "prompt_sha256": "6aa2501d5ad415802c6f8c27f126e914cc9064ce765bebab35457b53dbac8f36",
+        "prompt_identical": true,
+        "staged_inputs_identical": true,
+        "command_identical_except_model_and_paths": true,
+        "seed_images": [
+          "drawing.png"
+        ],
+        "staged_input_sha256": {
+          "bom.json": "decbac90b7f0f58489a39594d2babf3b8b84dede70b50856a273485ffc611bd8",
+          "drawing.png": "2de7e605d6da56ab584b7e85a1635d64d109a6f77c5ce437fa294d3e5eb0b513",
+          "drawing_tile_r1c1.png": "857400c65eb13dfab301dc02639166410e04f05efaa2f225be026110abdcad2c",
+          "drawing_tile_r1c2.png": "8ab3a70c6d4bf0fed0c5cb081144fb0e469f3a57c589ee5012f15cb40a2be249",
+          "drawing_tile_r2c1.png": "c4feb8058d15fa2680ef71cdfd7526e7c200f8ab08b7937163f89de004a86226",
+          "drawing_tile_r2c2.png": "588b7328a91000f1d079e1e9bc879016807572e28b57ab9357affec37c1e169d",
+          "hires/drawing.png": "a5868c228251d1b89568f7976abc5f52486895eac6019e5dd7082d10d5fcbf40",
+          "step_files/part_01.step": "aaa4d568a57fdb1634d1791e7310fea9bad5790ef341e3d2062b5a008fe8f72a",
+          "step_files/part_02.step": "f6deea9b9c8216d9fd21f97fb370acb8b254d587812d342ddc2db068f5f7f507",
+          "step_files/part_03.step": "275b984f2d87dec3195455538cda167e92d1c528f94ea4f88e015115d01aea78",
+          "step_files/part_04.step": "e13a29d0d038dcc0f659c8ec4bafcb7b632c74d66ed65b98eaa1c3f19f25c70b",
+          "step_files/part_05.step": "f77b0b0af4a8d5f2c443ee23071c7cbf7137d0e4c0e19d88733eec093309d3ff",
+          "step_files/part_06.step": "c2773a2e7f824e1f61f7036c68e0c54d2d2d2dddc4718386bfd4543868b40525",
+          "step_files/part_07.step": "bfc6c92e0f9238787d13ecd27286b3554e532a401e9e1045ca796af59e78bd14",
+          "step_files/part_08.step": "a6396ac2dc2971775ec3a70329cc97c33f05badd01c8b4fd10fae64f681272eb",
+          "step_files/part_09.step": "b422fbd20448e84a14d6e7d9f6e08c9c40fb6314b9517f6488ba8103d8bbfd58",
+          "step_files/part_10.step": "c2fa56d70c7c77c5db17b3c1e59c8907a16f389ccf9faabfc7b8b810903af71b",
+          "step_files/part_11.step": "d89d293f57f683d3d1aa74507ce6171ff8f8cbb3e14d95ed7682e6bad583aad4",
+          "step_files/part_12.step": "93b8758ad64212fc9b09486c6a0ef5c1e1fc08822e9142bb3e85d5f72de5d18d",
+          "step_files/part_13.step": "de06dbc7617b4b6e12e0dcef9863cad58bea6d1ade75a673f12b3e3f1e3f3fd6",
+          "step_files/part_14.step": "38228494cd6fe8f0f21bc243d950c76f72fc5c0992cfe70872bb45c702f5ccdd",
+          "step_files/part_15.step": "c9753100db780ede0ad8c425e0b5fada3e80dd6aa86a205f773e5239559b3cde",
+          "step_files/part_16.step": "90d241085f7e205c022d18cb37a80c0d0fe41473f4bc52b00a41b553ac42faac",
+          "step_files/part_17.step": "21e6b0dec66c875807740f422af92d0d9b02c56fe680ddde445b9092eff69c55",
+          "step_files/part_18.step": "a6436a28b12eddfe27ee55cb684facfe24f7fa054b278193784bc35837f915a3",
+          "step_files/part_19.step": "9f0d3dbd6cde1d5de84d23f3e43dfe276c74b8286e1d8c398357c3fa5231eebc",
+          "step_files/part_20.step": "5ebff705d805495966bd612d76049ffc2a208de1ed18454a34b51389809e1d58",
+          "step_files/part_21.step": "f12a3d1a7bb6574ab3ed33dc5a43da5b78d1fa725ecaf80cac3ccaa6d16dd1fa"
+        }
+      },
+      {
+        "case": "task2_case2",
+        "prompt_sha256": "b208310f56ae9628dc400cff501c302f0bfef0b78fe64ca09450e9b94279f459",
+        "prompt_identical": true,
+        "staged_inputs_identical": true,
+        "command_identical_except_model_and_paths": true,
+        "seed_images": [
+          "drawing.png"
+        ],
+        "staged_input_sha256": {
+          "bom.json": "0470a58e99c900d3539c778780c3d60fc859e7beb37989d4545d32ff57a97a42",
+          "drawing.png": "b368e89522897b21992c3bc7f30b6f5a512fc7f7f3957538885e115a49870c99",
+          "drawing_tile_r1c1.png": "a9f39cd038e583740c861da76f63fe65c7bc91054d353c6d775c91a8584e8422",
+          "drawing_tile_r1c2.png": "742215b09d0477db7d96d5074475f3cca25e437d6cfe6e6fe69a67a3a180f1fb",
+          "drawing_tile_r2c1.png": "ca4259bbff94dab38948e62810c67f44a9a1191c4f59ef8762a6350e7ce18487",
+          "drawing_tile_r2c2.png": "1393f55b7c7ee801986fd3272c8f83bd03be3b6be66a7b2a62fd6c8fbbbdfadc",
+          "hires/drawing.png": "59a92715ffff9647f0701f79cb9e361590983a856f6735c723b3727f911b7319",
+          "step_files/part_01.step": "233fc21abf8ce141e488cf534a320d43e50c3592d708f60ecbae56a53adf97d1",
+          "step_files/part_02.step": "c3b9d9188efe2a96f08de3ff376c9d2f351c79a2e907d19d6e04ec743d187e19",
+          "step_files/part_03.step": "acf0b7b8d4a8f607abf20d61c05b2a7504ce3427d0510e356fb0bfd75e11ef5b",
+          "step_files/part_04.step": "bdfa7e2725bc86ddb6ed1a6bd9d625a5994705b968970d142cf212ac8b2f3068",
+          "step_files/part_05.step": "21516d414542d08b34eb8fd237e6e87c7bcd0662f4ee0048c0338ed91abc2525",
+          "step_files/part_06.step": "edfb8e3463348b78f251afb55082caf61dc81560bc0f7d7b782468ac7693871a",
+          "step_files/part_07.step": "f40da9e0970f5d1a5eaa75be1ce37324cfcd95c7b0f1daac3727548530a85e4f",
+          "step_files/part_08.step": "b82877a2190258f300f1ef6671ea7b4d1e57a4a5f280260d603f1ced5b3bb2f6",
+          "step_files/part_09.step": "283de5e2fdd6983eab237a2a0516615ba569e3ba66b276bea1fcf087aede6ddd",
+          "step_files/part_10.step": "f7f2972a200a6619477d810ab76103670ad24e0f1a341d3b14338c7e18cf40a0",
+          "step_files/part_11.step": "cbc5955d5cff204028e5ac27d528ac0ad8cf49b1fd912175619323c319f1438b",
+          "step_files/part_12.step": "0b74b48f26c10f7b94d1d2c0fed741bcc61ae9f44b3fa1880cab2f9e70a6f285",
+          "step_files/part_13.step": "88adae7675ca17abc6e96a7025facc8001a85717053a7c5c3e68f3b945053088",
+          "step_files/part_14.step": "076788ba66117357f689ee388f3806f398b2abbff718f57540ac06614fb1a485",
+          "step_files/part_15.step": "c4bf8428b52bbaeccaedeb94b75bf852fe51254d3265b13f6491014bb5d9aad2",
+          "step_files/part_16.step": "94ff6ff30c949b8d54f8926a92eb5d936db47f8d0c362ab7d419df0c67e52934",
+          "step_files/part_17.step": "364eef12eec3d8b05034205eb08812086700d3980630c1391dbee5a582578fd9",
+          "step_files/part_18.step": "aba145bf6899b2a98ab45b4da78e342cf103205762f0f858908fb06a64676e5b",
+          "step_files/part_19.step": "1b98d2c6b4f35498bc8468a1b672d3b6845870bef232ecf11e90ffee2b7fe7d0",
+          "step_files/part_20.step": "f96b222014be459db31b5f430cbe8e01a053ba0e8ceabc7ec0de2d1a0c6cffe3"
+        }
+      },
+      {
+        "case": "task3_case1",
+        "prompt_sha256": "d0049550ccbfbc753f23e43e3d1fd53c985224f58f820548b769d0302cb22e3d",
+        "prompt_identical": true,
+        "staged_inputs_identical": true,
+        "command_identical_except_model_and_paths": true,
+        "seed_images": [
+          "views.png"
+        ],
+        "staged_input_sha256": {
+          "views.png": "01b788bd3e4476ff6fa83cd1759bc52336b2121f01a131a3a017dae915ba9278"
+        }
+      },
+      {
+        "case": "task3_case2",
+        "prompt_sha256": "d0049550ccbfbc753f23e43e3d1fd53c985224f58f820548b769d0302cb22e3d",
+        "prompt_identical": true,
+        "staged_inputs_identical": true,
+        "command_identical_except_model_and_paths": true,
+        "seed_images": [
+          "views.png"
+        ],
+        "staged_input_sha256": {
+          "views.png": "82d16cf24a6e8f57385bfc8fdb1ab5ad81fb090a85099fedac421a724c877f7a"
+        }
+      },
+      {
+        "case": "task4_case1",
+        "prompt_sha256": "0d9b0d82dc695bb0e61a3c756b178637b8f2bd0b14bc1d04e4337f00b3fdea68",
+        "prompt_identical": true,
+        "staged_inputs_identical": true,
+        "command_identical_except_model_and_paths": true,
+        "seed_images": [
+          "views.png",
+          "parts/body_alone.png",
+          "parts/body_in_assembly.png",
+          "parts/cover_alone.png",
+          "parts/cover_in_assembly.png",
+          "parts/jaw_1_alone.png",
+          "parts/jaw_1_in_assembly.png",
+          "parts/jaw_2_alone.png",
+          "parts/jaw_2_in_assembly.png",
+          "parts/jaw_3_alone.png",
+          "parts/jaw_3_in_assembly.png",
+          "parts/pinion_alone.png",
+          "parts/pinion_in_assembly.png",
+          "parts/scroll_plate_alone.png",
+          "parts/scroll_plate_in_assembly.png"
+        ],
+        "staged_input_sha256": {
+          "bom.json": "b13e7a2accc89598acad3ae1137ab2cc81b2b7ecab6e3cbb1bb373f4de4be2eb",
+          "parts/body_alone.png": "7445191d4798767f9a642737faf05b2eec12847dc9e9940d6f6aa7d3d4e77376",
+          "parts/body_in_assembly.png": "65e7d4a728b10d76eafe6b9627f071bb02073864cffbe9089acaf5a455bd4bbe",
+          "parts/cover_alone.png": "775758c08622eb3f9b336fed8a05026f9ec09d607e6b6922315b3469686c657f",
+          "parts/cover_in_assembly.png": "e5e341f084411eba29588c4c55080b597eee5ac385df642d75b96eea03b40b27",
+          "parts/jaw_1_alone.png": "573f3c044e3d4a6db851483404ef5c87f32ae23c31af48d2f6fbeaafca3fa79d",
+          "parts/jaw_1_in_assembly.png": "df9599c008aa7e79f3c5a43c2108610d92035e576fc121cd733a1a99f29432c4",
+          "parts/jaw_2_alone.png": "468899934b92977f290afb43248f029c7e86eb3379fa2b64e95a151ec05fb8be",
+          "parts/jaw_2_in_assembly.png": "6939c9352edf10dedde3e1b0b337b74647e94ff35b3cb8cbadf470c44dbc829d",
+          "parts/jaw_3_alone.png": "bd4f739142b9d287ec48dd58dfe19334ad3bb8d3677dae102cb4cf736b224549",
+          "parts/jaw_3_in_assembly.png": "50e89efbfe4a5e50e5d5fe5f8c853a16529596439a0cdd1af01cd2ef598bfd71",
+          "parts/pinion_alone.png": "bfc2992707cef5e9d31d2d0ef1c98157ccf3d5f983ab897a6c4c1120965a2784",
+          "parts/pinion_in_assembly.png": "e9cddf275a7999bca1e83273a529b4d6ae948b862b0757d368bdb893dc04be30",
+          "parts/scroll_plate_alone.png": "8218536b7f71e91ee1eeb0b5da3987fec19856055ec666156561f0ef4f338fe2",
+          "parts/scroll_plate_in_assembly.png": "49b1b849764e2642fd09d2a4b7a67912c5b9bae3a2612d87a9c71f1d31eb397c",
+          "views.png": "f07f22134df232e0ac9efc8a4befe0e107ab0ee89caed6a2b7b555c77bcbd84c"
+        }
+      },
+      {
+        "case": "task5_case1",
+        "prompt_sha256": "1c5ed889121d18662016f79a83101026308abf01cd7462feac1bc074d1707606",
+        "prompt_identical": true,
+        "staged_inputs_identical": true,
+        "command_identical_except_model_and_paths": true,
+        "seed_images": [
+          "drawing.png",
+          "part_drawings/part_03.png",
+          "part_drawings/part_14.png",
+          "part_drawings/part_16.png",
+          "part_drawings/part_19.png",
+          "part_drawings/part_21.png"
+        ],
+        "staged_input_sha256": {
+          "bom.json": "eb44bb7c58f5784a19d78b9736ba63924669c12fd3042d364333b7fd6a1c3b83",
+          "drawing.png": "b0811e3004e060ab0fcabf785f730d4e4eb0f2ad97d6dbfecbd573711427f768",
+          "drawing_tile_r1c1.png": "1eb105b8b98417699b5258faf50f661e04e7e3ce6a3824e8c2a7b92dc2902303",
+          "drawing_tile_r1c2.png": "61c15a40cdda0864c10c6734fc8f7c898be3cf0045ea7b69ffa7aca7ff463b88",
+          "hires/drawing.png": "9eb554372a2dd53fafd6a01ad4c31918c152e252ab04aad48b22a81159c9f776",
+          "part_drawings/hires/part_03.png": "a4d52a70c6ddfe99e950d48659119a80c00f807bc1e77798c7c9f7b11b38a71c",
+          "part_drawings/hires/part_14.png": "97920f58970f87b721340c39d5cba93e35af11bf6136e8caa5bf29e06fec8226",
+          "part_drawings/hires/part_16.png": "9ea23271a17b9703900f0b9d1466814deb6a01fbbd956edaeff612262e6ee0cd",
+          "part_drawings/hires/part_19.png": "fed876440f09b0209e35fd87be1aa80bcf6a168165a3db22e29d658221f7b63b",
+          "part_drawings/hires/part_21.png": "a143f664fb304276c9b294f2cf28a5268cae03784379e3be927ea28633dfbf88",
+          "part_drawings/part_03.png": "770bf1f84fd1987608e7bd2bdd7bc02b29c1cc0f258a2e9e7db2bbf92bf8273b",
+          "part_drawings/part_03_tile_r1c1.png": "dc814aafff5cdb6b5f538303731a5962db6a0203722dc2009cafdb8af2e13ae9",
+          "part_drawings/part_03_tile_r1c2.png": "8408bf77c60bb5c11610f32ddd4299cde4795cc6ed1f93189942a083df420d59",
+          "part_drawings/part_14.png": "c0f159ccaf82e8b7b8d2ef6202654847ef8c26edd51ec69fe06780a101d13f34",
+          "part_drawings/part_14_tile_r1c1.png": "b89f5b48d59ebbb2c02f9f7ea121f9c52e2daa7dc789d57bed1fd72a240710c4",
+          "part_drawings/part_14_tile_r1c2.png": "c63b7589b2620b0ddbb7ebdd9e9060b576d383ad806f9c77f939187e1ff18d86",
+          "part_drawings/part_16.png": "570388b3d5c796166387ab45505d46613de2d84aa8a3950392a985e8f12f6f40",
+          "part_drawings/part_16_tile_r1c1.png": "40485f74a314609ce1e4ce679f1296ea661c370964e37426d8a218637e4ce838",
+          "part_drawings/part_16_tile_r1c2.png": "784ee33b509ea10a477472c512e537e0e4735cd0773d2154d6df15c19a1a0175",
+          "part_drawings/part_19.png": "7ad5ff64066d86b91af35ccb3562004868c24ad19cee990ba0cf04899f053e00",
+          "part_drawings/part_19_tile_r1c1.png": "3c67bc4d3b2c96b7cd06d82f165e9e06d231ec0c7d186a73146defe4410ed209",
+          "part_drawings/part_19_tile_r1c2.png": "e45193e3f71278ec3d726fb99618ccdc8d3ac20fa2f6195f10bb8af06b2841f5",
+          "part_drawings/part_21.png": "d6b45818baaf25a194ee65171e7c94ac718647295f914981691fca34b28d98ad",
+          "part_drawings/part_21_tile_r1c1.png": "d54fd2af3b98e2167b83c8530f93f83199a63356e486abbe82f3f7513734e837",
+          "part_drawings/part_21_tile_r1c2.png": "23d58f9d049831244cdb2c78bf739593c4b3a5e283e5c0baa1612dac776c1298",
+          "step_files/part_01.step": "d0c9877144f375464e75231555f4c2b9961d2003e3901a2c7aa7d5b24785b44c",
+          "step_files/part_02.step": "28ce15af6390b7f7c660cc1cb24b7e6eedfa12b40671181e4ca895ce22fa7326",
+          "step_files/part_04.step": "81b8e839ddd43f9d6c1faa8426fba2e983471367ea0a5787967ebeab7f2b402c",
+          "step_files/part_05.step": "f97a9cc4b3e4c1b9c847cefc5946ffd2fd963f95397ddb9ec73f6800e12e079c",
+          "step_files/part_06.step": "4e6b5c3ffe26954de782d4e1fd4c5a7df6dfa91fdb2f945b2f72566214bb052d",
+          "step_files/part_07.step": "d2a1bda743298901d739e8a930d6461f7267d694f3d06bbb84fe47e025b9240e",
+          "step_files/part_08.step": "ee6c9222010643e8b38db5c2f613dafc0d4045a334f897439c6efc86ed609773",
+          "step_files/part_09.step": "0b68d921d53f4af6e06a9fdd8dcd4c4943dc5f2c6e6938799d895593fc210b89",
+          "step_files/part_10.step": "329566ccda324fecf62cf7fcd180ddf682aa1e5de0dc0289901738f7d4995138",
+          "step_files/part_11.step": "074f57c41e62b7884bdcb5e327340fc4a0aa7408e153260c770f372b8e83d451",
+          "step_files/part_12.step": "455d2151aa71df70e52fc98617fbd3d3277a0b4f840bf870c10554f20c1eb3df",
+          "step_files/part_13.step": "d7df0a340a633a04eeaeb8f34d5cddbb2942da635e45c3a05d0f4c919df70495",
+          "step_files/part_15.step": "50cac96ddf8408894113770d68c4122dacdb1b498c961b90bbba64db39c07de1",
+          "step_files/part_17.step": "d8beb79603bcf9aba714bac0bc7cb9adef3c90b50d98d335eea17dbc3a3b8067",
+          "step_files/part_18.step": "9dcd760f6a456ca538ac0f767716306d514d7bb245ffe292cfd694363a1d3d2d",
+          "step_files/part_20.step": "bf7274daf00141b8ca9e311799d4a3dc296514b5366efb0c25acfceaaba3fe13"
+        }
+      },
+      {
+        "case": "task6_case1",
+        "prompt_sha256": "80520d2e16e8e0176f3396f168269f2edd26bd0b944d1942c7252c2d7f999f16",
+        "prompt_identical": true,
+        "staged_inputs_identical": true,
+        "command_identical_except_model_and_paths": true,
+        "seed_images": [
+          "views/view_bottom.png",
+          "views/view_bottom_obl_a.png",
+          "views/view_bottom_obl_b.png",
+          "views/view_top.png",
+          "views/view_top_obl_a.png",
+          "views/view_top_obl_b.png"
+        ],
+        "staged_input_sha256": {
+          "README.md": "c15cc150a865c4b480563f9c3cc7c03ee9256c8752a515f55fcdd8ab5a81223b",
+          "views/view_bottom.png": "322a3982f1cc36a43e3562f62a5990f1fea8fc7a205bfa2327d52e72554ecd07",
+          "views/view_bottom_obl_a.png": "1813f11c4429f8585d9208436839da64f62c1369c9176c9e243392ed85eeba36",
+          "views/view_bottom_obl_b.png": "a618612158ef11517f0c925da9b04b20a15d10d9c96f764a8cbb1de46fd5bae1",
+          "views/view_top.png": "5eb7635a8c81a72df05951d9730f9ee280b0ca036e3ecad619899fe6e989e1c7",
+          "views/view_top_obl_a.png": "95f62bde94640a60207cefca55dccdbf41e124da034c0b56f47e0a726e7b240b",
+          "views/view_top_obl_b.png": "aa54ed61451bfbfb628227ae4b6f0eb19ffd470baf780bddb4af0f979ec50039"
+        }
+      },
+      {
+        "case": "task6_case2",
+        "prompt_sha256": "80520d2e16e8e0176f3396f168269f2edd26bd0b944d1942c7252c2d7f999f16",
+        "prompt_identical": true,
+        "staged_inputs_identical": true,
+        "command_identical_except_model_and_paths": true,
+        "seed_images": [
+          "views/view_bottom.png",
+          "views/view_bottom_obl_a.png",
+          "views/view_bottom_obl_b.png",
+          "views/view_top.png",
+          "views/view_top_obl_a.png",
+          "views/view_top_obl_b.png"
+        ],
+        "staged_input_sha256": {
+          "README.md": "c15cc150a865c4b480563f9c3cc7c03ee9256c8752a515f55fcdd8ab5a81223b",
+          "views/view_bottom.png": "67f87763e05ca930517206d7b295420ab53278c4c20b7dc58a20d0241aa5868c",
+          "views/view_bottom_obl_a.png": "ee0b88cfe3e4dde50742f5e6684da552d745520dc6a1e8879aedd0695849ce1b",
+          "views/view_bottom_obl_b.png": "a9ab28c51afe9e9b1f714017a4bb92543deb1a037ac337963816a1cd828f04ef",
+          "views/view_top.png": "b9bb2cb0365f010054966877c850d56d4820451a3d343ec704cfd97587001b28",
+          "views/view_top_obl_a.png": "fb385655df37cc5cd2c2f831d16d662cfa9338cd4d054e2c246998389bf49993",
+          "views/view_top_obl_b.png": "5e2b0733bfdba5bd4efa4d85777ead2a6d24b91e961b5d1722363097189761cc"
+        }
+      }
+    ]
+  },
+  "analysis_plan": {
+    "primary": "Mean of the six task means, identical to the Sol report",
+    "paired_case_differences": "Candidate minus reference, percentage points, full precision retained",
+    "secondary": "Mean of T1-T5 task means, descriptive; not a CAD-kernel-only score",
+    "outcomes": "All nine cases, all attempts retained; no best-attempt selection",
+    "resources": [
+      "Cumulative episode seconds",
+      "MCP calls and errors",
+      "CLI cumulative token usage and connection retries"
+    ],
+    "interpretation": "Nine heterogeneous public development samples, one formal episode per model/case; no significance or leaderboard ranking claim",
+    "frozen_before_first_score": true
+  },
+  "provenance": {
+    "reference_archive": "D:\\Projects\\AgentCAD-output\\benchcad2-sol-max-20261030-final\\results-2026-10-30.json",
+    "reference_archive_sha256": "281ac46fc5621df1befc4b3a62083b87c38024b047fb0d6de3e5c2b425e3c6fc",
+    "candidate_first_attempt_archive": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\results-astra-first-attempts-2026-10-30.json",
+    "candidate_first_attempt_archive_sha256": "8f3d87aefbd68dc37d04226b61524637709afa725a1a711b6636e5562d37ebf7",
+    "candidate_archive": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\results-astra-2026-10-30.json",
+    "candidate_archive_sha256": "b00b1c8a168e8d00a597be3e233e8d3f2119b8e5359aa2a606a61ec98f621c3c",
+    "comparison_protocol_sha256": "789dac6b644bd2a4aed869e7a57fda4495b196f362be3ab563ebf254d0e35fae",
+    "analysis_plan_sha256": "35a6c7a3a78f5a6d974d66438972dc8cf35b3a966dd24901f3762de2841adf2c",
+    "infrastructure_recovery_plan_sha256": "1d7db86608925af189fa1e2f5fb02beb81381695947fcbd70fd2685ef695fe44",
+    "frozen_launcher_sha256": "cb648cd0f7c1ffa7ae7be63df2d9df6825291e0cde267a6344058b1a85e2bfe0",
+    "archive_generator_sha256": "98f2377f428e2e29b70bc398c1a74c8347e6d1f2ad3610f73c8ab7e413a02000",
+    "comparison_generator_sha256": "9728e747a3238c5d58c822b0efbea613f5b0afcee3467766f25d2f7c0d9fc3ea"
+  },
+  "limitations": [
+    "Nine heterogeneous public development samples; primary uses one first attempt per model/case; one additional infrastructure recovery is reported separately",
+    "Custom Codex MCP harness, not gated Core or an official leaderboard protocol",
+    "Shared host and model connection retries confound wall time; no dollar cost available",
+    "T6 is model-only graph reasoning; the six-task aggregate is not CAD-kernel performance alone",
+    "The failed first T6/case2 attempt returned no token usage; Astra totals including that attempt have incomplete token coverage"
+  ]
+}
