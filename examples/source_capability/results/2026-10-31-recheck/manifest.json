@@ -3,8 +3,8 @@
   "product_commit": "290ced3033f85e1fc97611cf1c920d922524bc3a",
   "archive": {
     "path": "evidence.zip",
-    "bytes": 45929104,
-    "sha256": "5adb511508f53b210b22d734f8c1e5364543c7e199cd236ec3a197c3f7f31ccf"
+    "bytes": 44196784,
+    "sha256": "fd8787550364038c4dfa8d1cec3f0e0c3c614b2b48cbcc878f0d24a5d7f1bd5b"
   },
   "members": [
     {
@@ -7366,21 +7366,6 @@
       "path": "output/source-capability-100/reviewer-publication-final/tmp/pdfs/architecture.png",
       "bytes": 39859,
       "sha256": "124baac728d3fc1a72abd7a49cb17f21835c19d592b7572dd7593599b1d7da37"
-    },
-    {
-      "path": "output/source-capability-100/reviewer-publication-final/tmp/pdfs/gost-5.png",
-      "bytes": 412252,
-      "sha256": "70a6f87e2f0aa5285c17a7aeb88798770209c952563d746a0a3aa454ea61a535"
-    },
-    {
-      "path": "output/source-capability-100/reviewer-publication-final/tmp/pdfs/gost-6.png",
-      "bytes": 616980,
-      "sha256": "57ba5220952a5a8ef37dcab61545fc898c3bae9d41d25d283af61e37e2887483"
-    },
-    {
-      "path": "output/source-capability-100/reviewer-publication-final/tmp/pdfs/gost-7.png",
-      "bytes": 766679,
-      "sha256": "6bc9b244b800a73b1059afe1ceefa4bb1e3272fc4df8c21c1f627343413c02cf"
     },
     {
       "path": "output/source-capability-100/reviewer-publication-final/tmp/pdfs/mechanical-native.pdf",

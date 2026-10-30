@@ -16,15 +16,15 @@ Product: `290ced3033f85e1fc97611cf1c920d922524bc3a`. Pro/evaluator:
 | [Performance](performance.json) | 24 correctness-checked observations, raw timings and environment |
 | [Production](showcase-report.json) | Fresh synthetic examples, native DWG/AUDIT and actual A3 activation |
 | [Visual review](visual-review.md) | Seven independently rendered and inspected PDFs |
-| [Evidence ZIP](evidence.zip) | 7,144 new retained files, including failures and counterexamples |
+| [Evidence ZIP](evidence.zip) | 7,141 new retained files, including failures and counterexamples |
 | [Manifest](manifest.json) | SHA-256 for archive, every member, standalone files and companion ZIPs |
 
 Local regression: **885 passed / 8 skipped**;
 [four completed CI lanes](https://github.com/lizaixi01/AgentCAD/actions/runs/41114528669).
-Archive size: 45,929,104 bytes. SHA-256:
+Archive size: 44,196,784 bytes. SHA-256:
 
 ```text
-5adb511508f53b210b22d734f8c1e5364543c7e199cd236ec3a197c3f7f31ccf
+fd8787550364038c4dfa8d1cec3f0e0c3c614b2b48cbcc878f0d24a5d7f1bd5b
 ```
 
 Assessment SHA-256 (copied without edits from the independent reviewer):
