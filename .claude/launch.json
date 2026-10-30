@@ -6,6 +6,12 @@
       "runtimeExecutable": ".venv/Scripts/python.exe",
       "runtimeArgs": ["-m", "agentcad.cli", "--root", "playground", "viewer", "--port", "8770"],
       "port": 8770
+    },
+    {
+      "name": "agentcad-setup-demo",
+      "runtimeExecutable": ".venv/Scripts/python.exe",
+      "runtimeArgs": ["-m", "agentcad.cli", "setup", "--gui", "--dry-run", "--no-browser", "--port", "8790"],
+      "port": 8790
     }
   ]
 }
