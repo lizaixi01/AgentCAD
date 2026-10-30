@@ -29,7 +29,7 @@ GROUPS = {"create": "v3-bench-create", "edit": "v3-bench-create-edit", "drawing"
 EXPECTED_DIGEST = "sha256:8a786725d3648a76282fc5868df06da3d5e00d603f283573a53430803465d78a"
 TOOLS = ["list_operations", "create_drawing", "read_drawing", "inspect_entities", "apply_operations",
          "validate_drawing", "export_drawing", "rollback", "history", "get_diff", "list_checkpoints",
-         "save_benchmark_stage"]
+         "save_benchmark_stage", "inspect_image"]
 
 
 def digest(path: Path) -> str:
@@ -54,8 +54,32 @@ def select_tasks(dataset: Path, count: int, seed: int) -> list[dict]:
         for path, meta in randomizer.sample(candidates, count):
             selected.append({"id": path.name, "kind": kind, "description": meta["task"]["description"],
                              "instruction_sha256": digest(path / "instruction.md"),
-                             "task_toml_sha256": digest(path / "task.toml")})
+                             "task_toml_sha256": digest(path / "task.toml"),
+                             "public_input_sha256": {p.name: digest(p) for p in sorted((path / "environment").glob("*.png"))}})
     return selected
+
+
+def repeat_selection(baseline_path: Path, dataset: Path, ids: list[str] | None, config: dict) -> tuple[list[dict], dict]:
+    """Freeze a declared regression set from an existing run; never redraw the cohort."""
+    baseline = json.loads(baseline_path.read_text("utf-8"))
+    if baseline["benchmark"] != "gnucleus-ai/cad-bench@v3":
+        raise ValueError("Baseline is not CAD Bench V3")
+    for key, value in config.items():
+        if baseline[key] != value:
+            raise ValueError(f"{key} differs from the baseline")
+    if ids and set(ids) - {item["id"] for item in baseline["tasks"]}:
+        raise ValueError("Requested task is outside the baseline selection")
+    items = [dict(item) for item in baseline["tasks"] if not ids or item["id"] in ids]
+    for item in items:
+        task = dataset / item["id"]
+        if (digest(task / "instruction.md") != item["instruction_sha256"]
+                or digest(task / "task.toml") != item["task_toml_sha256"]):
+            raise ValueError(f"Baseline task changed: {item['id']}")
+        inputs = {p.name: digest(p) for p in sorted((task / "environment").glob("*.png"))}
+        if "public_input_sha256" in item and item["public_input_sha256"] != inputs:
+            raise ValueError(f"Baseline drawing input changed: {item['id']}")
+        item["public_input_sha256"] = inputs
+    return items, {"path": str(baseline_path.resolve()), "sha256": digest(baseline_path)}
 
 
 def stage_inputs(task: Path, workspace: Path, item: dict) -> list[Path]:
@@ -63,6 +87,10 @@ def stage_inputs(task: Path, workspace: Path, item: dict) -> list[Path]:
         raise ValueError("Task instruction changed since selection")
     if digest(task / "task.toml") != item["task_toml_sha256"]:
         raise ValueError("Task metadata changed since selection")
+    if "public_input_sha256" in item:
+        inputs = {p.name: digest(p) for p in sorted((task / "environment").glob("*.png"))}
+        if inputs != item["public_input_sha256"]:
+            raise ValueError("Task image changed since selection")
     workspace.mkdir(parents=True, exist_ok=False)
     shutil.copyfile(task / "instruction.md", workspace / "instruction.md")
     images = []
@@ -115,9 +143,12 @@ def audit_log(log: Path) -> dict:
             tools.append(item.get("tool"))
             if item.get("server") != "agentcad" or item.get("tool") not in TOOLS:
                 foreign.append(item)
+            prior_errors = len(errors)
+            messages = []
             for block in (item.get("result") or {}).get("content", []):
                 if block.get("type") != "text":
                     continue
+                messages.append(block.get("text", ""))
                 try:
                     body = json.loads(block["text"])
                 except (ValueError, KeyError):
@@ -126,6 +157,10 @@ def audit_log(log: Path) -> dict:
                     error = body.get("error", {})
                     errors.append({"tool": item.get("tool"), "code": error.get("code"),
                                    "message": error.get("message", "")[:300]})
+            # MCP/schema failures can be plain text, outside Runtime's JSON envelope.
+            if len(errors) == prior_errors and (item.get("status") == "failed" or item.get("error")):
+                errors.append({"tool": item.get("tool"), "code": "MCP_TOOL_ERROR",
+                               "message": ("\n".join(messages) or str(item.get("error")))[:300]})
         elif kind not in {"reasoning", "agent_message", "image_view"}:
             foreign.append({"type": kind, "id": item.get("id")})
     return {"tool_calls": len(tools), "tools": tools, "tool_errors": errors,
@@ -291,6 +326,7 @@ def main() -> None:
     parser.add_argument("--timeout", type=int, default=900)
     parser.add_argument("--jobs", type=int, default=2)
     parser.add_argument("--ids", nargs="*")
+    parser.add_argument("--baseline-manifest", type=Path, help="prepare: reuse a frozen run's tasks/config for an explicit regression")
     args = parser.parse_args()
     args.dataset, args.output, args.workspaces, args.freecad = [
         p.resolve() for p in (args.dataset, args.output, args.workspaces, args.freecad)]
@@ -301,7 +337,20 @@ def main() -> None:
     if min(args.timeout, args.jobs, args.per_group) < 1:
         parser.error("Timeout, concurrency and per-group sample size must be positive")
     if args.action == "prepare":
-        items = select_tasks(args.dataset, args.per_group, args.seed)
+        baseline_ref = None
+        if args.baseline_manifest:
+            try:
+                items, baseline_ref = repeat_selection(args.baseline_manifest, args.dataset, args.ids, {
+                    "model": args.model, "effort": args.effort, "timeout_sec": args.timeout,
+                    "jobs": args.jobs, "seed": args.seed})
+            except ValueError as exc:
+                parser.error(str(exc))
+        else:
+            items = select_tasks(args.dataset, args.per_group, args.seed)
+        if args.ids and not args.baseline_manifest:
+            if set(args.ids) - {item["id"] for item in items}:
+                parser.error("--ids contains a task outside the fixed sample")
+            items = [item for item in items if item["id"] in args.ids]
         args.output.mkdir(parents=True, exist_ok=False)
         manifest = {"benchmark": "gnucleus-ai/cad-bench@v3", "expected_dataset_digest": EXPECTED_DIGEST,
                     "digest_verified": False, "seed": args.seed, "selection": "stratified random, before any run",
@@ -310,6 +359,9 @@ def main() -> None:
                     "model": args.model, "effort": args.effort, "timeout_sec": args.timeout,
                     "jobs": args.jobs, "official_submission": False, "tasks": items}
         manifest["harness_sha256"] = {path.name: digest(path) for path in [HERE / "pilot.py", HERE / "stage_server.py"]}
+        if baseline_ref:
+            manifest.update(purpose="post-diagnostic regression", baseline=baseline_ref,
+                            selection="fixed subset of baseline manifest; no resampling")
         write_json(args.output / "manifest.json", manifest)
         print(json.dumps(manifest, ensure_ascii=False, indent=2))
         return

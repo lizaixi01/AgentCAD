@@ -4,6 +4,7 @@ AGENTCAD_READ_ONLY=1 and AGENTCAD_ALLOWED_OPS=op1,op2. The live viewer starts on
 (AGENTCAD_VIEWER=0: not at all; AGENTCAD_VIEWER_OPEN=1: also open it in the browser)."""
 from __future__ import annotations
 
+import base64
 from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import FastMCP, Image
@@ -43,6 +44,12 @@ Basics
   run_script (only if enabled) covers edits no op can express.
 
 3D parts (.FCStd)
+- For an engineering drawing image, inspect_image magnifies callouts and section views. Before modeling,
+  rotate vertical or inverted annotations upright with inspect_image(rotate=90/180/270). Recheck ambiguous
+  digits and decimal points at a readable orientation. Make a dimension ledger from the drawing, then
+  map each dimension to the edges/centres it measures, rather than a nearby feature. Use section extension
+  lines and hatching to distinguish cut depth from remaining wall thickness and to identify which side
+  each recess or protrusion occupies. Record signed face levels in the chosen coordinate frame.
 - One PartDesign Body, one solid, every feature native and editable. Usual order: set_parameters (optional),
   add_sketch on a plane (XY normal +Z, XZ normal -Y, YZ normal +X; offset moves it along the normal) or
   on_face, then pad (adds along the normal) / pocket (cuts against it) / revolve / groove / hole, then fillet,
@@ -54,6 +61,10 @@ Basics
   ("top", {"type": "circle", "radius": 6}) are re-resolved after every edit; '=Params.w' drives dimensions: change them later with set_parameters or
   modify_feature and the part rebuilds.
 - The result's validation.shape gives size, volume and holes: check them against what you meant to build.
+  Derive validation targets independently from explicit drawing callouts, not from the geometry you just
+  created. Check that the signed face-level differences agree with those callouts before saving.
+  A valid solid with matching overall size/hole count can still have wrong local geometry. Compare opposite
+  faces and section depth levels, and use inspect_entities for the relevant face positions.
 - See what you built: export_drawing(path, "preview.png", "png", views=[...]); a view is a name (iso, front,
   top, right, ...) or the camera position [x, y, z] relative to the part. The image comes back in the result.
   Each view is scaled to fill its cell (fit='view'), so compare shapes and proportions within a view, not
@@ -82,6 +93,23 @@ Path_ = Annotated[str, Field(description="Drawing path (.dxf) or 3D part (.FCStd
 def build_server(policy: Policy | None = None) -> FastMCP:
     rt = Runtime(policy or Policy(), auto_viewer=True)
     mcp = FastMCP("agentcad", instructions=INSTRUCTIONS)
+
+    @mcp.tool()
+    def inspect_image(path: Annotated[str, Field(description="PNG/JPEG/WebP image in the workspace")],
+                      region: Annotated[list[int] | None, Field(description="[left, top, right, bottom] in source "
+                          "pixels, top-left origin; omit for an overview showing source dimensions")] = None,
+                      max_size: Annotated[int, Field(ge=64, le=2048, description="Longest preview side in pixels; "
+                          "small crops are magnified. This does not create additional source detail")] = 1536,
+                      rotate: Annotated[Literal[0, 90, 180, 270], Field(description="Clockwise rotation AFTER cropping; "
+                          "make vertical dimensions upright. Region coordinates always refer to the source")] = 0) -> Any:
+        """Look closely at a drawing's dimensions, leaders, hatching or section view before modeling.
+        Returns source dimensions, crop coordinates and an inline image. Read-only; writes no files.
+        Pixel distances are not CAD dimensions: use the drawing's explicit callouts and datums."""
+        result = rt.inspect_image(path, region, max_size, rotate)
+        if result.get("ok"):
+            png = base64.b64decode(result.pop("image_base64"))
+            return [result, Image(data=png, format="png")]
+        return result
 
     @mcp.tool()
     def list_operations(category: Annotated[str | None, Field(description="draw|edit|annotate|layer|block|layout|library: "

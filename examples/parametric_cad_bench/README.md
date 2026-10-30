@@ -10,6 +10,12 @@ The [machine-readable results](pilot-2026-10-30.json) include hashes and the
 [generated CAD and previews](artifacts/2026-10-30/). No benchmark reference
 models, solutions or input drawings are redistributed here.
 
+The separate [drawing diagnosis and regression](drawing-diagnosis-2026-10-30.md)
+preserves the original two drawing tasks and all attempts: the latest plate
+scores **34.20** and tube **66.67**, for a **50.43** two-task mean. It also records
+the intervening failed plate attempt and distinguishes manually repaired
+diagnostic controls from fresh-agent results.
+
 V3 has 30 text-to-CAD creation tasks, 30 create-and-edit tasks and 40 tasks that
 reconstruct a part from an engineering drawing. The last category evaluates
 **3D reconstruction from a drawing**, rather than production of 2D drawings.
@@ -19,7 +25,8 @@ scores are combined with a harmonic mean.
 ## What the adapter does
 
 `pilot.py prepare` samples each category without replacement, using seed 42 by
-default, before any agent runs. It records instruction and task metadata hashes.
+default, before any agent runs. It records instruction, task metadata and public
+input image hashes.
 `run` copies only public instructions and input PNGs into separate workspaces.
 Each task gets a fresh Codex process and an AgentCAD MCP server. Scripts, shell,
 web search and other configured MCP servers are disabled. Only the selected CAD
@@ -75,6 +82,23 @@ selection. A subset summary describes only that subset. After scoring different
 subsets, run `summarize` with the same arguments to combine all saved results
 without running the scorers again. Do not choose a new
 sample after seeing scores or present best-of-retry results as one attempt.
+
+For an explicitly declared regression, reuse the original manifest and list
+the original task IDs when preparing a **new** output/workspace pair:
+
+```powershell
+.venv\Scripts\python.exe examples\parametric_cad_bench\pilot.py prepare @pilotArgs `
+  --baseline-manifest D:\bench\original-run\manifest.json `
+  --ids freecad-6fd69bd0c4 freecad-686f17ce17
+```
+
+The adapter rejects changes to model, effort, time limit, concurrency, seed or
+the selected tasks' recorded inputs. Older manifests without image hashes are
+accepted, but cannot establish historical image identity on their own; compare
+them with the baseline ledger. Run and score using the newly prepared paths.
+The manifest labels this as a post-diagnostic regression, not a new blind sample.
+AgentCAD's read-only `inspect_image` tool can magnify the public drawing's
+dimensions and section views; it exposes neither the reference nor the grader.
 
 ## Differences from a leaderboard run
 

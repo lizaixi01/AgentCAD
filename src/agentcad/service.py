@@ -402,6 +402,17 @@ class Runtime:
         return {"drawing": self._rel(p), "units": u, "dxf_version": dxf_version, "journal_seq": seq, **info}
 
     @tool
+    def inspect_image(self, path: str, region: list[int] | None = None, max_size: int = 1536,
+                      rotate: int = 0) -> dict[str, Any]:
+        """Read a workspace image or magnify a region; return a PNG without writing files.
+
+        region is [left, top, right, bottom] in displayed source pixels (top-left origin).
+        The longest preview side is max_size. Pixel magnification adds no missing detail.
+        """
+        from .images import inspect_image
+        return inspect_image(self.policy, path, region, max_size, rotate)
+
+    @tool
     def read_drawing(self, path: str) -> dict[str, Any]:
         if part.is_part(path):
             return part.read(self, path)
