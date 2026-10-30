@@ -72,6 +72,7 @@ Samples are small (2–3 runs per task, one run per BenchCAD task). The full rep
 - [vs. AutoCAD MCP Pro](docs/comparison-autocad-mcp-pro.md)
 - [native DWG in AutoCAD 2027](docs/comparison-native-dwg.md)
 - [BenchCAD](examples/benchcad/README.md)
+- [Parametric CAD Bench V3 pilot: six tasks with native PartDesign operations](examples/parametric_cad_bench/README.md)
 
 ## Get started in two minutes
 
