@@ -271,7 +271,21 @@
             "max_size": 1500
           },
           "metadata": [
-            {}
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                654,
+                277,
+                925,
+                549
+              ],
+              "rotate": 0
+            }
           ]
         },
         {
