@@ -130,14 +130,25 @@ def _own(override) -> bool:
 
 
 def _mark(dimension) -> dict | None:
-    """The dimension's own look before AgentCAD's tolerance; None if AgentCAD did not write its tolerance."""
+    """The dimension's own look before AgentCAD's tolerance; None if AgentCAD did not write its tolerance.
+    A missing or implausible value reads as None, so clearing falls back to the style's value."""
     if not dimension.has_xdata(MARK):
         return None
     try:
         saved = json.loads(next(value for code, value in dimension.get_xdata(MARK) if code == 1000))
-        return {key: value for key in LOOK if (value := saved.get(key)) is None or isinstance(value, (int, float))}
+        return {key: _plausible(key, saved.get(key)) for key in LOOK}
     except (StopIteration, ValueError, TypeError, AttributeError):  # damaged: still AgentCAD's, look unknown
         return {}
+
+
+def _plausible(key: str, value):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value):
+        return None
+    if key == "dimtolj":
+        return value if value in (0, 1, 2) else None
+    if key == "dimtfac":
+        return value if 0 < value < 1e6 else None
+    return value if abs(value) < 1e6 else None  # a negative gap is AutoCAD's boxed text
 
 
 def _set_mark(dimension, before: dict) -> None:

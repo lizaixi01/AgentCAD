@@ -74,3 +74,18 @@ def test_recover_removes_a_legacy_marker_only_once_its_writer_exited(rt, ws, bla
     assert recovered["recovered"] and recovered["removed_legacy_lock"] == int(gone.stdout)
     assert not marker.exists()
     assert rt.apply_operations(blank, line)["ok"]
+
+
+def test_recover_keeps_a_marker_replaced_during_its_check(rt, blank, monkeypatch):
+    import agentcad.locking as locking
+    _, store = rt._drawing(blank)
+    marker = store.dir / "lock"
+    marker.write_text("12345")
+
+    def replaced(pid):  # an older runtime takes the stale marker over while recover checks it
+        marker.write_text(str(os.getpid()))
+        return False
+
+    monkeypatch.setattr(locking, "_running", replaced)
+    assert rt.recover(blank)["error"]["code"] == "DRAWING_LOCKED"
+    assert marker.read_text() == str(os.getpid())

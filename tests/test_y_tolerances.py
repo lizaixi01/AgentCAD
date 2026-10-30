@@ -2,6 +2,7 @@ import ezdxf
 import pytest
 
 from agentcad.service import Runtime
+from agentcad.tolerances import MARK
 
 
 @pytest.mark.parametrize("kind", ["linear", "diameter", "radius"])
@@ -216,12 +217,16 @@ def test_corrupt_foreign_tolerance_values_are_still_refused(rt, ws):
     assert [i["code"] for i in issues if "TOLERANCE" in i["code"]] == ["INVALID_TOLERANCE"]
 
 
-def test_agentcad_tolerances_keep_their_rules_after_a_foreign_edit(rt, ws, blank):
+@pytest.mark.parametrize("damaged_mark", [False, True])
+def test_agentcad_tolerances_keep_their_rules_after_a_foreign_edit(rt, ws, blank, damaged_mark):
     assert rt.apply_operations(blank, [{"op": "add_line", "start": [0, 0], "end": [10, 0]},
                                        {"op": "add_linear_dim", "p1": [0, 0], "p2": [10, 0], "tag": "fit",
                                         "tolerance": {"lower": -0.1, "upper": 0.1}}])["ok"]
     doc = ezdxf.readfile(ws / blank)
-    doc.modelspace().query("DIMENSION").first.dxf.text = "20"  # another program types a fake nominal
+    dim = doc.modelspace().query("DIMENSION").first
+    dim.dxf.text = "20"  # another program types a fake nominal
+    if damaged_mark:  # a damaged mark still says AgentCAD wrote the tolerance
+        dim.set_xdata(MARK, [(1000, "not json")])
     doc.saveas(ws / blank)
     issues = rt.validate_drawing(blank)["validation"]["issues"]
     assert [i["code"] for i in issues if "TOLERANCE" in i["code"]] == ["TOLERANCE_TEXT_OVERRIDE"]
@@ -254,20 +259,39 @@ LOOK = ("dimgap", "dimtolj", "dimtfac")
 
 
 def test_clearing_a_tolerance_restores_the_dimension_look(rt, ws, blank):
-    # a, d: never toleranced. b: toleranced, cleared. c: toleranced, text grows, cleared.
-    dims = [{"op": "add_linear_dim", "p1": [0, 0], "p2": [50, 0], "text_height": 3.5, "tag": tag} for tag in "abcd"]
-    for d in dims[1:3]:
+    # a, d: never toleranced. b: cleared. c: text grows, then cleared. e: tolerance changed, then cleared.
+    dims = [{"op": "add_linear_dim", "p1": [0, 0], "p2": [50, 0], "text_height": 3.5, "tag": tag} for tag in "abcde"]
+    for d in (dims[1], dims[2], dims[4]):
         d["tolerance"] = {"lower": -0.1, "upper": 0.1}
     assert rt.apply_operations(blank, [{"op": "add_line", "start": [0, 0], "end": [50, 0]}, *dims])["ok"]
     assert rt.apply_operations(blank, [{"op": "modify", "target": f"tag:{t}", "set": {"text_height": 5}}
-                                       for t in "cd"])["ok"]
+                                       for t in "cd"] + [{"op": "modify", "target": "tag:e", "set": {
+                                           "tolerance": {"lower": -0.2, "upper": 0.3}}}])["ok"]
     assert rt.apply_operations(blank, [{"op": "modify", "target": f"tag:{t}", "set": {"tolerance": None}}
-                                       for t in "bc"])["ok"]
+                                       for t in "bce"])["ok"]
     doc = ezdxf.readfile(ws / blank)
-    look = {t: (lambda ov: {k: ov.get(k) for k in LOOK})(
-        doc.entitydb[Runtime(rt.policy).inspect_entities(blank, {"tag": t})["entities"][0]["id"]].override())
-        for t in "abcd"}
-    assert look["b"] == look["a"] and look["c"] == look["d"]
+    dims = {t: doc.entitydb[Runtime(rt.policy).inspect_entities(blank, {"tag": t})["entities"][0]["id"]]
+            for t in "abcde"}
+    look = {t: {k: dim.override().get(k) for k in LOOK} for t, dim in dims.items()}
+    assert look["b"] == look["a"] == look["e"] and look["c"] == look["d"]
+    assert not any(dims[t].has_xdata(MARK) for t in "bce")
+
+
+def test_a_damaged_mark_never_writes_an_invalid_look(rt, ws, blank):
+    assert rt.apply_operations(blank, [{"op": "add_line", "start": [0, 0], "end": [50, 0]},
+                                       *({"op": "add_linear_dim", "p1": [0, 0], "p2": [50, 0], "tag": tag}
+                                         for tag in "ab")])["ok"]
+    assert rt.apply_operations(blank, [{"op": "modify", "target": "tag:b",
+                                        "set": {"tolerance": {"lower": -0.1, "upper": 0.1}}}])["ok"]
+    doc = ezdxf.readfile(ws / blank)
+    damaged = doc.entitydb[Runtime(rt.policy).inspect_entities(blank, {"tag": "b"})["entities"][0]["id"]]
+    damaged.set_xdata(MARK, [(1000, '{"dimgap": NaN, "dimtolj": 7, "dimtfac": 0}')])
+    doc.saveas(ws / blank)
+    assert rt.apply_operations(blank, [{"op": "modify", "target": "tag:b", "set": {"tolerance": None}}])["ok"]
+    doc = ezdxf.readfile(ws / blank)
+    plain, cleared = (doc.entitydb[Runtime(rt.policy).inspect_entities(blank, {"tag": t})["entities"][0]["id"]]
+                      .override() for t in "ab")
+    assert {k: cleared.get(k) for k in LOOK} == {k: plain.get(k) for k in LOOK}
 
 
 def test_clearing_a_tolerance_keeps_the_dimensions_own_gap(rt, ws):
