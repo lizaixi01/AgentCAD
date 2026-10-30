@@ -16,7 +16,8 @@ MAX_PREVIEW_BYTES = 2 * 1024 * 1024
 FORMATS = {"PNG", "JPEG", "WEBP"}
 
 
-def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size: int, rotate: int = 0) -> dict:
+def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size: int, rotate: int = 0,
+                  dimensions: list[dict] | None = None) -> dict:
     source = policy.resolve(path, must_exist=True, suffixes=(".png", ".jpg", ".jpeg", ".webp"))
     if isinstance(max_size, bool) or not isinstance(max_size, int) or not 64 <= max_size <= 2048:
         raise input_error("BAD_IMAGE_SIZE", "max_size must be an integer from 64 to 2048")
@@ -45,12 +46,21 @@ def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size:
             background = Image.new("RGBA", rgba.size, "white")
             background.alpha_composite(rgba)
             crop = background.convert("RGB")
+            extra = {}
+            if dimensions is not None:
+                from .image_dimensions import check_dimensions, evidence_preview
+                evidence = check_dimensions(dimensions, list(box), crop)
             if rotate:
                 crop = crop.transpose({90: Image.Transpose.ROTATE_270, 180: Image.Transpose.ROTATE_180,
                                        270: Image.Transpose.ROTATE_90}[rotate])
-            scale = max_size / max(crop.size)
-            size = (max(1, round(crop.width * scale)), max(1, round(crop.height * scale)))
-            preview = crop.resize(size, Image.Resampling.LANCZOS)
+            if dimensions is not None:
+                preview, scale, panels = evidence_preview(crop, box, rotate, max_size, evidence)
+                extra = {"dimension_evidence": evidence, "panels": panels}
+                size = preview.size
+            else:
+                scale = max_size / max(crop.size)
+                size = (max(1, round(crop.width * scale)), max(1, round(crop.height * scale)))
+                preview = crop.resize(size, Image.Resampling.LANCZOS)
             stream = BytesIO()
             preview.save(stream, format="PNG")
             png = stream.getvalue()
@@ -61,4 +71,4 @@ def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size:
     return {"source": source.relative_to(policy.root).as_posix(),
             "source_sha256": hashlib.sha256(raw).hexdigest(), "source_size": [width, height],
             "region": list(box), "rotate": rotate, "preview_size": list(size), "pixel_scale": scale,
-            "mime_type": "image/png", "image_base64": base64.b64encode(png).decode("ascii")}
+            "mime_type": "image/png", "image_base64": base64.b64encode(png).decode("ascii"), **extra}

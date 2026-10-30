@@ -1,0 +1,5583 @@
+{
+  "date": "2026-10-30",
+  "benchmark": "gnucleus-ai/cad-bench@v3",
+  "official_submission": false,
+  "purpose": "Post-diagnostic drawing-workflow regression; one fresh attempt on each original task",
+  "previous_ledger": {
+    "path": "section-evidence-2026-10-30.json",
+    "sha256": "997ddfe8b62e04c8f7677134088a6fe5400d3c672083a96b83c87f54854edeee"
+  },
+  "manifest": {
+    "benchmark": "gnucleus-ai/cad-bench@v3",
+    "expected_dataset_digest": "sha256:8a786725d3648a76282fc5868df06da3d5e00d603f283573a53430803465d78a",
+    "digest_verified": false,
+    "seed": 42,
+    "selection": "fixed subset of baseline manifest; no resampling",
+    "agentcad_commit": "a6c673b69ca1160f9f2f30284efea629b1a55ad9",
+    "codex_version": "codex-cli 0.163.0",
+    "model": "gpt-6.1-sol",
+    "effort": "xhigh",
+    "timeout_sec": 900,
+    "jobs": 2,
+    "official_submission": false,
+    "tasks": [
+      {
+        "id": "freecad-6fd69bd0c4",
+        "kind": "drawing",
+        "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+        "instruction_sha256": "c20356feec279d4e553f875c606f7454927557e65c17c2d8defd46a78263725d",
+        "task_toml_sha256": "3c869ee14ab5f256ea560d5df062d741bfd4809ba963bad2ee354266020802cb",
+        "public_input_sha256": {
+          "6fd69bd0c4.png": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071"
+        }
+      },
+      {
+        "id": "freecad-686f17ce17",
+        "kind": "drawing",
+        "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+        "instruction_sha256": "579ff895229de2227aedbe59227397cbcc4bffb37f73ae4d6171bb22cb443e39",
+        "task_toml_sha256": "9d4c42112dc3c948876d5228acfac2a96c75604e249bfb732410b9ce65f4e08a",
+        "public_input_sha256": {
+          "686f17ce17.png": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116"
+        }
+      }
+    ],
+    "harness_sha256": {
+      "pilot.py": "9aab6247c16fd36aac41c93af98b26ebfaf33cfe06bb06c815e66e92ab9b46a6",
+      "stage_server.py": "2f0ea500b8cc02dc8d494a434ed7586af5f8750899e4e06b6ed6b0c3ac7520aa"
+    },
+    "purpose": "post-diagnostic regression",
+    "baseline": {
+      "path": "D:\\Projects\\bench-data\\cadbench-v3-anchor-retest-20261030\\manifest.json",
+      "sha256": "43ee91f554bf884e5d29214dbae71a97fac117839872352a9f848063448a9887"
+    }
+  },
+  "manifest_sha256": "5166d1bd5538119fdede203ecf5300505ea07a1c767dc2ba65ff7fd78389cf0d",
+  "raw_directory": "D:\\Projects\\bench-data\\cadbench-v3-witness-retest-20261030",
+  "conditions": {
+    "freecad": "1.1.4",
+    "occt": "7.8.1",
+    "python": "3.11.16",
+    "validator": "0.6.0",
+    "scorer": "v2",
+    "attempts_per_task_this_version": 1,
+    "scripts_enabled": false,
+    "manual_repairs_of_submissions": false,
+    "hidden_reference_given_to_fresh_agents": false,
+    "task_specific_readings_in_product_or_prompt": false,
+    "source_drawing_or_annotated_source_redistributed": false,
+    "raw_trajectory_is_public_atif": false
+  },
+  "mean_reward": 0.6705255,
+  "previous_mean_reward": 0.488297,
+  "cases": [
+    {
+      "id": "freecad-6fd69bd0c4",
+      "kind": "drawing",
+      "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+      "instruction_sha256": "c20356feec279d4e553f875c606f7454927557e65c17c2d8defd46a78263725d",
+      "task_toml_sha256": "3c869ee14ab5f256ea560d5df062d741bfd4809ba963bad2ee354266020802cb",
+      "public_input_sha256": {
+        "6fd69bd0c4.png": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071"
+      },
+      "status": "done",
+      "seconds": 350.45,
+      "evaluation": {
+        "reward": 0.672149,
+        "geometry_similarity": 0.5061934764696737,
+        "cad_spec_consistency": 1.0,
+        "combined": 0.6721493412069836,
+        "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=0.506 [solid_count=1 (matched)] (surface_types=0.689, volume=0.000, surface_area=1.000, principal_moments=1.000, icp=0.636); surface_types_diff=2.044% (Close); volume_diff=1.155% (Far); surface_area_diff=0.562% (Matched); bbox_diff=0.007% (OCCT OBB; gate passed); principal_moments_diff=0.276% (Matched); icp[reference.FCStd vs answer.FCStd: reward=0.636 rmse=1.2763e-01 max_residual=4.3005e-01 mm]",
+        "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=1.000 (37/37 consistent, 0 inconsistent, 0 not_found; failure_budget=10)",
+        "status": "scored",
+        "score": 0.672149
+      },
+      "previous_reward": 0.307692,
+      "audit": {
+        "tool_calls": 24,
+        "tools": [
+          "list_operations",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "list_operations",
+          "inspect_image",
+          "apply_operations",
+          "apply_operations",
+          "export_drawing",
+          "measure_entities",
+          "inspect_entities",
+          "inspect_image",
+          "inspect_entities",
+          "validate_drawing",
+          "validate_drawing",
+          "save_benchmark_stage"
+        ],
+        "tool_errors": [
+          {
+            "tool": "inspect_image",
+            "code": "MCP_TOOL_ERROR",
+            "message": "Error executing tool inspect_image: 1 validation error for inspect_imageArguments\nmax_size\n  Input should be less than or equal to 2048 [type=less_than_equal, input_value=2384, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/less_than_equal"
+          },
+          {
+            "tool": "list_operations",
+            "code": "UNKNOWN_OPERATION",
+            "message": "Unknown operation(s) ['add_body']"
+          }
+        ],
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 1303307,
+          "cached_input_tokens": 1216640,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 10640,
+          "reasoning_output_tokens": 6002
+        }
+      },
+      "stage_audit_errors": [],
+      "image_calls": [
+        {
+          "tool_call_id": "item_2",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              540,
+              120,
+              990,
+              650
+            ],
+            "max_size": 1800
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                540,
+                120,
+                990,
+                650
+              ],
+              "rotate": 0
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_3",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              620,
+              120,
+              925,
+              189
+            ],
+            "max_size": 1830,
+            "dimensions": []
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                620,
+                120,
+                925,
+                189
+              ],
+              "rotate": 0,
+              "dimension_evidence": {
+                "checks": [],
+                "groups": [],
+                "pixel_tolerance": 2.0,
+                "consistent": null,
+                "semantics_verified": false,
+                "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."
+              },
+              "panels": [
+                {
+                  "kind": "source",
+                  "origin": [
+                    0,
+                    24
+                  ],
+                  "size": [
+                    908,
+                    205
+                  ]
+                },
+                {
+                  "kind": "anchors",
+                  "origin": [
+                    920,
+                    24
+                  ],
+                  "size": [
+                    908,
+                    205
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_4",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              1050,
+              405,
+              1275,
+              570
+            ],
+            "max_size": 1350
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                1050,
+                405,
+                1275,
+                570
+              ],
+              "rotate": 0
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_5",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              623,
+              125,
+              921,
+              186
+            ],
+            "max_size": 2384
+          },
+          "metadata": []
+        },
+        {
+          "tool_call_id": "item_6",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              623,
+              125,
+              921,
+              186
+            ],
+            "max_size": 2048
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                623,
+                125,
+                921,
+                186
+              ],
+              "rotate": 0
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_8",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              627,
+              126,
+              763,
+              185
+            ],
+            "max_size": 1632,
+            "rotate": 90
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                627,
+                126,
+                763,
+                185
+              ],
+              "rotate": 90
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_9",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              661,
+              132,
+              724,
+              181
+            ],
+            "rotate": 90,
+            "max_size": 1260,
+            "dimensions": []
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                661,
+                132,
+                724,
+                181
+              ],
+              "rotate": 90,
+              "dimension_evidence": {
+                "checks": [],
+                "groups": [],
+                "pixel_tolerance": 2.0,
+                "consistent": null,
+                "semantics_verified": false,
+                "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."
+              },
+              "panels": [
+                {
+                  "kind": "source",
+                  "origin": [
+                    0,
+                    24
+                  ],
+                  "size": [
+                    624,
+                    802
+                  ]
+                },
+                {
+                  "kind": "anchors",
+                  "origin": [
+                    636,
+                    24
+                  ],
+                  "size": [
+                    624,
+                    802
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_10",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              623,
+              123,
+              922,
+              186
+            ],
+            "max_size": 2048,
+            "dimensions": [
+              {
+                "id": "S_total",
+                "view": "A-A",
+                "value": 5.6,
+                "unit": "mm",
+                "line": [
+                  [
+                    635,
+                    134
+                  ],
+                  [
+                    635,
+                    154
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "rim_top",
+                    "point": [
+                      664,
+                      134
+                    ]
+                  },
+                  {
+                    "name": "boss_bottom",
+                    "point": [
+                      730,
+                      154
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "S_recess",
+                "view": "A-A",
+                "value": 2,
+                "unit": "mm",
+                "line": [
+                  [
+                    651,
+                    134
+                  ],
+                  [
+                    651,
+                    141
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "rim_top",
+                    "point": [
+                      664,
+                      134
+                    ]
+                  },
+                  {
+                    "name": "recess_floor",
+                    "point": [
+                      700,
+                      141
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "S_boss",
+                "view": "A-A",
+                "value": 1.5,
+                "unit": "mm",
+                "line": [
+                  [
+                    682,
+                    149
+                  ],
+                  [
+                    682,
+                    154
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "plate_bottom",
+                    "point": [
+                      700,
+                      149
+                    ]
+                  },
+                  {
+                    "name": "boss_bottom",
+                    "point": [
+                      730,
+                      154
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                623,
+                123,
+                922,
+                186
+              ],
+              "rotate": 0,
+              "dimension_evidence": {
+                "checks": [
+                  {
+                    "id": "S_total",
+                    "view": "A-A",
+                    "value": 5.6,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        635.0,
+                        134.0
+                      ],
+                      [
+                        635.0,
+                        154.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "rim_top",
+                        "point": [
+                          664.0,
+                          134.0
+                        ]
+                      },
+                      {
+                        "name": "boss_bottom",
+                        "point": [
+                          730.0,
+                          154.0
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 20.0,
+                    "surface_span_px": 20.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        623,
+                        123,
+                        652,
+                        167
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            153,
+                            154
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "S_recess",
+                    "view": "A-A",
+                    "value": 2,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        651.0,
+                        134.0
+                      ],
+                      [
+                        651.0,
+                        141.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "rim_top",
+                        "point": [
+                          664.0,
+                          134.0
+                        ]
+                      },
+                      {
+                        "name": "recess_floor",
+                        "point": [
+                          700.0,
+                          141.0
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 7.0,
+                    "surface_span_px": 7.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        635,
+                        123,
+                        668,
+                        154
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            134,
+                            134
+                          ],
+                          "reach_px": [
+                            13,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            141,
+                            141
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            153,
+                            153
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "S_boss",
+                    "view": "A-A",
+                    "value": 1.5,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        682.0,
+                        149.0
+                      ],
+                      [
+                        682.0,
+                        154.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "plate_bottom",
+                        "point": [
+                          700.0,
+                          149.0
+                        ]
+                      },
+                      {
+                        "name": "boss_bottom",
+                        "point": [
+                          730.0,
+                          154.0
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 5.0,
+                    "surface_span_px": 5.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        666,
+                        137,
+                        699,
+                        167
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            141,
+                            141
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            148,
+                            148
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            153,
+                            154
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  }
+                ],
+                "groups": [
+                  {
+                    "view": "A-A",
+                    "axis": "y",
+                    "consistent": true,
+                    "issues": [],
+                    "components": [
+                      {
+                        "origin": "rim_top",
+                        "levels_mm": {
+                          "rim_top": 0.0,
+                          "recess_floor": 2.0,
+                          "boss_bottom": 5.6,
+                          "plate_bottom": 4.1
+                        }
+                      }
+                    ],
+                    "note": "Each disconnected component has its own zero; their relative offsets are undetermined."
+                  }
+                ],
+                "pixel_tolerance": 2.0,
+                "consistent": true,
+                "semantics_verified": false,
+                "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."
+              },
+              "panels": [
+                {
+                  "kind": "source",
+                  "origin": [
+                    0,
+                    24
+                  ],
+                  "size": [
+                    1018,
+                    214
+                  ]
+                },
+                {
+                  "kind": "anchors",
+                  "origin": [
+                    1030,
+                    24
+                  ],
+                  "size": [
+                    1018,
+                    214
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_11",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              555,
+              205,
+              975,
+              565
+            ],
+            "max_size": 2048,
+            "dimensions": []
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                555,
+                205,
+                975,
+                565
+              ],
+              "rotate": 0,
+              "dimension_evidence": {
+                "checks": [],
+                "groups": [],
+                "pixel_tolerance": 2.0,
+                "consistent": null,
+                "semantics_verified": false,
+                "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."
+              },
+              "panels": [
+                {
+                  "kind": "source",
+                  "origin": [
+                    0,
+                    24
+                  ],
+                  "size": [
+                    1017,
+                    872
+                  ]
+                },
+                {
+                  "kind": "anchors",
+                  "origin": [
+                    1029,
+                    24
+                  ],
+                  "size": [
+                    1017,
+                    872
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_12",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              555,
+              280,
+              770,
+              525
+            ],
+            "max_size": 1700
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                555,
+                280,
+                770,
+                525
+              ],
+              "rotate": 0
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_13",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              695,
+              247,
+              879,
+              464
+            ],
+            "max_size": 1736
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                695,
+                247,
+                879,
+                464
+              ],
+              "rotate": 0
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_16",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              555,
+              199,
+              975,
+              650
+            ],
+            "max_size": 1200,
+            "dimensions": [
+              {
+                "id": "Poverall",
+                "view": "plan",
+                "value": 72.12,
+                "unit": "mm",
+                "line": [
+                  [
+                    662,
+                    646
+                  ],
+                  [
+                    917,
+                    646
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "outer_left",
+                    "point": [
+                      662,
+                      330
+                    ]
+                  },
+                  {
+                    "name": "outer_right",
+                    "point": [
+                      917,
+                      330
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "Pflats",
+                "view": "plan",
+                "value": 70,
+                "unit": "mm",
+                "line": [
+                  [
+                    666,
+                    633
+                  ],
+                  [
+                    913,
+                    633
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "flat_left",
+                    "point": [
+                      666,
+                      414
+                    ]
+                  },
+                  {
+                    "name": "flat_right",
+                    "point": [
+                      913,
+                      414
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "Precess",
+                "view": "plan",
+                "value": 58,
+                "unit": "mm",
+                "line": [
+                  [
+                    687,
+                    619
+                  ],
+                  [
+                    892,
+                    619
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "recess_left",
+                    "point": [
+                      687,
+                      413
+                    ]
+                  },
+                  {
+                    "name": "recess_right",
+                    "point": [
+                      892,
+                      413
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "Pedge",
+                "view": "plan",
+                "value": 35,
+                "unit": "mm",
+                "line": [
+                  [
+                    727,
+                    559
+                  ],
+                  [
+                    851,
+                    559
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "recess_topedge_left",
+                    "point": [
+                      727,
+                      310
+                    ]
+                  },
+                  {
+                    "name": "recess_topedge_right",
+                    "point": [
+                      851,
+                      310
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "Pwaist",
+                "view": "plan",
+                "value": 25,
+                "unit": "mm",
+                "line": [
+                  [
+                    611,
+                    369
+                  ],
+                  [
+                    611,
+                    457
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "side_upper",
+                    "point": [
+                      666,
+                      369
+                    ]
+                  },
+                  {
+                    "name": "side_lower",
+                    "point": [
+                      666,
+                      457
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "Pwindows",
+                "view": "plan",
+                "value": 24,
+                "unit": "mm",
+                "line": [
+                  [
+                    625,
+                    371
+                  ],
+                  [
+                    625,
+                    456
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "upper_window_inner",
+                    "point": [
+                      789,
+                      371
+                    ]
+                  },
+                  {
+                    "name": "lower_window_inner",
+                    "point": [
+                      789,
+                      456
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "Pslotheight",
+                "view": "plan",
+                "value": 15,
+                "unit": "mm",
+                "line": [
+                  [
+                    655,
+                    387
+                  ],
+                  [
+                    655,
+                    440
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "slot_top",
+                    "point": [
+                      708,
+                      387
+                    ]
+                  },
+                  {
+                    "name": "slot_bottom",
+                    "point": [
+                      708,
+                      440
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "Pslotinner",
+                "view": "plan",
+                "value": 10,
+                "unit": "mm",
+                "line": [
+                  [
+                    755,
+                    396
+                  ],
+                  [
+                    755,
+                    431
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "slot_inner_top",
+                    "point": [
+                      708,
+                      396
+                    ]
+                  },
+                  {
+                    "name": "slot_inner_bottom",
+                    "point": [
+                      708,
+                      431
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "Pslotgap",
+                "view": "plan",
+                "value": 3,
+                "unit": "mm",
+                "line": [
+                  [
+                    742,
+                    408
+                  ],
+                  [
+                    742,
+                    419
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "slot_gap_top",
+                    "point": [
+                      720,
+                      408
+                    ]
+                  },
+                  {
+                    "name": "slot_gap_bottom",
+                    "point": [
+                      720,
+                      419
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "Pholeinner",
+                "view": "plan",
+                "value": 30.5,
+                "unit": "mm",
+                "line": [
+                  [
+                    735,
+                    246
+                  ],
+                  [
+                    843,
+                    246
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "innerhole_left",
+                    "point": [
+                      735,
+                      359
+                    ]
+                  },
+                  {
+                    "name": "innerhole_right",
+                    "point": [
+                      843,
+                      359
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "PholeouterA",
+                "view": "plan",
+                "value": 45.25,
+                "unit": "mm",
+                "line": [
+                  [
+                    709,
+                    230
+                  ],
+                  [
+                    870,
+                    230
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "perimeterhole_leftA",
+                    "point": [
+                      709,
+                      303
+                    ]
+                  },
+                  {
+                    "name": "perimeterhole_rightA",
+                    "point": [
+                      870,
+                      303
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "PholeouterB",
+                "view": "plan",
+                "value": 62.23,
+                "unit": "mm",
+                "line": [
+                  [
+                    679,
+                    211
+                  ],
+                  [
+                    900,
+                    211
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "perimeterhole_leftB",
+                    "point": [
+                      679,
+                      333
+                    ]
+                  },
+                  {
+                    "name": "perimeterhole_rightB",
+                    "point": [
+                      900,
+                      333
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                555,
+                199,
+                975,
+                650
+              ],
+              "rotate": 0,
+              "dimension_evidence": {
+                "checks": [
+                  {
+                    "id": "Poverall",
+                    "view": "plan",
+                    "value": 72.12,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        662.0,
+                        646.0
+                      ],
+                      [
+                        917.0,
+                        646.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "outer_left",
+                        "point": [
+                          662.0,
+                          330.0
+                        ]
+                      },
+                      {
+                        "name": "outer_right",
+                        "point": [
+                          917.0,
+                          330.0
+                        ]
+                      }
+                    ],
+                    "axis": "x",
+                    "dimension_span_px": 255.0,
+                    "surface_span_px": 255.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        598,
+                        630,
+                        975,
+                        650
+                      ],
+                      "axis": "x",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            661,
+                            662
+                          ],
+                          "reach_px": [
+                            16,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            871,
+                            871
+                          ],
+                          "reach_px": [
+                            16,
+                            3
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            894,
+                            895
+                          ],
+                          "reach_px": [
+                            16,
+                            3
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            917,
+                            918
+                          ],
+                          "reach_px": [
+                            16,
+                            3
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            956,
+                            956
+                          ],
+                          "reach_px": [
+                            16,
+                            3
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "Pflats",
+                    "view": "plan",
+                    "value": 70,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        666.0,
+                        633.0
+                      ],
+                      [
+                        913.0,
+                        633.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "flat_left",
+                        "point": [
+                          666.0,
+                          414.0
+                        ]
+                      },
+                      {
+                        "name": "flat_right",
+                        "point": [
+                          913.0,
+                          414.0
+                        ]
+                      }
+                    ],
+                    "axis": "x",
+                    "dimension_span_px": 247.0,
+                    "surface_span_px": 247.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        602,
+                        617,
+                        975,
+                        650
+                      ],
+                      "axis": "x",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            661,
+                            662
+                          ],
+                          "reach_px": [
+                            16,
+                            13
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            665,
+                            665
+                          ],
+                          "reach_px": [
+                            15,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            871,
+                            871
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            894,
+                            895
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            913,
+                            913
+                          ],
+                          "reach_px": [
+                            15,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            917,
+                            918
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            956,
+                            956
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "Precess",
+                    "view": "plan",
+                    "value": 58,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        687.0,
+                        619.0
+                      ],
+                      [
+                        892.0,
+                        619.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "recess_left",
+                        "point": [
+                          687.0,
+                          413.0
+                        ]
+                      },
+                      {
+                        "name": "recess_right",
+                        "point": [
+                          892.0,
+                          413.0
+                        ]
+                      }
+                    ],
+                    "axis": "x",
+                    "dimension_span_px": 205.0,
+                    "surface_span_px": 205.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        623,
+                        603,
+                        957,
+                        636
+                      ],
+                      "axis": "x",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            661,
+                            662
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            665,
+                            665
+                          ],
+                          "reach_px": [
+                            16,
+                            13
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            686,
+                            687
+                          ],
+                          "reach_px": [
+                            16,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            871,
+                            871
+                          ],
+                          "reach_px": [
+                            12,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            892,
+                            892
+                          ],
+                          "reach_px": [
+                            16,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            894,
+                            895
+                          ],
+                          "reach_px": [
+                            12,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            913,
+                            913
+                          ],
+                          "reach_px": [
+                            16,
+                            13
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            917,
+                            918
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            956,
+                            956
+                          ],
+                          "reach_px": [
+                            12,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "Pedge",
+                    "view": "plan",
+                    "value": 35,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        727.0,
+                        559.0
+                      ],
+                      [
+                        851.0,
+                        559.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "recess_topedge_left",
+                        "point": [
+                          727.0,
+                          310.0
+                        ]
+                      },
+                      {
+                        "name": "recess_topedge_right",
+                        "point": [
+                          851.0,
+                          310.0
+                        ]
+                      }
+                    ],
+                    "axis": "x",
+                    "dimension_span_px": 124.0,
+                    "surface_span_px": 124.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        665,
+                        543,
+                        914,
+                        576
+                      ],
+                      "axis": "x",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            665,
+                            666
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            686,
+                            687
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            691,
+                            692
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            702,
+                            703
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            716,
+                            717
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            727,
+                            727
+                          ],
+                          "reach_px": [
+                            16,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            851,
+                            851
+                          ],
+                          "reach_px": [
+                            16,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            861,
+                            862
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            875,
+                            876
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            886,
+                            887
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            891,
+                            892
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            913,
+                            913
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "Pwaist",
+                    "view": "plan",
+                    "value": 25,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        611.0,
+                        369.0
+                      ],
+                      [
+                        611.0,
+                        457.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "side_upper",
+                        "point": [
+                          666.0,
+                          369.0
+                        ]
+                      },
+                      {
+                        "name": "side_lower",
+                        "point": [
+                          666.0,
+                          457.0
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 88.0,
+                    "surface_span_px": 88.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        595,
+                        325,
+                        628,
+                        502
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            327,
+                            327
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            499,
+                            499
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "Pwindows",
+                    "view": "plan",
+                    "value": 24,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        625.0,
+                        371.0
+                      ],
+                      [
+                        625.0,
+                        456.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "upper_window_inner",
+                        "point": [
+                          789.0,
+                          371.0
+                        ]
+                      },
+                      {
+                        "name": "lower_window_inner",
+                        "point": [
+                          789.0,
+                          456.0
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 85.0,
+                    "surface_span_px": 85.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        609,
+                        328,
+                        642,
+                        500
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            368,
+                            369
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            457,
+                            457
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            499,
+                            499
+                          ],
+                          "reach_px": [
+                            14,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "Pslotheight",
+                    "view": "plan",
+                    "value": 15,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        655.0,
+                        387.0
+                      ],
+                      [
+                        655.0,
+                        440.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "slot_top",
+                        "point": [
+                          708.0,
+                          387.0
+                        ]
+                      },
+                      {
+                        "name": "slot_bottom",
+                        "point": [
+                          708.0,
+                          440.0
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 53.0,
+                    "surface_span_px": 53.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        639,
+                        360,
+                        672,
+                        468
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            368,
+                            371
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            386,
+                            386
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            439,
+                            440
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            455,
+                            455
+                          ],
+                          "reach_px": [
+                            14,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            457,
+                            457
+                          ],
+                          "reach_px": [
+                            16,
+                            10
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "Pslotinner",
+                    "view": "plan",
+                    "value": 10,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        755.0,
+                        396.0
+                      ],
+                      [
+                        755.0,
+                        431.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "slot_inner_top",
+                        "point": [
+                          708.0,
+                          396.0
+                        ]
+                      },
+                      {
+                        "name": "slot_inner_bottom",
+                        "point": [
+                          708.0,
+                          431.0
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 35.0,
+                    "surface_span_px": 35.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        739,
+                        378,
+                        772,
+                        450
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            395,
+                            395
+                          ],
+                          "reach_px": [
+                            16,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            430,
+                            431
+                          ],
+                          "reach_px": [
+                            16,
+                            0
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "Pslotgap",
+                    "view": "plan",
+                    "value": 3,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        742.0,
+                        408.0
+                      ],
+                      [
+                        742.0,
+                        419.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "slot_gap_top",
+                        "point": [
+                          720.0,
+                          408.0
+                        ]
+                      },
+                      {
+                        "name": "slot_gap_bottom",
+                        "point": [
+                          720.0,
+                          419.0
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 11.0,
+                    "surface_span_px": 11.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        726,
+                        396,
+                        759,
+                        432
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            407,
+                            408
+                          ],
+                          "reach_px": [
+                            15,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            413,
+                            413
+                          ],
+                          "reach_px": [
+                            6,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            418,
+                            418
+                          ],
+                          "reach_px": [
+                            15,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            430,
+                            431
+                          ],
+                          "reach_px": [
+                            16,
+                            13
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "Pholeinner",
+                    "view": "plan",
+                    "value": 30.5,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        735.0,
+                        246.0
+                      ],
+                      [
+                        843.0,
+                        246.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "innerhole_left",
+                        "point": [
+                          735.0,
+                          359.0
+                        ]
+                      },
+                      {
+                        "name": "innerhole_right",
+                        "point": [
+                          843.0,
+                          359.0
+                        ]
+                      }
+                    ],
+                    "axis": "x",
+                    "dimension_span_px": 108.0,
+                    "surface_span_px": 108.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        681,
+                        230,
+                        898,
+                        263
+                      ],
+                      "axis": "x",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            709,
+                            709
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            735,
+                            735
+                          ],
+                          "reach_px": [
+                            1,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            843,
+                            843
+                          ],
+                          "reach_px": [
+                            1,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            869,
+                            869
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "PholeouterA",
+                    "view": "plan",
+                    "value": 45.25,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        709.0,
+                        230.0
+                      ],
+                      [
+                        870.0,
+                        230.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "perimeterhole_leftA",
+                        "point": [
+                          709.0,
+                          303.0
+                        ]
+                      },
+                      {
+                        "name": "perimeterhole_rightA",
+                        "point": [
+                          870.0,
+                          303.0
+                        ]
+                      }
+                    ],
+                    "axis": "x",
+                    "dimension_span_px": 161.0,
+                    "surface_span_px": 161.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        645,
+                        214,
+                        935,
+                        247
+                      ],
+                      "axis": "x",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            679,
+                            679
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            709,
+                            709
+                          ],
+                          "reach_px": [
+                            1,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            869,
+                            869
+                          ],
+                          "reach_px": [
+                            1,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            899,
+                            899
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "PholeouterB",
+                    "view": "plan",
+                    "value": 62.23,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        679.0,
+                        211.0
+                      ],
+                      [
+                        900.0,
+                        211.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "perimeterhole_leftB",
+                        "point": [
+                          679.0,
+                          333.0
+                        ]
+                      },
+                      {
+                        "name": "perimeterhole_rightB",
+                        "point": [
+                          900.0,
+                          333.0
+                        ]
+                      }
+                    ],
+                    "axis": "x",
+                    "dimension_span_px": 221.0,
+                    "surface_span_px": 221.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        615,
+                        199,
+                        965,
+                        228
+                      ],
+                      "axis": "x",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            679,
+                            679
+                          ],
+                          "reach_px": [
+                            1,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            789,
+                            789
+                          ],
+                          "reach_px": [
+                            6,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            802,
+                            802
+                          ],
+                          "reach_px": [
+                            6,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            899,
+                            899
+                          ],
+                          "reach_px": [
+                            1,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  }
+                ],
+                "groups": [
+                  {
+                    "view": "plan",
+                    "axis": "x",
+                    "consistent": true,
+                    "issues": [],
+                    "components": [
+                      {
+                        "origin": "outer_left",
+                        "levels_mm": {
+                          "outer_left": 0.0,
+                          "outer_right": 72.12
+                        }
+                      },
+                      {
+                        "origin": "flat_left",
+                        "levels_mm": {
+                          "flat_left": 0.0,
+                          "flat_right": 70.0
+                        }
+                      },
+                      {
+                        "origin": "perimeterhole_leftB",
+                        "levels_mm": {
+                          "perimeterhole_leftB": 0.0,
+                          "perimeterhole_rightB": 62.23
+                        }
+                      },
+                      {
+                        "origin": "recess_left",
+                        "levels_mm": {
+                          "recess_left": 0.0,
+                          "recess_right": 58.0
+                        }
+                      },
+                      {
+                        "origin": "perimeterhole_leftA",
+                        "levels_mm": {
+                          "perimeterhole_leftA": 0.0,
+                          "perimeterhole_rightA": 45.25
+                        }
+                      },
+                      {
+                        "origin": "recess_topedge_left",
+                        "levels_mm": {
+                          "recess_topedge_left": 0.0,
+                          "recess_topedge_right": 35.0
+                        }
+                      },
+                      {
+                        "origin": "innerhole_left",
+                        "levels_mm": {
+                          "innerhole_left": 0.0,
+                          "innerhole_right": 30.5
+                        }
+                      }
+                    ],
+                    "note": "Each disconnected component has its own zero; their relative offsets are undetermined."
+                  },
+                  {
+                    "view": "plan",
+                    "axis": "y",
+                    "consistent": true,
+                    "issues": [],
+                    "components": [
+                      {
+                        "origin": "side_upper",
+                        "levels_mm": {
+                          "side_upper": 0.0,
+                          "side_lower": 25.0
+                        }
+                      },
+                      {
+                        "origin": "upper_window_inner",
+                        "levels_mm": {
+                          "upper_window_inner": 0.0,
+                          "lower_window_inner": 24.0
+                        }
+                      },
+                      {
+                        "origin": "slot_top",
+                        "levels_mm": {
+                          "slot_top": 0.0,
+                          "slot_bottom": 15.0
+                        }
+                      },
+                      {
+                        "origin": "slot_inner_top",
+                        "levels_mm": {
+                          "slot_inner_top": 0.0,
+                          "slot_inner_bottom": 10.0
+                        }
+                      },
+                      {
+                        "origin": "slot_gap_top",
+                        "levels_mm": {
+                          "slot_gap_top": 0.0,
+                          "slot_gap_bottom": 3.0
+                        }
+                      }
+                    ],
+                    "note": "Each disconnected component has its own zero; their relative offsets are undetermined."
+                  }
+                ],
+                "pixel_tolerance": 2.0,
+                "consistent": true,
+                "semantics_verified": false,
+                "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."
+              },
+              "panels": [
+                {
+                  "kind": "source",
+                  "origin": [
+                    0,
+                    24
+                  ],
+                  "size": [
+                    594,
+                    637
+                  ]
+                },
+                {
+                  "kind": "anchors",
+                  "origin": [
+                    606,
+                    24
+                  ],
+                  "size": [
+                    594,
+                    637
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_23",
+          "arguments": {
+            "path": "6fd69bd0c4.png",
+            "region": [
+              687,
+              378,
+              763,
+              446
+            ],
+            "max_size": 1368,
+            "dimensions": []
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                687,
+                378,
+                763,
+                446
+              ],
+              "rotate": 0,
+              "dimension_evidence": {
+                "checks": [],
+                "groups": [],
+                "pixel_tolerance": 2.0,
+                "consistent": null,
+                "semantics_verified": false,
+                "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."
+              },
+              "panels": [
+                {
+                  "kind": "source",
+                  "origin": [
+                    0,
+                    24
+                  ],
+                  "size": [
+                    678,
+                    606
+                  ]
+                },
+                {
+                  "kind": "anchors",
+                  "origin": [
+                    690,
+                    24
+                  ],
+                  "size": [
+                    678,
+                    606
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "dimension_calls_before_building": [
+        "item_10",
+        "item_16"
+      ],
+      "geometry_check_calls": [
+        {
+          "tool": "measure_entities",
+          "arguments": {
+            "path": "part.FCStd",
+            "target": {
+              "kind": "planar_levels",
+              "axis": "z"
+            }
+          },
+          "result": [
+            {
+              "ok": true,
+              "tool": "measure_entities",
+              "drawing": "part.FCStd",
+              "units": "mm",
+              "of": "Body",
+              "measurements": [
+                {
+                  "kind": "planar_levels",
+                  "axis": [
+                    0.0,
+                    0.0,
+                    1.0
+                  ],
+                  "levels": [
+                    {
+                      "position": -1.5,
+                      "faces": [
+                        {
+                          "name": "Face101",
+                          "normal": [
+                            0.0,
+                            0.0,
+                            -1.0
+                          ],
+                          "area": 43.196899
+                        },
+                        {
+                          "name": "Face103",
+                          "normal": [
+                            0.0,
+                            0.0,
+                            -1.0
+                          ],
+                          "area": 43.196899
+                        },
+                        {
+                          "name": "Face104",
+                          "normal": [
+                            0.0,
+                            0.0,
+                            -1.0
+                          ],
+                          "area": 43.196899
+                        },
+                        {
+                          "name": "Face105",
+                          "normal": [
+                            0.0,
+                            0.0,
+                            -1.0
+                          ],
+                          "area": 43.196899
+                        }
+                      ],
+                      "area": 172.787596
+                    },
+                    {
+                      "position": 0.0,
+                      "faces": [
+                        {
+                          "name": "Face4",
+                          "normal": [
+                            0.0,
+                            0.0,
+                            -1.0
+                          ],
+                          "area": 3513.569875
+                        }
+                      ],
+                      "area": 3513.569875
+                    },
+                    {
+                      "position": 2.1,
+                      "faces": [
+                        {
+                          "name": "Face102",
+                          "normal": [
+                            0.0,
+                            0.0,
+                            1.0
+                          ],
+                          "area": 2097.197288
+                        }
+                      ],
+                      "area": 2097.197288
+                    },
+                    {
+                      "position": 4.1,
+                      "faces": [
+                        {
+                          "name": "Face5",
+                          "normal": [
+                            0.0,
+                            0.0,
+                            1.0
+                          ],
+                          "area": 1589.160182
+                        }
+                      ],
+                      "area": 1589.160182
+                    }
+                  ],
+                  "gaps": [
+                    {
+                      "from": -1.5,
+                      "to": 0.0,
+                      "distance": 1.5
+                    },
+                    {
+                      "from": 0.0,
+                      "to": 2.1,
+                      "distance": 2.1
+                    },
+                    {
+                      "from": 2.1,
+                      "to": 4.1,
+                      "distance": 2.0
+                    }
+                  ],
+                  "note": "Levels are measured geometry, not assigned feature roles; match each face to the drawing."
+                }
+              ],
+              "seconds": 0.67,
+              "metrics": {
+                "duration_ms": 680.49,
+                "input_bytes": 78,
+                "output_bytes": 1114
+              }
+            }
+          ]
+        },
+        {
+          "tool": "validate_drawing",
+          "arguments": {
+            "path": "part.FCStd",
+            "requirements": [
+              {
+                "type": "bbox",
+                "size": [
+                  72.12,
+                  72.12,
+                  5.6
+                ],
+                "tolerance": 0.01
+              },
+              {
+                "type": "solid_count",
+                "count": 1
+              },
+              {
+                "type": "hole",
+                "diameter": 3,
+                "count": 4
+              },
+              {
+                "type": "hole",
+                "diameter": 3.2,
+                "count": 8
+              },
+              {
+                "type": "feature_count",
+                "feature_type": "PartDesign::Pad",
+                "count": 2
+              },
+              {
+                "type": "feature_count",
+                "feature_type": "PartDesign::Pocket",
+                "count": 5
+              },
+              {
+                "type": "face_distance",
+                "from": "Face5",
+                "to": "Face102",
+                "value": 2,
+                "tolerance": 0.001
+              },
+              {
+                "type": "face_distance",
+                "from": "Face4",
+                "to": "Face101",
+                "value": 1.5,
+                "tolerance": 0.001
+              },
+              {
+                "type": "face_distance",
+                "from": "Face5",
+                "to": "Face101",
+                "value": 5.6,
+                "tolerance": 0.001
+              }
+            ]
+          },
+          "result": [
+            {
+              "ok": true,
+              "tool": "validate_drawing",
+              "drawing": "part.FCStd",
+              "validation": {
+                "passed": false,
+                "issues": [],
+                "requirements": {
+                  "total": 9,
+                  "failed": [
+                    {
+                      "index": 4,
+                      "type": "feature_count",
+                      "actual": 0,
+                      "passed": false
+                    },
+                    {
+                      "index": 5,
+                      "type": "feature_count",
+                      "actual": 0,
+                      "passed": false
+                    }
+                  ]
+                },
+                "shape": {
+                  "valid": true,
+                  "solids": 1,
+                  "volume": 11178.852448,
+                  "size": [
+                    72.12,
+                    72.12,
+                    5.6
+                  ],
+                  "bbox": [
+                    [
+                      -36.06,
+                      -36.06,
+                      -1.5
+                    ],
+                    [
+                      36.06,
+                      36.06,
+                      4.1
+                    ]
+                  ],
+                  "holes": [
+                    {
+                      "diameter": 2.0,
+                      "count": 16
+                    },
+                    {
+                      "diameter": 3.0,
+                      "count": 4
+                    },
+                    {
+                      "diameter": 3.2,
+                      "count": 8
+                    },
+                    {
+                      "diameter": 6.0,
+                      "count": 8
+                    }
+                  ]
+                }
+              },
+              "metrics": {
+                "duration_ms": 1343.98,
+                "input_bytes": 689,
+                "output_bytes": 575
+              }
+            }
+          ]
+        },
+        {
+          "tool": "validate_drawing",
+          "arguments": {
+            "path": "part.FCStd",
+            "requirements": [
+              {
+                "type": "bbox",
+                "size": [
+                  72.12,
+                  72.12,
+                  5.6
+                ],
+                "tolerance": 0.01
+              },
+              {
+                "type": "solid_count",
+                "count": 1
+              },
+              {
+                "type": "hole",
+                "diameter": 3,
+                "count": 4
+              },
+              {
+                "type": "hole",
+                "diameter": 3.2,
+                "count": 8
+              },
+              {
+                "type": "feature_count",
+                "feature_type": "Pad",
+                "count": 2
+              },
+              {
+                "type": "feature_count",
+                "feature_type": "Pocket",
+                "count": 5
+              },
+              {
+                "type": "face_distance",
+                "from": "Face5",
+                "to": "Face102",
+                "value": 2,
+                "tolerance": 0.001
+              },
+              {
+                "type": "face_distance",
+                "from": "Face4",
+                "to": "Face101",
+                "value": 1.5,
+                "tolerance": 0.001
+              },
+              {
+                "type": "face_distance",
+                "from": "Face5",
+                "to": "Face101",
+                "value": 5.6,
+                "tolerance": 0.001
+              }
+            ]
+          },
+          "result": [
+            {
+              "ok": true,
+              "tool": "validate_drawing",
+              "drawing": "part.FCStd",
+              "validation": {
+                "passed": true,
+                "issues": [],
+                "requirements": {
+                  "total": 9,
+                  "failed": []
+                },
+                "shape": {
+                  "valid": true,
+                  "solids": 1,
+                  "volume": 11178.852448,
+                  "size": [
+                    72.12,
+                    72.12,
+                    5.6
+                  ],
+                  "bbox": [
+                    [
+                      -36.06,
+                      -36.06,
+                      -1.5
+                    ],
+                    [
+                      36.06,
+                      36.06,
+                      4.1
+                    ]
+                  ],
+                  "holes": [
+                    {
+                      "diameter": 2.0,
+                      "count": 16
+                    },
+                    {
+                      "diameter": 3.0,
+                      "count": 4
+                    },
+                    {
+                      "diameter": 3.2,
+                      "count": 8
+                    },
+                    {
+                      "diameter": 6.0,
+                      "count": 8
+                    }
+                  ]
+                }
+              },
+              "metrics": {
+                "duration_ms": 1233.1,
+                "input_bytes": 665,
+                "output_bytes": 438
+              }
+            }
+          ]
+        }
+      ],
+      "agent_messages": [
+        "I’ll read the drawing, build the plate with native PartDesign features, then check its dimensions and rendered views before saving the final file.",
+        "The drawing shows a recessed center, eight Ø3.2 perimeter holes, four Ø3 holes with Ø8 bosses underneath, and two rounded trapezoidal openings. I’m checking the crowded section dimensions to establish the plate thickness and boss height.",
+        "The section gives 5.6 mm overall thickness, 1.5 mm boss projection, and a 2 mm recess. That makes the plate 4.1 mm thick, with 2.1 mm remaining below the recess.\n\nI’ll center the model on the drawing’s centerlines. The labeled plan dimensions are 72.12 mm overall, 70 mm across the central outer flats, a 58 mm recessed octagon with 35 mm straight edges, and a 30.5 mm square pattern for the four inner holes. The two openings use R3 corners and a 68.9° included angle.",
+        "The native model is built. The top, underside, and isometric previews match the drawing’s layout, and measurement confirms 72.12 × 72.12 × 5.6 mm overall, a 2 mm recess, and 1.5 mm boss projection. The file validates as one solid in one editable PartDesign Body; I’m checking the remaining small slot callouts before saving.",
+        "Saved the final native model as `answer.FCStd`.\n\nVerified one editable PartDesign Body producing one valid solid, with the labeled dimensions, hole patterns, recess, bosses, and cutouts checked in rendered previews."
+      ],
+      "posthoc_validation": {
+        "readable": true,
+        "passed": true,
+        "issues": [],
+        "requirements": [],
+        "warnings": [],
+        "shape": {
+          "valid": true,
+          "solids": 1,
+          "faces": 109,
+          "edges": 312,
+          "volume": 11178.852448,
+          "area": 10101.847088,
+          "bbox": [
+            [
+              -36.06,
+              -36.06,
+              -1.5
+            ],
+            [
+              36.06,
+              36.06,
+              4.1
+            ]
+          ],
+          "size": [
+            72.12,
+            72.12,
+            5.6
+          ],
+          "center_of_mass": [
+            0.0,
+            0.0,
+            1.591114
+          ],
+          "holes": [
+            {
+              "diameter": 2.0,
+              "count": 16
+            },
+            {
+              "diameter": 3.0,
+              "count": 4
+            },
+            {
+              "diameter": 3.2,
+              "count": 8
+            },
+            {
+              "diameter": 6.0,
+              "count": 8
+            }
+          ]
+        },
+        "features": 14,
+        "parameters": {
+          "Overall": {
+            "value": 72.12
+          },
+          "FlatSpan": {
+            "value": 70.0
+          },
+          "RecessSpan": {
+            "value": 58.0
+          },
+          "RecessStraight": {
+            "value": 35.0
+          },
+          "TotalThickness": {
+            "value": 5.6
+          },
+          "BossProjection": {
+            "value": 1.5
+          },
+          "PlateThickness": {
+            "value": 4.1,
+            "formula": "=TotalThickness - BossProjection"
+          },
+          "RecessDepth": {
+            "value": 2.0
+          },
+          "InnerPitch": {
+            "value": 30.5
+          },
+          "InnerHoleDiameter": {
+            "value": 3.0
+          },
+          "OuterHoleDiameter": {
+            "value": 3.2
+          },
+          "BossDiameter": {
+            "value": 8.0
+          },
+          "WindowRadius": {
+            "value": 3.0
+          },
+          "WindowAngle": {
+            "value": 68.9
+          }
+        },
+        "file": "answer.FCStd",
+        "requirements_source": null
+      },
+      "posthoc_plane_levels": {
+        "ok": true,
+        "tool": "measure_entities",
+        "drawing": "answer.FCStd",
+        "units": "mm",
+        "of": "Body",
+        "measurements": [
+          {
+            "kind": "planar_levels",
+            "axis": [
+              0.0,
+              0.0,
+              1.0
+            ],
+            "levels": [
+              {
+                "position": -1.5,
+                "faces": [
+                  {
+                    "name": "Face101",
+                    "normal": [
+                      0.0,
+                      0.0,
+                      -1.0
+                    ],
+                    "area": 43.196899
+                  },
+                  {
+                    "name": "Face103",
+                    "normal": [
+                      0.0,
+                      0.0,
+                      -1.0
+                    ],
+                    "area": 43.196899
+                  },
+                  {
+                    "name": "Face104",
+                    "normal": [
+                      0.0,
+                      0.0,
+                      -1.0
+                    ],
+                    "area": 43.196899
+                  },
+                  {
+                    "name": "Face105",
+                    "normal": [
+                      0.0,
+                      0.0,
+                      -1.0
+                    ],
+                    "area": 43.196899
+                  }
+                ],
+                "area": 172.787596
+              },
+              {
+                "position": 0.0,
+                "faces": [
+                  {
+                    "name": "Face4",
+                    "normal": [
+                      0.0,
+                      0.0,
+                      -1.0
+                    ],
+                    "area": 3513.569875
+                  }
+                ],
+                "area": 3513.569875
+              },
+              {
+                "position": 2.1,
+                "faces": [
+                  {
+                    "name": "Face102",
+                    "normal": [
+                      0.0,
+                      0.0,
+                      1.0
+                    ],
+                    "area": 2097.197288
+                  }
+                ],
+                "area": 2097.197288
+              },
+              {
+                "position": 4.1,
+                "faces": [
+                  {
+                    "name": "Face5",
+                    "normal": [
+                      0.0,
+                      0.0,
+                      1.0
+                    ],
+                    "area": 1589.160182
+                  }
+                ],
+                "area": 1589.160182
+              }
+            ],
+            "gaps": [
+              {
+                "from": -1.5,
+                "to": 0.0,
+                "distance": 1.5
+              },
+              {
+                "from": 0.0,
+                "to": 2.1,
+                "distance": 2.1
+              },
+              {
+                "from": 2.1,
+                "to": 4.1,
+                "distance": 2.0
+              }
+            ],
+            "note": "Levels are measured geometry, not assigned feature roles; match each face to the drawing."
+          }
+        ],
+        "seconds": 0.7,
+        "metrics": {
+          "duration_ms": 708.96,
+          "input_bytes": 62,
+          "output_bytes": 1115
+        }
+      },
+      "native_object_types": {
+        "Spreadsheet::Sheet": 1,
+        "PartDesign::Body": 1,
+        "App::Origin": 1,
+        "App::Line": 3,
+        "App::Plane": 3,
+        "App::Point": 1,
+        "Sketcher::SketchObject": 7,
+        "PartDesign::Pad": 2,
+        "PartDesign::Pocket": 5
+      },
+      "native": {
+        "path": "artifacts/dimension-witnesses-2026-10-30/freecad-6fd69bd0c4/answer.FCStd",
+        "sha256": "b138ab2b2b2e5cc30ba9a4107b9d7cefdeb26fdd4ec109d2830299fb00189abf"
+      },
+      "preview": {
+        "path": "artifacts/dimension-witnesses-2026-10-30/freecad-6fd69bd0c4/preview.png",
+        "sha256": "f3c49d2e08bcc5ccc96465bddb24809709a7b7575ad7f62cb86f989c28725445"
+      },
+      "raw_files_sha256": {
+        "command.json": "f625b3bc48a5d358cd6e9c8e2cad9e42a7af71dd29c4d50ca8b6ba1645513122",
+        "prompt.txt": "8ea8a7967ae4fc3b2dc597c89f995b19d6caad8c8644c19019027559ba2e072b",
+        "result.json": "98dd956e3b2bd6353d554ef7f1d9eb138bce67e876b351b58be113c42b3848e4",
+        "run.json": "2917562bed1283d035c47481f1ed00919fca3036749dca0bdb32391d16d3f11b",
+        "stderr.log": "7690f8dcbadc6c4774b4f908220b5cc81cb7292a4183ebd1157734287e00c351",
+        "trajectory.jsonl": "eb86e121c93e3e167c3f15ff9bd5c455b3aaed0148d9dddafce2085d0ebe3cdc"
+      },
+      "scorer_sha256": "c052386b999e6d2625fe1f966754c6ea1d8ab77589c457c704157559652370d4",
+      "reward_sha256": "1db4f79f87d0f9fb582ac4f33bda98c5fc03fdd908234ef8d1a6c7e2f39f3d7c"
+    },
+    {
+      "id": "freecad-686f17ce17",
+      "kind": "drawing",
+      "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+      "instruction_sha256": "579ff895229de2227aedbe59227397cbcc4bffb37f73ae4d6171bb22cb443e39",
+      "task_toml_sha256": "9d4c42112dc3c948876d5228acfac2a96c75604e249bfb732410b9ce65f4e08a",
+      "public_input_sha256": {
+        "686f17ce17.png": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116"
+      },
+      "status": "done",
+      "seconds": 406.45,
+      "evaluation": {
+        "reward": 0.668902,
+        "geometry_similarity": 0.502518535959796,
+        "cad_spec_consistency": 1.0,
+        "combined": 0.668901612769511,
+        "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=0.503 [solid_count=1 (matched)] (surface_types=1.000, volume=1.000, surface_area=1.000, principal_moments=1.000, icp=0.005); surface_types_diff=0.333% (Matched); volume_diff=0.091% (Matched); surface_area_diff=0.010% (Matched); bbox_diff=0.044% (OCCT OBB; gate passed); principal_moments_diff=0.082% (Matched); icp[reference.FCStd vs answer.FCStd: reward=0.005 rmse=1.2966e+00 max_residual=5.0217e+00 mm]",
+        "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=1.000 (12/12 consistent, 0 inconsistent, 0 not_found; failure_budget=10)",
+        "status": "scored",
+        "score": 0.668902
+      },
+      "previous_reward": 0.668902,
+      "audit": {
+        "tool_calls": 22,
+        "tools": [
+          "list_operations",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "inspect_image",
+          "apply_operations",
+          "apply_operations",
+          "export_drawing",
+          "inspect_entities",
+          "inspect_image",
+          "apply_operations",
+          "export_drawing",
+          "inspect_entities",
+          "validate_drawing",
+          "inspect_entities",
+          "validate_drawing",
+          "measure_entities",
+          "save_benchmark_stage"
+        ],
+        "tool_errors": [
+          {
+            "tool": "inspect_image",
+            "code": "MCP_TOOL_ERROR",
+            "message": "Error executing tool inspect_image: 1 validation error for inspect_imageArguments\nmax_size\n  Input should be less than or equal to 2048 [type=less_than_equal, input_value=2400, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/less_than_equal"
+          },
+          {
+            "tool": "apply_operations",
+            "code": "FEATURE_FAILED",
+            "message": "Revolution: Shape index 3 out of bound 2"
+          }
+        ],
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 980432,
+          "cached_input_tokens": 913024,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 10747,
+          "reasoning_output_tokens": 6093
+        }
+      },
+      "stage_audit_errors": [],
+      "image_calls": [
+        {
+          "tool_call_id": "item_2",
+          "arguments": {
+            "path": "686f17ce17.png",
+            "dimensions": [],
+            "max_size": 1600
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                0,
+                0,
+                1582,
+                836
+              ],
+              "rotate": 0,
+              "dimension_evidence": {
+                "checks": [],
+                "groups": [],
+                "pixel_tolerance": 2.0,
+                "consistent": null,
+                "semantics_verified": false,
+                "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."
+              },
+              "panels": [
+                {
+                  "kind": "source",
+                  "origin": [
+                    0,
+                    24
+                  ],
+                  "size": [
+                    794,
+                    419
+                  ]
+                },
+                {
+                  "kind": "anchors",
+                  "origin": [
+                    806,
+                    24
+                  ],
+                  "size": [
+                    794,
+                    419
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_3",
+          "arguments": {
+            "path": "686f17ce17.png",
+            "region": [
+              515,
+              115,
+              750,
+              375
+            ],
+            "dimensions": [],
+            "max_size": 1800
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                515,
+                115,
+                750,
+                375
+              ],
+              "rotate": 0,
+              "dimension_evidence": {
+                "checks": [],
+                "groups": [],
+                "pixel_tolerance": 2.0,
+                "consistent": null,
+                "semantics_verified": false,
+                "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."
+              },
+              "panels": [
+                {
+                  "kind": "source",
+                  "origin": [
+                    0,
+                    24
+                  ],
+                  "size": [
+                    894,
+                    989
+                  ]
+                },
+                {
+                  "kind": "anchors",
+                  "origin": [
+                    906,
+                    24
+                  ],
+                  "size": [
+                    894,
+                    989
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_4",
+          "arguments": {
+            "path": "686f17ce17.png",
+            "region": [
+              880,
+              125,
+              1115,
+              410
+            ],
+            "dimensions": [],
+            "max_size": 1800
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                880,
+                125,
+                1115,
+                410
+              ],
+              "rotate": 0,
+              "dimension_evidence": {
+                "checks": [],
+                "groups": [],
+                "pixel_tolerance": 2.0,
+                "consistent": null,
+                "semantics_verified": false,
+                "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."
+              },
+              "panels": [
+                {
+                  "kind": "source",
+                  "origin": [
+                    0,
+                    24
+                  ],
+                  "size": [
+                    894,
+                    1084
+                  ]
+                },
+                {
+                  "kind": "anchors",
+                  "origin": [
+                    906,
+                    24
+                  ],
+                  "size": [
+                    894,
+                    1084
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_5",
+          "arguments": {
+            "path": "686f17ce17.png",
+            "region": [
+              530,
+              515,
+              720,
+              695
+            ],
+            "max_size": 1200
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                530,
+                515,
+                720,
+                695
+              ],
+              "rotate": 0
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_6",
+          "arguments": {
+            "path": "686f17ce17.png",
+            "region": [
+              640,
+              155,
+              735,
+              240
+            ],
+            "max_size": 1700
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                640,
+                155,
+                735,
+                240
+              ],
+              "rotate": 0
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_7",
+          "arguments": {
+            "path": "686f17ce17.png",
+            "region": [
+              900,
+              130,
+              990,
+              215
+            ],
+            "rotate": 90,
+            "max_size": 1700
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                900,
+                130,
+                990,
+                215
+              ],
+              "rotate": 90
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_9",
+          "arguments": {
+            "path": "686f17ce17.png",
+            "region": [
+              520,
+              120,
+              1100,
+              400
+            ],
+            "dimensions": [
+              {
+                "id": "F86",
+                "view": "front",
+                "value": 86.35,
+                "unit": "mm",
+                "line": [
+                  [
+                    571.5,
+                    139.5
+                  ],
+                  [
+                    688.5,
+                    139.5
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "U_leg_axis",
+                    "point": [
+                      571.5,
+                      245
+                    ]
+                  },
+                  {
+                    "name": "horizontal_end",
+                    "point": [
+                      688.5,
+                      194.5
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "F36",
+                "view": "front",
+                "value": 36.35,
+                "unit": "mm",
+                "line": [
+                  [
+                    571.5,
+                    161.5
+                  ],
+                  [
+                    620.8,
+                    161.5
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "U_leg_axis",
+                    "point": [
+                      571.5,
+                      245
+                    ]
+                  },
+                  {
+                    "name": "elbow_horizontal_tangent",
+                    "point": [
+                      620.8,
+                      194.5
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "F15",
+                "view": "front",
+                "value": 15,
+                "unit": "mm",
+                "line": [
+                  [
+                    539,
+                    174.2
+                  ],
+                  [
+                    539,
+                    194.5
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "vertical_end",
+                    "point": [
+                      571.5,
+                      174.2
+                    ]
+                  },
+                  {
+                    "name": "horizontal_axis",
+                    "point": [
+                      688.5,
+                      194.5
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "F10",
+                "view": "front",
+                "value": 10.1,
+                "unit": "mm",
+                "line": [
+                  [
+                    674.8,
+                    227
+                  ],
+                  [
+                    688.5,
+                    227
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "horizontal_taper_start",
+                    "point": [
+                      674.8,
+                      194.5
+                    ]
+                  },
+                  {
+                    "name": "horizontal_end",
+                    "point": [
+                      688.5,
+                      194.5
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "S90",
+                "view": "side",
+                "value": 90,
+                "unit": "mm",
+                "line": [
+                  [
+                    908.5,
+                    174.2
+                  ],
+                  [
+                    908.5,
+                    296.1
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "vertical_end",
+                    "point": [
+                      953.5,
+                      174.2
+                    ]
+                  },
+                  {
+                    "name": "U_bend_tangent",
+                    "point": [
+                      953.5,
+                      296.1
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "S51",
+                "view": "side",
+                "value": 51.35,
+                "unit": "mm",
+                "line": [
+                  [
+                    1088,
+                    174.2
+                  ],
+                  [
+                    1088,
+                    243.8
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "vertical_end",
+                    "point": [
+                      953.5,
+                      174.2
+                    ]
+                  },
+                  {
+                    "name": "elbow_vertical_tangent",
+                    "point": [
+                      1052,
+                      243.8
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "S10",
+                "view": "side",
+                "value": 10.1,
+                "unit": "mm",
+                "line": [
+                  [
+                    920.5,
+                    174.2
+                  ],
+                  [
+                    920.5,
+                    187.9
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "vertical_end",
+                    "point": [
+                      953.5,
+                      174.2
+                    ]
+                  },
+                  {
+                    "name": "vertical_taper_start",
+                    "point": [
+                      953.5,
+                      187.9
+                    ]
+                  }
+                ]
+              }
+            ],
+            "max_size": 2400
+          },
+          "metadata": []
+        },
+        {
+          "tool_call_id": "item_10",
+          "arguments": {
+            "path": "686f17ce17.png",
+            "region": [
+              520,
+              120,
+              1100,
+              400
+            ],
+            "dimensions": [
+              {
+                "id": "F86",
+                "view": "front",
+                "value": 86.35,
+                "unit": "mm",
+                "line": [
+                  [
+                    571.5,
+                    139.5
+                  ],
+                  [
+                    688.5,
+                    139.5
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "U_leg_axis",
+                    "point": [
+                      571.5,
+                      245
+                    ]
+                  },
+                  {
+                    "name": "horizontal_end",
+                    "point": [
+                      688.5,
+                      194.5
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "F36",
+                "view": "front",
+                "value": 36.35,
+                "unit": "mm",
+                "line": [
+                  [
+                    571.5,
+                    161.5
+                  ],
+                  [
+                    620.8,
+                    161.5
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "U_leg_axis",
+                    "point": [
+                      571.5,
+                      245
+                    ]
+                  },
+                  {
+                    "name": "elbow_horizontal_tangent",
+                    "point": [
+                      620.8,
+                      194.5
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "F15",
+                "view": "front",
+                "value": 15,
+                "unit": "mm",
+                "line": [
+                  [
+                    539,
+                    174.2
+                  ],
+                  [
+                    539,
+                    194.5
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "vertical_end",
+                    "point": [
+                      571.5,
+                      174.2
+                    ]
+                  },
+                  {
+                    "name": "horizontal_axis",
+                    "point": [
+                      688.5,
+                      194.5
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "F10",
+                "view": "front",
+                "value": 10.1,
+                "unit": "mm",
+                "line": [
+                  [
+                    674.8,
+                    227
+                  ],
+                  [
+                    688.5,
+                    227
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "horizontal_taper_start",
+                    "point": [
+                      674.8,
+                      194.5
+                    ]
+                  },
+                  {
+                    "name": "horizontal_end",
+                    "point": [
+                      688.5,
+                      194.5
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "S90",
+                "view": "side",
+                "value": 90,
+                "unit": "mm",
+                "line": [
+                  [
+                    908.5,
+                    174.2
+                  ],
+                  [
+                    908.5,
+                    296.1
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "vertical_end",
+                    "point": [
+                      953.5,
+                      174.2
+                    ]
+                  },
+                  {
+                    "name": "U_bend_tangent",
+                    "point": [
+                      953.5,
+                      296.1
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "S51",
+                "view": "side",
+                "value": 51.35,
+                "unit": "mm",
+                "line": [
+                  [
+                    1088,
+                    174.2
+                  ],
+                  [
+                    1088,
+                    243.8
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "vertical_end",
+                    "point": [
+                      953.5,
+                      174.2
+                    ]
+                  },
+                  {
+                    "name": "elbow_vertical_tangent",
+                    "point": [
+                      1052,
+                      243.8
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "S10",
+                "view": "side",
+                "value": 10.1,
+                "unit": "mm",
+                "line": [
+                  [
+                    920.5,
+                    174.2
+                  ],
+                  [
+                    920.5,
+                    187.9
+                  ]
+                ],
+                "surfaces": [
+                  {
+                    "name": "vertical_end",
+                    "point": [
+                      953.5,
+                      174.2
+                    ]
+                  },
+                  {
+                    "name": "vertical_taper_start",
+                    "point": [
+                      953.5,
+                      187.9
+                    ]
+                  }
+                ]
+              }
+            ],
+            "max_size": 2048
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                520,
+                120,
+                1100,
+                400
+              ],
+              "rotate": 0,
+              "dimension_evidence": {
+                "checks": [
+                  {
+                    "id": "F86",
+                    "view": "front",
+                    "value": 86.35,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        571.5,
+                        139.5
+                      ],
+                      [
+                        688.5,
+                        139.5
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "U_leg_axis",
+                        "point": [
+                          571.5,
+                          245.0
+                        ]
+                      },
+                      {
+                        "name": "horizontal_end",
+                        "point": [
+                          688.5,
+                          194.5
+                        ]
+                      }
+                    ],
+                    "axis": "x",
+                    "dimension_span_px": 117.0,
+                    "surface_span_px": 117.0,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        520,
+                        124,
+                        749,
+                        157
+                      ],
+                      "axis": "x",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            571,
+                            571
+                          ],
+                          "reach_px": [
+                            1,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            688,
+                            689
+                          ],
+                          "reach_px": [
+                            1,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "F36",
+                    "view": "front",
+                    "value": 36.35,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        571.5,
+                        161.5
+                      ],
+                      [
+                        620.8,
+                        161.5
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "U_leg_axis",
+                        "point": [
+                          571.5,
+                          245.0
+                        ]
+                      },
+                      {
+                        "name": "elbow_horizontal_tangent",
+                        "point": [
+                          620.8,
+                          194.5
+                        ]
+                      }
+                    ],
+                    "axis": "x",
+                    "dimension_span_px": 49.299999999999955,
+                    "surface_span_px": 49.299999999999955,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        546,
+                        146,
+                        647,
+                        179
+                      ],
+                      "axis": "x",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            571,
+                            571
+                          ],
+                          "reach_px": [
+                            16,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            620,
+                            621
+                          ],
+                          "reach_px": [
+                            2,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "F15",
+                    "view": "front",
+                    "value": 15,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        539.0,
+                        174.2
+                      ],
+                      [
+                        539.0,
+                        194.5
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "vertical_end",
+                        "point": [
+                          571.5,
+                          174.2
+                        ]
+                      },
+                      {
+                        "name": "horizontal_axis",
+                        "point": [
+                          688.5,
+                          194.5
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 20.30000000000001,
+                    "surface_span_px": 20.30000000000001,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        523,
+                        162,
+                        556,
+                        208
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            173,
+                            174
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            194,
+                            194
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "F10",
+                    "view": "front",
+                    "value": 10.1,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        674.8,
+                        227.0
+                      ],
+                      [
+                        688.5,
+                        227.0
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "horizontal_taper_start",
+                        "point": [
+                          674.8,
+                          194.5
+                        ]
+                      },
+                      {
+                        "name": "horizontal_end",
+                        "point": [
+                          688.5,
+                          194.5
+                        ]
+                      }
+                    ],
+                    "axis": "x",
+                    "dimension_span_px": 13.700000000000045,
+                    "surface_span_px": 13.700000000000045,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        662,
+                        211,
+                        702,
+                        244
+                      ],
+                      "axis": "x",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            674,
+                            675
+                          ],
+                          "reach_px": [
+                            16,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            688,
+                            689
+                          ],
+                          "reach_px": [
+                            16,
+                            0
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "S90",
+                    "view": "side",
+                    "value": 90,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        908.5,
+                        174.2
+                      ],
+                      [
+                        908.5,
+                        296.1
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "vertical_end",
+                        "point": [
+                          953.5,
+                          174.2
+                        ]
+                      },
+                      {
+                        "name": "U_bend_tangent",
+                        "point": [
+                          953.5,
+                          296.1
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 121.90000000000003,
+                    "surface_span_px": 121.90000000000003,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        892,
+                        120,
+                        925,
+                        359
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            136,
+                            137
+                          ],
+                          "reach_px": [
+                            0,
+                            10
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            150,
+                            150
+                          ],
+                          "reach_px": [
+                            0,
+                            8
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            153,
+                            153
+                          ],
+                          "reach_px": [
+                            0,
+                            8
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            159,
+                            160
+                          ],
+                          "reach_px": [
+                            0,
+                            10
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            173,
+                            174
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            295,
+                            296
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "S51",
+                    "view": "side",
+                    "value": 51.35,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        1088.0,
+                        174.2
+                      ],
+                      [
+                        1088.0,
+                        243.8
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "vertical_end",
+                        "point": [
+                          953.5,
+                          174.2
+                        ]
+                      },
+                      {
+                        "name": "elbow_vertical_tangent",
+                        "point": [
+                          1052.0,
+                          243.8
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 69.60000000000002,
+                    "surface_span_px": 69.60000000000002,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        1072,
+                        139,
+                        1100,
+                        280
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            173,
+                            174
+                          ],
+                          "reach_px": [
+                            16,
+                            0
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            243,
+                            244
+                          ],
+                          "reach_px": [
+                            16,
+                            0
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  },
+                  {
+                    "id": "S10",
+                    "view": "side",
+                    "value": 10.1,
+                    "unit": "mm",
+                    "line": [
+                      [
+                        920.5,
+                        174.2
+                      ],
+                      [
+                        920.5,
+                        187.9
+                      ]
+                    ],
+                    "surfaces": [
+                      {
+                        "name": "vertical_end",
+                        "point": [
+                          953.5,
+                          174.2
+                        ]
+                      },
+                      {
+                        "name": "vertical_taper_start",
+                        "point": [
+                          953.5,
+                          187.9
+                        ]
+                      }
+                    ],
+                    "axis": "y",
+                    "dimension_span_px": 13.700000000000017,
+                    "surface_span_px": 13.700000000000017,
+                    "endpoint_errors_px": [
+                      0.0,
+                      0.0
+                    ],
+                    "aligned": true,
+                    "raster_probe": {
+                      "detail_region": [
+                        904,
+                        162,
+                        937,
+                        201
+                      ],
+                      "axis": "y",
+                      "crossings": [
+                        {
+                          "range_px": [
+                            173,
+                            174
+                          ],
+                          "reach_px": [
+                            12,
+                            16
+                          ]
+                        },
+                        {
+                          "range_px": [
+                            187,
+                            188
+                          ],
+                          "reach_px": [
+                            0,
+                            16
+                          ]
+                        }
+                      ],
+                      "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: the tip touches the witness, while the broad arrow base and shaft extend beyond it. Neighbouring dimensions, text, hatching and edges may also cross the shaft.",
+                      "status": "candidates"
+                    }
+                  }
+                ],
+                "groups": [
+                  {
+                    "view": "front",
+                    "axis": "x",
+                    "consistent": true,
+                    "issues": [],
+                    "components": [
+                      {
+                        "origin": "U_leg_axis",
+                        "levels_mm": {
+                          "U_leg_axis": 0.0,
+                          "elbow_horizontal_tangent": 36.35,
+                          "horizontal_end": 86.35,
+                          "horizontal_taper_start": 76.25
+                        }
+                      }
+                    ],
+                    "note": "Each disconnected component has its own zero; their relative offsets are undetermined."
+                  },
+                  {
+                    "view": "front",
+                    "axis": "y",
+                    "consistent": true,
+                    "issues": [],
+                    "components": [
+                      {
+                        "origin": "vertical_end",
+                        "levels_mm": {
+                          "vertical_end": 0.0,
+                          "horizontal_axis": 15.0
+                        }
+                      }
+                    ],
+                    "note": "Each disconnected component has its own zero; their relative offsets are undetermined."
+                  },
+                  {
+                    "view": "side",
+                    "axis": "y",
+                    "consistent": true,
+                    "issues": [],
+                    "components": [
+                      {
+                        "origin": "vertical_end",
+                        "levels_mm": {
+                          "vertical_end": 0.0,
+                          "vertical_taper_start": 10.1,
+                          "elbow_vertical_tangent": 51.35,
+                          "U_bend_tangent": 90.0
+                        }
+                      }
+                    ],
+                    "note": "Each disconnected component has its own zero; their relative offsets are undetermined."
+                  }
+                ],
+                "pixel_tolerance": 2.0,
+                "consistent": true,
+                "semantics_verified": false,
+                "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."
+              },
+              "panels": [
+                {
+                  "kind": "source",
+                  "origin": [
+                    0,
+                    24
+                  ],
+                  "size": [
+                    1018,
+                    491
+                  ]
+                },
+                {
+                  "kind": "anchors",
+                  "origin": [
+                    1030,
+                    24
+                  ],
+                  "size": [
+                    1018,
+                    491
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "tool_call_id": "item_16",
+          "arguments": {
+            "path": "686f17ce17.png",
+            "region": [
+              548,
+              165,
+              640,
+              270
+            ],
+            "max_size": 1200
+          },
+          "metadata": [
+            {
+              "ok": true,
+              "source_sha256": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116",
+              "source_size": [
+                1582,
+                836
+              ],
+              "region": [
+                548,
+                165,
+                640,
+                270
+              ],
+              "rotate": 0
+            }
+          ]
+        }
+      ],
+      "dimension_calls_before_building": [
+        "item_9",
+        "item_10"
+      ],
+      "geometry_check_calls": [
+        {
+          "tool": "validate_drawing",
+          "arguments": {
+            "path": "part.FCStd",
+            "detail": true,
+            "requirements": [
+              {
+                "type": "solid_count",
+                "count": 1
+              },
+              {
+                "type": "bbox",
+                "size": [
+                  95,
+                  90,
+                  135
+                ],
+                "tolerance": 0.001
+              },
+              {
+                "type": "feature_count",
+                "feature_type": "PartDesign::Body",
+                "count": 1
+              },
+              {
+                "type": "feature_count",
+                "feature_type": "PartDesign::Revolution",
+                "count": 2
+              },
+              {
+                "type": "feature_count",
+                "feature_type": "PartDesign::Groove",
+                "count": 2
+              }
+            ]
+          },
+          "result": [
+            {
+              "ok": true,
+              "tool": "validate_drawing",
+              "drawing": "part.FCStd",
+              "validation": {
+                "readable": true,
+                "passed": false,
+                "issues": [],
+                "requirements": [
+                  {
+                    "index": 0,
+                    "type": "solid_count",
+                    "expected": 1,
+                    "actual": 1,
+                    "passed": true
+                  },
+                  {
+                    "index": 1,
+                    "type": "bbox",
+                    "expected": [
+                      95.0,
+                      90.0,
+                      135.0
+                    ],
+                    "actual": [
+                      95.0,
+                      90.0,
+                      135.0
+                    ],
+                    "deviation": [
+                      0.0,
+                      0.0,
+                      0.0
+                    ],
+                    "passed": true
+                  },
+                  {
+                    "index": 2,
+                    "type": "feature_count",
+                    "actual": 0,
+                    "passed": false
+                  },
+                  {
+                    "index": 3,
+                    "type": "feature_count",
+                    "actual": 0,
+                    "passed": false
+                  },
+                  {
+                    "index": 4,
+                    "type": "feature_count",
+                    "actual": 0,
+                    "passed": false
+                  }
+                ],
+                "warnings": [],
+                "shape": {
+                  "valid": true,
+                  "solids": 1,
+                  "faces": 14,
+                  "edges": 29,
+                  "volume": 33485.654836,
+                  "area": 33785.089729,
+                  "bbox": [
+                    [
+                      -8.65,
+                      -81.35,
+                      -120.0
+                    ],
+                    [
+                      86.35,
+                      8.65,
+                      15.0
+                    ]
+                  ],
+                  "size": [
+                    95.0,
+                    90.0,
+                    135.0
+                  ],
+                  "center_of_mass": [
+                    10.694026,
+                    -42.168192,
+                    -48.381655
+                  ],
+                  "holes": [
+                    {
+                      "diameter": 13.3,
+                      "count": 3
+                    }
+                  ]
+                },
+                "features": 14,
+                "parameters": {
+                  "OutsideDiameter": {
+                    "value": 17.3
+                  },
+                  "BoreDiameter": {
+                    "value": 13.3
+                  },
+                  "BendRadius": {
+                    "value": 36.35
+                  },
+                  "EndOffset": {
+                    "value": 15.0
+                  },
+                  "LegToUBend": {
+                    "value": 90.0
+                  },
+                  "ElbowTangentDepth": {
+                    "value": 51.35
+                  },
+                  "HorizontalReach": {
+                    "value": 86.35
+                  },
+                  "EndTaperLength": {
+                    "value": 10.1
+                  },
+                  "HorizontalTaperIncluded": {
+                    "value": 3.24
+                  },
+                  "VerticalTaperIncluded": {
+                    "value": 3.26
+                  }
+                },
+                "file": "part.FCStd",
+                "requirements_source": "explicit"
+              },
+              "metrics": {
+                "duration_ms": 687.83,
+                "input_bytes": 390,
+                "output_bytes": 1334
+              }
+            }
+          ]
+        },
+        {
+          "tool": "validate_drawing",
+          "arguments": {
+            "path": "part.FCStd",
+            "detail": true,
+            "requirements": [
+              {
+                "type": "solid_count",
+                "count": 1
+              },
+              {
+                "type": "bbox",
+                "size": [
+                  95,
+                  90,
+                  135
+                ],
+                "tolerance": 0.001
+              },
+              {
+                "type": "volume",
+                "value": 33485.654835843765,
+                "rel_tolerance": 1e-06
+              },
+              {
+                "type": "feature_count",
+                "feature_type": "Revolution",
+                "count": 2
+              },
+              {
+                "type": "feature_count",
+                "feature_type": "Groove",
+                "count": 2
+              },
+              {
+                "type": "feature_count",
+                "feature_type": "Pad",
+                "count": 3
+              },
+              {
+                "type": "feature_count",
+                "feature_type": "SketchObject",
+                "count": 7
+              }
+            ]
+          },
+          "result": [
+            {
+              "ok": true,
+              "tool": "validate_drawing",
+              "drawing": "part.FCStd",
+              "validation": {
+                "readable": true,
+                "passed": true,
+                "issues": [],
+                "requirements": [
+                  {
+                    "index": 0,
+                    "type": "solid_count",
+                    "expected": 1,
+                    "actual": 1,
+                    "passed": true
+                  },
+                  {
+                    "index": 1,
+                    "type": "bbox",
+                    "expected": [
+                      95.0,
+                      90.0,
+                      135.0
+                    ],
+                    "actual": [
+                      95.0,
+                      90.0,
+                      135.0
+                    ],
+                    "deviation": [
+                      0.0,
+                      0.0,
+                      0.0
+                    ],
+                    "passed": true
+                  },
+                  {
+                    "index": 2,
+                    "type": "volume",
+                    "expected": 33485.654835843765,
+                    "actual": 33485.654836,
+                    "deviation": 0.0,
+                    "passed": true
+                  },
+                  {
+                    "index": 3,
+                    "type": "feature_count",
+                    "actual": 2,
+                    "passed": true
+                  },
+                  {
+                    "index": 4,
+                    "type": "feature_count",
+                    "actual": 2,
+                    "passed": true
+                  },
+                  {
+                    "index": 5,
+                    "type": "feature_count",
+                    "actual": 3,
+                    "passed": true
+                  },
+                  {
+                    "index": 6,
+                    "type": "feature_count",
+                    "actual": 7,
+                    "passed": true
+                  }
+                ],
+                "warnings": [],
+                "shape": {
+                  "valid": true,
+                  "solids": 1,
+                  "faces": 14,
+                  "edges": 29,
+                  "volume": 33485.654836,
+                  "area": 33785.089729,
+                  "bbox": [
+                    [
+                      -8.65,
+                      -81.35,
+                      -120.0
+                    ],
+                    [
+                      86.35,
+                      8.65,
+                      15.0
+                    ]
+                  ],
+                  "size": [
+                    95.0,
+                    90.0,
+                    135.0
+                  ],
+                  "center_of_mass": [
+                    10.694026,
+                    -42.168192,
+                    -48.381655
+                  ],
+                  "holes": [
+                    {
+                      "diameter": 13.3,
+                      "count": 3
+                    }
+                  ]
+                },
+                "features": 14,
+                "parameters": {
+                  "OutsideDiameter": {
+                    "value": 17.3
+                  },
+                  "BoreDiameter": {
+                    "value": 13.3
+                  },
+                  "BendRadius": {
+                    "value": 36.35
+                  },
+                  "EndOffset": {
+                    "value": 15.0
+                  },
+                  "LegToUBend": {
+                    "value": 90.0
+                  },
+                  "ElbowTangentDepth": {
+                    "value": 51.35
+                  },
+                  "HorizontalReach": {
+                    "value": 86.35
+                  },
+                  "EndTaperLength": {
+                    "value": 10.1
+                  },
+                  "HorizontalTaperIncluded": {
+                    "value": 3.24
+                  },
+                  "VerticalTaperIncluded": {
+                    "value": 3.26
+                  }
+                },
+                "file": "part.FCStd",
+                "requirements_source": "explicit"
+              },
+              "metrics": {
+                "duration_ms": 710.86,
+                "input_bytes": 497,
+                "output_bytes": 1520
+              }
+            }
+          ]
+        },
+        {
+          "tool": "measure_entities",
+          "arguments": {
+            "path": "part.FCStd",
+            "target": {
+              "kind": "planar_levels",
+              "axis": "z",
+              "feature": "Pad001"
+            }
+          },
+          "result": [
+            {
+              "ok": true,
+              "tool": "measure_entities",
+              "drawing": "part.FCStd",
+              "units": "mm",
+              "of": "Pad001",
+              "measurements": [
+                {
+                  "kind": "planar_levels",
+                  "axis": [
+                    0.0,
+                    0.0,
+                    1.0
+                  ],
+                  "levels": [
+                    {
+                      "position": -36.35,
+                      "faces": [
+                        {
+                          "name": "Face6",
+                          "normal": [
+                            0.0,
+                            0.0,
+                            1.0
+                          ],
+                          "area": 96.132735
+                        }
+                      ],
+                      "area": 96.132735
+                    },
+                    {
+                      "position": 15.0,
+                      "faces": [
+                        {
+                          "name": "Face3",
+                          "normal": [
+                            0.0,
+                            0.0,
+                            1.0
+                          ],
+                          "area": 96.132735
+                        }
+                      ],
+                      "area": 96.132735
+                    }
+                  ],
+                  "gaps": [
+                    {
+                      "from": -36.35,
+                      "to": 15.0,
+                      "distance": 51.35
+                    }
+                  ],
+                  "note": "Levels are measured geometry, not assigned feature roles; match each face to the drawing."
+                }
+              ],
+              "seconds": 0.59,
+              "metrics": {
+                "duration_ms": 597.26,
+                "input_bytes": 99,
+                "output_bytes": 587
+              }
+            }
+          ]
+        }
+      ],
+      "agent_messages": [
+        "I’ll read the dimensions from the drawing, build the tube with native PartDesign features, then check its dimensions and preview before saving the final file.",
+        "The drawing shows a U-bend in one plane and a 90° elbow in the other. I’ve read Ø17.3 outside, Ø13.3 inside, R36.35 for both bends, and 10.1 mm end sections with 3.24° and 3.26° taper callouts. I’m checking the witness lines to locate the bend tangencies and end faces.",
+        "The dimensions place the horizontal end 86.35 mm from the vertical leg axis and 15 mm below the vertical end. The U-bend tangency is 90 mm below the vertical end; the elbow tangency is 51.35 mm below it. This gives straight lengths of 38.65 mm between the bends and 50 mm after the elbow.\n\nThe witness lines agree across both views. I’ll use annular pads and revolutions, then groove the two 10.1 mm end sections using the marked included taper angles.",
+        "The preview revealed the drawing’s projection layout: the top view is below the front view, and the left view is on the right. I’m correcting the bend orientation to match all three views, then adding the end tapers.",
+        "The model now matches the three drawing views. Validation confirms one valid solid built from native PartDesign features, with a 95 × 90 × 135 mm overall envelope. The measured end-to-elbow tangency distance is 51.35 mm. I’m saving the final stage.",
+        "Saved the final native model to `answer.FCStd`, built in `part.FCStd`.\n\nVerified one PartDesign Body containing one valid solid, with editable sketches, pads, revolutions, and taper grooves. Dimensions and rendered views checked."
+      ],
+      "posthoc_validation": {
+        "readable": true,
+        "passed": true,
+        "issues": [],
+        "requirements": [],
+        "warnings": [],
+        "shape": {
+          "valid": true,
+          "solids": 1,
+          "faces": 14,
+          "edges": 29,
+          "volume": 33485.654836,
+          "area": 33785.089729,
+          "bbox": [
+            [
+              -8.65,
+              -81.35,
+              -120.0
+            ],
+            [
+              86.35,
+              8.65,
+              15.0
+            ]
+          ],
+          "size": [
+            95.0,
+            90.0,
+            135.0
+          ],
+          "center_of_mass": [
+            10.694026,
+            -42.168192,
+            -48.381655
+          ],
+          "holes": [
+            {
+              "diameter": 13.3,
+              "count": 3
+            }
+          ]
+        },
+        "features": 14,
+        "parameters": {
+          "OutsideDiameter": {
+            "value": 17.3
+          },
+          "BoreDiameter": {
+            "value": 13.3
+          },
+          "BendRadius": {
+            "value": 36.35
+          },
+          "EndOffset": {
+            "value": 15.0
+          },
+          "LegToUBend": {
+            "value": 90.0
+          },
+          "ElbowTangentDepth": {
+            "value": 51.35
+          },
+          "HorizontalReach": {
+            "value": 86.35
+          },
+          "EndTaperLength": {
+            "value": 10.1
+          },
+          "HorizontalTaperIncluded": {
+            "value": 3.24
+          },
+          "VerticalTaperIncluded": {
+            "value": 3.26
+          }
+        },
+        "file": "answer.FCStd",
+        "requirements_source": null
+      },
+      "posthoc_plane_levels": {
+        "ok": true,
+        "tool": "measure_entities",
+        "drawing": "answer.FCStd",
+        "units": "mm",
+        "of": "Body",
+        "measurements": [
+          {
+            "kind": "planar_levels",
+            "axis": [
+              0.0,
+              1.0,
+              0.0
+            ],
+            "levels": [],
+            "gaps": [],
+            "note": "Levels are measured geometry, not assigned feature roles; match each face to the drawing."
+          }
+        ],
+        "seconds": 0.72,
+        "metrics": {
+          "duration_ms": 727.41,
+          "input_bytes": 62,
+          "output_bytes": 310
+        }
+      },
+      "native_object_types": {
+        "Spreadsheet::Sheet": 1,
+        "PartDesign::Body": 1,
+        "App::Origin": 1,
+        "App::Line": 3,
+        "App::Plane": 3,
+        "App::Point": 1,
+        "Sketcher::SketchObject": 7,
+        "PartDesign::Pad": 3,
+        "PartDesign::Revolution": 2,
+        "PartDesign::Groove": 2
+      },
+      "native": {
+        "path": "artifacts/dimension-witnesses-2026-10-30/freecad-686f17ce17/answer.FCStd",
+        "sha256": "88a88c450f0b90feb0fd899bac8cdcd1c2e24e30e7f756faf50b6076b4587e9b"
+      },
+      "preview": {
+        "path": "artifacts/dimension-witnesses-2026-10-30/freecad-686f17ce17/preview.png",
+        "sha256": "10f9289adcb4356e6b13672ffab11ef87ce0c584a8bb468cf157f5892f55a9d3"
+      },
+      "raw_files_sha256": {
+        "command.json": "f7e2bb4d8ab738b624f08898518c7931093e3a492ab43de8afc883d17067d8f5",
+        "prompt.txt": "37d313638c0cbb2c7f1313a631aa8fdbae8c33612cfd2693cccf51b79a053bb2",
+        "result.json": "e1539215502d78fae04aa84f8c1e41f3836c46a7a23b3c620efef91270ed65b3",
+        "run.json": "86a12f6538e393c87c6968396924c7605b8cb73541385296e4e3af40836e3188",
+        "stderr.log": "be057c85047fa03463e7b106b2c7d6fb83b0bc83b0445957ed5b44573a5a2b86",
+        "trajectory.jsonl": "54c964e8d38a9e7595c43be1fe9edd462574064b2975242c6fee57fb0e5d5c71"
+      },
+      "scorer_sha256": "c052386b999e6d2625fe1f966754c6ea1d8ab77589c457c704157559652370d4",
+      "reward_sha256": "92718d996a6e600571754a85e7ed6ea8822bff3feb4dfe03afdbf8deffbbc366"
+    }
+  ]
+}

@@ -22,6 +22,13 @@ fresh scores are **30.77 / 66.89**, mean **48.83**: a regression from 50.43.
 The plate still assigns a dimension to the wrong surfaces; the tube corrects
 its handedness. The report preserves this outcome and the new native artifacts.
 
+The [dimension-endpoint and raster-witness iteration](dimension-anchors-2026-10-30.md)
+then adds general source-image anchors, linked dimension equations and external
+arrow guidance. Its final fresh pair scores **67.21 / 66.89**, mean **67.05**;
+the plate correctly associates the section dimensions and passes 37/37 specification
+checks. The intermediate **32.44 / 66.89** attempt is also retained. These known-task
+results do not establish reliability on unseen drawings or change the original pilot mean.
+
 V3 has 30 text-to-CAD creation tasks, 30 create-and-edit tasks and 40 tasks that
 reconstruct a part from an engineering drawing. The last category evaluates
 **3D reconstruction from a drawing**, rather than production of 2D drawings.

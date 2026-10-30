@@ -64,6 +64,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("path"); s.add_argument("--region", help="JSON [left,top,right,bottom] in source pixels")
     s.add_argument("--max-size", type=int, default=1536)
     s.add_argument("--rotate", type=int, choices=(0, 90, 180, 270), default=0, help="Clockwise degrees after cropping")
+    s.add_argument("--dimensions", help="JSON linear-dimension anchors; [] shows source-coordinate guides")
+    s.add_argument("--dimensions-file", help="JSON file with linear-dimension anchors")
 
     s = sub.add_parser("entities", help="List entities (filtered, paginated)")
     s.add_argument("path"); s.add_argument("--type"); s.add_argument("--layer"); s.add_argument("--tag")
@@ -268,7 +270,8 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
     elif c == "inspect":
         r = rt.read_drawing(a.path)
     elif c == "image":
-        r = rt.inspect_image(a.path, _json_arg(a.region, None, "region"), a.max_size, a.rotate)
+        r = rt.inspect_image(a.path, _json_arg(a.region, None, "region"), a.max_size, a.rotate,
+                             _json_arg(a.dimensions, a.dimensions_file, "dimensions"))
     elif c == "measure":
         r = rt.measure_entities(a.path, _json_arg(a.target, None, "target"))
     elif c == "entities":
