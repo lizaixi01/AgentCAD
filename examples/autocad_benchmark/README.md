@@ -86,6 +86,20 @@ $env:PYTHONUTF8 = "1"
 Pop-Location
 ```
 
+For a reference report whose every artifact can be archived and checked, use
+the capture wrapper from this AgentCAD worktree instead:
+
+```powershell
+D:/bench/autocad-mcp/.venv/Scripts/python.exe examples/autocad_benchmark/capture_reference.py `
+  --upstream D:/bench/autocad-mcp --out D:/bench/pro-retained
+```
+
+Some upstream tasks overwrite files returned by earlier tasks. The wrapper runs
+each **original** reference task and immediately copies its returned artifacts
+to a task-specific directory before the original runner hashes them. It does not
+alter task inputs, gates, verdicts or scoring. The archived reference report uses
+this wrapper; its source hash is recorded too.
+
 The adapter refuses a nonempty output directory and a modified/unpinned evaluator.
 `artifacts/events.jsonl` records calls and responses; `progress.json` is updated
 after completed tasks; stderr and drawings are retained. The original runner

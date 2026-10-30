@@ -1,241 +1,236 @@
 {
+  "schema_version": "2.0",
+  "matrix": "v8",
   "adapter": "autocad-mcp-pro",
   "adapter_metadata": {
     "backend": "ezdxf",
     "capabilities": {
       "backend": "ezdxf",
       "features": {
-        "audit_detail": {
-          "mode": "native",
-          "reason": null,
-          "supported": true
-        },
-        "boundary_trace": {
-          "mode": "computed",
-          "reason": "straight_edges_split_at_intersections;curved_edges_not_split",
-          "supported": true
-        },
-        "chspace": {
-          "mode": "computed",
-          "reason": "top_view_untwisted_viewports_only;dimensions_refused_unless_frozen;acis_proxy_table_refused;viewport_clipping_reported_not_applied",
-          "supported": true
-        },
-        "delivery": {
-          "mode": "shared",
-          "reason": null,
-          "supported": true
-        },
-        "documents": {
-          "mode": "registry",
-          "reason": null,
-          "supported": true
-        },
         "drawing_2d": {
+          "supported": true,
           "mode": "native",
-          "reason": null,
-          "supported": true
-        },
-        "dwg": {
-          "mode": null,
-          "reason": "no_dwg_writer_requires_live_autocad",
-          "supported": false
-        },
-        "dwg_write": {
-          "mode": null,
-          "reason": "requires_oda_file_converter:https://www.opendesign.com/guestfiles/oda_file_converter",
-          "supported": false
-        },
-        "dwgprops": {
-          "mode": null,
-          "reason": "summary_fields_need_live_autocad;custom_properties_need_r2004_or_newer",
-          "supported": false
-        },
-        "dwt_write": {
-          "mode": null,
-          "reason": "dwt_is_a_dwg_container_requires_live_autocad",
-          "supported": false
+          "reason": null
         },
         "dxf": {
+          "supported": true,
           "mode": "native",
-          "reason": null,
-          "supported": true
+          "reason": null
         },
-        "explode_opaque_members": {
+        "dwg": {
+          "supported": false,
           "mode": null,
-          "reason": "ezdxf_cannot_transform:OLE2FRAME,VIEWPORT,ACAD_PROXY_ENTITY_without_proxy_graphic;refused_before_writing",
-          "supported": false
-        },
-        "handle_overlay": {
-          "mode": "rendered",
-          "reason": null,
-          "supported": true
-        },
-        "hatch_edge_paths": {
-          "mode": "native",
-          "reason": null,
-          "supported": true
-        },
-        "hatch_loops": {
-          "mode": "native",
-          "reason": "entity_get_reports_wcs_loops;ellipse_and_spline_edges_sampled_not_exact",
-          "supported": true
-        },
-        "interactive_prompt": {
-          "mode": null,
-          "reason": "no_operator_to_prompt_headlessly",
-          "supported": false
-        },
-        "layer_states": {
-          "mode": "xrecord",
-          "reason": "portable_acadmcp_xrecord;not_listed_in_autocad_layer_states_manager",
-          "supported": true
-        },
-        "lisp": {
-          "mode": null,
-          "reason": "live_com_only",
-          "supported": false
-        },
-        "live_application": {
-          "mode": null,
-          "reason": "headless_engine_has_no_application_to_launch_or_attach",
-          "supported": false
-        },
-        "measure_area_acis": {
-          "mode": null,
-          "reason": "acis_evaluation_requires_live_autocad",
-          "supported": false
-        },
-        "mleader": {
-          "mode": "composite",
-          "reason": null,
-          "supported": true
-        },
-        "mtext_background_color": {
-          "mode": "native",
-          "reason": null,
-          "supported": true
-        },
-        "named_views": {
-          "mode": "vport_active",
-          "reason": "restore_sets_the_view_the_file_opens_on;no_live_display",
-          "supported": true
-        },
-        "ocs_normalized": {
-          "mode": "wcs",
-          "reason": "reported_xy_is_wcs;z_component_not_reported;text_rotation_stays_in_entity_frame;hatch_loops_reported_in_wcs",
-          "supported": true
-        },
-        "ocs_tilted_plane": {
-          "mode": null,
-          "reason": "2d_xy_cannot_address_a_tilted_plane",
-          "supported": false
-        },
-        "paper_space": {
-          "mode": "native",
-          "reason": null,
-          "supported": true
+          "reason": "no_dwg_writer_requires_live_autocad"
         },
         "pdf": {
+          "supported": true,
           "mode": "rendered",
-          "reason": null,
-          "supported": true
+          "reason": null
         },
         "png": {
+          "supported": true,
           "mode": "rendered",
-          "reason": null,
-          "supported": true
-        },
-        "preferences": {
-          "mode": null,
-          "reason": "preferences_live_in_the_running_application_not_in_a_file",
-          "supported": false
-        },
-        "preflight": {
-          "mode": "shared",
-          "reason": null,
-          "supported": true
-        },
-        "refiner": {
-          "mode": "shared",
-          "reason": null,
-          "supported": true
-        },
-        "registry_sysvar": {
-          "mode": null,
-          "reason": "registry_saved_variables_have_no_home_in_a_file",
-          "supported": false
-        },
-        "revcloud": {
-          "mode": "native",
-          "reason": "ezdxf_revcloud_helper",
-          "supported": true
-        },
-        "solid_3d": {
-          "mode": null,
-          "reason": "acis_generation_requires_live_autocad",
-          "supported": false
-        },
-        "table": {
-          "mode": "composite",
-          "reason": null,
-          "supported": true
+          "reason": null
         },
         "transactions": {
+          "supported": true,
           "mode": "snapshot",
-          "reason": null,
-          "supported": true
+          "reason": null
         },
-        "ucs": {
-          "mode": "stored_not_interpreted",
-          "reason": "tool_coordinates_stay_wcs",
-          "supported": true
+        "audit_detail": {
+          "supported": true,
+          "mode": "native",
+          "reason": null
         },
-        "undo_history": {
-          "mode": null,
-          "reason": "set_EZDXF_UNDO_DEPTH_to_enable",
-          "supported": false
-        },
-        "viewport_render": {
+        "handle_overlay": {
+          "supported": true,
           "mode": "rendered",
-          "reason": "viewport_borders_not_drawn",
-          "supported": true
+          "reason": null
+        },
+        "revcloud": {
+          "supported": true,
+          "mode": "native",
+          "reason": "ezdxf_revcloud_helper"
         },
         "wipeout": {
+          "supported": true,
           "mode": "native",
-          "reason": null,
-          "supported": true
+          "reason": null
         },
-        "xlsx_write": {
-          "mode": "openpyxl",
-          "reason": null,
-          "supported": true
+        "mtext_background_color": {
+          "supported": true,
+          "mode": "native",
+          "reason": null
+        },
+        "boundary_trace": {
+          "supported": true,
+          "mode": "computed",
+          "reason": "straight_edges_split_at_intersections;curved_edges_not_split"
+        },
+        "hatch_edge_paths": {
+          "supported": true,
+          "mode": "native",
+          "reason": null
+        },
+        "hatch_loops": {
+          "supported": true,
+          "mode": "native",
+          "reason": "entity_get_reports_wcs_loops;ellipse_and_spline_edges_sampled_not_exact"
+        },
+        "chspace": {
+          "supported": true,
+          "mode": "computed",
+          "reason": "top_view_untwisted_viewports_only;dimensions_refused_unless_frozen;acis_proxy_table_refused;viewport_clipping_reported_not_applied"
+        },
+        "undo_history": {
+          "supported": false,
+          "mode": null,
+          "reason": "set_EZDXF_UNDO_DEPTH_to_enable"
+        },
+        "measure_area_acis": {
+          "supported": false,
+          "mode": null,
+          "reason": "acis_evaluation_requires_live_autocad"
+        },
+        "explode_opaque_members": {
+          "supported": false,
+          "mode": null,
+          "reason": "ezdxf_cannot_transform:OLE2FRAME,VIEWPORT,ACAD_PROXY_ENTITY_without_proxy_graphic;refused_before_writing"
+        },
+        "ocs_normalized": {
+          "supported": true,
+          "mode": "wcs",
+          "reason": "reported_xy_is_wcs;z_component_not_reported;text_rotation_stays_in_entity_frame;hatch_loops_reported_in_wcs"
+        },
+        "ocs_tilted_plane": {
+          "supported": false,
+          "mode": null,
+          "reason": "2d_xy_cannot_address_a_tilted_plane"
+        },
+        "table": {
+          "supported": true,
+          "mode": "composite",
+          "reason": null
+        },
+        "mleader": {
+          "supported": true,
+          "mode": "composite",
+          "reason": null
+        },
+        "preflight": {
+          "supported": true,
+          "mode": "shared",
+          "reason": null
+        },
+        "refiner": {
+          "supported": true,
+          "mode": "shared",
+          "reason": null
+        },
+        "delivery": {
+          "supported": true,
+          "mode": "shared",
+          "reason": null
+        },
+        "paper_space": {
+          "supported": true,
+          "mode": "native",
+          "reason": null
+        },
+        "dwt_write": {
+          "supported": false,
+          "mode": null,
+          "reason": "dwt_is_a_dwg_container_requires_live_autocad"
+        },
+        "viewport_render": {
+          "supported": true,
+          "mode": "rendered",
+          "reason": "viewport_borders_not_drawn"
+        },
+        "solid_3d": {
+          "supported": false,
+          "mode": null,
+          "reason": "acis_generation_requires_live_autocad"
+        },
+        "lisp": {
+          "supported": false,
+          "mode": null,
+          "reason": "live_com_only"
+        },
+        "registry_sysvar": {
+          "supported": false,
+          "mode": null,
+          "reason": "registry_saved_variables_have_no_home_in_a_file"
+        },
+        "dwgprops": {
+          "supported": false,
+          "mode": null,
+          "reason": "summary_fields_need_live_autocad;custom_properties_need_r2004_or_newer"
+        },
+        "documents": {
+          "supported": true,
+          "mode": "registry",
+          "reason": null
+        },
+        "layer_states": {
+          "supported": true,
+          "mode": "xrecord",
+          "reason": "portable_acadmcp_xrecord;not_listed_in_autocad_layer_states_manager"
+        },
+        "named_views": {
+          "supported": true,
+          "mode": "vport_active",
+          "reason": "restore_sets_the_view_the_file_opens_on;no_live_display"
+        },
+        "ucs": {
+          "supported": true,
+          "mode": "stored_not_interpreted",
+          "reason": "tool_coordinates_stay_wcs"
+        },
+        "live_application": {
+          "supported": false,
+          "mode": null,
+          "reason": "headless_engine_has_no_application_to_launch_or_attach"
+        },
+        "preferences": {
+          "supported": false,
+          "mode": null,
+          "reason": "preferences_live_in_the_running_application_not_in_a_file"
+        },
+        "interactive_prompt": {
+          "supported": false,
+          "mode": null,
+          "reason": "no_operator_to_prompt_headlessly"
+        },
+        "dwg_write": {
+          "supported": false,
+          "mode": null,
+          "reason": "requires_oda_file_converter:https://www.opendesign.com/guestfiles/oda_file_converter"
         },
         "xref_live": {
+          "supported": false,
           "mode": null,
-          "reason": "reload_and_bind_need_a_live_seat;list_detach_path_are_headless",
-          "supported": false
+          "reason": "reload_and_bind_need_a_live_seat;list_detach_path_are_headless"
+        },
+        "xlsx_write": {
+          "supported": true,
+          "mode": "openpyxl",
+          "reason": null
         }
       }
     }
   },
-  "environment": {
-    "implementation": "CPython",
-    "machine": "AMD64",
-    "platform": "Windows-10-10.0.26200-SP0",
-    "python": "3.11.16"
-  },
-  "generated_at": "2026-10-30T05:43:34.365959+00:00",
   "git_sha": "58a05ddfc34a9832c626e82cd88ecdce8e16a62a",
+  "generated_at": "2026-10-30T05:58:26.565654+00:00",
+  "environment": {
+    "python": "3.11.16",
+    "implementation": "CPython",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "machine": "AMD64"
+  },
+  "timeout_seconds": 180,
   "manifest": {
-    "dependencies": {
-      "ezdxf": "1.4.4",
-      "fastmcp": "3.4.5",
-      "matplotlib": "3.11.1",
-      "mcp": "1.29.0",
-      "numpy": "2.4.6",
-      "openpyxl": "3.1.5",
-      "pywin32": "312"
-    },
+    "server_sha": "58a05ddfc34a9832c626e82cd88ecdce8e16a62a",
     "dirty": false,
     "evaluator_version": "v8.1",
     "fixtures": [
@@ -260,312 +255,338 @@
         "size_bytes": 25419
       }
     ],
-    "server_sha": "58a05ddfc34a9832c626e82cd88ecdce8e16a62a"
+    "dependencies": {
+      "ezdxf": "1.4.4",
+      "fastmcp": "3.4.5",
+      "mcp": "1.29.0",
+      "numpy": "2.4.6",
+      "openpyxl": "3.1.5",
+      "matplotlib": "3.11.1",
+      "pywin32": "312"
+    }
   },
-  "matrix": "v8",
+  "summary": {
+    "attempted": 31,
+    "passed": 31,
+    "supported": 31,
+    "unsupported": 0,
+    "not_run": 0,
+    "environment_blocked": 0,
+    "coverage_percent": 100.0,
+    "score": 100.0
+  },
   "results": [
     {
-      "artifacts": [],
-      "duration_ms": 7.19,
+      "task_id": "core_geometry",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 3.72,
+      "artifacts": [],
       "metrics": {
         "line_length": 5.0
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "core_geometry"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 3.67,
+      "task_id": "modify_query",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 2.64,
+      "artifacts": [],
       "metrics": {},
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "modify_query"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 9.76,
+      "task_id": "layers_linetypes",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 5.13,
+      "artifacts": [],
       "metrics": {},
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "layers_linetypes"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 104.3,
+      "task_id": "dimensions",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 48.92,
+      "artifacts": [],
       "metrics": {
         "entity_type": "DIMENSION"
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "dimensions"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 6.25,
+      "task_id": "table_mleader",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 6.15,
+      "artifacts": [],
       "metrics": {
         "representations": [
           "composite",
           "composite"
         ]
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "table_mleader"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 32.89,
+      "task_id": "transactions",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 22.48,
+      "artifacts": [],
       "metrics": {
         "entity_count": 0
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "transactions"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 4.11,
+      "task_id": "preflight",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 2.18,
+      "artifacts": [],
       "metrics": {},
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "preflight"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 19.88,
+      "task_id": "quality_refiner",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 16.96,
+      "artifacts": [],
       "metrics": {
-        "final_score": 100.0,
+        "status": "threshold_met",
         "initial_score": 92.0,
-        "remaining_issues": [],
+        "final_score": 100.0,
         "rounds": [
           {
+            "number": 1,
+            "score_before": 92.0,
+            "score_after": 100.0,
+            "error_count_before": 0,
+            "error_count_after": 0,
+            "transaction": "committed",
             "actions": [
               {
-                "detail": {
-                  "deleted_handle": "3E",
-                  "kept_handle": "3D"
-                },
-                "fingerprint": "e0aa625bccfb9c3a3f88bd5f5020c66c4d34fee481e166ef51cdaadee76dab38",
                 "focus": "duplicate_entities",
+                "fingerprint": "e0aa625bccfb9c3a3f88bd5f5020c66c4d34fee481e166ef51cdaadee76dab38",
                 "handles": [
                   "3D",
                   "3E"
                 ],
-                "status": "applied"
+                "status": "applied",
+                "detail": {
+                  "deleted_handle": "3E",
+                  "kept_handle": "3D"
+                }
               }
-            ],
-            "error_count_after": 0,
-            "error_count_before": 0,
-            "number": 1,
-            "score_after": 100.0,
-            "score_before": 92.0,
-            "transaction": "committed"
+            ]
           }
         ],
-        "status": "threshold_met"
+        "remaining_issues": []
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "quality_refiner"
+      "stderr_summary": ""
     },
     {
+      "task_id": "dxf_roundtrip",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 79.05,
       "artifacts": [
         {
           "filename": "roundtrip.dxf",
-          "sha256": "39e981c3685230e7b43bcc75daec6ec16ff591e39c30acbcbdff9ac372110008",
-          "size_bytes": 18448
+          "size_bytes": 18448,
+          "sha256": "1123b6bdc219725df14a7a09b0c3b95b4be844fdd6a25d0d628deca196244b81"
         }
       ],
-      "duration_ms": 36.66,
-      "message": "",
       "metrics": {
         "entity_count": 1
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "dxf_roundtrip"
+      "stderr_summary": ""
     },
     {
+      "task_id": "auditable_delivery",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 703.97,
       "artifacts": [
         {
           "filename": "manifest.json",
-          "sha256": "d97e9368852b92e09468b3e8b68e1465e4ce9ae7fb5885944ae2418e83596a1e",
-          "size_bytes": 8912
+          "size_bytes": 8909,
+          "sha256": "01947cd25822f70b58cbc6572cdd33e6c4a95f9eceb7226ab053ee48aa3b284d"
         }
       ],
-      "duration_ms": 1469.75,
-      "message": "",
       "metrics": {
         "score": {
-          "errors": 0,
-          "grade": "A",
-          "info": 0,
-          "invalidity_ratio": 0.0,
           "score": 100.0,
-          "warnings": 0
+          "invalidity_ratio": 0.0,
+          "grade": "A",
+          "errors": 0,
+          "warnings": 0,
+          "info": 0
         }
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "auditable_delivery"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 3061.08,
+      "task_id": "tool_discovery",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 2269.24,
+      "artifacts": [],
       "metrics": {
         "ranks": {
-          "BPOLY": 1,
-          "CHSPACE": 1,
           "FILLET": 1,
-          "OVERKILL": 1,
+          "BPOLY": 1,
           "QSELECT": 1,
-          "WBLOCK": 1
+          "WBLOCK": 1,
+          "OVERKILL": 1,
+          "CHSPACE": 1
         },
         "top_n": 3
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "tool_discovery"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 456.69,
+      "task_id": "token_budget",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 188.46,
+      "artifacts": [],
       "metrics": {
-        "advertised_tools": 3,
         "catalog_tokens": 89350,
-        "catalog_tools": 243,
-        "ceiling": 2000,
         "discovery_tokens": 503,
+        "ceiling": 2000,
         "reduction_x": 177.6,
+        "catalog_tools": 243,
+        "advertised_tools": 3,
         "tokenizer": "ratio/v1 (estimate)"
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "token_budget"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 26.25,
+      "task_id": "hatch_islands",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 23.27,
+      "artifacts": [],
       "metrics": {
+        "path_count": 2,
+        "filled_area": 300.0,
         "area_ignoring_islands": 400.0,
         "expected_filled": 300.0,
-        "filled_area": 300.0,
-        "hatch_style": "outer",
-        "path_count": 2
+        "hatch_style": "outer"
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "hatch_islands"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 23.15,
+      "task_id": "selection_filter",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 28.64,
+      "artifacts": [],
       "metrics": {
-        "bounding_box": 3,
-        "by_layer": 1,
+        "window": 1,
         "crossing": 2,
+        "bounding_box": 3,
         "polygon": 1,
-        "window": 1
+        "by_layer": 1
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "selection_filter"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 14.17,
+      "task_id": "measure_from_handle",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 16.61,
+      "artifacts": [],
       "metrics": {
-        "boundary_agrees": true,
-        "fraction_lost_by_reading_points_back": 0.282,
         "measured_area": 139.269908,
         "true_area": 139.269908,
-        "vertex_shoelace_area": 100.0
+        "vertex_shoelace_area": 100.0,
+        "fraction_lost_by_reading_points_back": 0.282,
+        "boundary_agrees": true
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "measure_from_handle"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 205.39,
+      "task_id": "pid_roundtrip",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 218.97,
+      "artifacts": [],
       "metrics": {
-        "authored_line_numbers_kept": true,
+        "nodes": 5,
+        "edges": 4,
+        "dangling": 0,
         "confidence_min": 1.0,
         "critique_issues": 0,
-        "dangling": 0,
-        "edges": 4,
         "instrument_index_rows": 1,
         "line_list_rows": 4,
-        "nodes": 5,
+        "authored_line_numbers_kept": true,
         "unnumbered_lines_sequenced": true
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "pid_roundtrip"
+      "stderr_summary": ""
     },
     {
+      "task_id": "page_setup_truth",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 243.36,
       "artifacts": [
         {
           "filename": "untitled-Layout1-ansi_b.pdf",
-          "sha256": "f5bdf071a5edc3c7fbcbeb5d52b2aa40dd3ae00b8f863b78239aec9c78de7a96",
-          "size_bytes": 1287
+          "size_bytes": 1287,
+          "sha256": "87a953ecd1708ddbbb2af9009f4cf09ac97005ae87d29404dff6f3512a77aa42"
         },
         {
           "filename": "untitled-Layout1-iso_a3.pdf",
-          "sha256": "968e7fd2d1c1844e0bf98547acdf2cd460f5bd272b287421c584abecc6677b51",
-          "size_bytes": 1287
+          "size_bytes": 1287,
+          "sha256": "55f7da9bfd20cd827853c70626a290ce7e84642e57e2be590c6fcaa15d3a0826"
         }
       ],
-      "duration_ms": 399.2,
-      "message": "",
       "metrics": {
+        "paper": "ISO_A3",
+        "orientation": "landscape",
+        "size_mm_listed": [
+          420.0,
+          297.0
+        ],
         "mediabox_mm": [
           420.0,
           297.0
@@ -574,10 +595,6 @@
           432.0,
           279.0
         ],
-        "orientation": "landscape",
-        "paper": "ISO_A3",
-        "pdf_bytes": 1287,
-        "plot_style_known": true,
         "size_mm_changed": [
           [
             432.0,
@@ -588,520 +605,527 @@
             297.0
           ]
         ],
-        "size_mm_listed": [
-          420.0,
-          297.0
-        ]
+        "pdf_bytes": 1287,
+        "plot_style_known": true
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "page_setup_truth"
+      "stderr_summary": ""
     },
     {
+      "task_id": "mech_assembly",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 1741.74,
       "artifacts": [
         {
           "filename": "mech_assembly.dxf",
-          "sha256": "ebe80bc5a2cffbe0476dee6d35cf9dc74cb5a82479d623cb9bfde8e054baeabb",
-          "size_bytes": 107970
+          "size_bytes": 107968,
+          "sha256": "e268d5846f7f134d50d0a711cb8823d8684d4bc677ee3ec9ccd550f4b4bdf30e"
         }
       ],
-      "duration_ms": 975.29,
-      "message": "",
       "metrics": {
-        "critique_focuses": [],
         "critique_issues": 0,
-        "fasteners": 4,
+        "critique_focuses": [],
+        "score": 100.0,
         "grade": "A",
         "invalidity_ratio": 0.0,
         "parts_list_rows": 2,
-        "score": 100.0,
+        "fasteners": 4,
         "validator_findings": []
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "mech_assembly"
+      "stderr_summary": ""
     },
     {
+      "task_id": "arch_roundtrip",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 1827.53,
       "artifacts": [
         {
           "filename": "arch_roundtrip.dxf",
-          "sha256": "5d324cdd38b62bccf1cf1558199a3f11735ba946c81e02fbb3df669609eceb7e",
-          "size_bytes": 82827
+          "size_bytes": 82827,
+          "sha256": "cad5e8c1915c756e7f87819333244be735d2d779c163e29dc074aafa76c54239"
         }
       ],
-      "duration_ms": 1069.46,
-      "message": "",
       "metrics": {
+        "rooms": {
+          "01": {
+            "label_mm2": 27743750.0,
+            "detected_mm2": 27743750.0,
+            "hand_mm2": 27743750.0,
+            "agrees": true
+          },
+          "02": {
+            "label_mm2": 21993750.0,
+            "detected_mm2": 21993750.0,
+            "hand_mm2": 21993750.0,
+            "agrees": true
+          }
+        },
+        "faces_detected": 2,
         "confidence_min": 1.0,
-        "critique_focuses": [],
-        "critique_issues": 0,
         "door_tags": [
           "D1",
           "D2"
         ],
-        "faces_detected": 2,
-        "grade": "A",
-        "invalidity_ratio": 0.0,
-        "omitted": [],
-        "rooms": {
-          "01": {
-            "agrees": true,
-            "detected_mm2": 27743750.0,
-            "hand_mm2": 27743750.0,
-            "label_mm2": 27743750.0
-          },
-          "02": {
-            "agrees": true,
-            "detected_mm2": 21993750.0,
-            "hand_mm2": 21993750.0,
-            "label_mm2": 21993750.0
-          }
-        },
-        "score": 100.0,
-        "validator_findings": [],
         "window_tags": [
           "W1",
           "W2"
-        ]
+        ],
+        "omitted": [],
+        "critique_issues": 0,
+        "critique_focuses": [],
+        "score": 100.0,
+        "grade": "A",
+        "invalidity_ratio": 0.0,
+        "validator_findings": []
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "arch_roundtrip"
+      "stderr_summary": ""
     },
     {
+      "task_id": "takeoff_roundtrip",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 385.23,
       "artifacts": [
         {
           "filename": "pid.dxf",
-          "sha256": "9b3a224f3bf1a648dedae7a91ee4ad8ed5517b28189485dc49e5d6a4ade3b751",
-          "size_bytes": 33767
+          "size_bytes": 33767,
+          "sha256": "3f72d0310033bf037407af027b71c0af63f62c0c17393ca654686fcb6035bd31"
         },
         {
           "filename": "layout.dxf",
-          "sha256": "4a4a06386a843e3b79df584fb4adbad1ed64cc76893690d10c18f962516c9d05",
-          "size_bytes": 40501
+          "size_bytes": 40501,
+          "sha256": "aefa9c1b16b81b9760cbeb020f21078296e6e718caaba2b745e5450d2efc4b18"
         }
       ],
-      "duration_ms": 237.05,
-      "message": "",
       "metrics": {
-        "cable_mismatch": [],
-        "length_source": "layout",
-        "loads_checked": 4,
-        "pipe_mismatch": [],
-        "runs_checked": 9,
         "scale_verdict": "schematic",
-        "within_10pct": 0.21818181818181817
+        "within_10pct": 0.21818181818181817,
+        "length_source": "layout",
+        "runs_checked": 9,
+        "pipe_mismatch": [],
+        "loads_checked": 4,
+        "cable_mismatch": []
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "takeoff_roundtrip"
+      "stderr_summary": ""
     },
     {
+      "task_id": "understand_foreign",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 305.9,
       "artifacts": [
         {
           "filename": "layout.dxf",
-          "sha256": "6910f7aad1665a414d44b080bcbb8973209e8d3dad8505e186e2f79aa4e381bf",
-          "size_bytes": 40501
+          "size_bytes": 40501,
+          "sha256": "20511ff01baeeba2dc190f65f984575d164c3a8d717a436cca03c511647b7e93"
         },
         {
           "filename": "pid.dxf",
-          "sha256": "7a1c92128f5e9e171b18d9c7b28bf60bd7d643e9c8bc625d8eedf6d2a10a5ae5",
-          "size_bytes": 33767
+          "size_bytes": 33767,
+          "sha256": "fe421bf0b5ef363e12c155eb3fc39cbc033356d91fc22a9fd86c8cfdc47a33ba"
         }
       ],
-      "duration_ms": 189.71,
-      "message": "",
       "metrics": {
-        "clusters": 2,
-        "copies_separated": true,
-        "misread_layers": {},
-        "outlier_found": true,
         "units": {
-          "agree": false,
-          "confidence": 0.76,
           "declared": {
             "code": 1,
-            "label": "Inches",
-            "name": "in"
+            "name": "in",
+            "label": "Inches"
+          },
+          "inferred": "mm",
+          "mm_per_unit": 1.0,
+          "agree": false,
+          "confidence": 0.76,
+          "scores": {
+            "mm": 2.75,
+            "cm": 0.75,
+            "m": 0,
+            "in": 0.5,
+            "ft": 0
           },
           "evidence": [
             {
-              "as": {
-                "cm": 2.5,
-                "ft": 76.2,
-                "in": 6.35,
-                "m": 250.0,
-                "mm": 0.25
-              },
+              "kind": "text_height",
+              "value": 250.0,
+              "count": 26,
               "band": [
                 0.0018,
                 4.0
               ],
               "band_unit": "m",
-              "count": 26,
-              "informative": true,
-              "kind": "text_height",
+              "weight": 0.5,
+              "as": {
+                "mm": 0.25,
+                "cm": 2.5,
+                "m": 250.0,
+                "in": 6.35,
+                "ft": 76.2
+              },
               "plausible": [
                 "mm",
                 "cm"
               ],
-              "value": 250.0,
-              "weight": 0.5
+              "informative": true
             },
             {
-              "as": {
-                "cm": 2.0,
-                "ft": 60.96,
-                "in": 5.08,
-                "m": 200.0,
-                "mm": 0.2
-              },
+              "kind": "wall_thickness",
+              "value": 200.0,
+              "count": 24,
               "band": [
                 0.05,
                 1.0
               ],
               "band_unit": "m",
-              "count": 24,
-              "informative": true,
-              "kind": "wall_thickness",
+              "weight": 1.0,
+              "as": {
+                "mm": 0.2,
+                "cm": 2.0,
+                "m": 200.0,
+                "in": 5.08,
+                "ft": 60.96
+              },
               "plausible": [
                 "mm"
               ],
-              "value": 200.0,
-              "weight": 1.0
+              "informative": true
             },
             {
-              "as": {
-                "cm": 21480.0,
-                "ft": 19955572.992000002,
-                "in": 138580.368,
-                "m": 214800000.0,
-                "mm": 214.79999999999998
-              },
+              "kind": "room_area",
+              "value": 214800000.0,
+              "count": 4,
               "band": [
                 1.0,
                 5000.0
               ],
               "band_unit": "m2",
-              "count": 4,
-              "informative": true,
-              "kind": "room_area",
+              "weight": 1.0,
+              "as": {
+                "mm": 214.79999999999998,
+                "cm": 21480.0,
+                "m": 214800000.0,
+                "in": 138580.368,
+                "ft": 19955572.992000002
+              },
               "plausible": [
                 "mm"
               ],
-              "value": 214800000.0,
-              "weight": 1.0
+              "informative": true
             },
             {
-              "as": {
-                "cm": 1364.0,
-                "ft": 41574.72,
-                "in": 3464.56,
-                "m": 136400.0,
-                "mm": 136.4
-              },
+              "kind": "overall_size",
+              "value": 136400.0,
+              "count": 80,
               "band": [
                 0.01,
                 2000.0
               ],
               "band_unit": "m",
-              "count": 80,
-              "informative": true,
-              "kind": "overall_size",
+              "weight": 0.25,
+              "as": {
+                "mm": 136.4,
+                "cm": 1364.0,
+                "m": 136400.0,
+                "in": 3464.56,
+                "ft": 41574.72
+              },
               "plausible": [
                 "mm",
                 "cm"
               ],
-              "value": 136400.0,
-              "weight": 0.25
+              "informative": true
             }
           ],
-          "inferred": "mm",
-          "mm_per_unit": 1.0,
-          "scores": {
-            "cm": 0.75,
-            "ft": 0,
-            "in": 0.5,
-            "m": 0,
-            "mm": 2.75
-          },
           "warning": "INSUNITS declares Inches (1) but the geometry reads as mm: text_height 250 = 0.25 m as mm, 6.35 m as in; wall_thickness 200 = 0.2 m as mm, 5.08 m as in; room_area 2.148e+08 = 214.8 m2 as mm, 1.386e+05 m2 as in; overall_size 136400 = 136.4 m as mm, 3465 m as in. Lengths are measured in mm; the header is not changed."
         },
-        "units_flagged": true
+        "units_flagged": true,
+        "outlier_found": true,
+        "clusters": 2,
+        "copies_separated": true,
+        "misread_layers": {}
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "understand_foreign"
+      "stderr_summary": ""
     },
     {
+      "task_id": "requirements_roundtrip",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 229.71,
       "artifacts": [
         {
           "filename": "requirements_roundtrip.dxf",
-          "sha256": "8e1625cd6c8dad91701400909fee089404a42a50b3e9d505e8b92e67b04fb11e",
-          "size_bytes": 26872
+          "size_bytes": 26874,
+          "sha256": "fd5c08977b88d8b0aa65b9d86ea0f3b774e7a5d74f76f370020dd2e7f1f30cfa"
         }
       ],
-      "duration_ms": 116.16,
-      "message": "",
       "metrics": {
-        "artifact": {
+        "document": {
+          "status": "pass",
           "counts": {
-            "ambiguous": 0,
-            "fail": 1,
-            "pass": 3,
             "required": 4,
+            "pass": 4,
+            "fail": 0,
             "unknown": 0,
-            "unsupported": 0
+            "unsupported": 0,
+            "ambiguous": 0
+          }
+        },
+        "artifact": {
+          "status": "fail",
+          "counts": {
+            "required": 4,
+            "pass": 3,
+            "fail": 1,
+            "unknown": 0,
+            "unsupported": 0,
+            "ambiguous": 0
           },
           "failed": [
             "R3"
           ],
-          "handles_stable": true,
           "measured": {
             "R1": 20.0,
             "R2": 90.0,
             "R3": 54.120236510939236,
             "R4": 4.0
           },
-          "status": "fail"
+          "handles_stable": true
         },
-        "bores_moved": 1,
-        "document": {
-          "counts": {
-            "ambiguous": 0,
-            "fail": 0,
-            "pass": 4,
-            "required": 4,
-            "unknown": 0,
-            "unsupported": 0
-          },
-          "status": "pass"
-        },
-        "moved_mm": 3.0,
-        "parity_blind": true,
         "reopened": {
+          "status": "fail",
           "failed": [
             "R3"
-          ],
-          "status": "fail"
-        }
+          ]
+        },
+        "bores_moved": 1,
+        "moved_mm": 3.0,
+        "parity_blind": true
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "requirements_roundtrip"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 332.8,
+      "task_id": "cancel_safety",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 317.15,
+      "artifacts": [],
       "metrics": {
-        "entity_count_after": 1,
-        "line": "2F",
-        "overlapped": false,
         "trace": [
           "A:end",
           "B:run"
-        ]
+        ],
+        "overlapped": false,
+        "entity_count_after": 1,
+        "line": "2F"
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "cancel_safety"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 1103.28,
+      "task_id": "qa_large_drawing",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 1343.11,
+      "artifacts": [],
       "metrics": {
+        "entities": 10004,
         "construction": {
-          "after_10000": "274D",
           "at_5001": "13C5",
+          "after_10000": "274D",
           "paper": "274E"
         },
         "duplicate": [
           "274F",
           "2750"
         ],
-        "elapsed_ms": 566.1,
-        "entities": 10004,
+        "missing": [],
         "incomplete": [],
-        "max_loop_stall_ms": 69.6,
-        "missing": []
+        "elapsed_ms": 865.6,
+        "max_loop_stall_ms": 86.3
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "qa_large_drawing"
+      "stderr_summary": ""
     },
     {
+      "task_id": "export_safety",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 724.95,
       "artifacts": [
         {
           "filename": "lines.csv",
-          "sha256": "e82c7cfc2d800fd9630afd3c0377905a2ebb3f16333b982ea1d585a7f79c10e0",
-          "size_bytes": 363
+          "size_bytes": 363,
+          "sha256": "e82c7cfc2d800fd9630afd3c0377905a2ebb3f16333b982ea1d585a7f79c10e0"
         },
         {
           "filename": "bom.csv",
-          "sha256": "9fa6874359e3d12f20ea61e35b0eb56e08fe59b3c8209e92f0e99c9f499bea51",
-          "size_bytes": 167
+          "size_bytes": 167,
+          "sha256": "9fa6874359e3d12f20ea61e35b0eb56e08fe59b3c8209e92f0e99c9f499bea51"
         },
         {
           "filename": "bom.xlsx",
-          "sha256": "53f114ca66b2f33bef167c60337efafa40bff9984b405e887be9e09bb9320e88",
-          "size_bytes": 5085
+          "size_bytes": 5085,
+          "sha256": "0b8d3c0bb05de80afc8456b92820e9a1258f80cf16f492e19fef181e4c76d02d"
         }
       ],
-      "duration_ms": 775.2,
-      "message": "",
       "metrics": {
-        "bom_csv": {
-          "masses": [
-            "",
-            "",
-            "-12.5",
-            ""
-          ],
-          "ok": true,
-          "rows": 4
-        },
-        "bom_xlsx": {
-          "formula_cells": [],
-          "mass": -12.5,
-          "ok": true,
-          "texts_missing": []
-        },
-        "formula_cells": [],
         "pid_csv": {
+          "ok": true,
           "line_numbers": [
             "3",
             "'=1+1",
             "'=1+1",
             ""
-          ],
-          "ok": true
-        }
+          ]
+        },
+        "bom_csv": {
+          "ok": true,
+          "rows": 4,
+          "masses": [
+            "",
+            "",
+            "-12.5",
+            ""
+          ]
+        },
+        "bom_xlsx": {
+          "ok": true,
+          "formula_cells": [],
+          "mass": -12.5,
+          "texts_missing": []
+        },
+        "formula_cells": []
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "export_safety"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 878.6,
+      "task_id": "stale_preview",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 1032.98,
+      "artifacts": [],
       "metrics": {
+        "refused_kind": "stale_revision",
         "changed_handles": [
           "2F"
+        ],
+        "moved_over_a_stale_preview": false,
+        "fresh_apply_ok": true,
+        "start_after_the_refused_apply": [
+          0.0,
+          0.0
         ],
         "final_start": [
           5.0,
           0.0
-        ],
-        "fresh_apply_ok": true,
-        "moved_over_a_stale_preview": false,
-        "refused_kind": "stale_revision",
-        "start_after_the_refused_apply": [
-          0.0,
-          0.0
         ]
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "stale_preview"
+      "stderr_summary": ""
     },
     {
-      "artifacts": [],
-      "duration_ms": 536.65,
+      "task_id": "revision_guarded_edit",
+      "status": "pass",
+      "score": 100.0,
       "message": "",
+      "duration_ms": 608.4,
+      "artifacts": [],
       "metrics": {
-        "edits_applied": [
-          true,
-          true
-        ],
-        "refusal": {
-          "actual_revision": 3,
-          "expected_revision": 1,
-          "kind": "stale_revision"
-        },
         "revisions": [
           1,
           2,
           3
         ],
+        "edits_applied": [
+          true,
+          true
+        ],
         "stale_refused": true,
+        "refusal": {
+          "kind": "stale_revision",
+          "expected_revision": 1,
+          "actual_revision": 3
+        },
+        "unchanged_after_refusal": true,
         "start_after_edits": [
           2.0,
           0.0
-        ],
-        "unchanged_after_refusal": true
+        ]
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "revision_guarded_edit"
+      "stderr_summary": ""
     },
     {
+      "task_id": "pid_file_roundtrip",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 398.21,
       "artifacts": [
         {
           "filename": "pid_file_roundtrip.dxf",
-          "sha256": "da0222f265007faaba36c43750d5c292e8c763318bdca2a15632f6732ffa87ff",
-          "size_bytes": 39239
+          "size_bytes": 39239,
+          "sha256": "9e1ab151644384179d5c6fa7d7de0df987342548b312ab7e16c5fad88920ec4f"
         }
       ],
-      "duration_ms": 219.58,
-      "message": "",
       "metrics": {
-        "dangling": 0,
-        "edges": 4,
-        "edges_equal": true,
-        "equipment_equal": true,
-        "index_equal": true,
-        "line_numbers_equal": true,
         "nodes": 5,
-        "tags_equal": true
+        "edges": 4,
+        "dangling": 0,
+        "tags_equal": true,
+        "edges_equal": true,
+        "line_numbers_equal": true,
+        "index_equal": true,
+        "equipment_equal": true
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "pid_file_roundtrip"
+      "stderr_summary": ""
     },
     {
+      "task_id": "foreign_edit_verified",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 195.11,
       "artifacts": [
         {
           "filename": "foreign_plate.dxf",
-          "sha256": "8b1af01fc0ab0a0a5207313aaec76b6f3de69c2616735eedb68fe1f8b4ded587",
-          "size_bytes": 19129
+          "size_bytes": 19129,
+          "sha256": "ea2986abba3efdfc8dd0bc3fda25e151641a5e7d5ffea3bacbd77b3ef4ccb8ef"
         },
         {
           "filename": "foreign_plate_repaired.dxf",
-          "sha256": "3263b64bb4d6495293b2ae9dad89ebd19ef4a04720c8d4d6194508399c912d50",
-          "size_bytes": 19129
+          "size_bytes": 19129,
+          "sha256": "91a6c21ebf6e6bdba3cf9602885e4167843c730c0f365801887f3b8ef1bab6d9"
         }
       ],
-      "duration_ms": 135.24,
-      "message": "",
       "metrics": {
+        "before": {
+          "status": "fail",
+          "failed": [
+            "H3"
+          ]
+        },
+        "repaired_handle": "32",
+        "precondition_held": true,
         "after": {
+          "status": "pass",
           "failed": [],
           "measured": {
             "H1": 10.0,
@@ -1110,131 +1134,109 @@
             "H4": 10.0,
             "N": 4.0,
             "P": 60.0
-          },
-          "status": "pass"
-        },
-        "before": {
-          "failed": [
-            "H3"
-          ],
-          "status": "fail"
+          }
         },
         "diff": {
-          "added": 0,
           "changed": 1,
+          "added": 0,
           "removed": 0
-        },
-        "precondition_held": true,
-        "repaired_handle": "32"
+        }
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "foreign_edit_verified"
+      "stderr_summary": ""
     },
     {
+      "task_id": "damaged_dxf_refusal",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 67.73,
       "artifacts": [
         {
           "filename": "truncated.dxf",
-          "sha256": "2aa92b1fdd62492dea67ef2a7f18a5bf3b99db9f84170f6769f00662f93e34b2",
-          "size_bytes": 12445
+          "size_bytes": 12445,
+          "sha256": "41486f3173e9140eba1a4eb8fb7ff7d04d2917bf36b8d43b9de921e5d1b35e2f"
         },
         {
           "filename": "not_a_drawing.dxf",
-          "sha256": "6d800db0cf8c6f288f522e9a9f424b91ad2e9eccebe628de8e15462950db0955",
-          "size_bytes": 176
+          "size_bytes": 176,
+          "sha256": "6d800db0cf8c6f288f522e9a9f424b91ad2e9eccebe628de8e15462950db0955"
         }
       ],
-      "duration_ms": 46.95,
-      "message": "",
       "metrics": {
         "cases": {
-          "not_dxf": {
-            "error": "OSError: File 'not_a_drawing.dxf' is not a DXF file.",
-            "named": true,
-            "refused": true
-          },
           "truncated": {
+            "refused": true,
             "error": "DXFStructureError: DXFStructureError: missing ENDSEC tag.",
-            "named": true,
-            "refused": true
+            "named": true
+          },
+          "not_dxf": {
+            "refused": true,
+            "error": "OSError: File 'not_a_drawing.dxf' is not a DXF file.",
+            "named": true
           }
         },
         "document_kept": true,
         "entity_count_after": 1,
         "recover": "not in 1.7.0 (B09, 1.7.1)"
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "damaged_dxf_refusal"
+      "stderr_summary": ""
     },
     {
+      "task_id": "dimension_binding",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 346.76,
       "artifacts": [
         {
           "filename": "dimension_binding.dxf",
-          "sha256": "1fb11b13b52c3504cdf09fc11a5c80d7be7a888d379df4dac10f6e0fe3104941",
-          "size_bytes": 51223
+          "size_bytes": 51223,
+          "sha256": "00a61e2fc17aed46d624d7a21590938548ad7909ac3afaa279f3f6cae3b98254"
         }
       ],
-      "duration_ms": 73.34,
-      "message": "",
       "metrics": {
-        "accepted": false,
+        "rows": {
+          "D1": {
+            "status": "pass",
+            "measured": 42.0,
+            "displayed": 42.0,
+            "dimension_findings": []
+          },
+          "D2": {
+            "status": "pass",
+            "measured": 40.0,
+            "displayed": 42.0,
+            "dimension_findings": [
+              "text_override_disagrees_with_geometry"
+            ]
+          },
+          "D3": {
+            "status": "pass",
+            "measured": 21.0,
+            "displayed": 42.0,
+            "dimension_findings": [
+              "dimlfac_scales_the_displayed_value"
+            ]
+          },
+          "D4": {
+            "status": "pass",
+            "measured": 40.0,
+            "displayed": 40.0,
+            "dimension_findings": []
+          }
+        },
         "findings": {
           "D2": "dimension_mismatch",
           "D3": "dimension_mismatch"
         },
-        "rows": {
-          "D1": {
-            "dimension_findings": [],
-            "displayed": 42.0,
-            "measured": 42.0,
-            "status": "pass"
-          },
-          "D2": {
-            "dimension_findings": [
-              "text_override_disagrees_with_geometry"
-            ],
-            "displayed": 42.0,
-            "measured": 40.0,
-            "status": "pass"
-          },
-          "D3": {
-            "dimension_findings": [
-              "dimlfac_scales_the_displayed_value"
-            ],
-            "displayed": 42.0,
-            "measured": 21.0,
-            "status": "pass"
-          },
-          "D4": {
-            "dimension_findings": [],
-            "displayed": 40.0,
-            "measured": 40.0,
-            "status": "pass"
-          }
-        }
+        "accepted": false
       },
-      "score": 100.0,
-      "status": "pass",
-      "stderr_summary": "",
       "stdout_summary": "",
-      "task_id": "dimension_binding"
+      "stderr_summary": ""
     }
   ],
-  "schema_version": "2.0",
-  "summary": {
-    "attempted": 31,
-    "coverage_percent": 100.0,
-    "environment_blocked": 0,
-    "not_run": 0,
-    "passed": 31,
-    "score": 100.0,
-    "supported": 31,
-    "unsupported": 0
-  },
-  "timeout_seconds": 180.0
+  "artifact_capture": "Copy returned artifacts immediately after each original task; no fixture/gate/score changes.",
+  "capture_script_sha256": "a31310bf54b83cdc8a89be8d79d34f449972870f9e189f45bf05e1ee5ae3b83f"
 }

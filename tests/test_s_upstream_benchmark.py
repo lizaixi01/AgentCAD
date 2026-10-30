@@ -4,6 +4,7 @@ from copy import deepcopy
 import importlib.util
 import math
 from pathlib import Path
+from types import SimpleNamespace
 
 import ezdxf
 import pytest
@@ -84,3 +85,20 @@ def test_geometry_claim_cannot_pass_with_a_wrong_saved_line(tmp_path, monkeypatc
     monkeypatch.setattr(adapter, "inspect", claimed_inspection)
     monkeypatch.setattr(benchmark, "strict_result", lambda task, passed, *args, **kw: passed)
     assert not asyncio.run(adapter.task_core_geometry())
+
+
+@pytest.mark.parametrize("as_dict", [False, True])
+def test_reference_artifacts_survive_later_task_overwrites(tmp_path, as_dict):
+    spec = importlib.util.spec_from_file_location("capture_reference", SOURCE.with_name("capture_reference.py"))
+    capture = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(capture)
+    original = tmp_path / "shared.dxf"
+    original.write_bytes(b"task A original bytes")
+    artifact = {"path": str(original), "filename": original.name} if as_dict else str(original)
+    result = SimpleNamespace(task_id="A", status="pass", score=100, metrics={"count": 1}, artifacts=[artifact])
+    capture.preserve_artifacts(result, tmp_path / "retained")
+    original.write_bytes(b"task B overwrites the same path")
+    kept = result.artifacts[0]
+    target = Path(kept["path"] if as_dict else kept)
+    assert target.read_bytes() == b"task A original bytes"
+    assert result.status == "pass" and result.score == 100 and result.metrics == {"count": 1}

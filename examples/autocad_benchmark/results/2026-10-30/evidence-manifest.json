@@ -1,8 +1,13 @@
 {
   "archive": "evidence.zip",
-  "sha256": "ddfaf1884b6f2f302c9df932ffcc6953e0177ebfab6c670e2d268f706a406b38",
-  "size_bytes": 715640,
+  "sha256": "eef25cdd4cd922e19cd008e9975a05c7d8eacf7c573201d5b1924d886fb8ae09",
+  "size_bytes": 812018,
   "entries": [
+    {
+      "path": "adapter/capture_reference.py",
+      "size_bytes": 2927,
+      "sha256": "a31310bf54b83cdc8a89be8d79d34f449972870f9e189f45bf05e1ee5ae3b83f"
+    },
     {
       "path": "adapter/run.py",
       "size_bytes": 35769,
@@ -10,8 +15,8 @@
     },
     {
       "path": "adapter/test_s_upstream_benchmark.py",
-      "size_bytes": 3588,
-      "sha256": "20c2f3b3f153bd641a0adfbb105f6296c4ea613f2f95ff4a42c01a0449a0b7f9"
+      "size_bytes": 4614,
+      "sha256": "474949837c60d1d8add1d2498949637e545ac247701df0a577e773075691b7eb"
     },
     {
       "path": "agentcad/artifacts/events.jsonl",
@@ -606,17 +611,17 @@
     {
       "path": "reference/artifacts/arch_roundtrip.dxf",
       "size_bytes": 82827,
-      "sha256": "5d324cdd38b62bccf1cf1558199a3f11735ba946c81e02fbb3df669609eceb7e"
+      "sha256": "cad5e8c1915c756e7f87819333244be735d2d779c163e29dc074aafa76c54239"
     },
     {
       "path": "reference/artifacts/delivery/drawing.dxf",
       "size_bytes": 21138,
-      "sha256": "910f4f7af5e1bf655af13bea7edcb661f859ddf6e1329f091ee330dc99f24a6c"
+      "sha256": "ba088f273e77e64da9f10354fe40c4b36d8124f2d52eff716e6c1821501e8a04"
     },
     {
       "path": "reference/artifacts/delivery/manifest.json",
-      "size_bytes": 8912,
-      "sha256": "d97e9368852b92e09468b3e8b68e1465e4ce9ae7fb5885944ae2418e83596a1e"
+      "size_bytes": 8909,
+      "sha256": "01947cd25822f70b58cbc6572cdd33e6c4a95f9eceb7226ab053ee48aa3b284d"
     },
     {
       "path": "reference/artifacts/delivery/validation.json",
@@ -626,7 +631,7 @@
     {
       "path": "reference/artifacts/dimension_binding.dxf",
       "size_bytes": 51223,
-      "sha256": "1fb11b13b52c3504cdf09fc11a5c80d7be7a888d379df4dac10f6e0fe3104941"
+      "sha256": "00a61e2fc17aed46d624d7a21590938548ad7909ac3afaa279f3f6cae3b98254"
     },
     {
       "path": "reference/artifacts/export_safety/bom.csv",
@@ -636,7 +641,7 @@
     {
       "path": "reference/artifacts/export_safety/bom.xlsx",
       "size_bytes": 5085,
-      "sha256": "53f114ca66b2f33bef167c60337efafa40bff9984b405e887be9e09bb9320e88"
+      "sha256": "0b8d3c0bb05de80afc8456b92820e9a1258f80cf16f492e19fef181e4c76d02d"
     },
     {
       "path": "reference/artifacts/export_safety/lines.csv",
@@ -646,22 +651,22 @@
     {
       "path": "reference/artifacts/foreign_plate.dxf",
       "size_bytes": 19129,
-      "sha256": "8b1af01fc0ab0a0a5207313aaec76b6f3de69c2616735eedb68fe1f8b4ded587"
+      "sha256": "ea2986abba3efdfc8dd0bc3fda25e151641a5e7d5ffea3bacbd77b3ef4ccb8ef"
     },
     {
       "path": "reference/artifacts/foreign_plate_repaired.dxf",
       "size_bytes": 19129,
-      "sha256": "3263b64bb4d6495293b2ae9dad89ebd19ef4a04720c8d4d6194508399c912d50"
+      "sha256": "91a6c21ebf6e6bdba3cf9602885e4167843c730c0f365801887f3b8ef1bab6d9"
     },
     {
       "path": "reference/artifacts/intact.dxf",
       "size_bytes": 24891,
-      "sha256": "9f6e9c9eff8ff9ba6d8b829b916aaa8ce301bbc87d04c9590a164de1729dc97d"
+      "sha256": "a3f6a5d6143480f5a3afafd7bad47a92ff33e557e872e9972ba05fec21a8dadd"
     },
     {
       "path": "reference/artifacts/mech_assembly.dxf",
-      "size_bytes": 107970,
-      "sha256": "ebe80bc5a2cffbe0476dee6d35cf9dc74cb5a82479d623cb9bfde8e054baeabb"
+      "size_bytes": 107968,
+      "sha256": "e268d5846f7f134d50d0a711cb8823d8684d4bc677ee3ec9ccd550f4b4bdf30e"
     },
     {
       "path": "reference/artifacts/not_a_drawing.dxf",
@@ -671,47 +676,147 @@
     {
       "path": "reference/artifacts/page_setup_truth/untitled-Layout1-ansi_b.pdf",
       "size_bytes": 1287,
-      "sha256": "f5bdf071a5edc3c7fbcbeb5d52b2aa40dd3ae00b8f863b78239aec9c78de7a96"
+      "sha256": "87a953ecd1708ddbbb2af9009f4cf09ac97005ae87d29404dff6f3512a77aa42"
     },
     {
       "path": "reference/artifacts/page_setup_truth/untitled-Layout1-iso_a3.pdf",
       "size_bytes": 1287,
-      "sha256": "968e7fd2d1c1844e0bf98547acdf2cd460f5bd272b287421c584abecc6677b51"
+      "sha256": "55f7da9bfd20cd827853c70626a290ce7e84642e57e2be590c6fcaa15d3a0826"
     },
     {
       "path": "reference/artifacts/pid_file_roundtrip.dxf",
       "size_bytes": 39239,
-      "sha256": "da0222f265007faaba36c43750d5c292e8c763318bdca2a15632f6732ffa87ff"
+      "sha256": "9e1ab151644384179d5c6fa7d7de0df987342548b312ab7e16c5fad88920ec4f"
     },
     {
       "path": "reference/artifacts/plant_pair/layout.dxf",
       "size_bytes": 40501,
-      "sha256": "6910f7aad1665a414d44b080bcbb8973209e8d3dad8505e186e2f79aa4e381bf"
+      "sha256": "20511ff01baeeba2dc190f65f984575d164c3a8d717a436cca03c511647b7e93"
     },
     {
       "path": "reference/artifacts/plant_pair/pid.dxf",
       "size_bytes": 33767,
-      "sha256": "7a1c92128f5e9e171b18d9c7b28bf60bd7d643e9c8bc625d8eedf6d2a10a5ae5"
+      "sha256": "fe421bf0b5ef363e12c155eb3fc39cbc033356d91fc22a9fd86c8cfdc47a33ba"
     },
     {
       "path": "reference/artifacts/requirements_roundtrip.dxf",
-      "size_bytes": 26872,
-      "sha256": "8e1625cd6c8dad91701400909fee089404a42a50b3e9d505e8b92e67b04fb11e"
+      "size_bytes": 26874,
+      "sha256": "fd5c08977b88d8b0aa65b9d86ea0f3b774e7a5d74f76f370020dd2e7f1f30cfa"
     },
     {
       "path": "reference/artifacts/roundtrip.dxf",
       "size_bytes": 18448,
-      "sha256": "39e981c3685230e7b43bcc75daec6ec16ff591e39c30acbcbdff9ac372110008"
+      "sha256": "1123b6bdc219725df14a7a09b0c3b95b4be844fdd6a25d0d628deca196244b81"
     },
     {
       "path": "reference/artifacts/truncated.dxf",
       "size_bytes": 12445,
-      "sha256": "2aa92b1fdd62492dea67ef2a7f18a5bf3b99db9f84170f6769f00662f93e34b2"
+      "sha256": "41486f3173e9140eba1a4eb8fb7ff7d04d2917bf36b8d43b9de921e5d1b35e2f"
     },
     {
       "path": "reference/report.json",
-      "size_bytes": 31599,
-      "sha256": "8b9d20d373308eaada78bca233fd1ad82680fcb30a170f6c1982174eecb99461"
+      "size_bytes": 33056,
+      "sha256": "ef2571ef94d7f19b40525ff44c62f849cc7987dedd6a093cfd364da57a26c17e"
+    },
+    {
+      "path": "reference/retained/arch_roundtrip/0/arch_roundtrip.dxf",
+      "size_bytes": 82827,
+      "sha256": "cad5e8c1915c756e7f87819333244be735d2d779c163e29dc074aafa76c54239"
+    },
+    {
+      "path": "reference/retained/auditable_delivery/0/manifest.json",
+      "size_bytes": 8909,
+      "sha256": "01947cd25822f70b58cbc6572cdd33e6c4a95f9eceb7226ab053ee48aa3b284d"
+    },
+    {
+      "path": "reference/retained/damaged_dxf_refusal/0/truncated.dxf",
+      "size_bytes": 12445,
+      "sha256": "41486f3173e9140eba1a4eb8fb7ff7d04d2917bf36b8d43b9de921e5d1b35e2f"
+    },
+    {
+      "path": "reference/retained/damaged_dxf_refusal/1/not_a_drawing.dxf",
+      "size_bytes": 176,
+      "sha256": "6d800db0cf8c6f288f522e9a9f424b91ad2e9eccebe628de8e15462950db0955"
+    },
+    {
+      "path": "reference/retained/dimension_binding/0/dimension_binding.dxf",
+      "size_bytes": 51223,
+      "sha256": "00a61e2fc17aed46d624d7a21590938548ad7909ac3afaa279f3f6cae3b98254"
+    },
+    {
+      "path": "reference/retained/dxf_roundtrip/0/roundtrip.dxf",
+      "size_bytes": 18448,
+      "sha256": "1123b6bdc219725df14a7a09b0c3b95b4be844fdd6a25d0d628deca196244b81"
+    },
+    {
+      "path": "reference/retained/export_safety/0/lines.csv",
+      "size_bytes": 363,
+      "sha256": "e82c7cfc2d800fd9630afd3c0377905a2ebb3f16333b982ea1d585a7f79c10e0"
+    },
+    {
+      "path": "reference/retained/export_safety/1/bom.csv",
+      "size_bytes": 167,
+      "sha256": "9fa6874359e3d12f20ea61e35b0eb56e08fe59b3c8209e92f0e99c9f499bea51"
+    },
+    {
+      "path": "reference/retained/export_safety/2/bom.xlsx",
+      "size_bytes": 5085,
+      "sha256": "0b8d3c0bb05de80afc8456b92820e9a1258f80cf16f492e19fef181e4c76d02d"
+    },
+    {
+      "path": "reference/retained/foreign_edit_verified/0/foreign_plate.dxf",
+      "size_bytes": 19129,
+      "sha256": "ea2986abba3efdfc8dd0bc3fda25e151641a5e7d5ffea3bacbd77b3ef4ccb8ef"
+    },
+    {
+      "path": "reference/retained/foreign_edit_verified/1/foreign_plate_repaired.dxf",
+      "size_bytes": 19129,
+      "sha256": "91a6c21ebf6e6bdba3cf9602885e4167843c730c0f365801887f3b8ef1bab6d9"
+    },
+    {
+      "path": "reference/retained/mech_assembly/0/mech_assembly.dxf",
+      "size_bytes": 107968,
+      "sha256": "e268d5846f7f134d50d0a711cb8823d8684d4bc677ee3ec9ccd550f4b4bdf30e"
+    },
+    {
+      "path": "reference/retained/page_setup_truth/0/untitled-Layout1-ansi_b.pdf",
+      "size_bytes": 1287,
+      "sha256": "87a953ecd1708ddbbb2af9009f4cf09ac97005ae87d29404dff6f3512a77aa42"
+    },
+    {
+      "path": "reference/retained/page_setup_truth/1/untitled-Layout1-iso_a3.pdf",
+      "size_bytes": 1287,
+      "sha256": "55f7da9bfd20cd827853c70626a290ce7e84642e57e2be590c6fcaa15d3a0826"
+    },
+    {
+      "path": "reference/retained/pid_file_roundtrip/0/pid_file_roundtrip.dxf",
+      "size_bytes": 39239,
+      "sha256": "9e1ab151644384179d5c6fa7d7de0df987342548b312ab7e16c5fad88920ec4f"
+    },
+    {
+      "path": "reference/retained/requirements_roundtrip/0/requirements_roundtrip.dxf",
+      "size_bytes": 26874,
+      "sha256": "fd5c08977b88d8b0aa65b9d86ea0f3b774e7a5d74f76f370020dd2e7f1f30cfa"
+    },
+    {
+      "path": "reference/retained/takeoff_roundtrip/0/pid.dxf",
+      "size_bytes": 33767,
+      "sha256": "3f72d0310033bf037407af027b71c0af63f62c0c17393ca654686fcb6035bd31"
+    },
+    {
+      "path": "reference/retained/takeoff_roundtrip/1/layout.dxf",
+      "size_bytes": 40501,
+      "sha256": "aefa9c1b16b81b9760cbeb020f21078296e6e718caaba2b745e5450d2efc4b18"
+    },
+    {
+      "path": "reference/retained/understand_foreign/0/layout.dxf",
+      "size_bytes": 40501,
+      "sha256": "20511ff01baeeba2dc190f65f984575d164c3a8d717a436cca03c511647b7e93"
+    },
+    {
+      "path": "reference/retained/understand_foreign/1/pid.dxf",
+      "size_bytes": 33767,
+      "sha256": "fe421bf0b5ef363e12c155eb3fc39cbc033356d91fc22a9fd86c8cfdc47a33ba"
     },
     {
       "path": "verification/pytest-full.log",
