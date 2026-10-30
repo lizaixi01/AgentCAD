@@ -275,7 +275,7 @@ def test_demo_draws_and_revises_the_plate(tmp_path):
     linear = sorted((round(d.get_measurement(), 3), round(d.dxf.defpoint.x, 3)) for d in dims if d.dxf.dimtype & 7 == 0)
     assert linear == [(100, -14), (240, 0)]  # the height dimension sits left of the plate, not across the holes
     bore_dim = next(d for d in dims if d.dxf.dimtype & 7 == 3 and d.get_measurement() == pytest.approx(40))
-    assert abs(bore_dim.dxf.defpoint.x - 120) < 20  # the Ø40 callout moved with the bore
+    assert (bore_dim.dxf.defpoint.x + bore_dim.dxf.defpoint4.x) / 2 == pytest.approx(120)  # moved with the bore
     demo.prepare(root)  # a second run starts clean
     assert not (root / "plate.dxf").exists()
 

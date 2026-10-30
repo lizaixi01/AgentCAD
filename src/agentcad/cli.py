@@ -256,7 +256,9 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
             return {"ok": True}, 0
         from .demo import run as run_demo
         try:
-            return {"ok": True}, run_demo(root, open_browser=not a.no_browser)
+            code = run_demo(root, open_browser=not a.no_browser)
+            return ({"ok": True}, 0) if code == 0 else ({"ok": False, "error": {"code": "DEMO_FAILED", "category": "input",
+                                                                                "message": "A demo step failed"}}, code)
         except FileExistsError as exc:
             return {"ok": False, "error": {"code": "FOLDER_NOT_EMPTY", "category": "input", "message": str(exc)}}, 2
     if a.cmd == "mcp" and not a.root:
