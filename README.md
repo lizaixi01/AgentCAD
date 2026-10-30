@@ -53,7 +53,7 @@ AgentCAD gives the agent a CAD runtime instead of a blank Python file:
 
 ## AutoCAD MCP benchmark
 
-**100/100 on U-C4N's v8 runtime matrix: 31/31 tasks passed, tied with AutoCAD MCP Pro.** Checked on 2026-10-30 against the same pinned evaluator. AgentCAD's run uses the upstream runner and its public MCP interface; the reference was also rerun on this machine.
+**100/100 on U-C4N's v8 runtime matrix: 31/31 tasks passed, tied with AutoCAD MCP Pro.** Checked on 2026-10-30: AgentCAD `39fa4b5` and Pro `58a05dd`, using matrix v8 / evaluator v8.1. AgentCAD's run uses the upstream runner and its public MCP interface; the reference was also rerun on this machine.
 
 <p align="center">
   <picture>
@@ -166,7 +166,7 @@ The fixed [U-C4N v8 execution matrix](docs/comparison-upstream-benchmark-v8.md) 
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
 | 3D parts | Parametric FreeCAD parts (`.FCStd`) through the same tools: sketches, pad, pocket, revolve, holes, fillets, chamfers, shells, patterns, lofts, sweeps, helices, driven by named parameters. Edge and face selections survive edits. STEP/STL export and shaded PNG previews. Needs FreeCAD 1.1 (optional) — see [docs/part-3d.md](docs/part-3d.md) |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | Latest recorded regression: 435 passed, 74 skipped (509 collected). Includes 27 golden cases checked against recorded AutoCAD 2027 behaviour; optional AutoCAD/FreeCAD runs are not implied by the headless result. [Evidence and scope](docs/comparison-upstream-benchmark-v8.md) |
+| Tests | Latest recorded regression: 439 passed, 81 skipped (520 collected). Includes 27 golden cases checked against recorded AutoCAD 2027 behaviour; optional AutoCAD/FreeCAD runs are not implied by the headless result. [Evidence and scope](docs/benchmark-leaderboard.md#图表复现) |
 
 Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial software.
 

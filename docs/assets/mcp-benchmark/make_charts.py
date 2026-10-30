@@ -49,7 +49,8 @@ def read_rows():
         tokens = next(r["metrics"] for r in results if r["task_id"] == "token_budget")
         assert tokens["tokenizer"] == "ratio/v1 (estimate)"
         assert tokens["advertised_tools"] == 3 and tokens["ceiling"] == 2000
-        rows.append({**source, "score": summary["score"], "passed": summary["passed"], "tokens": tokens["discovery_tokens"]})
+        product_sha = report.get("adapter_metadata", {}).get("product_sha", report["git_sha"])
+        rows.append({**source, "score": summary["score"], "passed": summary["passed"], "tokens": tokens["discovery_tokens"], "product_sha": product_sha})
     assert [r["id"] for r in rows] == ["agentcad", "autocad-mcp-pro"]
     return data, rows
 
@@ -83,10 +84,12 @@ def draw(theme, data, rows, output, preview=None):
     fig.text(.045, .265, "Estimated tokens, not billed tokens. Both pass the 2,000 ceiling; no extra score is awarded.", color=t["muted"], fontsize=9)
 
     fig.add_artist(plt.Line2D([.045, .955], [.22, .22], color=t["line"], transform=fig.transFigure))
-    fig.text(.045, .167, "AgentCAD: contributor run via upstream runner. Pro: same-machine reference rerun.", color=t["ink"], fontsize=9)
+    fig.text(.045, .167, f"AgentCAD {rows[0]['product_sha'][:7]}: upstream runner. Pro {rows[1]['product_sha'][:7]}: same-machine rerun.", color=t["ink"], fontsize=9)
     fig.text(.045, .128, "Local reproduced results; AgentCAD is not an official upstream listing. No model or speed ranking.", color=t["muted"], fontsize=9)
     fig.text(.045, .071, "Pro's published 93/100 is a separate source-review self-assessment, not this runtime score.", color=t["muted"], fontsize=9)
     fig.savefig(output, facecolor=t["bg"], metadata={"Date": None})
+    normalized = "\n".join(line.rstrip() for line in output.read_text(encoding="utf-8").splitlines()) + "\n"
+    output.write_text(normalized, encoding="utf-8", newline="\n")
     if preview:
         preview.parent.mkdir(parents=True, exist_ok=True)
         fig.savefig(preview, dpi=150, facecolor=t["bg"])
@@ -105,7 +108,7 @@ def main():
             target = Path(temporary) / destination.name if args.check else destination
             preview = args.preview_dir / f"leaderboard-{theme}.png" if args.preview_dir else None
             draw(theme, data, rows, target, preview)
-            if args.check and target.read_bytes() != destination.read_bytes():
+            if args.check and target.read_bytes() != destination.read_bytes().replace(b"\r\n", b"\n"):
                 raise SystemExit(f"Regenerate {destination}")
     print("Two v8 reports verified; light/dark figures " + ("match" if args.check else "generated"))
 
