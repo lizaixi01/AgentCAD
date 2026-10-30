@@ -2,7 +2,7 @@
 
 Every benchmark and comparison AgentCAD has run, with what it compares, its caveats and links to the full reports, logs and graders. The [README](../README.md#results-at-a-glance) keeps one line per benchmark.
 
-The first three sections and the first seven rows of the report table were moved from the README as of `0b93e9b`. Their text, numbers, dates, commit pins and caveats are unchanged; only the first heading (it was "Results") and the relative links, which now resolve from this folder, differ.
+The first three sections were moved from the README as of `0b93e9b`, with three more README passages: the paragraph that ends the AutoCAD MCP benchmark section (from "What's inside"), and the first seven rows of the report table and the note below it (from "Documentation"). Their text, numbers, dates, commit pins and caveats are unchanged; only the first heading (it was "Results") and the relative links, which now resolve from this folder, differ.
 
 ## Timed trials and BenchCAD Vision2Code
 
@@ -72,18 +72,21 @@ The work repaired strict delivery checks, native tolerances, curved-pipe connect
 
 **9/9 explicit submissions, 53.45/100 mean of the six task means.** Codex CLI with GPT-6.1 Sol at reasoning effort max ran BenchCAD 2's nine public development samples, covering all six tasks, through AgentCAD snapshot `2583516` and BenchCAD `v2.1`, on 2026-10-30. This is a custom MCP agent harness, not BenchCAD's provider harness, the gated 100-case Core set or a leaderboard result. The development samples check integration and are too small to estimate general performance.
 
-| Task | Samples | Mean / 100 |
-|---|---:|---:|
-| T1 part from an engineering drawing | 1 | 78.22 |
-| T2 assembly from supplied parts | 2 | 11.79 |
-| T3 part from four views | 2 | 58.46 |
-| T4 parts and assembly from views | 1 | 13.69 |
-| T5 assembly from drawn and supplied parts | 1 | 59.16 |
-| T6 connection graph from PCB photos (model only) | 2 | 99.40 |
+**Controlled Astra / Sol replay: GPT-6 Astra / max 56.79 vs Sol / max 53.45** on the original nine first attempts, with the same `2583516` snapshot, prompts, inputs and 3,600-second / 100-call per-case limits. Astra submitted 8/9: T6/case2 ended with connection/request errors and no answer, so the predefined no-submission rule assigns zero. One additional infrastructure recovery also failed and is reported separately, without replacing the first-attempt results. T1–T5 task means are 58.15 vs 44.26.
 
-T2 tests assembly reasoning with supplied parts, and AgentCAD has no native assembly engine; T6 is model-only visual graph reasoning, and AgentCAD has no schematic engine. The six-task aggregate is therefore not AgentCAD CAD-engine performance alone.
+| Task | Samples | Sol / 100 | Astra / 100 |
+|---|---:|---:|---:|
+| T1 part from an engineering drawing | 1 | 78.22 | 71.64 |
+| T2 assembly from supplied parts | 2 | 11.79 | 53.51 |
+| T3 part from four views | 2 | 58.46 | 59.11 |
+| T4 parts and assembly from views | 1 | 13.69 | 16.22 |
+| T5 assembly from drawn and supplied parts | 1 | 59.16 | 90.26 |
+| T6 connection graph from PCB photos (model only) | 2 | 99.40 | 50.00 |
+| **Mean of the six task means** | **9** | **53.45** | **56.79** |
 
-[Summary and protocol](../examples/benchcad2/README.md) · [2026-10-30 report (Chinese)](../examples/benchcad2/report-2026-10-30.md) · [Metrics and provenance](../examples/benchcad2/results-2026-10-30.json)
+T2 tests assembly reasoning with supplied parts, and AgentCAD has no native assembly engine; T6 is model-only visual graph reasoning, and AgentCAD has no schematic engine. The six-task aggregate is therefore not AgentCAD CAD-engine performance alone. Both runs are development-sample results, not Core rankings.
+
+[Summary and protocol](../examples/benchcad2/README.md) · [Sol report (Chinese)](../examples/benchcad2/report-2026-10-30.md) · [Sol metrics and provenance](../examples/benchcad2/results-2026-10-30.json) · [Astra / Sol report (Chinese)](../examples/benchcad2/comparison-astra-sol-2026-10-30.md) · [Comparison and provenance](../examples/benchcad2/comparison-astra-sol-2026-10-30.json) · [Astra first nine](../examples/benchcad2/results-astra-first-attempts-2026-10-30.json) · [Astra all attempts](../examples/benchcad2/results-astra-2026-10-30.json)
 
 ## Parametric CAD Bench V3 pilot
 

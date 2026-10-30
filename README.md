@@ -30,7 +30,7 @@ AgentCAD is an open-source program you install on your machine, the CAD engine y
 
 ## Get started in two minutes
 
-Install from this repository. The `agentcad` package on PyPI is an unrelated project. When AgentCAD is published there, it will be as `agentcad-runtime`. To let the agent build 3D parts from CadQuery scripts, as in the BenchCAD run, install with `-e ".[dev,cadquery]"` and pass `--allow-scripts` to `mcp-config` below.
+Install from this repository. The `agentcad` package on PyPI is an unrelated project. When AgentCAD is published there, it will be as `agentcad-runtime`. To let the agent build 3D parts from CadQuery scripts, as in the BenchCAD run, install with `-e ".[dev,cadquery]"` and add `--allow-scripts` before `mcp-config` in the commands below.
 
 ```bash
 git clone https://github.com/lizaixi01/AgentCAD.git
@@ -61,7 +61,7 @@ uv pip install --python .venv -e ".[dev]"
 
 ## Why AgentCAD
 
-Your agent can already write code. It still can't do CAD: asked to edit a drawing, it writes a throwaway script against a DXF library. The script overwrites the file, there is no undo, nobody checks the result, and the next session has no idea what the last one changed. AgentCAD gives the agent a CAD runtime instead:
+Your agent can already write code. It still can't do CAD: asked to edit a drawing, it writes a throwaway script against a DXF library. That works until it doesn't: the script overwrites the file, there is no undo, nobody checks the result, and the next session has no idea what the last one changed. AgentCAD gives the agent a CAD runtime instead:
 
 - **Operations, and scripts held to the same rules.** 71 typed 2D operations (draw, edit, annotate, layers, blocks, sheets and viewports, industry symbols) and 19 for 3D parts (sketch, pad, pocket, revolve, hole, fillet, pattern, loft, sweep…), each with a JSON schema. Batches are atomic: if one step fails, the file is untouched. A 3D part can also start from a CadQuery script, which runs as one transaction: validated, checkpointed and undoable like any operation.
 - **Every change is reversible.** Checkpoints before every edit, a diff of what changed, and a durable journal, so a new session can see and undo what an earlier one did.
@@ -85,10 +85,10 @@ Your agent can already write code. It still can't do CAD: asked to edit a drawin
 | [BenchCAD Vision2Code](docs/benchmarks.md#timed-trials-and-benchcad-vision2code), 100 tasks | Mean IoU: Claude Code 0.745 vs 0.682; Codex 0.876 vs 0.918 | Through AgentCAD vs. the same agent writing CadQuery itself; our run, not the BenchCAD leaderboard |
 | [U-C4N v8 runtime matrix](docs/benchmarks.md#autocad-mcp-benchmark) | 31/31 (100/100), tied with AutoCAD MCP Pro | 31 fixed tasks without an LLM, rerun locally; not an official listing |
 | [Source-capability review](docs/benchmarks.md#source-capability-comparison) | 98 vs 96 for AutoCAD MCP Pro | Both pinned sources on our frozen local rubric, scored by an AI reviewer we asked for; not certification or an upstream ranking |
-| [BenchCAD 2](docs/benchmarks.md#benchcad-2-development-samples), 9 development samples | 53.45/100 | Codex with GPT-6.1 Sol through AgentCAD, no comparison arm; not the Core set or a leaderboard result |
+| [BenchCAD 2](docs/benchmarks.md#benchcad-2-development-samples), 9 development samples | 53.45/100 with GPT-6.1 Sol; 56.79 with GPT-6 Astra | Two models in Codex, both through AgentCAD; no run without AgentCAD, and not the Core set or a leaderboard result |
 | [Parametric CAD Bench V3 pilot](docs/benchmarks.md#parametric-cad-bench-v3-pilot) | 55.43/100 on 6 tasks | Codex with GPT-6.1 Sol building native PartDesign parts, no comparison arm; not a leaderboard submission |
 
-**Where it doesn't win yet:** Codex still rebuilt the BenchCAD parts more accurately by writing CadQuery itself (0.918 vs 0.876), though through AgentCAD it took a third less time. For a batch of near-identical drawings, one generated script is faster and cheaper. AgentCAD sessions also read about 2× the input tokens.
+**Where it doesn't win yet:** Codex still rebuilt the BenchCAD Vision2Code parts more accurately by writing CadQuery itself (0.918 vs 0.876), though through AgentCAD it took a third less time. For a batch of near-identical drawings, one generated script is faster and cheaper. AgentCAD sessions also read about 2× the input tokens.
 
 ## Other ways to use it
 
@@ -105,7 +105,7 @@ Your agent can already write code. It still can't do CAD: asked to edit a drawin
 | Live AutoCAD | `autocad_live` (Windows, COM) shows the agent's drawing in the user's running AutoCAD and pulls the user's edits back as a checkpointed, validated change. Raw command lines are off by default |
 | 3D parts | Parametric FreeCAD parts driven by named parameters; edge and face selections survive edits; STEP/STL export and shaded PNG previews. Needs FreeCAD 1.1 (optional): [docs/part-3d.md](docs/part-3d.md) |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | Latest recorded regression at `b4c0466`: 685 passed, 8 skipped (CadQuery-dependent), with AutoCAD 2027 and FreeCAD 1.1.4 enabled. [Windows/Linux/macOS CI results](docs/source-capability-review.md#verification) are reported separately |
+| Tests | Latest recorded regression at `b4c0466`: 685 passed, 8 skipped (CadQuery-dependent), with AutoCAD 2027 and FreeCAD 1.1.4 enabled. [Windows/Linux/macOS CI results](docs/source-capability-review.md#verification) and their optional-backend skips are reported separately |
 
 ## Where it stands
 
