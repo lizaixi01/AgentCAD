@@ -108,6 +108,8 @@ def test_command_limits_tools_and_does_not_load_personal_configuration(tmp_path)
     server = settings["mcp_servers"]["agentcad"]
     assert server["required"] is True
     assert server["env"]["AGENTCAD_ALLOW_SCRIPTS"] == "0"
+    assert server["env"]["AGENTCAD_TOOL_PROFILE"] == "full"
+    assert "measure_entities" in server["enabled_tools"]
     assert "run_script" not in server["enabled_tools"]
     assert "save_benchmark_stage" in server["enabled_tools"]
 

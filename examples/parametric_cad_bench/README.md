@@ -11,10 +11,16 @@ The [machine-readable results](pilot-2026-10-30.json) include hashes and the
 models, solutions or input drawings are redistributed here.
 
 The separate [drawing diagnosis and regression](drawing-diagnosis-2026-10-30.md)
-preserves the original two drawing tasks and all attempts: the latest plate
+preserves the original two drawing tasks and all attempts: that iteration's plate
 scores **34.20** and tube **66.67**, for a **50.43** two-task mean. It also records
 the intervening failed plate attempt and distinguishes manually repaired
 diagnostic controls from fresh-agent results.
+
+The next [face-measurement and view-correspondence iteration](section-evidence-2026-10-30.md)
+fixes an inspection-filter defect and adds final-solid face-gap checks. Its
+fresh scores are **30.77 / 66.89**, mean **48.83**: a regression from 50.43.
+The plate still assigns a dimension to the wrong surfaces; the tube corrects
+its handedness. The report preserves this outcome and the new native artifacts.
 
 V3 has 30 text-to-CAD creation tasks, 30 create-and-edit tasks and 40 tasks that
 reconstruct a part from an engineering drawing. The last category evaluates
