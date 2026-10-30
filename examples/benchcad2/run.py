@@ -143,8 +143,9 @@ Interface:
   export each modelled part to submission/parts/<part_id>.step. AgentCAD does not
   have a native assembly model: benchmark adapters handle supplied STEP inspection,
   previews and JSON placements. inspect_step describes and previews supplied STEPs.
-- export_drawing can show previews of your parts. Reference comparison is available
-  but only compares silhouettes, and the three approximate cameras are perturbed.
+- export_drawing can show previews of your parts. Reference comparison provides
+  approximate visual feedback, not the BenchCAD geometry score. Follow the tool's
+  camera and image-layout instructions.
 - preview_assembly takes proposed instances and shows an independent four-view image.
 - When finished, submit_answer(path='submission.step') for a single part,
   submit_answer(instances=[...]) for an assembly, or submit_answer(graph={{...}})

@@ -158,7 +158,9 @@ class TaskFiles:
 
 def server(root: Path, kind: str):
     files = TaskFiles(root, kind)
-    mcp = build_server(files.policy)
+    # Keep the benchmark's direct tool surface stable even if the caller uses
+    # the product's optional discovery profile in its normal sessions.
+    mcp = build_server(files.policy, profile="full")
 
     @mcp.tool()
     def read_workspace(path: str = ".", box: list[int] | None = None) -> list:

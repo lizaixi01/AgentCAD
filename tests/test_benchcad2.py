@@ -40,6 +40,16 @@ def test_explicit_model_effort_and_no_unrelated_tools(tmp_path):
     assert 'web_search="disabled"' in cmd
 
 
+def test_adapter_and_native_tools_are_visible_under_discovery_environment(tmp_path, monkeypatch):
+    import asyncio
+
+    monkeypatch.setenv("AGENTCAD_TOOL_PROFILE", "discovery")
+    app = tools.server(tmp_path, "part")
+    names = {tool.name for tool in asyncio.run(app.list_tools())}
+    assert {"run_script", "export_drawing", "read_workspace", "inspect_step",
+            "preview_assembly", "submit_answer"} <= names
+
+
 @pytest.mark.parametrize("matrix", [
     [[2, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],
     [[-1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]],

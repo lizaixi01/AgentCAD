@@ -11,6 +11,9 @@ performance. The user chose them because Core access was unavailable.
 53.45/100 mean of the six task means**. The measured AgentCAD snapshot is
 `2583516`; check out that commit in an isolated worktree to reproduce the
 historical run. Later main-branch features belong to a new experiment.
+After integration, the reusable runner pins the full tool profile and describes
+reference comparison without the historical silhouette-only limitation. Those
+compatibility edits did not participate in the recorded model episodes.
 
 ## Protocol
 
