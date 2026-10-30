@@ -14,6 +14,8 @@ historical run. Later main-branch features belong to a new experiment.
 After integration, the reusable runner pins the full tool profile and describes
 reference comparison without the historical silhouette-only limitation. Those
 compatibility edits did not participate in the recorded model episodes.
+Integrated verification at `02ba8c8`: 539 tests passed, including all 25 adapter
+tests; live AutoCAD tests were excluded to avoid the shared application profile.
 
 ## Protocol
 

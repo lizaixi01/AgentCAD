@@ -1455,5 +1455,14 @@
         "case_manifest": "fb4e475176cbdc173253725617b407a51a6cc61392216887c245029a533869f0"
       }
     }
-  ]
+  ],
+  "integrated_verification": {
+    "branch_head": "02ba8c89c4a97b91f7242f9d05ca1699438cfa5c",
+    "main_base": "3a7f1c742f2adc11ad3c91364bba519addf6ae32",
+    "tests_passed": 539,
+    "tests_seconds": 469.44,
+    "excluded": "tests/test_autocad_live.py",
+    "adapter_tests_passed": 25,
+    "independent_review": "https://github.com/lizaixi01/AgentCAD/pull/34#issuecomment-6520647465"
+  }
 }
