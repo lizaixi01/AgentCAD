@@ -251,3 +251,63 @@ def test_desktop_exec_quoting():
     assert install._desktop_quote("/home/a/100%parts") == '"/home/a/100%%parts"'
     assert install._desktop_quote('/x/a"b$c`d') == '"/x/a\\\\"b\\\\$c\\\\`d"'
     assert install._desktop_quote("/x/back\\slash") == '"/x/back\\\\\\\\slash"'
+
+
+def test_demo_draws_and_revises_the_plate(tmp_path):
+    from agentcad import demo
+    root = demo.demo_root(tmp_path)
+    demo.prepare(root)
+    waits = []
+    results = demo.draw(root, sleep=waits.append)
+    assert all(r["ok"] for r in results) and len(results) == 1 + len(demo.STEPS)
+    assert waits == [w for w, _, _ in demo.STEPS]  # a pause before each step, so people can follow
+    assert results[-1]["changes"]["modified"] and not results[-1]["changes"]["added"]  # the revision edits
+    assert (root / "plate.dxf").is_file() and (root / demo.MARKER).is_file()
+    # what people see last: 240 wide, holes 15 from the edges, the bore with its centre mark and callout centred
+    import ezdxf
+    msp = ezdxf.readfile(root / "plate.dxf").modelspace()
+    assert max(p[0] for p in msp.query("LWPOLYLINE")[0].get_points()) == pytest.approx(240)
+    circles = sorted((round(c.dxf.center.x, 3), round(c.dxf.center.y, 3), c.dxf.radius) for c in msp.query("CIRCLE"))
+    assert circles == [(15, 15, 6), (15, 85, 6), (120, 50, 20), (225, 15, 6), (225, 85, 6)]
+    lines = msp.query("LINE")
+    assert len(lines) == 2 and all((ln.dxf.start.x + ln.dxf.end.x) / 2 == pytest.approx(120) for ln in lines)
+    dims = msp.query("DIMENSION")
+    linear = sorted((round(d.get_measurement(), 3), round(d.dxf.defpoint.x, 3)) for d in dims if d.dxf.dimtype & 7 == 0)
+    assert linear == [(100, -14), (240, 0)]  # the height dimension sits left of the plate, not across the holes
+    bore_dim = next(d for d in dims if d.dxf.dimtype & 7 == 3 and d.get_measurement() == pytest.approx(40))
+    assert (bore_dim.dxf.defpoint.x + bore_dim.dxf.defpoint4.x) / 2 == pytest.approx(120)  # moved with the bore
+    demo.prepare(root)  # a second run starts clean
+    assert not (root / "plate.dxf").exists()
+
+
+def test_demo_never_clears_a_folder_it_did_not_make(tmp_path):
+    from agentcad import demo
+    root = demo.demo_root(tmp_path)
+    root.mkdir()
+    (root / "mine.dxf").write_text("x")
+    with pytest.raises(FileExistsError):
+        demo.prepare(root)
+    assert (root / "mine.dxf").read_text() == "x"
+
+
+def test_demo_icon(home):
+    root = home / "AgentCAD"
+    out = install.create_shortcut(root, "uvx", "https://example.org/a.zip", platform="linux",
+                                  name="AgentCAD Demo", action=install.DEMO)
+    text = Path(out["path"]).read_text("utf-8")
+    assert Path(out["path"]).name == "AgentCAD Demo.desktop" and "Name=AgentCAD Demo" in text
+    assert '"demo"' in text and "viewer" not in text
+    run = FakeRunner()
+    install.create_shortcut(root, "python", platform="win32", runner=run, name="AgentCAD 演示", action=install.DEMO)
+    assert "'AgentCAD 演示.lnk'" in run.calls[0][-1] and "demo" in run.calls[0][-1]
+
+
+def test_setup_puts_both_icons(home):
+    run = FakeRunner()
+    res = install.setup(["cursor"], launcher="python", shortcut=True, runner=run)
+    assert res.shortcut["status"] == "added" and res.demo_shortcut["status"] == "added"
+    if os.name == "nt":  # through (fake) PowerShell
+        scripts = [c[-1] for c in run.calls]
+        assert any("viewer --open" in s for s in scripts) and any(" demo" in s for s in scripts)
+    else:
+        assert {p.stem for p in (home / "Desktop").iterdir()} == {"AgentCAD", install.demo_name()}
