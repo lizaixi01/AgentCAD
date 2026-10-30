@@ -376,7 +376,7 @@ function stepText(s) {
 let checks = null;
 async function runCheck() {
   view = "check"; checks = null; render();
-  try { checks = await api("/api/doctor"); } catch (e) { checks = { checks: [] }; }
+  try { checks = await api("/api/doctor"); } catch (e) { checks = { failed: true }; }
   render();
 }
 function checkRows(r) {
@@ -400,6 +400,13 @@ function checkRows(r) {
 }
 function renderCheck() {
   const card = $("card");
+  if (checks && (checks.failed || !Array.isArray(checks.checks))) {
+    card.innerHTML = demo() + `<div class="yay"><div class="ring bad pop">${ICON.x}</div><h1>${esc(t("checkTitle"))}</h1>
+      <p class="lead">${esc(t("err_other"))}</p></div><div class="actions"><button class="btn primary" id="again" type="button">${ICON.redo} ${esc(t("checkAgain"))}</button>
+      <button class="btn" id="back" type="button">${esc(t("back"))}</button></div>`;
+    $("again").onclick = runCheck; $("back").onclick = () => { view = "welcome"; render(); };
+    return;
+  }
   if (!checks) { card.innerHTML = demo() + `<h1>${esc(t("checkTitle"))}</h1><p class="lead">${ICON.spin.replace("<svg", '<svg width="24" height="24" style="vertical-align:-5px"')} ${esc(t("checking"))}</p>`; return; }
   const rows = checkRows(checks), bad = rows.filter(r => r.s === "bad");
   const st = { ok: "done", bad: "error", opt: "opt", skip: "wait" };

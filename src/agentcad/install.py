@@ -349,15 +349,22 @@ def viewer_command(root: Path, launcher: str, source: str | None = None) -> tupl
     return command, args + ["--root", str(root), "viewer", "--open"]
 
 
+PS_QUOTES = "'\u2018\u2019\u201a\u201b"  # PowerShell ends a '...' string at any of these, not only at '
+
+
 def _ps_quote(text: str) -> str:
-    return "'" + text.replace("'", "''") + "'"
+    """A PowerShell single-quoted string: each quote character is doubled, so a path such as Mum’s drawings stays
+    text."""
+    return "'" + "".join(ch * 2 if ch in PS_QUOTES else ch for ch in text) + "'"
 
 
 def _desktop_quote(arg: str) -> str:
-    """An Exec= argument of a .desktop file (freedesktop Desktop Entry spec)."""
+    """An Exec= argument of a .desktop file (freedesktop Desktop Entry spec): % is doubled, \\ " ` $ are escaped
+    inside the quotes, and then every backslash is doubled again for the string-value escaping."""
+    arg = arg.replace("%", "%%")
     for ch in ("\\", '"', "`", "$"):
         arg = arg.replace(ch, "\\" + ch)
-    return '"' + arg + '"'
+    return '"' + arg.replace("\\", "\\\\") + '"'
 
 
 def create_shortcut(root: Path, launcher: str, source: str | None = None, *, platform: str = sys.platform,
@@ -369,7 +376,8 @@ def create_shortcut(root: Path, launcher: str, source: str | None = None, *, pla
     state = root / ".agentcad"
     if platform == "win32":
         ico = state / "agentcad.ico"
-        script = ("$d = [Environment]::GetFolderPath('Desktop'); $p = Join-Path $d 'AgentCAD.lnk'; "
+        script = ("[Console]::OutputEncoding = [Text.Encoding]::UTF8; "  # else a Chinese desktop path comes back as ????
+                  "$d = [Environment]::GetFolderPath('Desktop'); $p = Join-Path $d 'AgentCAD.lnk'; "
                   "$had = Test-Path $p; "
                   + ("" if dry_run else
                      "$s = (New-Object -ComObject WScript.Shell).CreateShortcut($p); "

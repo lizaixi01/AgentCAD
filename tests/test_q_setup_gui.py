@@ -233,3 +233,21 @@ def test_viewer_open_reuses_a_running_viewer(tmp_path, monkeypatch):
         assert opened == [v.url]
     finally:
         v.stop()
+
+
+def test_powershell_quoting_survives_typographic_apostrophes():
+    tricky = "C:/Users/x/Mum\u2019s drawings/\u2018a\u2019 \u201ab\u201b 'c'; Write-Output pwned"
+    quoted = install._ps_quote(tricky)
+    for q in install.PS_QUOTES:
+        assert quoted[1:-1].count(q) == 2 * tricky.count(q)
+    if os.name == "nt":  # PowerShell itself reads it back as one string, not as code
+        p = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command",
+                            "[Console]::OutputEncoding = [Text.Encoding]::UTF8; Write-Output " + quoted],
+                           capture_output=True, text=True, encoding="utf-8")
+        assert p.returncode == 0 and p.stdout.strip() == tricky
+
+
+def test_desktop_exec_quoting():
+    assert install._desktop_quote("/home/a/100%parts") == '"/home/a/100%%parts"'
+    assert install._desktop_quote('/x/a"b$c`d') == '"/x/a\\\\"b\\\\$c\\\\`d"'
+    assert install._desktop_quote("/x/back\\slash") == '"/x/back\\\\\\\\slash"'
