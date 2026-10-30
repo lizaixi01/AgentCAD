@@ -3,7 +3,10 @@
 This is an independent local adapter for the task matrix published by
 [U-C4N/Autocad-MCP](https://github.com/U-C4N/Autocad-MCP/tree/main/benchmarks),
 pinned at `58a05ddfc34a9832c626e82cd88ecdce8e16a62a` (v1.7.0, evaluator v8.1).
-It is not an upstream leaderboard submission. The [baseline report](../../docs/comparison-upstream-benchmark.md)
+The original runs were independent measurements. They were submitted for upstream
+review in [U-C4N/Autocad-MCP PR #15](https://github.com/U-C4N/Autocad-MCP/pull/15)
+on 2026-10-30; submission is not acceptance or an official ranking.
+The [baseline report](../../docs/comparison-upstream-benchmark.md)
 preserves the original measurements. The [v8 implementation report](../../docs/comparison-upstream-benchmark-v8.md)
 records the subsequent implementation and full rerun.
 
