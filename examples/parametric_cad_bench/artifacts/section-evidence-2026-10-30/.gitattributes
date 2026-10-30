@@ -1,2 +1,2 @@
 # Evidence hashes describe exact bytes, including diagnostic source and JSON.
-* -text
+* -text whitespace=trailing-space,space-before-tab,cr-at-eol
