@@ -57,7 +57,8 @@ def test_complete_supplied_dimensions_survive_saved_readback_and_delivery(rt, bl
     assert delivery['ok']
 
 
-@pytest.mark.parametrize('damage', ['delete','fake_text','scale','definition','cached_text','hidden','unplotted','bore'])
+@pytest.mark.parametrize('damage', ['delete','fake_text','scale','definition','cached_text','hidden','unplotted','bore',
+                                  'dimension_block','dimension_paper','note_block','geometry_block','precision','postfix','partial_record'])
 def test_wrong_or_missing_manufacturing_annotation_blocks_delivery(rt,blank,ws,damage):
     report=generated(rt,blank)
     row=next(a for p in report['manufacturing'] for a in p['annotations'] if a['kind']=='bore_diameter.0')
@@ -76,9 +77,28 @@ def test_wrong_or_missing_manufacturing_annotation_blocks_delivery(rt,blank,ws,d
     elif damage=='bore':
         line=doc.modelspace().query('LWPOLYLINE[layer=="HIDDEN"]')[0]
         line.translate(0,1,0)
+    elif damage in {'dimension_block','dimension_paper','note_block','geometry_block'}:
+        if damage=='note_block':
+            note=next(a for p in report['manufacturing'] for a in p['annotations'] if a['kind']=='pattern_orientation.0')
+            dim=doc.entitydb[note['handle']]
+        elif damage=='geometry_block':
+            dim=doc.modelspace().query('LWPOLYLINE[layer=="HIDDEN"]')[0]
+        target=doc.layouts.new('unused sheet') if damage=='dimension_paper' else doc.blocks.new('UNINSERTED')
+        doc.modelspace().move_to_layout(dim,target)
+    elif damage in {'precision','postfix'}:
+        hole=next(a for p in report['manufacturing'] for a in p['annotations'] if a['kind']=='hole_diameter.0')
+        dim=doc.entitydb[hole['handle']];override=dim.override()
+        override.update({'dimdec':0} if damage=='precision' else {'dimpost':'<> inches'})
+        override.commit()  # Keep the old graphical cache: future regeneration must still be safe.
+    else:
+        part=next(p for p in report['manufacturing'] if row in p['annotations'])
+        body=doc.entitydb[part['handle']];record=get(body,'mech')
+        record['manufacturing']['annotations']=[a for a in record['manufacturing']['annotations'] if a['handle']!=dim.dxf.handle]
+        doc.modelspace().delete_entity(dim);put(doc,body,'mech',record)
     doc.saveas(ws/blank); before=(ws/blank).read_bytes()
     checked=ok(Runtime(rt.policy).read_engineering(blank,'mechanical'))
-    assert any(i['code'] in {'MANUFACTURING_ANNOTATION_MISMATCH','MANUFACTURING_GEOMETRY_CHANGED'} for i in checked['critique'])
+    assert any(i['code'] in {'MANUFACTURING_ANNOTATION_MISMATCH','MANUFACTURING_GEOMETRY_CHANGED',
+                            'MANUFACTURING_RECORD_INVALID'} for i in checked['critique'])
     assert rt.deliver_drawing(blank,'bad',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
     assert (ws/blank).read_bytes()==before
 
@@ -130,7 +150,7 @@ def test_malformed_coverage_and_invisible_leader_are_not_certified(rt,blank,ws,d
     assert rt.deliver_drawing(blank,'invalid',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
 
 
-def test_large_manufacturing_record_uses_owned_storage_and_missing_record_is_refused(rt,blank,ws):
+def test_large_manufacturing_record_uses_owned_storage_and_missing_record_is_refused(rt,blank,ws,monkeypatch):
     spec={'parts':[{'name':'index ring','at':[220,190],'views':['front','side'],
         'segments':[{'length':10,'d_outer':80,'d_inner':20}],
         'features':[{'kind':'hole_circle','pcd':60,'diameter':.5,'count':100}]}]}
@@ -139,6 +159,15 @@ def test_large_manufacturing_record_uses_owned_storage_and_missing_record_is_ref
     doc=ezdxf.readfile(ws/blank);body=doc.entitydb[report['parts'][0]['handle']]
     assert len(str(body.get_xdata('AGENTCAD_MECH')))<500
     assert body.has_extension_dict and len(get(body,'mech')['manufacturing']['geometry'])>300
+    ok(rt.deliver_drawing(blank,'good-large',formats=['dxf']))
+    export=rt.export_drawing
+    def corrupt(path,output,format):
+        result=export(path,output,format);saved=ezdxf.readfile(ws/output)
+        saved.entitydb[body.dxf.handle].get_extension_dict()['AGENTCAD_MECH'].reset([(1,'INVALID JSON')])
+        saved.saveas(ws/output);return result
+    monkeypatch.setattr(rt,'export_drawing',corrupt)
+    assert rt.deliver_drawing(blank,'corrupted-large',formats=['dxf'])['error']['code']=='DELIVERY_PARITY_FAILED'
+    assert not (ws/'corrupted-large'/'manifest.json').exists()
     del body.get_extension_dict()['AGENTCAD_MECH'];doc.saveas(ws/blank)
     assert rt.read_engineering(blank,'mechanical')['error']['code']=='INVALID_DOMAIN_RECORD'
     assert not rt.deliver_drawing(blank,'missing-record',formats=['dxf'])['ok']

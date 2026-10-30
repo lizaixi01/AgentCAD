@@ -152,6 +152,8 @@ disables automatic annotations for that part and is reported as such.
 The saved manufacturing record binds the actual profile, bore, view and hole
 geometry to the expected annotation entities. `read_engineering(..., "mechanical")`
 checks native dimension definition points, measurements, display text and visibility,
+the retained list of required roles, actual model-space ownership and native display
+precision/settings (even when an old rendered cache still looks correct),
 plus orientation leaders, saved profiles, BOM quantities and balloon links. Strict
 delivery rejects missing, altered or stale annotations and changed geometry. A
 legacy part without this record reports `MANUFACTURING_COVERAGE_UNRECORDED`;
@@ -159,6 +161,8 @@ regenerate from its source spec to gain verified coverage. It is not silently ce
 The record is a consistency check, not a signature against malicious metadata editing.
 Large records use an entity-owned XRECORD with a small XDATA locator to stay below
 AutoCAD's per-entity XDATA limit; missing record storage is an explicit read error.
+DXF delivery parity follows the owned extension data, including nested dictionaries
+and XRECORD payloads; matching their handles alone is insufficient.
 
 Annotations cover the supplied nominal dimensions. An end-view hole circle has no
 depth input, so it receives **no invented THRU/depth**, tolerance, fit, finish or

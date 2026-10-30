@@ -40,6 +40,11 @@ def _visible(doc, entity) -> bool:
                 and not layer.is_frozen() and layer.dxf.get("plot", 1))
 
 
+def _model_visible(doc, entity) -> bool:
+    return (_visible(doc, entity) and entity.dxf.owner == doc.modelspace().block_record_handle
+            and not entity.dxf.get("paperspace", 0))
+
+
 def _contract_valid(contract, part_handle) -> bool:
     """Malformed or truncated saved records must never imply complete coverage."""
     if type(contract.get("enabled")) is not bool:
@@ -48,6 +53,9 @@ def _contract_valid(contract, part_handle) -> bool:
     if not isinstance(sources, list) or not sources or not isinstance(annotations, list):
         return False
     if bool(annotations) != contract["enabled"]:
+        return False
+    required = contract.get("required")
+    if not isinstance(required, dict) or bool(required) != contract["enabled"]:
         return False
     for source in sources:
         if (not isinstance(source, dict) or not isinstance(source.get("handle"), str)
@@ -64,6 +72,8 @@ def _contract_valid(contract, part_handle) -> bool:
             return False
         handles.add(annotation["handle"])
         kinds.add(annotation["kind"])
+        if annotation["kind"] not in required:
+            return False
         if annotation.get("type") == "DIMENSION":
             value, rendered = annotation.get("value"), annotation.get("rendered")
             if (type(value) not in {int, float} or not math.isfinite(value) or value <= 0
@@ -71,13 +81,35 @@ def _contract_valid(contract, part_handle) -> bool:
                     or not isinstance(rendered, list) or not rendered
                     or not all(isinstance(s, str) for s in rendered)):
                 return False
+            if not _same(value, required[annotation["kind"]]):
+                return False
         elif annotation.get("type") == "MTEXT":
             if (not isinstance(annotation.get("leader"), str)
-                    or not isinstance(annotation.get("leader_geometry"), dict)):
+                    or not isinstance(annotation.get("leader_geometry"), dict)
+                    or required[annotation["kind"]] is not None):
                 return False
         else:
             return False
-    return not contract["enabled"] or "length.0" in kinds
+    return kinds == required.keys() and (not contract["enabled"] or {"length.0", "outer_diameter.0"} <= kinds)
+
+
+def _requirements(segments, patterns) -> dict[str, float | None]:
+    """Record supplied roles separately from the generated entity list."""
+    required = {f"length.{i}": s[0] for i, s in enumerate(segments)}
+    for column, prefix in ((1, "outer_diameter"), (2, "bore_diameter")):
+        seen = set()
+        for i, segment in enumerate(segments):
+            radius = segment[column]
+            if radius and radius not in seen:
+                required[f"{prefix}.{i}"] = 2 * radius
+                seen.add(radius)
+    if len(segments) > 1:
+        required["overall_length"] = sum(s[0] for s in segments)
+    for i, pattern in enumerate(patterns):
+        required[f"hole_diameter.{i}"] = pattern["diameter"]
+        required[f"pitch_diameter.{i}"] = pattern["pcd"]
+        required[f"pattern_orientation.{i}"] = None
+    return required
 
 
 def geometry(entity) -> dict[str, Any] | None:
@@ -123,7 +155,8 @@ def _precision(value: float) -> int:
 
 
 def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=True) -> dict[str, Any]:
-    contract: dict[str, Any] = {"version": 1, "enabled": enabled, "geometry": [], "annotations": []}
+    contract: dict[str, Any] = {"version": 1, "enabled": enabled, "geometry": [], "annotations": [],
+                                "required": _requirements(segments, patterns) if enabled else {}}
     for handle in source_handles:
         entity = ctx.doc.entitydb[handle]
         data = geometry(entity)
@@ -141,6 +174,7 @@ def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=Tr
         # increment, also meaningful in native CAD, to preserve fractional sizes.
         override.update({"dimdec": digits, "dimlfac": 1, "dimrnd": 10 ** -digits,
                          "dimzin": 8, "dimdsep": ord("."), "dimpost": "", "dimscale": 1,
+                         "dimalt": 0, "dimtol": 0, "dimlim": 0,
                          "dimtxt": 2.5, "dimclrt": 7, "dimclrd": 7, "dimclre": 7})
         if location is not None:
             override.set_location(location)
@@ -223,12 +257,12 @@ def check(doc, contract, part_handle) -> tuple[list[dict], list[dict]]:
         return [{"code": "MANUFACTURING_RECORD_INVALID", "handle": part_handle}], annotations
     for source in contract["geometry"]:
         entity = doc.entitydb.get(source["handle"])
-        if not _visible(doc, entity) or not _same(geometry(entity), source["geometry"]):
+        if not _model_visible(doc, entity) or not _same(geometry(entity), source["geometry"]):
             issues.append({"code": "MANUFACTURING_GEOMETRY_CHANGED", "handle": source["handle"], "part": part_handle})
     for expected in contract["annotations"]:
         handle = expected["handle"]
         entity = doc.entitydb.get(handle)
-        valid = _visible(doc, entity) and entity.dxftype() == expected["type"]
+        valid = _model_visible(doc, entity) and entity.dxftype() == expected["type"]
         measured = None
         if valid and entity.dxftype() == "DIMENSION":
             measured = measure_dimension(entity)
@@ -236,11 +270,16 @@ def check(doc, contract, part_handle) -> tuple[list[dict], list[dict]]:
             valid = (_same(measured, expected["value"]) and _same(_definition(entity), expected["definition"])
                      and entity.dxf.get("text", "") == expected["text"]
                      and override.get("dimlfac", 1) == 1
+                     and override.get("dimdec", 2) == _precision(expected["value"])
+                     and override.get("dimdsep", ord(".")) == ord(".")
+                     and override.get("dimpost", "") == ""
+                     and all(override.get(k, 0) == 0 for k in ("dimalt", "dimtol", "dimlim"))
+                     and override.get("dimscale", 1) == 1 and override.get("dimtxt", 2.5) == 2.5
                      and _same(override.get("dimrnd", 0), 10 ** -_precision(expected["value"]))
                      and _rendered(doc, entity) == expected["rendered"])
         elif valid:
             leader = doc.entitydb.get(expected["leader"])
-            valid = (_plain(entity.text) == _plain(expected["text"]) and _visible(doc, leader)
+            valid = (_plain(entity.text) == _plain(expected["text"]) and _model_visible(doc, leader)
                      and entity.dxf.char_height > 0
                      and _same(geometry(leader), expected["leader_geometry"]))
         annotations.append({"kind": expected["kind"], "handle": handle, "measurement": measured, "passed": bool(valid)})

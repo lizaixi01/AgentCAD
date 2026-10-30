@@ -92,6 +92,25 @@ def test_delivery_detects_dxf_loss_beyond_model_entity_count(rt, ws, blank, monk
     assert not (ws / "bad" / "manifest.json").exists()
 
 
+def test_delivery_checks_nested_extension_payloads_without_looping_on_cycles(rt,ws,blank,monkeypatch):
+    doc=ezdxf.readfile(ws/blank)
+    line=doc.modelspace().add_line((0,0),(10,0))
+    extension=line.new_extension_dict();nested=extension.add_dictionary('nested')
+    record=doc.objects.add_xrecord(nested.dxf.handle);record.reset([(1,'retained payload')]);nested['record']=record
+    # Soft dictionary links may revisit an already inspected dictionary.
+    nested['cycle']=extension.dictionary
+    doc.saveas(ws/blank)
+    assert rt.deliver_drawing(blank,'valid-nested',formats=['dxf'])['ok']
+    export=rt.export_drawing
+    def damaged(path,output,format):
+        result=export(path,output,format);saved=ezdxf.readfile(ws/output)
+        saved.entitydb[record.dxf.handle].reset([(1,'changed payload')]);saved.saveas(ws/output)
+        return result
+    monkeypatch.setattr(rt,'export_drawing',damaged)
+    result=rt.deliver_drawing(blank,'broken-nested',formats=['dxf'])
+    assert result['error']['code']=='DELIVERY_PARITY_FAILED',result
+
+
 @pytest.mark.parametrize("fmt", ["json", "csv", "xlsx", "pdf", "svg"])
 def test_delivery_rejects_nonempty_corrupt_exports(rt, ws, blank, monkeypatch, fmt):
     assert rt.apply_operations(blank, [{"op": "add_circle", "center": [0, 0], "radius": 10}])["ok"]

@@ -117,9 +117,10 @@ def _wait_reporting(p, log: Path, deadline: float, on_progress) -> None:
     """Wait for the process like ``p.wait``, passing each new line of ``log`` to ``on_progress`` meanwhile."""
     pos = 0
     while True:
+        finished = False
         try:
             p.wait(timeout=0.1)
-            return
+            finished = True
         except subprocess.TimeoutExpired:
             if time.perf_counter() >= deadline:
                 raise
@@ -128,6 +129,8 @@ def _wait_reporting(p, log: Path, deadline: float, on_progress) -> None:
                 f.seek(pos)
                 data = f.read()
         except OSError:
+            if finished:
+                return
             continue
         end = data.rfind(b"\n") + 1  # whole lines only: the runner may be writing the next one
         pos += end
@@ -136,6 +139,8 @@ def _wait_reporting(p, log: Path, deadline: float, on_progress) -> None:
                 on_progress(json.loads(raw))
             except Exception:  # noqa: BLE001 - progress must never fail the job
                 pass
+        if finished:
+            return
 
 
 def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
