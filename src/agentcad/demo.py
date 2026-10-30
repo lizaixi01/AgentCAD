@@ -30,14 +30,15 @@ STEPS: list[tuple[float, str, list[dict[str, Any]]]] = [
         {"op": "add_center_mark", "target": "tag:bore", "layer": "CENTER"}]),
     (3.0, "dimensions", [
         {"op": "add_linear_dim", "p1": [0, 0], "p2": [200, 0], "offset": -14, "layer": "DIM"},
-        {"op": "add_linear_dim", "p1": [0, 0], "p2": [0, 100], "orientation": "vertical", "offset": -14,
+        {"op": "add_linear_dim", "p1": [0, 0], "p2": [0, 100], "orientation": "vertical", "offset": 14,
          "layer": "DIM"},
-        {"op": "add_diameter_dim", "target": "tag:bore", "angle": 30, "layer": "DIM"},
+        {"op": "add_diameter_dim", "target": "tag:bore", "angle": 30, "layer": "DIM", "tag": "bore_dim"},
         {"op": "add_diameter_dim", "target": "tag:h4", "angle": 45, "layer": "DIM"},
         {"op": "add_text", "text": "MOUNTING PLATE", "insert": [0, -32], "height": 5, "layer": "TEXT"}]),
     (4.0, "wider", [  # a revision: 240 wide, holes still 15 from the edges, bore centred
         {"op": "stretch", "window": [[150, -60], [260, 160]], "delta": [40, 0]},
-        {"op": "move", "target": "tag:bore", "delta": [20, 0]}]),
+        {"op": "move", "target": ["tag:bore", "tag:bore_dim"], "delta": [20, 0]},
+        {"op": "move", "target": {"layer": "CENTER"}, "delta": [20, 0]}]),  # the bore's centre mark
 ]
 
 
@@ -94,6 +95,8 @@ def run(workspace: Path, *, open_browser: bool = True, linger: float = 1800.0) -
         results = draw(root)
         ok = all(r["ok"] for r in results)
         print(json.dumps({"ok": ok, "steps": len(results)}), flush=True)
+        if not ok:
+            return 1
         time.sleep(linger)  # people look around; closing the window ends it
     except KeyboardInterrupt:
         pass

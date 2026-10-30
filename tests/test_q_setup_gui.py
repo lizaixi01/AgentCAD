@@ -263,6 +263,19 @@ def test_demo_draws_and_revises_the_plate(tmp_path):
     assert waits == [w for w, _, _ in demo.STEPS]  # a pause before each step, so people can follow
     assert results[-1]["changes"]["modified"] and not results[-1]["changes"]["added"]  # the revision edits
     assert (root / "plate.dxf").is_file() and (root / demo.MARKER).is_file()
+    # what people see last: 240 wide, holes 15 from the edges, the bore with its centre mark and callout centred
+    import ezdxf
+    msp = ezdxf.readfile(root / "plate.dxf").modelspace()
+    assert max(p[0] for p in msp.query("LWPOLYLINE")[0].get_points()) == pytest.approx(240)
+    circles = sorted((round(c.dxf.center.x, 3), round(c.dxf.center.y, 3), c.dxf.radius) for c in msp.query("CIRCLE"))
+    assert circles == [(15, 15, 6), (15, 85, 6), (120, 50, 20), (225, 15, 6), (225, 85, 6)]
+    lines = msp.query("LINE")
+    assert len(lines) == 2 and all((ln.dxf.start.x + ln.dxf.end.x) / 2 == pytest.approx(120) for ln in lines)
+    dims = msp.query("DIMENSION")
+    linear = sorted((round(d.get_measurement(), 3), round(d.dxf.defpoint.x, 3)) for d in dims if d.dxf.dimtype & 7 == 0)
+    assert linear == [(100, -14), (240, 0)]  # the height dimension sits left of the plate, not across the holes
+    bore_dim = next(d for d in dims if d.dxf.dimtype & 7 == 3 and d.get_measurement() == pytest.approx(40))
+    assert abs(bore_dim.dxf.defpoint.x - 120) < 20  # the Ø40 callout moved with the bore
     demo.prepare(root)  # a second run starts clean
     assert not (root / "plate.dxf").exists()
 
