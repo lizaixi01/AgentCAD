@@ -54,6 +54,9 @@ Basics
   map each dimension to the edges/centres it measures, rather than a nearby feature. Use section extension
   lines and hatching to distinguish cut depth from remaining wall thickness and to identify which side
   each recess or protrusion occupies. Record signed face levels in the chosen coordinate frame.
+  For each thickness/depth callout, name BOTH measured surfaces and follow both witness lines to them;
+  a nearby number is not evidence for a surface pair. Resolve an ambiguous assignment against the other
+  views before building. State a short dimension ledger (value, measured features, source view, planned check).
 - One PartDesign Body, one solid, every feature native and editable. Usual order: set_parameters (optional),
   add_sketch on a plane (XY normal +Z, XZ normal -Y, YZ normal +X; offset moves it along the normal) or
   on_face, then pad (adds along the normal) / pocket (cuts against it) / revolve / groove / hole, then fillet,
@@ -69,10 +72,18 @@ Basics
   created. Check that the signed face-level differences agree with those callouts before saving.
   A valid solid with matching overall size/hole count can still have wrong local geometry. Compare opposite
   faces and section depth levels, and use inspect_entities for the relevant face positions.
+  Use inspect_entities(filter={kind:'faces'}), not the default feature history or the DXF type filter.
+  measure_entities(target={kind:'planar_levels',axis:'z'}) lists the final solid's plane levels. Measure
+  each intended local thickness with target={kind:'face_distance',from:'FaceN',to:'FaceM'}; validation
+  supports requirements={type:'face_distance',from:...,to:...,value:...,tolerance:...} in its list.
 - See what you built: export_drawing(path, "preview.png", "png", views=[...]); a view is a name (iso, front,
   top, right, ...) or the camera position [x, y, z] relative to the part. The image comes back in the result.
   Each view is scaled to fill its cell (fit='view'), so compare shapes and proportions within a view, not
   sizes across views; fit='uniform' uses one scale. To match a reference image, use its camera positions.
+  Keep one consistent orientation across front/top/side views; establish the drawing's projection layout
+  and track the same named features between views. Do not mirror individual views to make them fit.
+  The preview's camera_frames report screen-right/up directions, so left/right correspondence is explicit.
+  Angle operands on operations are numeric degrees; set_parameters does not accept strings ending in 'deg'.
 - Deliver with export_drawing(path, "part.step", "step") (also stl, iges, brep, obj): read back and compared.
 
 3D scripts and reference images
@@ -84,8 +95,13 @@ Basics
   rebuilds those ops on the new solid).
 - Compare with a reference image: export_drawing(path, "cmp.png", "png", views=[...], reference="ref.png"),
   views in the reference's order and grid (2 columns up to 4 views). Each view is scaled and centred onto the
-  reference's silhouette, so overall size is not compared, only shape and proportions. The image shows the
-  reference, ours and a diff (red: only reference, blue: only ours); compare.views[].iou and mean_iou score it.
+  reference's silhouette, so overall size is not compared, only shape and proportions. compare.score (per view:
+  views[].score) is the mean of outline (silhouette IoU) and edges (lines and shading steps inside the part). A part
+  that matches usually scores 0.95 or more (thin flanges, springs and hollow parts can score lower); below 0.9, look
+  where the diff shows red or blue. The
+  image is a diff per view: grey where both have material, light red / light blue where only the reference / only
+  ours has; red edges only in the reference (a feature yours lacks or misplaces), blue only in yours. views[].cut
+  names sides where the reference runs out of its picture: nothing beyond them is compared.
 
 Live viewer: results that change a file carry viewer_url, a page on this computer where the user watches the
 work step by step and can save or share it. Give the user that link once, the first time you change something."""
@@ -165,7 +181,9 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
 
     @mcp.tool()
     def inspect_entities(path: Path_,
-                         filter: Annotated[dict | None, Field(description="{type, layer, tag, tag_prefix, layout}")] = None,  # noqa: A002
+                         filter: Annotated[dict | None, Field(description="DXF: {type, layer, tag, tag_prefix, layout}. "
+                             "FCStd: {kind: 'features'|'faces'|'edges', feature?: <ref>, selector?: {...}}; "
+                             "selector is for faces/edges, type/layer are DXF-only")] = None,  # noqa: A002
                          ids: Annotated[list[str] | None, Field(description="Entity handles or 'tag:<name>'")] = None,
                          window: Annotated[list[list[float]] | None, Field(description="[[x0,y0],[x1,y1]] crossing window")] = None,
                          limit: Annotated[int, Field(ge=1, le=5000)] = 200, offset: int = 0, detail: bool = True,
@@ -363,8 +381,9 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
                            "one scale for every view")] = None,
                        reference: Annotated[str | None, Field(description="png of a 3D part: a reference image in the "
                            "workspace laid out as the same grid of views (same order; 2 columns up to 4 views). The "
-                           "png then shows per view the reference, our render aligned to its silhouette and a diff; "
-                           "the result gives each view's silhouette IoU and mean_iou")] = None,
+                           "png is then a diff of each view, aligned to the reference's silhouette; the result scores "
+                           "each view (outline, edges inside it) and their mean, compare.score: usually 0.95 or more "
+                           "when the part matches")] = None,
                        inline_image: Annotated[bool, Field(description="png: also return the image in this result, "
                            "so you see it without opening the file (not above 2 MB)")] = True,
                        table: Literal["entities", "pid_lines", "bom"] = "entities") -> Any:

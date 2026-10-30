@@ -5,6 +5,7 @@ itself is tested on synthetic images without either."""
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 import math
 import os
@@ -362,15 +363,118 @@ def test_alignment_ignores_framing_but_not_proportions():
     ref = draw(L_SHAPE, (256, 256), 2.0, (90, 70), (120, 130, 140), bg=(245, 245, 245))
     cells = [(np.asarray(ref), None)]
     same = compare.compare_views(cells, ["front"], [render_of(L_SHAPE, scale=4.0, offset=(20, 30))])[0][0]
-    assert same["iou"] > 0.95 and same["scale"] == pytest.approx(0.5, abs=0.02)
+    assert same["outline"] > 0.95 and same["score"] > 0.95 and "cut" not in same
     stretched = [(x * 1.6, y) for x, y in L_SHAPE]  # wrong proportions: one scale for both axes, so they show
     wrong = compare.compare_views(cells, ["front"], [render_of(stretched, scale=2.0)])[0][0]
     box = compare.compare_views(cells, ["front"], [render_of([(0, 0), (60, 0), (60, 50), (0, 50)])])[0][0]
-    assert wrong["iou"] < 0.8 and box["iou"] < 0.8
+    assert wrong["outline"] < 0.85 and box["outline"] < 0.85
     # a reference that crops the part on the left: scaled by the uncut axis, aligned to the uncut side
     cropped = draw(L_SHAPE, (256, 256), 3.0, (-40, 40), (120, 130, 140))
     r = compare.compare_views([(np.asarray(cropped), None)], ["front"], [render_of(L_SHAPE)])[0][0]
-    assert r["reference_cropped"] == ["left"] and r["iou"] > 0.95 and r["scale"] == pytest.approx(1.0, abs=0.03)
+    assert r["cut"] == ["left"] and r["outline"] > 0.95
+
+
+def test_a_part_cut_off_inside_a_gutter_is_aligned():
+    """BenchCAD's sheets have a 4 px white gutter round each 256 px view and clip blocky parts at the view's edge,
+    so a cut silhouette ends a few pixels short of the cell border. Before, that cut went unnoticed: the box of the
+    cut silhouette set the scale and a part matching its own picture scored 0.73."""
+    cell = Image.new("RGB", (264, 264), (255, 255, 255))
+    view = draw(L_SHAPE, (256, 256), 4.0, (-20, -40), (120, 130, 140))  # runs out at the left and the top
+    cell.paste(view, (4, 4))
+    r = compare.compare_views([(np.asarray(cell), None)], ["front"], [render_of(L_SHAPE)])[0][0]
+    assert r["cut"] == ["left", "top"] and r["outline"] > 0.95
+    # a silhouette that only touches the border with a corner is not cut
+    diamond = [(0, 0), (40, 40), (0, 80), (-40, 40)]
+    touching = draw(diamond, (256, 256), 3.2, (128, 0), (120, 130, 140))
+    r = compare.compare_views([(np.asarray(touching), None)], ["front"], [render_of(diamond, offset=(150, 20))])[0][0]
+    assert "cut" not in r and r["outline"] > 0.95
+
+
+def test_curves_and_tight_framing_are_not_cuts():
+    """Reviewed: with the first rule, a disc 4 px from the border counted as cut (its tip column is long enough), and
+    so did a square plate 5 px from every border, after which a plate half again as long matched it at 1.0. A cut
+    must be straight, within BenchCAD's gutter of the border, and not on all four sides."""
+    im = Image.new("RGB", (256, 256), (255, 255, 255))
+    ImageDraw.Draw(im).ellipse([4, 28, 204, 228], fill=(120, 130, 140))  # r = 100, 4 px from the left border
+    assert compare.cut_sides(compare.silhouette(np.asarray(im))[0]) == {}
+    square = [(0, 0), (49, 0), (49, 49), (0, 49)]
+    for margin in (5, 3):  # 5 px in: a part's own side; 3 px on all four sides: framed tightly
+        plate = draw(square, (256, 256), (255 - 2 * margin) / 49, (margin, margin), (120, 130, 140))
+        longer = render_of([(0, 0), (75, 0), (75, 50), (0, 50)])
+        r = compare.compare_views([(np.asarray(plate), None)], ["v"], [longer])[0][0]
+        assert "cut" not in r and r["outline"] < 0.8
+
+
+def ribbed(lines, size=(256, 256), scale=3.0, offset=(30, 40), width=2):
+    """An L shape with its outline and the given inner lines drawn in red, as a renderer that draws edges would."""
+    im = draw(L_SHAPE, size, scale, offset, (110, 190, 185))
+    d = ImageDraw.Draw(im)
+    d.polygon([(offset[0] + x * scale, offset[1] + y * scale) for x, y in L_SHAPE], outline=(200, 30, 30))
+    for (x0, y0), (x1, y1) in lines:
+        d.line([(offset[0] + x0 * scale, offset[1] + y0 * scale), (offset[0] + x1 * scale, offset[1] + y1 * scale)],
+               fill=(200, 30, 30), width=width)
+    return im
+
+
+def test_edges_see_inside_the_outline():
+    """Same outline, different inside: the outline score cannot tell, the edge score can, and the diff shows the
+    reference's line that ours lacks in red. Our seams may match a reference line but never count against us."""
+    inner = [((20, 3), (20, 17)), ((3, 10), (17, 45))]  # two lines inside the L
+    cells = [(np.asarray(ribbed(inner)), None)]
+
+    def ours(lines, seams=None):
+        img = np.asarray(ribbed(lines, scale=2.5, offset=(50, 60)))
+        mask = np.asarray(draw(L_SHAPE, (256, 256), 2.5, (50, 60), (0, 0, 0))).max(axis=2) < 128
+        return img, mask, seams
+
+    same = compare.compare_views(cells, ["v"], [ours(inner)])
+    plain = compare.compare_views(cells, ["v"], [ours([])])
+    one = compare.compare_views(cells, ["v"], [ours(inner[:1])])
+    assert same[0][0]["edges"] > 0.9 and same[0][0]["score"] > 0.9
+    assert plain[0][0]["outline"] > 0.95 and plain[0][0]["edges"] < 0.2 and plain[0][0]["score"] < 0.65
+    assert plain[0][0]["edges"] < one[0][0]["edges"] < same[0][0]["edges"]
+    red = np.all(plain[1][0] == compare.LINE_REF, axis=2).sum()
+    assert red > 100 and np.all(same[1][0] == compare.LINE_REF, axis=2).sum() < red / 10
+    # the second line as a seam of ours (not in our image): it matches the reference's line ...
+    im = Image.new("1", (256, 256))
+    ImageDraw.Draw(im).line([(50 + 3 * 2.5, 60 + 10 * 2.5), (50 + 17 * 2.5, 60 + 45 * 2.5)], fill=1, width=2)
+    seam = np.asarray(im).astype(bool)
+    matched = compare.compare_views(cells, ["v"], [ours(inner[:1], seam)])
+    assert matched[0][0]["edges"] > one[0][0]["edges"] + 0.1
+    # ... and where the reference has no line, it costs nothing (a wider line: enough detail to compare edges)
+    ref_one = [(np.asarray(ribbed(inner[:1], width=4)), None)]
+    assert compare.compare_views(ref_one, ["v"], [ours(inner[:1], seam)])[0][0]["edges"] == \
+        compare.compare_views(ref_one, ["v"], [ours(inner[:1])])[0][0]["edges"]
+    # a seam is our only line inside the outline (a cylinder seen from the side) and the reference draws it
+    lone = [(np.asarray(ribbed(inner[1:])), None)]
+    v = compare.compare_views(lone, ["v"], [ours([], seam)])[0][0]
+    assert v["edges"] > 0.9 and v["score"] > 0.9
+    # no line inside either outline: nothing to compare inside, so the score is the outline's
+    v = compare.compare_views([(np.asarray(ribbed([])), None)], ["v"], [ours([])])[0][0]
+    assert v["edges"] is None and v["score"] == v["outline"] > 0.95
+
+
+def test_a_flat_silhouette_reference_is_scored_on_outlines():
+    """Reviewed: a reference with nothing drawn inside its outlines (one colour, or a transparent background) gave a
+    correct part edges 0 and half its score, all of its own edges counting as extra. Such a sheet says nothing about
+    the inside, so every view scores its outline; one detailed view is enough to compare edges everywhere. JPEG noise
+    in a flat silhouette is not detail (at quality 75 it switched edges back on, re-review)."""
+    lines = [((20, 3), (20, 17)), ((3, 10), (17, 45))]
+    ours = (np.asarray(ribbed(lines, scale=2.5, offset=(50, 60))),
+            np.asarray(draw(L_SHAPE, (256, 256), 2.5, (50, 60), (0, 0, 0))).max(axis=2) < 128)
+    flat = np.asarray(draw(L_SHAPE, (256, 256), 3.0, (30, 40), (90, 90, 90)))
+    rgba = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    ImageDraw.Draw(rgba).polygon([(30 + x * 3, 40 + y * 3) for x, y in L_SHAPE], fill=(250, 250, 250, 255))
+    buf = io.BytesIO()
+    Image.fromarray(flat).save(buf, "JPEG", quality=75)
+    jpeg = np.asarray(Image.open(buf).convert("RGB"))
+    for cell in ((flat, None), (np.asarray(rgba.convert("RGB")), np.asarray(rgba)[:, :, 3]), (jpeg, None)):
+        (v,), (diff,), _ = compare.compare_views([cell], ["v"], [ours])
+        assert v["edges"] is None and v["score"] == v["outline"] > 0.95
+        assert not np.all(diff == compare.LINE_OURS, axis=2).any()  # no edge of ours painted as extra
+    # a sheet with one detailed view compares edges in its flat views too
+    res = compare.compare_views([(flat, None), (np.asarray(ribbed(lines)), None)], ["a", "b"], [ours, ours])[0]
+    assert res[0]["edges"] is not None and res[0]["edges"] < 0.5 and res[1]["edges"] > 0.9
 
 
 def test_reference_grid_layout(tmp_path):
@@ -418,10 +522,10 @@ def test_reference_limits(tmp_path, size, n, why):
 
 
 def test_compare_sheet_stays_bounded(tmp_path):
-    rows = [[np.full((128, 1024, 3), 255, np.uint8)] * 3 for _ in range(9)]  # nine 8:1 cells
-    grid, cell = compare.save_sheet(rows, [["a", "b", "c"]] * 9, tmp_path / "s.png", 1024)
+    cells = [np.full((128, 1024, 3), 255, np.uint8)] * 9  # nine 8:1 cells
+    grid, cell = compare.save_sheet(cells, ["a"] * 9, tmp_path / "s.png", 1024)
     w, h = Image.open(tmp_path / "s.png").size
-    assert grid == [9, 3] and cell < 1024 and w <= compare.SHEET_MAX_SIDE and h <= compare.SHEET_MAX_SIDE
+    assert grid == [3, 3] and cell < 1024 and w <= compare.SHEET_MAX_SIDE and h <= compare.SHEET_MAX_SIDE
     assert w * h <= compare.SHEET_MAX_PIXELS
 
 
@@ -464,20 +568,31 @@ VIEWS = ["iso", "front", "top", "right"]
 
 @needs_freecad
 def test_preview_compared_with_a_reference(rt, ws):
-    """A render of the part itself as the reference scores near 1 in every view; another part scores lower. The
-    sheet holds, per view, the reference, our aligned render and the diff."""
+    """A render of the part itself as the reference scores near 1 in every view; another part scores lower, and so
+    does the same plate without its blind pocket, which leaves every outline alone. The image is one diff per view,
+    laid out like the reference, and the result carries no shape summary or legend (every later turn pays for it)."""
     ok(rt.apply_operations("a.FCStd", PLATE, create={"units": "mm"}))
     ok(rt.export_drawing("a.FCStd", "ref.png", "png", views=VIEWS))
     r = ok(rt.export_drawing("a.FCStd", "self.png", "png", views=VIEWS, reference="ref.png"))
     c = r["compare"]
-    assert [v["view"] for v in c["views"]] == VIEWS and all(v["iou"] > 0.95 for v in c["views"])
-    assert c["mean_iou"] > 0.97 and c["reference"] == "ref.png" and "red" in c["legend"]
-    assert r["grid"] == [4, 3] and Image.open(ws / "self.png").size == (3 * 256, 4 * 256)
+    assert [v["view"] for v in c["views"]] == VIEWS and all(v["score"] > 0.95 for v in c["views"])
+    assert c["score"] > 0.97 and c["reference"] == "ref.png" and "shape" not in r and "legend" not in c
+    assert r["grid"] == [2, 2] and Image.open(ws / "self.png").size == (2 * 256, 2 * 256)
 
     ok(rt.apply_operations("b.FCStd", [{"op": "primitive", "kind": "cylinder", "dims": {"radius": 20, "height": 30}}],
                            create={"units": "mm"}))
     other = ok(rt.export_drawing("b.FCStd", "other.png", "png", views=VIEWS, reference="ref.png"))["compare"]
-    assert other["mean_iou"] < c["mean_iou"] - 0.3
+    assert other["score"] < c["score"] - 0.3
+
+    pocket = PLATE[:3] + [{"op": "pocket", "sketch": "$2", "length": 5}]  # blind: no outline shows it
+    ok(rt.apply_operations("p.FCStd", pocket, create={"units": "mm"}))
+    ok(rt.apply_operations("q.FCStd", PLATE[:2], create={"units": "mm"}))
+    views = ["iso", "iso_back"]
+    ok(rt.export_drawing("p.FCStd", "pref.png", "png", views=views))
+    flat = ok(rt.export_drawing("q.FCStd", "flat.png", "png", views=views, reference="pref.png"))["compare"]
+    assert all(v["outline"] > 0.95 and v["edges"] < 0.9 for v in flat["views"]) and flat["score"] < 0.95
+    diff = np.asarray(Image.open(ws / "flat.png").convert("RGB")).astype(int)
+    assert ((diff[..., 0] > 180) & (diff[..., 1] < 80) & (diff[..., 2] < 80)).sum() > 100  # the pocket, in red
 
     # one view, and the same shape twice the size is aligned onto it: only proportions count
     ok(rt.export_drawing("a.FCStd", "top.png", "png", views=["top"], image_size=300))
@@ -487,8 +602,8 @@ def test_preview_compared_with_a_reference(rt, ws):
                                          dict(PLATE[2], shapes=[{"type": "circle", "center": [40, 0],
                                                                  "diameter": 24}]), PLATE[3]], create={"units": "mm"}))
     one = ok(rt.export_drawing("big.FCStd", "one.png", "png", views=["top"], reference="top.png", image_size=128))
-    assert one["grid"] == [1, 3] and one["compare"]["views"][0]["iou"] > 0.97
-    assert Image.open(ws / "one.png").size == (3 * 128, 128)
+    assert one["grid"] == [1, 1] and one["compare"]["views"][0]["score"] > 0.95
+    assert Image.open(ws / "one.png").size == (128, 128)
 
     plain = ok(rt.export_drawing("a.FCStd", "plain.png", "png", views=["top"]))
     assert "compare" not in plain and plain["grid"] == [1, 1]  # without a reference: the usual preview
@@ -506,7 +621,7 @@ def test_mcp_tools_document_scripts_and_references(ws):
     assert {"language", "keep_features"} <= set(tools["run_script"].inputSchema["properties"])
     assert "reference" in tools["export_drawing"].inputSchema["properties"]
     para = INSTRUCTIONS.split("3D scripts and reference images")[1]
-    assert "run_script" in para and "reference=" in para and "iou" in para
+    assert "run_script" in para and "reference=" in para and "compare.score" in para
 
 
 @needs_freecad

@@ -37,11 +37,11 @@
 17. **字体**：新图默认 `gbenor.shx` + `gbcbig.shx`。没有安装这两个字体的 CAD 软件会做字体替换。
 
 19. **三维零件**（2026-10-29）：一个零件一个 Body，没有装配；不能从三维生成二维工程图（预览图已有：`export_drawing` 的 png）；Agent 三维实验目前只有 BenchCAD Vision2Code 的 100 题试点（每题一次，见 [examples/benchcad/README.md](../examples/benchcad/README.md)），图纸到零件（T1）还没跑。详见 [part-3d.md](part-3d.md)。
-20. **三维脚本与参考图比较**（2026-10-30）：`run_script` 可以用 CadQuery / FreeCAD Part 脚本建零件的基体，之后的操作建在它上面；基体本身不是特征树（`SCRIPT_BASE_SOLID` 警告，CADBench 会拒收），只能整段重跑脚本来改。和二维脚本一样默认关闭，检查只防误操作，不是沙箱。`export_drawing(..., reference=...)` 的比较只看轮廓，按包围盒对齐（整体尺寸不比较），参考图必须按预览的网格排法，且有大小上限（32 MB、2500 万像素、每格不超过 8:1，每格先缩到 1024 px）；还没有用 Agent 实测这两个功能对 BenchCAD 得分的影响。
+20. **三维脚本与参考图比较**（2026-10-30）：`run_script` 可以用 CadQuery / FreeCAD Part 脚本建零件的基体，之后的操作建在它上面；基体本身不是特征树（`SCRIPT_BASE_SOLID` 警告，CADBench 会拒收），只能整段重跑脚本来改。和二维脚本一样默认关闭，检查只防误操作，不是沙箱。`export_drawing(..., reference=...)` 比较轮廓和轮廓里的边线（整体尺寸不比较），看不到任何视图都看不出的差别（空心内部、正面背后的壁厚）；参考图必须按预览的网格排法，且有大小上限（32 MB、2500 万像素、每格不超过 8:1，每格先缩到 1024 px）。Agent 实测见 [examples/benchcad/README.md](../examples/benchcad/README.md)。
 
 ## 路线图
 
-- **三维**：从模型投影出二维工程图（DXF，接现有标注和出图）；装配；用 CADBench / BenchCAD 测 Agent，包括"CadQuery 脚本 + 参考图比较"这条路线和纯代码对照组的对比；参考图比较可加按体素或深度图的评分，以及不按包围盒、保留整体尺寸的对齐方式。
+- **三维**：从模型投影出二维工程图（DXF，接现有标注和出图）；装配；用 CADBench / BenchCAD 测 Agent，包括"CadQuery 脚本 + 参考图比较"这条路线和纯代码对照组的对比；参考图比较可加不按轮廓、保留整体尺寸的对齐方式。
 
 - **实测暴露的问题**（[trials-report.md](trials-report.md)、[comparison-hard-tasks.md](comparison-hard-tasks.md)）：~~读取图纸空间布局~~（已完成）；~~脚本出口~~（已完成，`run_script`）；判断图纸副本与模型是否一致；`modify` 支持标注；标注重叠检测；保留动态块数据。
 - **P1 收尾**：两线角度标注创建、HATCH、MLEADER、坐标标注；为 `mirror` 作用于标注/块、开口多段线偏移补测试。

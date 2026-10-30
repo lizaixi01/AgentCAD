@@ -99,7 +99,8 @@ be a single solid.
 To compare your part with the target, export_drawing("part.FCStd", "compare.png", "png",
 views=[[-1,-1,-1],[1,1,1],[1,-1,1],[-1,1,-1]], reference="composite.png", overwrite=true) renders the same four
 camera positions in the same 2x2 order (a views vector is the camera position), aligned to the target's
-silhouettes, and returns a match score per view (compare.views[].iou, compare.mean_iou) with a diff image.
+silhouettes, and returns a match score (compare.score; per view, compare.views[]: outline and edges inside it)
+with a diff image.
 submission.step is scored by voxel IoU against the real part when you finish; there is no other output."""
 
 LOOK = {"claude": "Look at preview.png next to composite.png with the Read tool.",
@@ -163,6 +164,12 @@ def _run_once(task: Path, agent: str, arm: str, label: str, effort: str, timeout
     # the hybrid arm is the AgentCAD arm with scripts enabled (CadQuery in AgentCAD's venv: the [cadquery] extra)
     cmd = command(agent, "mcp" if arm == "hybrid" else arm, ws.as_posix(), effort, logs / "_mcp",
                   python=str(BENCH_PY), scripts=arm == "hybrid", images=[(ws / i).as_posix() for i in images])
+    if (logs / f"{tid}.jsonl").exists():  # run again: keep the earlier attempt's logs, in a folder the summaries skip
+        n = 1 + len(list((logs / "replaced").glob(f"{tid}.*.jsonl")))
+        (logs / "replaced").mkdir(exist_ok=True)
+        for ext in (".jsonl", ".stderr.log"):
+            if (logs / f"{tid}{ext}").exists():
+                (logs / f"{tid}{ext}").replace(logs / "replaced" / f"{tid}.{n}{ext}")
     t0 = time.time()
     status = "done"
     with open(logs / f"{tid}.jsonl", "wb") as out, open(logs / f"{tid}.stderr.log", "wb") as err:
@@ -173,8 +180,12 @@ def _run_once(task: Path, agent: str, arm: str, label: str, effort: str, timeout
         except subprocess.TimeoutExpired:
             status, code = "timeout", None
     log = (logs / f"{tid}.jsonl").read_text(encoding="utf-8", errors="replace")
-    # The reference lives under DATA; an agent that names it has looked outside its workspace.
-    leak = str(DATA).replace("\\", "/").lower() in log.replace("\\\\", "/").replace("\\", "/").lower()
+    # The reference lives under DATA; an agent that names it has looked outside its workspace. A pinned AgentCAD copy
+    # (AGENTCAD_SRC) may sit under DATA too: its paths, in tracebacks, are not the reference.
+    seen = log.replace("\\\\", "/").replace("\\", "/").lower()
+    if os.environ.get("AGENTCAD_SRC"):
+        seen = seen.replace(Path(os.environ["AGENTCAD_SRC"]).as_posix().lower(), "")
+    leak = str(DATA).replace("\\", "/").lower() in seen
     submitted = (ws / "submission.step").exists()
     tail = log[-4000:] + (logs / f"{tid}.stderr.log").read_text(encoding="utf-8", errors="replace")[-4000:]
     return {"suite": suite, "id": tid, "agent": agent, "arm": arm, "effort": effort, "status": status, "exit": code,

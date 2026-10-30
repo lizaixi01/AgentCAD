@@ -1,0 +1,54 @@
+[
+  {
+    "run": "cadbench-v3-drawing-retest-20261030",
+    "determinant": 1,
+    "reference_faces": 16,
+    "candidate_faces": 14,
+    "candidate_points": 104,
+    "reference_points": 100,
+    "candidate_to_reference_max": 0.02837302937548005,
+    "reference_to_candidate_max": 8.644125458514252e-14,
+    "bidirectional_mean": 0.001938410528705966,
+    "volume_before": 33485.65483584377,
+    "volume_after": 33485.65483584378
+  },
+  {
+    "run": "cadbench-v3-drawing-retest-20261030",
+    "determinant": -1,
+    "reference_faces": 16,
+    "candidate_faces": 14,
+    "candidate_points": 104,
+    "reference_points": 100,
+    "candidate_to_reference_max": 72.69917018022119,
+    "reference_to_candidate_max": 72.64272426586672,
+    "bidirectional_mean": 19.9644612128352,
+    "volume_before": 33485.65483584377,
+    "volume_after": 33485.65483584378
+  },
+  {
+    "run": "cadbench-v3-drawing-retest2-20261030",
+    "determinant": 1,
+    "reference_faces": 16,
+    "candidate_faces": 14,
+    "candidate_points": 96,
+    "reference_points": 100,
+    "candidate_to_reference_max": 72.69917018022119,
+    "reference_to_candidate_max": 72.64272426586672,
+    "bidirectional_mean": 20.933068201614592,
+    "volume_before": 33485.65483584377,
+    "volume_after": 33485.654835843765
+  },
+  {
+    "run": "cadbench-v3-drawing-retest2-20261030",
+    "determinant": -1,
+    "reference_faces": 16,
+    "candidate_faces": 14,
+    "candidate_points": 96,
+    "reference_points": 100,
+    "candidate_to_reference_max": 0.02837302937548005,
+    "reference_to_candidate_max": 1.5951644855252062e-13,
+    "bidirectional_mean": 0.0020175293257936704,
+    "volume_before": 33485.65483584377,
+    "volume_after": 33485.654835843765
+  }
+]
