@@ -1,0 +1,65 @@
+{
+  "id": "freecad-1338adbf8b",
+  "kind": "drawing",
+  "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+  "instruction_sha256": "fdc60f28cabb65fe44f28abd3a08445f0105114a6839387be98c78df3f2654e8",
+  "task_toml_sha256": "f3bbb2e4c22b63214619ebd8776f6204147033e3287358041b68a13d106dc70f",
+  "public_input_sha256": {
+    "1338adbf8b.png": "7bae28036f84aed1d72ae02922cf111b8c383f2d12b51db2318a8c0904f9ebf1"
+  },
+  "status": "done",
+  "exit_code": 0,
+  "seconds": 404.53,
+  "workspace": "D:\\Projects\\bench-ws\\cadbench-v3-unseen-drawings-20261030\\freecad-1338adbf8b",
+  "outputs": {
+    "answer.FCStd": "e06eb9541d8d01e505b85b567d4ef464409d346709126f203d7299ac439c763c"
+  },
+  "tool_calls": 30,
+  "tools": [
+    "list_operations",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "apply_operations",
+    "measure_entities",
+    "export_drawing",
+    "inspect_entities",
+    "inspect_image",
+    "apply_operations",
+    "validate_drawing",
+    "read_drawing",
+    "inspect_entities",
+    "export_drawing",
+    "validate_drawing",
+    "inspect_entities",
+    "save_benchmark_stage"
+  ],
+  "tool_errors": [
+    {
+      "tool": "inspect_image",
+      "code": "MCP_TOOL_ERROR",
+      "message": "Error executing tool inspect_image: 1 validation error for inspect_imageArguments\nmax_size\n  Input should be less than or equal to 2048 [type=less_than_equal, input_value=2100, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/less_than_equal"
+    }
+  ],
+  "unexpected_tools": [],
+  "usage": {
+    "input_tokens": 1338620,
+    "cached_input_tokens": 1240064,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 15143,
+    "reasoning_output_tokens": 8538
+  }
+}

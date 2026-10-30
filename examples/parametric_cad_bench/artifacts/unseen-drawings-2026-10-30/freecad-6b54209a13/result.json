@@ -1,0 +1,71 @@
+{
+  "id": "freecad-6b54209a13",
+  "kind": "drawing",
+  "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+  "instruction_sha256": "07dabf075370446de868f0e45eec9c8b3b1c6f6a4ecd39a305c7e4bfacb2a2e7",
+  "task_toml_sha256": "ba15d1f21e99d888407d74eddf7648136ce9ca2859780c465b3afc776fa72cc0",
+  "public_input_sha256": {
+    "6b54209a13.png": "69a47a61dfd5afcc1881c66c4a2d1e5a2a30d6b9ae6d2365181b2e2c89dffc9d"
+  },
+  "status": "done",
+  "exit_code": 0,
+  "seconds": 647.17,
+  "workspace": "D:\\Projects\\bench-ws\\cadbench-v3-unseen-drawings-20261030\\freecad-6b54209a13",
+  "outputs": {
+    "answer.FCStd": "56dc6c57b65f836c0fe333d43e2b39ae7f2e309516b6a49fa80f99a9b0174a82"
+  },
+  "tool_calls": 32,
+  "tools": [
+    "list_operations",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "apply_operations",
+    "export_drawing",
+    "apply_operations",
+    "inspect_image",
+    "export_drawing",
+    "list_operations",
+    "inspect_image",
+    "inspect_image",
+    "apply_operations",
+    "measure_entities",
+    "inspect_entities",
+    "read_drawing",
+    "apply_operations",
+    "export_drawing",
+    "inspect_entities",
+    "measure_entities",
+    "list_operations",
+    "measure_entities",
+    "measure_entities",
+    "measure_entities",
+    "validate_drawing",
+    "save_benchmark_stage"
+  ],
+  "tool_errors": [],
+  "unexpected_tools": [],
+  "usage": {
+    "input_tokens": 1662039,
+    "cached_input_tokens": 1460096,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 17763,
+    "reasoning_output_tokens": 12508
+  },
+  "evaluation": {
+    "reward": 0.156645,
+    "geometry_similarity": 0.10599547680059763,
+    "cad_spec_consistency": 0.30000000000000004,
+    "combined": 0.15664530694166828,
+    "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=0.106 [solid_count=1 (matched)] (surface_types=0.422, volume=0.000, surface_area=0.437, principal_moments=0.085, icp=0.000); surface_types_diff=3.789% (Close); volume_diff=6.707% (Far); surface_area_diff=3.658% (Close); bbox_diff=0.000% (OCCT OBB; gate passed); principal_moments_diff=8.226% (Close); icp[reference.FCStd vs answer.FCStd: reward=0.000 rmse=7.5235e+00 max_residual=2.1299e+01 mm]",
+    "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=0.300 (17/24 consistent, 2 inconsistent, 5 not_found; failure_budget=10)",
+    "status": "scored",
+    "score": 0.156645
+  }
+}
