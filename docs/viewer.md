@@ -32,6 +32,10 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。三维零
 一个空闲端口启动查看器，再打开。安装向导（`agentcad setup --gui`）和 `agentcad setup --shortcut` 会在桌面放上这个
 图标。文件夹里还没有图纸时，页面会给出几句可以复制给助手的话。
 
+`agentcad demo` 用来给别人演示：在 `<工作区>/demo` 里开一个查看器、打开浏览器，然后一步步画一块安装板（外框、孔、
+尺寸），最后把它加宽到 240，改动的地方标成橙色。不需要 AI，也不碰别的文件：`demo` 文件夹里有它自己的标记文件，
+只有带这个标记的文件夹才会被清空重来。桌面上的「AgentCAD 演示」图标运行的就是它（`agentcad demo --shortcut`）。
+
 仓库带的 `.claude/launch.json` 里有 `agentcad-viewer` 配置，在 Claude 桌面应用的内置浏览器里启动查看器（根目录
 `playground`，端口 8770）。它用的是 Windows venv 路径 `.venv/Scripts/python.exe`，macOS/Linux 改成 `.venv/bin/python`。
 

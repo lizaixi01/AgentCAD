@@ -23,6 +23,9 @@ English or Chinese.
    Tap **Finish**; the installer window closes by itself.
 5. From then on, double-click the **AgentCAD** icon setup put on your desktop: it opens your drawings in the live
    viewer (see [viewer.md](viewer.md)). With no drawing yet, it shows sentences to copy to your assistant.
+   To show someone what AgentCAD does, double-click **AgentCAD Demo** (**AgentCAD 演示** on a Chinese system): the
+   viewer opens and a mounting plate is drawn and then widened, step by step, in `AgentCAD\demo`. No AI needed. From a
+   terminal: `agentcad demo`, or `agentcad demo --shortcut` to put that icon on the desktop.
 
 Already installed, or something stopped working? Run the installer again and tap **Already installed? Check it**.
 Every part gets a green tick or a sentence saying what to do, and **Fix it for me** reconnects the apps that need
