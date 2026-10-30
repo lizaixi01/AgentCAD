@@ -88,7 +88,14 @@ All nine standard-answer checks must pass with the current scoring protocol befo
 any model run. An initial integration trial was aborted after CAD imports/previews
 failed under memory pressure; its logs remain outside the final nine-case run,
 without a score. `--resume` never resets an exhausted time or tool-call budget.
-Failed attempts are retained in `attempt-N/` directories.
+Failed attempts are retained in `attempt-N/` directories. A second integration
+batch (`benchcad2-sol-max-20261030-dev9`) was stopped before either active case
+submitted: CadQuery rejected exact rigid JSON matrices in the preview adapter's
+`transformShape` call. This was reproduced locally and fixed by applying the
+unchanged matrix with the general transform for preview only. Both integration
+batches remain outside the final run and have no assigned performance scores.
+Real MCP preview tests now cover exact and oblique rotations, including unchanged
+source STEP bytes. The final run uses a new output directory and the fixed adapter.
 Do not use this script on Core: it is deliberately restricted to `examples/`.
 
 The external output directory holds `metadata.json`, each case's `run.json`,

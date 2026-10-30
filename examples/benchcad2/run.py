@@ -443,7 +443,7 @@ def main() -> None:
     ap.add_argument("mode", choices=["run", "score", "oracle", "summary", "_stage", "_score"])
     ap.add_argument("--bench-source", type=Path, default=Path(r"D:\Projects\bench-src\benchcad-2-main"))
     ap.add_argument("--bench-python", type=Path)
-    ap.add_argument("--out", type=Path, default=Path(r"D:\Projects\AgentCAD-output\benchcad2-sol-max-20261030-dev9"))
+    ap.add_argument("--out", type=Path, default=Path(r"D:\Projects\AgentCAD-output\benchcad2-sol-max-20261030-final"))
     ap.add_argument("--cases", nargs="*", help="e.g. task3_case1 task6_case2")
     ap.add_argument("--jobs", type=int, help="default: 2 model episodes, 1 offline scorer")
     ap.add_argument("--timeout", type=int, default=3600)

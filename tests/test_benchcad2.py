@@ -177,6 +177,38 @@ def test_submission_requires_real_output_inside_workspace(tmp_path):
     assert not (tmp_path / "answer.json").exists()
 
 
+@pytest.mark.parametrize("matrix", [
+    [[0, -1, 0, 10], [1, 0, 0, 20], [0, 0, 1, 30], [0, 0, 0, 1]],
+    [[.70710678, -.70710678, 0, 10], [.70710678, .70710678, 0, 20],
+     [0, 0, 1, 30], [0, 0, 0, 1]],
+])
+def test_assembly_preview_handles_rigid_json_matrices_without_changing_step(tmp_path, matrix):
+    import asyncio
+    import base64
+    import io
+    from PIL import Image
+
+    cq = pytest.importorskip("cadquery")
+    step = tmp_path / "step_files/part_01.step"
+    step.parent.mkdir()
+    cq.exporters.export(cq.Workplane("XY").box(2, 4, 8), str(step))
+    original = step.read_bytes()
+    app = tools.server(tmp_path, "assembly")
+
+    async def call(transform):
+        return await app.call_tool("preview_assembly", {"instances": [
+            {"part_id": "part_01", "transform": transform}]})
+
+    baseline = asyncio.run(call(IDENTITY))
+    rotated = asyncio.run(call(matrix))
+    assert [c.type for c in rotated] == ["image"]
+    assert rotated[0].mimeType == "image/png"
+    image = Image.open(io.BytesIO(base64.b64decode(rotated[0].data)))
+    assert image.size == (960, 960)
+    assert rotated[0].data != baseline[0].data
+    assert step.read_bytes() == original
+
+
 def test_summary_weights_tasks_equally_and_does_not_hide_evaluator_failure(tmp_path):
     pinned_protocol(tmp_path)
     counts = [1, 2, 2, 1, 1, 2]

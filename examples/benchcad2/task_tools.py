@@ -221,8 +221,12 @@ def server(root: Path, kind: str):
         import cadquery as cq
 
         rows = rigid_instances(instances)
+        # CadQuery's nested-list Matrix is a gp_GTrsf tagged as "other", even
+        # for an exact 90-degree rotation. transformShape requires gp_Trsf and
+        # rejects it. The general transform applies the supplied matrix as-is;
+        # it changes only this preview, never submitted geometry or placements.
         shapes = [cq.importers.importStep(str(files.part_path(r["part_id"]))).val()
-                  .transformShape(cq.Matrix(r["transform"])) for r in rows]
+                  .transformGeometry(cq.Matrix(r["transform"])) for r in rows]
         return [Image(data=preview(cq.Compound.makeCompound(shapes)), format="png")]
 
     @mcp.tool()
