@@ -255,7 +255,9 @@ MODIFIERS = ("M", "L", "S", "P", "F", "T", "U")
 
 def index() -> dict[str, Any]:
     """Compact catalogue for the standard_library tool."""
+    from .fits import catalog
     return {
+        "iso_fits": catalog(),
         "pid_symbols": sorted(PID),
         "pid_line_kinds": sorted(LINE_KINDS),
         "gdt_characteristics": sorted(GDT),
@@ -267,6 +269,9 @@ def index() -> dict[str, Any]:
 
 def table(item: str, size: str | None = None) -> dict[str, Any]:
     """Rows of one library item (all sizes, or one)."""
+    if item == "iso_fit":
+        from .fits import table as fit_table
+        return fit_table(size)
     if item in PARTS:
         sizes = [size] if size else PARTS[item]["sizes"]
         return {"item": item, "standard": PARTS[item]["standard"], "describe": PARTS[item]["describe"],
