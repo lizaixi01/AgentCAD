@@ -29,9 +29,16 @@ def _name(value: Any, field: str) -> str:
     return value
 
 
+def _finite_number(value: Any) -> bool:
+    try:
+        return not isinstance(value, bool) and isinstance(value, (float, int)) and math.isfinite(value)
+    except OverflowError:
+        return False
+
+
 def _point(value: Any, box: list[int]) -> list[float]:
     if (not isinstance(value, (list, tuple)) or len(value) != 2
-            or any(isinstance(x, bool) or not isinstance(x, (float, int)) or not math.isfinite(x) for x in value)):
+            or any(not _finite_number(x) for x in value)):
         raise _bad("Each point must contain two finite pixel coordinates")
     x, y = map(float, value)
     if not (box[0] <= x < box[2] and box[1] <= y < box[3]):
@@ -39,7 +46,7 @@ def _point(value: Any, box: list[int]) -> list[float]:
     return [x, y]
 
 
-def check_dimensions(readings: list[dict], box: list[int]) -> dict[str, Any]:
+def check_dimensions(readings: list[dict], box: list[int], source_crop=None) -> dict[str, Any]:
     if not isinstance(readings, list) or len(readings) > 12:
         raise _bad("dimensions must be a list of at most 12 readings (empty gives a coordinate guide)")
     checks, ids = [], set()
@@ -52,8 +59,7 @@ def check_dimensions(readings: list[dict], box: list[int]) -> dict[str, Any]:
         ids.add(identifier)
         view = _name(reading.get("view"), "view")
         value, unit = reading.get("value"), reading.get("unit", "mm")
-        if (isinstance(value, bool) or not isinstance(value, (float, int))
-                or not math.isfinite(value) or value <= 0):
+        if not _finite_number(value) or value <= 0:
             raise _bad("value must be a positive finite number read from the drawing")
         if not isinstance(unit, str) or unit not in UNIT_MM or not math.isfinite(value * UNIT_MM[unit]):
             raise _bad("unit must be mm, cm, m or in, with a finite converted value")
@@ -81,6 +87,9 @@ def check_dimensions(readings: list[dict], box: list[int]) -> dict[str, Any]:
                        "endpoint_errors_px": errors,
                        "aligned": all(abs(e) <= PIXEL_TOLERANCE for e in errors)})
 
+    if source_crop is not None:
+        for row in checks:
+            row["raster_probe"] = raster_probe(source_crop, box, row)
     groups = defaultdict(list)
     for row in checks:
         groups[(row["view"], row["axis"])].append(row)
@@ -92,6 +101,68 @@ def check_dimensions(readings: list[dict], box: list[int]) -> dict[str, Any]:
                     "Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual "
                     "surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. "
                     "Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."}
+
+
+def raster_probe(crop: Image.Image, box: list[int], row: dict) -> dict:
+    """Expose nearby ink crossings independently of the proposed endpoint coordinates.
+
+    This deliberately does not classify arrowheads, select endpoints or change the graph.
+    A physical edge, text or hatch can produce a crossing too. Inspect the source region.
+    """
+    import numpy as np
+
+    axis = "xy".index(row["axis"])
+    points = row["line"]
+    centre = round(sum(p[1-axis] for p in points)/2)
+    margin = max(12, min(64, math.ceil(row["dimension_span_px"]/2)))
+    lo = max(box[axis], math.floor(min(p[axis] for p in points))-margin)
+    hi = min(box[axis+2], math.ceil(max(p[axis] for p in points))+margin+1)
+    cross_lo, cross_hi = max(box[1-axis], centre-16), min(box[3-axis], centre+17)
+    region = [lo, cross_lo, hi, cross_hi] if axis == 0 else [cross_lo, lo, cross_hi, hi]
+    result = {"detail_region": region, "axis": row["axis"], "crossings": [],
+              "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. "
+                      "Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: "
+                      "the tip touches the witness, while the broad arrow base and shaft extend beyond it. "
+                      "Neighbouring dimensions, text, hatching and edges may also cross the shaft."}
+    if hi-lo > 4096:
+        result["status"] = "region_too_long"
+        result["note"] += " Raster scanning is limited to 4096 source pixels along the dimension."
+        return result
+    local = [region[i]-box[i % 2] for i in range(4)]
+    values = np.asarray(crop.crop(local).convert("L"), dtype=float)
+    # Rows follow the dimension axis; columns run perpendicular to it.
+    if axis == 0:
+        values = values.T
+    background, dark = float(np.percentile(values, 90)), float(np.percentile(values, 5))
+    contrast = background-dark
+    if contrast < 24:
+        result["status"] = "low_contrast"
+        return result
+    mask = values < background-max(16, min(64, contrast*.35))
+    middle = centre-cross_lo
+    crossings = []
+    for offset, pixels in enumerate(mask):
+        near = [i for i in range(max(0, middle-2), min(len(pixels), middle+3)) if pixels[i]]
+        if not near:
+            continue
+        stem = min(near, key=lambda i: abs(i-middle))
+        left = right = stem
+        while left > 0 and pixels[left-1]:
+            left -= 1
+        while right+1 < len(pixels) and pixels[right+1]:
+            right += 1
+        reaches = [stem-left, right-stem]
+        if max(reaches) >= 6:
+            crossings.append((lo+offset, reaches))
+    for coordinate, reaches in crossings:
+        if result["crossings"] and coordinate == result["crossings"][-1]["range_px"][1]+1:
+            previous = result["crossings"][-1]
+            previous["range_px"][1] = coordinate
+            previous["reach_px"] = [max(a, b) for a, b in zip(previous["reach_px"], reaches)]
+        else:
+            result["crossings"].append({"range_px": [coordinate, coordinate], "reach_px": reaches})
+    result["status"] = "candidates" if crossings else "no_crossings_detected"
+    return result
 
 
 def _solve(view: str, axis: str, rows: list[dict]) -> dict:

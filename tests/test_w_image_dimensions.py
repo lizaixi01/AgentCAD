@@ -77,6 +77,49 @@ def test_consistent_anchors_still_do_not_verify_their_semantics(ws):
     assert "not pixels/arrow recognition or OCR" in evidence["note"]
 
 
+@pytest.mark.parametrize("horizontal,colour", [(False, "black"), (True, "purple")])
+def test_raster_crossings_are_independent_of_guessed_external_arrow_endpoints(ws, horizontal, colour):
+    image = Image.new("RGB", (240, 140), "white")
+    draw = ImageDraw.Draw(image)
+    draw.line((40, 20, 40, 120), fill=colour)
+    for y in (60, 80):
+        draw.line((40, y, 180, y), fill=colour)
+    draw.polygon([(40, 60), (37, 50), (43, 50)], fill=colour)
+    draw.polygon([(40, 80), (37, 90), (43, 90)], fill=colour)
+    # The caller mistakes the outside arrow's base for its tip; all supplied points agree.
+    line, surfaces = [[40, 50], [40, 80]], [[140, 50], [140, 80]]
+    if horizontal:
+        image = image.transpose(Image.Transpose.TRANSPOSE)
+        line, surfaces = [[p[::-1] for p in group] for group in (line, surfaces)]
+    image.save(ws / "section.png")
+    readings = [{"id": "gap", "view": "detail", "value": 9, "line": line,
+                 "surfaces": [{"name": name, "point": point} for name, point in zip(("a", "b"), surfaces)]}]
+    result = inspect(ws, readings)
+    evidence = result["dimension_evidence"]
+    assert evidence["consistent"] and not evidence["semantics_verified"]
+    probe = evidence["checks"][0]["raster_probe"]
+    assert probe["status"] == "candidates"
+    assert [c["range_px"] for c in probe["crossings"]] == [[60, 60], [80, 80]]
+    assert "OUTSIDE arrows" in probe["note"]
+    # Crop offsets and preview rotation must not change independent source observations.
+    box = [20, 10, 200, 130] if not horizontal else [10, 20, 130, 200]
+    cropped = inspect(ws, readings, region=box, rotate=90)
+    assert cropped["dimension_evidence"]["checks"][0]["raster_probe"]["crossings"] == probe["crossings"]
+
+
+def test_unreadable_and_overlong_raster_probes_do_not_certify_endpoints(ws):
+    image = Image.new("RGB", (4500, 80), "white")
+    image.save(ws / "section.png")
+    row = {"id": "span", "view": "blank", "value": 100, "line": [[10, 20], [30, 20]],
+           "surfaces": [{"name": "a", "point": [10, 40]}, {"name": "b", "point": [30, 40]}]}
+    evidence = inspect(ws, [row])["dimension_evidence"]
+    assert evidence["checks"][0]["raster_probe"]["status"] == "low_contrast"
+    row["line"][1][0] = row["surfaces"][1]["point"][0] = 4400
+    evidence = inspect(ws, [row])["dimension_evidence"]
+    assert evidence["checks"][0]["raster_probe"]["status"] == "region_too_long"
+    assert evidence["semantics_verified"] is False
+
+
 def test_unit_conversion_reversed_endpoint_order_and_disconnected_components(ws):
     readings = section(ws / "section.png")
     readings[0].update(value=1.5, unit="cm")
@@ -129,7 +172,8 @@ def test_guide_and_evidence_keep_unmarked_source_and_original_coordinates(ws, ro
     assert guide["ok"] and guide["dimension_evidence"]["consistent"] is None
 
 
-@pytest.mark.parametrize("change", ["duplicate", "outside", "nonfinite", "diagonal", "unknown", "bad_value"])
+@pytest.mark.parametrize("change", ["duplicate", "outside", "nonfinite", "diagonal", "unknown", "bad_value",
+                                  "huge_value", "huge_coordinate"])
 def test_invalid_anchor_inputs_fail_without_writing(ws, change):
     source = ws / "section.png"
     readings = section(source)
@@ -140,6 +184,8 @@ def test_invalid_anchor_inputs_fail_without_writing(ws, change):
     if change == "diagonal": readings[0]["line"][1][0] = 100
     if change == "unknown": readings[0]["answer"] = "guess"
     if change == "bad_value": readings[0]["value"] = True
+    if change == "huge_value": readings[0]["value"] = 10**1000
+    if change == "huge_coordinate": readings[0]["line"][0][0] = 10**1000
     result = inspect(ws, readings)
     assert not result["ok"] and result["error"]["code"] == "BAD_DIMENSION_EVIDENCE", result
     assert source.read_bytes() == before and list(ws.iterdir()) == [source]

@@ -58,6 +58,12 @@ Basics
   each surface point is where that witness line reaches a physical boundary. Source coordinates remain
   unchanged by crop rotation. Read the unmarked panel alongside the D1/D2 and S1/S2 overlay: verify each
   point actually lies on the intended line/boundary, not on hatching, text or a neighbouring feature.
+  For crowded short dimensions, inspect each raster_probe.detail_region WITHOUT overlays, rotating the
+  dimension line horizontal. Its crossings come from the original raster, not your supplied surfaces;
+  they are candidates, not recognized witnesses. Follow BOTH arrow tips to the correct crossings.
+  Short dimensions often use OUTSIDE arrows: the broad arrow base and shaft lie beyond the measured
+  interval. Do not use an arrow base, shaft end or a nearby crossing as the tip. Check which side of each
+  witness contains the arrow body; a dimension's text can be far outside the measured interval.
   The tool checks witness projections and solves the supplied dimension graph; green/consistent means
   arithmetic and anchor alignment ONLY, not that OCR or the surface assignment is true. Correct any
   mismatched anchors, scale conflicts or contradictory cycles before trusting derived levels.
@@ -151,7 +157,8 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
                           "line:[[x,y],[x,y]],surfaces:[{name,point:[x,y]},{name,point:[x,y]}]}. "
                           "line=dimension/witness intersections; surfaces=corresponding boundary points, "
                           "all in source pixels inside the crop. Returns an unmarked+marked image, alignment "
-                          "checks and relative levels from equations; does NOT recognize arrows/text or verify semantics.")] = None) -> Any:
+                          "checks, raster crossing candidates/detail regions and relative levels from equations; "
+                          "does NOT recognize arrows/text or verify semantics.")] = None) -> Any:
         """Look closely at a drawing's dimensions, leaders, hatching or section view before modeling.
         Returns source dimensions, crop coordinates and an inline image. Read-only; writes no files.
         Pixel distances are not CAD dimensions: use the drawing's explicit callouts and datums."""

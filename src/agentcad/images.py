@@ -46,13 +46,14 @@ def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size:
             background = Image.new("RGBA", rgba.size, "white")
             background.alpha_composite(rgba)
             crop = background.convert("RGB")
-            if rotate:
-                crop = crop.transpose({90: Image.Transpose.ROTATE_270, 180: Image.Transpose.ROTATE_180,
-                                       270: Image.Transpose.ROTATE_90}[rotate])
             extra = {}
             if dimensions is not None:
                 from .image_dimensions import check_dimensions, evidence_preview
-                evidence = check_dimensions(dimensions, list(box))
+                evidence = check_dimensions(dimensions, list(box), crop)
+            if rotate:
+                crop = crop.transpose({90: Image.Transpose.ROTATE_270, 180: Image.Transpose.ROTATE_180,
+                                       270: Image.Transpose.ROTATE_90}[rotate])
+            if dimensions is not None:
                 preview, scale, panels = evidence_preview(crop, box, rotate, max_size, evidence)
                 extra = {"dimension_evidence": evidence, "panels": panels}
                 size = preview.size
