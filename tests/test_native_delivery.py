@@ -80,3 +80,18 @@ def test_large_manufacturing_record_survives_native_dwg(rt,blank):
     assert all(p['passed'] for p in read['manufacturing'])
     audit=ok(rt.autocad_audit('ring.dxf'))
     assert audit['passed'] and audit['audit_errors']==0
+
+
+def test_eight_decimal_nominal_dimension_survives_native_dwg(rt,blank,ws):
+    spec={'parts':[{'name':'fine length','at':[130,190],
+        'segments':[{'length':17.12345678,'d_outer':40}]}]}
+    ok(rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':spec}]))
+    ok(rt.export_drawing(blank,'fine.dwg','dwg'))
+    ok(rt.import_drawing('fine.dwg','fine.dxf'))
+    report=ok(rt.read_engineering('fine.dxf','mechanical'))
+    assert report['critique']==[]
+    row=next(a for a in report['manufacturing'][0]['annotations'] if a['kind']=='length.0')
+    doc=ezdxf.readfile(ws/'fine.dxf');dim=doc.entitydb[row['handle']]
+    assert dim.get_measurement()==pytest.approx(17.12345678,abs=1e-10)
+    assert dim.override().get('dimlunit')==2 and dim.override().get('dimrnd')==1e-8
+    assert any('17.12345678' in e.text for e in doc.blocks[dim.dxf.geometry] if e.dxftype()=='MTEXT')

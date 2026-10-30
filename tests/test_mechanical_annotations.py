@@ -58,7 +58,7 @@ def test_complete_supplied_dimensions_survive_saved_readback_and_delivery(rt, bl
 
 
 @pytest.mark.parametrize('damage', ['delete','fake_text','scale','definition','cached_text','hidden','unplotted','bore',
-                                  'dimension_block','dimension_paper','note_block','geometry_block','precision','postfix','partial_record'])
+                                  'dimension_block','dimension_paper','note_block','geometry_block','precision','postfix','units','partial_record'])
 def test_wrong_or_missing_manufacturing_annotation_blocks_delivery(rt,blank,ws,damage):
     report=generated(rt,blank)
     row=next(a for p in report['manufacturing'] for a in p['annotations'] if a['kind']=='bore_diameter.0')
@@ -85,10 +85,10 @@ def test_wrong_or_missing_manufacturing_annotation_blocks_delivery(rt,blank,ws,d
             dim=doc.modelspace().query('LWPOLYLINE[layer=="HIDDEN"]')[0]
         target=doc.layouts.new('unused sheet') if damage=='dimension_paper' else doc.blocks.new('UNINSERTED')
         doc.modelspace().move_to_layout(dim,target)
-    elif damage in {'precision','postfix'}:
+    elif damage in {'precision','postfix','units'}:
         hole=next(a for p in report['manufacturing'] for a in p['annotations'] if a['kind']=='hole_diameter.0')
         dim=doc.entitydb[hole['handle']];override=dim.override()
-        override.update({'dimdec':0} if damage=='precision' else {'dimpost':'<> inches'})
+        override.update({'precision':{'dimdec':0},'postfix':{'dimpost':'<> inches'},'units':{'dimlunit':4}}[damage])
         override.commit()  # Keep the old graphical cache: future regeneration must still be safe.
     else:
         part=next(p for p in report['manufacturing'] if row in p['annotations'])
@@ -101,6 +101,21 @@ def test_wrong_or_missing_manufacturing_annotation_blocks_delivery(rt,blank,ws,d
                             'MANUFACTURING_RECORD_INVALID'} for i in checked['critique'])
     assert rt.deliver_drawing(blank,'bad',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
     assert (ws/blank).read_bytes()==before
+
+
+@pytest.mark.parametrize('rounding',[0,1e-6])
+def test_submicron_rounding_increment_cannot_use_geometry_tolerance(rt,blank,ws,rounding):
+    spec={'parts':[{'name':'fine length','at':[130,190],
+        'segments':[{'length':17.12345678,'d_outer':40}]}]}
+    ok(rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':spec}]))
+    report=ok(rt.read_engineering(blank,'mechanical'))
+    row=next(a for a in report['manufacturing'][0]['annotations'] if a['kind']=='length.0')
+    doc=ezdxf.readfile(ws/blank);dim=doc.entitydb[row['handle']]
+    assert dim.override().get('dimrnd')==1e-8
+    override=dim.override();override.update({'dimrnd':rounding});override.commit();doc.saveas(ws/blank)
+    checked=ok(rt.read_engineering(blank,'mechanical'))
+    assert any(i['code']=='MANUFACTURING_ANNOTATION_MISMATCH' for i in checked['critique'])
+    assert rt.deliver_drawing(blank,'rounded',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
 
 
 def test_pattern_note_is_geometry_bound_and_legacy_coverage_is_explicit(rt,blank,ws):

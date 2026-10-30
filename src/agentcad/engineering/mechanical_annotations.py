@@ -174,7 +174,7 @@ def draw(ctx, at, segments, section_origin, patterns, source_handles, enabled=Tr
         # increment, also meaningful in native CAD, to preserve fractional sizes.
         override.update({"dimdec": digits, "dimlfac": 1, "dimrnd": 10 ** -digits,
                          "dimzin": 8, "dimdsep": ord("."), "dimpost": "", "dimscale": 1,
-                         "dimalt": 0, "dimtol": 0, "dimlim": 0,
+                         "dimalt": 0, "dimtol": 0, "dimlim": 0, "dimlunit": 2,
                          "dimtxt": 2.5, "dimclrt": 7, "dimclrd": 7, "dimclre": 7})
         if location is not None:
             override.set_location(location)
@@ -273,9 +273,10 @@ def check(doc, contract, part_handle) -> tuple[list[dict], list[dict]]:
                      and override.get("dimdec", 2) == _precision(expected["value"])
                      and override.get("dimdsep", ord(".")) == ord(".")
                      and override.get("dimpost", "") == ""
+                     and override.get("dimlunit", 2) == 2
                      and all(override.get(k, 0) == 0 for k in ("dimalt", "dimtol", "dimlim"))
                      and override.get("dimscale", 1) == 1 and override.get("dimtxt", 2.5) == 2.5
-                     and _same(override.get("dimrnd", 0), 10 ** -_precision(expected["value"]))
+                     and override.get("dimrnd", 0) == 10 ** -_precision(expected["value"])
                      and _rendered(doc, entity) == expected["rendered"])
         elif valid:
             leader = doc.entitydb.get(expected["leader"])
