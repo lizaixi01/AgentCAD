@@ -1,0 +1,157 @@
+{
+  "initial_full_suite": {
+    "passed": 555,
+    "failed": 1,
+    "skipped": 8,
+    "seconds": 391.72,
+    "excluded": "tests/test_autocad_live.py",
+    "failed_test": "tests/test_q_viewer_progress.py::test_a_3d_batch_reports_each_operation",
+    "failure": "Expected final progress states checking/done; observed working/done",
+    "source_changes_in_task": false
+  },
+  "isolated_recheck": {
+    "passed": 1,
+    "seconds": 0.77
+  },
+  "interpretation": "An intermittent failure in unchanged progress-event reporting; cause not established. No runtime or viewer code modified.",
+  "failed_activity_log": {
+    "path": "D:\\Projects\\bench-data\\pt-cadbench-unseen-drawings-suite\\test_a_3d_batch_reports_each_o0\\.agentcad\\activity.jsonl",
+    "sha256": "3bb6f329c78eeae41279b8afce16b8cf547be7af7d4af3763d8bc8185eff7677",
+    "events": [
+      {
+        "run": "b42895e3",
+        "n": 1,
+        "ts": 1793361722.194,
+        "tool": "apply_operations",
+        "drawing": "p.FCStd",
+        "state": "working",
+        "step": 0,
+        "total": 4
+      },
+      {
+        "run": "b42895e3",
+        "n": 2,
+        "ts": 1793361722.518,
+        "tool": "apply_operations",
+        "drawing": "p.FCStd",
+        "state": "working",
+        "step": 1,
+        "total": 4,
+        "op": {
+          "op": "set_parameters",
+          "params": {
+            "w": 40
+          }
+        }
+      },
+      {
+        "run": "b42895e3",
+        "n": 3,
+        "ts": 1793361722.734,
+        "tool": "apply_operations",
+        "drawing": "p.FCStd",
+        "state": "working",
+        "step": 3,
+        "total": 4,
+        "op": {
+          "op": "pad",
+          "length": 5
+        }
+      },
+      {
+        "run": "b42895e3",
+        "n": 4,
+        "ts": 1793361722.734,
+        "tool": "apply_operations",
+        "drawing": "p.FCStd",
+        "state": "working",
+        "step": 4,
+        "total": 4,
+        "op": {
+          "op": "fillet",
+          "radius": 2
+        }
+      },
+      {
+        "run": "b42895e3",
+        "n": 5,
+        "ts": 1793361722.871,
+        "tool": "apply_operations",
+        "drawing": "p.FCStd",
+        "state": "done",
+        "seconds": 0.68,
+        "changes": {
+          "added": 5,
+          "modified": 0,
+          "deleted": 0
+        },
+        "ops": [
+          {
+            "op": "set_parameters",
+            "params": {
+              "w": 40
+            },
+            "n": 1
+          },
+          {
+            "op": "add_sketch",
+            "plane": "XY",
+            "shapes": 1,
+            "n": 1
+          },
+          {
+            "op": "pad",
+            "length": 5,
+            "n": 1
+          },
+          {
+            "op": "fillet",
+            "radius": 2,
+            "n": 1
+          }
+        ],
+        "total": 4,
+        "passed": true,
+        "issues": 0
+      }
+    ]
+  },
+  "full_suite_recheck": {
+    "passed": 556,
+    "failed": 0,
+    "skipped": 8,
+    "seconds": 396.7,
+    "excluded": "tests/test_autocad_live.py",
+    "optional_skips": "CadQuery tests; FreeCAD available",
+    "runtime_changed_to_obtain_pass": false
+  },
+  "artifact_audit": {
+    "passed": true,
+    "task_count": 4,
+    "cohort_count": 40,
+    "eligible_count": 38,
+    "previously_seen_overlap": 0,
+    "model_attempts": 4,
+    "mean_reward": 0.46447575,
+    "artifact_counts": {
+      "submitted_native": 4,
+      "working_native": 4,
+      "agent_preview_final_bytes": 8,
+      "run_record": 8,
+      "stage_record": 4
+    },
+    "raw_files_verified": 40,
+    "successful_anchor_calls": 7,
+    "source_image_files_archived": 0,
+    "local_document_links_verified": 37,
+    "ledger_sha256": "32bf283e92e34557869645045c9dfafbc82cd626c7cd41fa13e7d7191a667c92",
+    "source_and_harness_unchanged": true,
+    "same_model_effort_budget_jobs_seed_and_cli": true
+  },
+  "preservation_guards": {
+    "passed": true,
+    "existing_selection_rejected": true,
+    "existing_collection_rejected": true,
+    "watched_files_unchanged": 31
+  }
+}

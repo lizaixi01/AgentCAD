@@ -29,6 +29,15 @@ the plate correctly associates the section dimensions and passes 37/37 specifica
 checks. The intermediate **32.44 / 66.89** attempt is also retained. These known-task
 results do not establish reliability on unseen drawings or change the original pilot mean.
 
+The [four previously unrun drawings](unseen-drawings-2026-10-30.md) then test the
+merged workflow with the same model, effort and 900-second budget. Seed 42 fixes
+the sample before viewing: wire lanyard **11.64**, LCD module **58.65**, valve
+housing **99.83**, and stepped enclosure **15.66**, mean **46.45**. All four use
+dimension endpoints before modeling and submit valid editable parts within time.
+The spread shows uneven transfer; without an older-version run on the same four
+tasks, it does not measure a causal improvement. Every attempt, low score,
+native file, preview and scorer record is preserved.
+
 V3 has 30 text-to-CAD creation tasks, 30 create-and-edit tasks and 40 tasks that
 reconstruct a part from an engineering drawing. The last category evaluates
 **3D reconstruction from a drawing**, rather than production of 2D drawings.

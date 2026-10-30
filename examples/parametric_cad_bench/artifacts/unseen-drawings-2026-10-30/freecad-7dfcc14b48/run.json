@@ -1,0 +1,77 @@
+{
+  "id": "freecad-7dfcc14b48",
+  "kind": "drawing",
+  "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+  "instruction_sha256": "b022b88bfd9c1464a469d650d75ce9457ebba1631df5ff98ccd9c935535bc45a",
+  "task_toml_sha256": "8aded11c0adf9d7597d71fe3f425a62522b1a9a3204a54d39ad85588fa927b87",
+  "public_input_sha256": {
+    "7dfcc14b48.png": "c96d6080fb97849374b2c6465f3b34250c9b985b3d31270e1341ca7f24f5c587"
+  },
+  "status": "done",
+  "exit_code": 0,
+  "seconds": 299.91,
+  "workspace": "D:\\Projects\\bench-ws\\cadbench-v3-unseen-drawings-20261030\\freecad-7dfcc14b48",
+  "outputs": {
+    "answer.FCStd": "bfe448ebb547abe2087988cf60c9e14f8294b1e10db70a6873ae78623abb3e82"
+  },
+  "tool_calls": 32,
+  "tools": [
+    "inspect_image",
+    "list_operations",
+    "inspect_image",
+    "inspect_image",
+    "list_operations",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "apply_operations",
+    "export_drawing",
+    "apply_operations",
+    "export_drawing",
+    "inspect_entities",
+    "validate_drawing",
+    "measure_entities",
+    "inspect_entities",
+    "measure_entities",
+    "measure_entities",
+    "measure_entities",
+    "measure_entities",
+    "measure_entities",
+    "measure_entities",
+    "measure_entities",
+    "measure_entities",
+    "measure_entities",
+    "validate_drawing",
+    "save_benchmark_stage"
+  ],
+  "tool_errors": [
+    {
+      "tool": "inspect_image",
+      "code": "MCP_TOOL_ERROR",
+      "message": "Error executing tool inspect_image: 1 validation error for inspect_imageArguments\nmax_size\n  Input should be less than or equal to 2048 [type=less_than_equal, input_value=2400, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/less_than_equal"
+    },
+    {
+      "tool": "list_operations",
+      "code": "UNKNOWN_OPERATION",
+      "message": "Unknown operation(s) ['additive_loft', 'subtractive_loft']"
+    },
+    {
+      "tool": "measure_entities",
+      "code": "BAD_MEASUREMENT",
+      "message": "3D target must be an object: {kind: planar_levels|face_distance, ...}"
+    }
+  ],
+  "unexpected_tools": [],
+  "usage": {
+    "input_tokens": 857128,
+    "cached_input_tokens": 743552,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 8426,
+    "reasoning_output_tokens": 4428
+  }
+}
