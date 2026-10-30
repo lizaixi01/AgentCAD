@@ -120,6 +120,29 @@ def test_unreadable_and_overlong_raster_probes_do_not_certify_endpoints(ws):
     assert evidence["semantics_verified"] is False
 
 
+@pytest.mark.parametrize("transpose", [False, True])
+@pytest.mark.parametrize("ink", [0, 128])
+def test_sparse_one_pixel_witnesses_survive_the_background_majority(ws, transpose, ink):
+    image = Image.new("RGB", (1000, 300), "white")
+    draw = ImageDraw.Draw(image)
+    colour = (ink, ink, ink)
+    draw.line((100, 100, 900, 100), fill=colour)
+    for x in (100, 900):
+        draw.line((x, 70, x, 160), fill=colour)
+    line, surfaces = [[100, 100], [900, 100]], [[100, 160], [900, 160]]
+    if transpose:
+        image = image.transpose(Image.Transpose.TRANSPOSE)
+        line, surfaces = [[p[::-1] for p in group] for group in (line, surfaces)]
+    image.save(ws / "section.png")
+    readings = [{"id": "long", "view": "detail", "value": 80, "line": line,
+                 "surfaces": [{"name": name, "point": point} for name, point in zip(("a", "b"), surfaces)]}]
+    evidence = inspect(ws, readings)["dimension_evidence"]
+    probe = evidence["checks"][0]["raster_probe"]
+    assert probe["status"] == "candidates"
+    assert [c["range_px"] for c in probe["crossings"]] == [[100, 100], [900, 900]]
+    assert evidence["semantics_verified"] is False
+
+
 def test_unit_conversion_reversed_endpoint_order_and_disconnected_components(ws):
     readings = section(ws / "section.png")
     readings[0].update(value=1.5, unit="cm")

@@ -134,6 +134,11 @@ def raster_probe(crop: Image.Image, box: list[int], row: dict) -> dict:
     if axis == 0:
         values = values.T
     background, dark = float(np.percentile(values, 90)), float(np.percentile(values, 5))
+    # A clear one-pixel shaft occupies less than 5% of the stripe. If the dark
+    # percentile discarded that ink, fall back to the darkest sample. Contiguous
+    # crossing runs below reject isolated speckles without claiming semantics.
+    if background-dark < 24:
+        dark = float(values.min())
     contrast = background-dark
     if contrast < 24:
         result["status"] = "low_contrast"
