@@ -36,7 +36,7 @@
 16. **版面与制图规范不检查**：标注互相重叠、文字压线、轴类的台阶/倒角轮廓线等，验证器发现不了，需要出图目视检查（`examples/trials/render_png.py`）。
 17. **字体**：新图默认 `gbenor.shx` + `gbcbig.shx`。没有安装这两个字体的 CAD 软件会做字体替换。
 
-19. **三维零件**（2026-10-29）：一个零件一个 Body，没有装配；不能从三维生成二维工程图（预览图已有：`export_drawing` 的 png）；Agent 三维实验目前只有 BenchCAD Vision2Code 的 100 题试点（每题一次，见 [examples/benchcad/README.md](../examples/benchcad/README.md)），图纸到零件（T1）还没跑。详见 [part-3d.md](part-3d.md)。
+19. **三维零件**（2026-10-29；实验列表 2026-10-31 更新）：一个零件一个 Body，没有装配；不能从三维生成二维工程图（预览图已有：`export_drawing` 的 png）；Agent 三维实验都是小样本，不是官方排行榜成绩：BenchCAD Vision2Code 的 100 题试点（每题一次，见 [examples/benchcad/README.md](../examples/benchcad/README.md)）、BenchCAD 2 的 9 个公开开发样例（其中 1 个是图纸到零件 T1；T6 只考模型推理，T2/T4/T5 的装配定位经评测适配器提交，见 [examples/benchcad2/README.md](../examples/benchcad2/README.md)）和 Parametric CAD Bench V3 的 6 题本地试点（见 [examples/parametric_cad_bench/README.md](../examples/parametric_cad_bench/README.md)），汇总见 [benchmarks.md](benchmarks.md)。详见 [part-3d.md](part-3d.md)。
 20. **三维脚本与参考图比较**（2026-10-30）：`run_script` 可以用 CadQuery / FreeCAD Part 脚本建零件的基体，之后的操作建在它上面；基体本身不是特征树（`SCRIPT_BASE_SOLID` 警告，CADBench 会拒收），只能整段重跑脚本来改。和二维脚本一样默认关闭，检查只防误操作，不是沙箱。`export_drawing(..., reference=...)` 比较轮廓和轮廓里的边线（整体尺寸不比较），看不到任何视图都看不出的差别（空心内部、正面背后的壁厚）；参考图必须按预览的网格排法，且有大小上限（32 MB、2500 万像素、每格不超过 8:1，每格先缩到 1024 px）。Agent 实测见 [examples/benchcad/README.md](../examples/benchcad/README.md)。
 
 ## 路线图
@@ -65,5 +65,5 @@
 
 - **P&ID**：24 个常用符号（ISO 10628 / ISA-5.1 风格），不是完整符号库；单个符号插入不自动连接设备。`draw_pid` 工作流已支持命名端口连接和管线编号，`read_engineering` 从保存几何重建连通性并检查断连；不是完整管道等级表或任意外来符号识别器。
 - **GD&T**：特征控制框用直线、圆和文字绘制（不是 AutoCAD 的 TOLERANCE 实体），所以任何查看器都能显示，但 AutoCAD 的 TOLERANCE 编辑命令不能编辑它。不检查公差标注本身是否合理（例如位置度是否该带 Ø）。
-- **标准件**：ISO 4014/4017、4032、7089、4762 对应的已列尺寸（M3–M24 中的 11 个规格）和深沟球轴承 6000–6010、6200–6210、6300–6310。螺栓头部高度用公称尺寸，螺母高度用最大尺寸，视图为简化画法（无倒角）。孔包括 ISO 273 尺寸系列通孔、切削丝锥推荐底孔和沉孔建议值；M14 沉孔未核验为 DIN 标准行。具体来源、年版和非认证范围见[尺寸表审计](standard-tables.md)。
+- **标准件**：ISO 4014/4017、4032、7089、4762 对应的已列尺寸（M3–M24 中的 11 个规格）和深沟球轴承 6000–6010、6200–6210、6300–6310。螺栓头部高度用公称尺寸，螺母高度用最大尺寸，视图为简化画法（无倒角）。孔包括 ISO 273 尺寸系列通孔、切削丝锥推荐底孔和沉孔尺寸。M14 沉孔采用已核对的 GOST 12876-67 表4公称直径24、深度15，通孔继续采用 ISO 273；不表示完整 DIN/GOST 符合性，其他规格的深度仍为建议值。具体来源、年版和非认证范围见[尺寸表审计](standard-tables.md)。
 - 同一个零件画两个视图时，第二个视图应传 `count_in_bom=false`，否则明细表会数两次。

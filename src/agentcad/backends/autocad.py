@@ -131,7 +131,11 @@ def dwg_to_dxf(src: Path, dst: Path, job_root: Path, version: str = "2018") -> d
         raise AgentCADError("UNSUPPORTED_DXF_VERSION", f"AutoCAD DXFOUT version {version!r} not supported",
                             category="input")
     d, log = _run(job_root, {"in.dwg": src}, [
-        f'(command "_.DXFOUT" "__JOBDIR__/out.dxf" "_V" "{version}" "16")'], open_dwg="in.dwg")
+        # Binary DXF preserves database doubles. AutoCAD's ASCII precision=16
+        # can change an eight-decimal dimension at a large coordinate offset.
+        # Callers read this intermediate with ezdxf; normal workspace commits
+        # still serialize text DXF with roundtrippable Python float values.
+        f'(command "_.DXFOUT" "__JOBDIR__/out.dxf" "_V" "{version}" "_Binary")'], open_dwg="in.dwg")
     return _finish(d, "out.dxf", dst, log)
 
 

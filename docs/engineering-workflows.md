@@ -56,6 +56,14 @@ into a reusable block with a base point, preserving the source entities.
 It binds DIMENSION anchors to actual geometry and compares the physical measurement
 with the requirement. Displayed text/DIMLFAC mismatches remain separate findings:
 a physical requirement can pass while the drawing is rejected for misleading text.
+The displayed primary value comes from saved visible TEXT/MTEXT in the dimension
+block, not measurement multiplied by DIMLFAC. Reports retain that text and distinguish
+it from geometry. Missing, hidden or ambiguous display cannot satisfy a dimension
+requirement. Decimal separators, scientific and common fractional formats, known
+literal prefixes/suffixes and native limits are handled explicitly; nominal readback
+does not certify every note, fit or tolerance string. Ordinary display rounding is
+allowed by generic integrity checks, but an explicit dimension requirement still
+uses its own tolerance and the value actually printed.
 Existing `validate_drawing` dimension requirements retain their displayed-value
 semantics, so existing clients do not silently change meaning.
 
@@ -141,10 +149,45 @@ to distinguish architectural marks from ISA instrument tags.
 
 `draw_mechanical_assembly` accepts an A3 `sheet`, named revolved `parts` (segment
 length/outer diameter/bore), optional end-view hole circles, and ISO library
-`fasteners`. It creates front/end/full longitudinal-section views, real dimensions,
-a parts list and linked balloons. `read_engineering(..., "mechanical")` rechecks
-saved profiles, quantities and links; deleting a fastener invalidates the old BOM
-and its balloon. Through-bore sections and the documented revolved profiles are
+`fasteners`. By default it dimensions each segment and overall length, each distinct
+outer and bore diameter, hole count/diameter, pitch-circle diameter, equal spacing
+and first-hole orientation (CCW from drawing +X). Diameter callouts retain native
+DIMENSION geometry; fractional sizes must also appear correctly in the rendered
+dimension block. `hole_circle` requires an end (`side`) view. A simultaneous
+section and end view occupy separate positions. `dimension: false` explicitly
+disables automatic annotations for that part and is reported as such.
+
+The saved manufacturing record binds the actual profile, bore, view and hole
+geometry to the expected annotation entities. `read_engineering(..., "mechanical")`
+checks native dimension definition points, measurements, display text and visibility,
+the retained list of required roles, actual model-space ownership and native display
+precision/settings (even when an old rendered cache still looks correct),
+plus orientation leaders, saved profiles, BOM quantities and balloon links. Strict
+delivery rejects missing, altered or stale annotations and changed geometry. A
+dimension's nominal value is also compared with measurements of its actual source:
+front/hidden/section edges for lengths, both ends of every repeated outer/bore
+diameter in front and section views, end-view circles, and the circles/centres for
+hole patterns. These comparisons use the declared
+display precision; coordinate integrity is checked separately so that large offsets
+do not hide a changed final digit or reject unchanged subtraction noise. The
+AutoCAD backend uses binary DXF intermediates to retain database floating-point
+precision; workspace imports are still committed as text DXF.
+A legacy part without this record reports `MANUFACTURING_COVERAGE_UNRECORDED`;
+regenerate from its source spec to gain verified coverage. It is not silently certified.
+The record is a consistency check, not a signature against malicious metadata editing.
+Large records use an entity-owned XRECORD with a small XDATA locator to stay below
+AutoCAD's per-entity XDATA limit; missing record storage is an explicit read error.
+DXF delivery parity follows the owned extension data, including nested dictionaries
+and XRECORD payloads; matching their handles alone is insufficient.
+
+Annotations cover the supplied nominal dimensions. An end-view hole circle has no
+depth input, so it receives **no invented THRU/depth**, tolerance, fit, finish or
+process requirement. A uniform positive bore across all profile segments can be
+labelled THRU. Hole-pattern counts with non-integer spacing retain an exact `360/N`
+expression. Decimal dimensions/orientation support up to eight decimal places;
+greater precision is refused. Sheet positions remain caller-controlled and should
+be visually checked for the chosen part sizes and annotation density.
+Through-bore sections and the documented revolved profiles are
 supported; this is a 2D drawing workflow, not a general 3D assembly solver or a
 certificate of full ISO drawing compliance.
 

@@ -174,6 +174,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--name", default="agentcad", help="Server name in the configs")
     s.add_argument("--dry-run", action="store_true", help="Show what would change; write nothing")
     s.add_argument("-y", "--yes", action="store_true", help="Do not ask; configure every app found")
+    s.add_argument("--shortcut", action="store_true", help="Also put an AgentCAD icon on the desktop that opens "
+                                                           "your drawings in the live viewer")
+    s.add_argument("--gui", action="store_true", help="Run setup as a page in your web browser (big buttons, a "
+                                                      "progress bar; what the double-click installers start)")
+    s.add_argument("--no-browser", action="store_true", help="With --gui: print the link, do not open a browser")
+    s.add_argument("--port", type=int, default=0, help="With --gui: port to listen on (default: any free one)")
     s.add_argument("--json", action="store_true", help="Print the result as JSON")
     s = sub.add_parser("doctor", help="Check Python, AgentCAD, FreeCAD, AutoCAD, Pillow and each app's MCP config",
                        description="Each check says ok, missing or skip, with a one-line fix.")
@@ -187,10 +193,16 @@ def build_parser() -> argparse.ArgumentParser:
                         "codex appends to PATH (default ~/.codex/config.toml)")
     s = sub.add_parser("serve", help="Run the HTTP JSON API"); s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8765)
+    s = sub.add_parser("demo", help="Show people what AgentCAD does: the live viewer opens and a plate is drawn "
+                                    "step by step (in <workspace>/demo)")
+    s.add_argument("--no-browser", action="store_true", help="Print the viewer link, do not open a browser")
+    s.add_argument("--shortcut", action="store_true", help="Put a demo icon on the desktop instead of running it")
     s = sub.add_parser("viewer", help="Live web viewer of the root's drawings and parts (read-only)")
     s.add_argument("--host", default="127.0.0.1"); s.add_argument("--port", type=int, default=8770)
     s.add_argument("--allow-remote", action="store_true",
                    help="Allow a non-loopback --host and any Host header (the page has no authentication)")
+    s.add_argument("--open", action="store_true", help="Open it in the browser; if a viewer of this root already "
+                                                       "runs, just open that one (the desktop icon)")
     return ap
 
 
@@ -201,6 +213,15 @@ def _setup_or_doctor(a: argparse.Namespace) -> tuple[dict[str, Any], int]:
         r = install.doctor(root)
         print(json.dumps(r, ensure_ascii=False, indent=1) if a.json else install.render_doctor(r))
         return {"ok": True}, 0 if r["ok"] else 1
+    if a.gui:
+        from .setup_gui import Wizard
+        try:
+            wiz = Wizard(root, dry_run=a.dry_run, launcher=a.launcher, source=a.source, freecad=a.freecad,
+                         name=a.name, read_only=a.read_only, allow_scripts=a.allow_scripts, port=a.port)
+        except OSError as exc:
+            return {"ok": False, "error": {"code": "PORT_IN_USE", "message": str(exc)}}, 2
+        wiz.serve(open_browser=not a.no_browser)
+        return {"ok": True}, 0
     clients = [c for c in (a.client or []) if c != "all"]
     if a.client and "all" in a.client:
         clients = list(install.CLIENTS)
@@ -213,7 +234,7 @@ def _setup_or_doctor(a: argparse.Namespace) -> tuple[dict[str, Any], int]:
     try:
         res = install.setup(list(dict.fromkeys(clients)), root, launcher=a.launcher, source=a.source,
                             freecad=a.freecad, dry_run=a.dry_run, read_only=a.read_only,
-                            allow_scripts=a.allow_scripts, name=a.name)
+                            allow_scripts=a.allow_scripts, name=a.name, shortcut=a.shortcut)
     except AgentCADError as exc:
         return {"ok": False, "error": exc.to_dict()}, EXIT.get(exc.category, 5)
     print(json.dumps(res.to_dict(), ensure_ascii=False, indent=1) if a.json else install.render_setup(res))
@@ -224,6 +245,22 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
     a = build_parser().parse_args(argv)
     if a.cmd in ("setup", "doctor"):
         return _setup_or_doctor(a)
+    if a.cmd == "demo":
+        from . import install
+        root = install.workspace_root(a.root)
+        if a.shortcut:
+            info = install.install_info()
+            launcher = install.choose_launcher("auto", info)
+            print(json.dumps(install.create_shortcut(root, launcher, info["source"], name=install.demo_name(),
+                                                     action=install.DEMO), ensure_ascii=False), flush=True)
+            return {"ok": True}, 0
+        from .demo import run as run_demo
+        try:
+            code = run_demo(root, open_browser=not a.no_browser)
+            return ({"ok": True}, 0) if code == 0 else ({"ok": False, "error": {"code": "DEMO_FAILED", "category": "input",
+                                                                                "message": "A demo step failed"}}, code)
+        except FileExistsError as exc:
+            return {"ok": False, "error": {"code": "FOLDER_NOT_EMPTY", "category": "input", "message": str(exc)}}, 2
     if a.cmd == "mcp" and not a.root:
         from .install import ensure_workspace
         a.root = str(ensure_workspace())  # never the folder the client happens to start in
@@ -246,7 +283,9 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         return {"ok": True}, 0
     if a.cmd == "viewer":
         from .errors import AgentCADError
-        from .viewer import Viewer
+        from .viewer import Viewer, open_or_serve
+        if a.open:
+            return open_or_serve(policy, a.port)
         try:
             Viewer(policy, a.host, a.port, allow_remote=a.allow_remote).serve()
         except AgentCADError as exc:

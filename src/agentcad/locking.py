@@ -8,9 +8,8 @@ from pathlib import Path
 from .errors import AgentCADError
 
 
-def _busy(message: str) -> AgentCADError:
-    return AgentCADError("DRAWING_LOCKED", message, category="policy", retryable=True,
-                        hint="Wait for the writer to finish. A legacy 'lock' marker needs explicit recovery after its writer exits.")
+def _busy(message: str, hint: str = "Wait for the writer to finish") -> AgentCADError:
+    return AgentCADError("DRAWING_LOCKED", message, category="policy", retryable=True, hint=hint)
 
 
 @contextmanager
@@ -18,7 +17,7 @@ def drawing_lock(directory: Path):
     directory.mkdir(parents=True, exist_ok=True)
     # Never guess that a pre-upgrade runtime has died based only on elapsed time.
     if (directory / "lock").exists():
-        raise _busy("A legacy writer lock exists; it is not safe to steal it")
+        refuse_legacy_marker(str(directory / "lock"))
     # Keep the inode: unlinking after unlock can split locks between two files on POSIX.
     with (directory / "write.lock").open("a+b") as stream:
         try:
@@ -39,3 +38,14 @@ def drawing_lock(directory: Path):
                 msvcrt.locking(stream.fileno(), msvcrt.LK_UNLCK, 1)
             else:
                 fcntl.flock(stream.fileno(), fcntl.LOCK_UN)
+
+
+def refuse_legacy_marker(shown: str) -> None:
+    """A non-cooperating old writer can replace a marker after any PID check.
+
+    No read/check/unlink sequence safely establishes exclusive ownership. Modern
+    writers use the OS lock above; legacy migration needs an offline decision.
+    """
+    raise _busy("An older AgentCAD's 'lock' marker exists; it is not safe to steal it",
+                hint=f"Wait for the writer to finish. If {shown} remains, close all older AgentCAD "
+                     "processes before manually deleting that marker and retrying")

@@ -4,13 +4,47 @@ AgentCAD lets an AI agent (Claude Code, Codex, Claude Desktop or Cursor) draw an
 gets it running in about five minutes. You do not need to know Python, and you do not need to download the source
 code.
 
+## Easiest: double-click the installer
+
+No terminal and nothing to type. A setup page opens in your browser, with big buttons and a progress bar, in
+English or Chinese.
+
+1. Download the installer for your computer:
+   - **Windows:** [AgentCAD-Setup.cmd](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup.cmd)
+   - **macOS / Linux:** [AgentCAD-Setup-mac.zip](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup-mac.zip)
+2. Double-click it. On Windows a small window with a progress bar downloads what is needed (about a minute the
+   first time), then the setup page opens in your browser. On macOS, double-click the .zip first: it unpacks to `AgentCAD-Setup.command`, still runnable
+   (a plain download of that file would lose the permission to run).
+   - Windows may say "Windows protected your PC". Click **More info**, then **Run anyway**.
+   - macOS may say it cannot check the developer. Right-click the file, choose **Open**, then **Open** again.
+3. On the page: tap **Start**, keep the apps it ticked (the ones found on your computer) and tap **Install now**.
+   Each step gets a green tick as it finishes.
+4. The last page says what is left (restart your app) and gives example sentences to copy to your assistant.
+   Tap **Finish**; the installer window closes by itself.
+5. From then on, double-click the **AgentCAD** icon setup put on your desktop: it opens your drawings in the live
+   viewer (see [viewer.md](viewer.md)). With no drawing yet, it shows sentences to copy to your assistant.
+   To show someone what AgentCAD does, double-click **AgentCAD Demo** (**AgentCAD 演示** on a Chinese system): the
+   viewer opens and a mounting plate is drawn and then widened, step by step, in `AgentCAD\demo`. No AI needed. From a
+   terminal: `agentcad demo`, or `agentcad demo --shortcut` to put that icon on the desktop.
+
+Already installed, or something stopped working? Run the installer again and tap **Already installed? Check it**.
+Every part gets a green tick or a sentence saying what to do, and **Fix it for me** reconnects the apps that need
+it. Without FreeCAD, the page has a button to its free download; 2D drawings work without it.
+
+The first run downloads uv and Python (about a minute). On macOS and Linux the installer shows its progress as text
+in a Terminal window instead of a progress window. It does the same as `agentcad setup` below, so running it
+again is safe. Under the hood: the installer runs `uvx --from <GitHub zip> agentcad setup --gui`, which serves the page
+on `127.0.0.1` only, behind a random token in its link.
+
+## With a terminal
+
 There are three steps:
 
 1. Install **uv**, a small tool that downloads and runs Python programs.
 2. Run **one command** that connects AgentCAD to your apps.
 3. Restart your app and try a first prompt.
 
-## 1. Install uv
+### 1. Install uv
 
 Open a terminal:
 
@@ -35,7 +69,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 **Close the terminal and open a new one** so it finds `uv`. If you already have uv, skip this step. uv also installs
 Python for you if you don't have it.
 
-## 2. Connect AgentCAD to your apps
+### 2. Connect AgentCAD to your apps
 
 Run this in the new terminal (the same line on Windows, macOS and Linux):
 
@@ -60,7 +94,7 @@ anything, add `--dry-run`. To skip the question, name the apps: `--client claude
 How it starts AgentCAD: your app runs `uvx --from git+https://github.com/lizaixi01/AgentCAD agentcad-mcp` whenever it
 needs it. uv keeps a copy, so this takes a couple of seconds, and it picks up new versions of AgentCAD by itself.
 
-## 3. Try it
+### 3. Try it
 
 Restart the app you connected:
 

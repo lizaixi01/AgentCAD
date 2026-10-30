@@ -15,6 +15,7 @@ from ezdxf.document import Drawing
 
 from .. import geom as G
 from ..model import circle_wcs, get_tag, lwpoly_wcs
+from ..dimension_display import read_display
 
 CONNECT_TOL = 1e-6
 FLATTEN = 0.01
@@ -90,9 +91,11 @@ def measure_dimension(e) -> tuple[str, float | None]:
             a2 = G.angle_of((x.defpoint3.x - c.x, x.defpoint3.y - c.y))
             return kind, G.ccw_span(a1, a2)
         if kind == "angular":
-            v1 = x.defpoint3 - x.defpoint2
-            v2 = x.defpoint - x.defpoint4
-            return kind, math.degrees(math.acos(max(-1, min(1, v1.normalize().dot(v2.normalize())))))
+            _center, start, end = G.angular_sector(
+                G.Seg(tuple(x.defpoint2)[:2], tuple(x.defpoint3)[:2]),
+                G.Seg(tuple(x.defpoint4)[:2], tuple(x.defpoint)[:2]),
+                tuple(e.ocs().to_wcs(x.defpoint5))[:2])
+            return kind, G.ccw_span(start, end)
         if kind == "ordinate":
             d = x.defpoint2 - x.defpoint
             return kind, abs(d.x) if x.dimtype & 64 else abs(d.y)
@@ -174,8 +177,12 @@ def extract(doc: Drawing, layout: str | None = None) -> Features:
                 lfac = float(e.override().get("dimlfac") or 1.0)
             except Exception:
                 lfac = 1.0
+            if kind in {"angular", "angular3p"}:
+                lfac = 1.0  # DIMLFAC scales lengths, never angular measurements.
+            display = read_display(e)
             f.dimensions.append({"id": h, "kind": kind, "measurement": m, "layer": e.dxf.layer,
-                                 "displayed": None if m is None else m * lfac,
+                                 "scaled_measurement": None if m is None else m * lfac,
+                                 "displayed": display["value"], "display_evidence": display,
                                  "text": e.dxf.get("text", ""), "anchors": dimension_anchor_points(e),
                                  "direction": dimension_direction(e),
                                  "stored": e.dxf.get("actual_measurement"), "tag": get_tag(e)})

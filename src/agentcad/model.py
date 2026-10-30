@@ -257,10 +257,12 @@ def measure_dimension(e: DXFGraphic) -> float | None:
         if kind == "radius":
             return (x.defpoint4 - x.defpoint).magnitude
         if kind == "angular":
-            # 2-line angular: first line 13->14, second line 15->10
-            v1 = x.defpoint3 - x.defpoint2
-            v2 = x.defpoint - x.defpoint4
-            return math.degrees(abs(math.atan2(v1.x * v2.y - v1.y * v2.x, v1.x * v2.x + v1.y * v2.y)))
+            from .geom import Seg, angular_sector, ccw_span
+            _center, start, end = angular_sector(
+                Seg(tuple(x.defpoint2)[:2], tuple(x.defpoint3)[:2]),
+                Seg(tuple(x.defpoint4)[:2], tuple(x.defpoint)[:2]),
+                tuple(e.ocs().to_wcs(x.defpoint5))[:2])
+            return ccw_span(start, end)
         if kind == "angular3p":
             # 13 / 14 = points on the two legs, 15 = vertex; measured CCW from 13 to 14
             c = x.defpoint4

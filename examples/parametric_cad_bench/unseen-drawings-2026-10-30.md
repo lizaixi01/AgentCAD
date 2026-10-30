@@ -5,7 +5,7 @@ It uses four drawing tasks that do not appear in this project's prior local
 CADBench run manifests or model workspaces. It is a small development holdout,
 not a claim that the underlying model has never encountered these public tasks.
 
-## Result: transfer is possible, reliability is uneven
+## Result: used on four new drawings, with uneven outcomes
 
 All four fresh attempts submitted within 900 seconds. The unmodified task
 scorers return a **46.45/100 arithmetic mean** over all four. One task is nearly
@@ -153,10 +153,21 @@ workspaces remain under the matching name in `D:\Projects\bench-ws`.
 Original trajectories include the inline image responses and stay there.
 Earlier experiments, artifacts and measurements are unchanged.
 
+The harness hashes in `artifacts/unseen-drawings-2026-10-30/manifest.json` were
+taken from the Windows working tree, whose files have CRLF line endings. The
+committed files, unchanged since the run's commit `211aaf1`, hash to
+`21e9d4a1a4123259fc9dfc9e3fda29a2f2c650066f9455b5bfebff39eb380023` (`pilot.py`)
+and `773f30ba2db74c183ab7466c296980f8596fe4962324c416042a5e1e0303a73c`
+(`stage_server.py`). Converting them to CRLF reproduces the recorded `9aab6247…`
+and `2f0ea500…`.
+
 This cohort has no matched pre-optimization run. Its score describes performance
 on these four new tasks; subtracting the old pair's 67.05 would conflate different
-tasks with a product effect. Evidence of using anchors and correct interpretation
-on new shapes supports transfer, but four known-public tasks cannot establish
+tasks with a product effect. The agents used the anchors on all four new shapes,
+and one was reconstructed almost exactly. Without a control, that cannot show the
+dimension-reading change carried over: the public leaderboard's Claude Opus 5.5 +
+Claude Code run, on 2026-09-23 (UTC) before this tool existed, scored the same
+0.998341 on the valve housing. Four known-public tasks also cannot establish
 broad reliability or quantify a causal improvement. No result here replaces the
 original six-task pilot mean or constitutes an official leaderboard submission.
 

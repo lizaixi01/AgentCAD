@@ -15,6 +15,10 @@ from .errors import input_error
 
 PIXEL_TOLERANCE = 2.0
 UNIT_MM = {"mm": 1.0, "cm": 10.0, "m": 1000.0, "in": 25.4}
+RASTER_NOTE = ("Raster ink crossings only, not recognized arrows or confirmed witnesses. "
+               "Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: "
+               "the tip touches the witness, while the broad arrow base and shaft extend beyond it. "
+               "Neighbouring dimensions, text, hatching and edges may also cross the shaft.")
 
 
 def _bad(message: str):
@@ -94,13 +98,16 @@ def check_dimensions(readings: list[dict], box: list[int], source_crop=None) -> 
     for row in checks:
         groups[(row["view"], row["axis"])].append(row)
     solved = [_solve(view, axis, rows) for (view, axis), rows in groups.items()]
-    return {"checks": checks, "groups": solved, "pixel_tolerance": PIXEL_TOLERANCE,
-            "consistent": all(g["consistent"] for g in solved) if solved else None,
-            "semantics_verified": False,
-            "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. "
-                    "Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual "
-                    "surface witnesses. Aligned anchors do not prove that text or surface names were read correctly. "
-                    "Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."}
+    evidence = {"checks": checks, "groups": solved, "pixel_tolerance": PIXEL_TOLERANCE,
+                "consistent": all(g["consistent"] for g in solved) if solved else None,
+                "semantics_verified": False,
+                "note": "Checks compare supplied anchors and equations only, not pixels/arrow recognition or OCR. "
+                        "Inspect the unmarked panel: D1/D2 must be dimension-line endpoints, S1/S2 their actual "
+                        "surface witnesses. Aligned anchors do not prove that text or surface names were read "
+                        "correctly. Relative levels are in mm along source +x (right) or +y (down), not the CAD axes."}
+    if source_crop is not None and checks:
+        evidence["raster_probe_note"] = RASTER_NOTE  # once per call, not per reading
+    return evidence
 
 
 def raster_probe(crop: Image.Image, box: list[int], row: dict) -> dict:
@@ -119,14 +126,10 @@ def raster_probe(crop: Image.Image, box: list[int], row: dict) -> dict:
     hi = min(box[axis+2], math.ceil(max(p[axis] for p in points))+margin+1)
     cross_lo, cross_hi = max(box[1-axis], centre-16), min(box[3-axis], centre+17)
     region = [lo, cross_lo, hi, cross_hi] if axis == 0 else [cross_lo, lo, cross_hi, hi]
-    result = {"detail_region": region, "axis": row["axis"], "crossings": [],
-              "note": "Raster ink crossings only, not recognized arrows or confirmed witnesses. "
-                      "Inspect detail_region without overlays. Short dimensions may have OUTSIDE arrows: "
-                      "the tip touches the witness, while the broad arrow base and shaft extend beyond it. "
-                      "Neighbouring dimensions, text, hatching and edges may also cross the shaft."}
+    result = {"detail_region": region, "axis": row["axis"], "crossings": []}  # see RASTER_NOTE
     if hi-lo > 4096:
         result["status"] = "region_too_long"
-        result["note"] += " Raster scanning is limited to 4096 source pixels along the dimension."
+        result["note"] = "Raster scanning is limited to 4096 source pixels along the dimension."
         return result
     local = [region[i]-box[i % 2] for i in range(4)]
     values = np.asarray(crop.crop(local).convert("L"), dtype=float)

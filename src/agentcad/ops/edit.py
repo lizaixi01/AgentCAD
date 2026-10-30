@@ -26,7 +26,8 @@ def rerender_dimension(ctx: Ctx, dim) -> None:
     from ..tolerances import check_dimension_tolerance
     check_dimension_tolerance(dim, ctx.unit)
     old = dim.dxf.get("geometry")
-    dim.override().render()
+    from .annotate import render_dimension
+    render_dimension(dim.override())
     from .annotate import store_measurement
     store_measurement(dim)
     new = dim.dxf.get("geometry")
@@ -357,7 +358,8 @@ def _modify_dimension(ctx: Ctx, e, fields: dict[str, Any]) -> dict[str, Any]:
     if "tolerance" in fields:
         from ..tolerances import apply_tolerance
         apply_tolerance(ov, fields["tolerance"], ctx.unit)
-    elif (ov.get("dimtol", 0) or ov.get("dimlim", 0)) and e.dxf.get("text", "") and "<>" not in e.dxf.text:
+    elif "text" in fields and (ov.get("dimtol", 0) or ov.get("dimlim", 0)) and e.dxf.get("text", "") \
+            and "<>" not in e.dxf.text:  # text this call writes; an existing override is checked on redraw
         raise input_error("TOLERANCE_TEXT_OVERRIDE", "Toleranced dimensions must display the measured value (<>)")
     ov.commit()
     rerender_dimension(ctx, e)

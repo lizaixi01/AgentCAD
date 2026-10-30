@@ -69,6 +69,9 @@ def _sheet(ctx, spec):
 
 
 def _part(ctx, spec):
+    from . import mechanical_annotations
+
+    start = len(ctx.added)
     if spec.get("kind", "revolved") != "revolved":
         raise input_error("UNSUPPORTED_PART", "Mechanical drawing views currently support revolved profiles")
     name = spec.get("name")
@@ -85,7 +88,7 @@ def _part(ctx, spec):
         segments.append((length, outer / 2, inner / 2))
     if not segments or len(segments) > 50:
         raise input_error("INVALID_PROFILE", "Part needs 1..50 profile segments")
-    length = sum(s[0] for s in segments)
+    length = math.fsum(s[0] for s in segments)
     radius = max(s[1] for s in segments)
     top, bottom, inner_top, inner_bottom = [], [], [], []
     x = 0
@@ -100,6 +103,12 @@ def _part(ctx, spec):
         raise input_error("INVALID_VIEW", "Use front plus optional side and section views")
     if "section" in views and any(s[2] <= 0 for s in segments):
         raise input_error("UNSUPPORTED_SECTION", "Longitudinal section currently requires a through bore")
+    if spec.get("features") and "side" not in views:
+        raise input_error("INVALID_VIEW", "hole_circle features require a side (end) view")
+    if not isinstance(spec.get("dimension", True), bool):
+        raise input_error("INVALID_VALUE", "part.dimension must be a boolean")
+    section_origin = None
+    patterns = []
 
     def place(points, origin):
         out = []
@@ -148,6 +157,7 @@ def _part(ctx, spec):
             )
     if "section" in views:
         origin = [at[0] - length - 15, at[1]]
+        section_origin = origin
         for outer, inner in [(top, inner_top), (bottom, inner_bottom)]:
             loop = place(outer + list(reversed(inner)), origin)
             result = operations(
@@ -189,7 +199,10 @@ def _part(ctx, spec):
             ],
         )
     if "side" in views:
-        center = [at[0] - radius - 20, at[1]]
+        # A simultaneous section occupies the left-hand slot. Place the end
+        # view below the front in that case instead of overlaying both views.
+        center = ([at[0] + length / 2, at[1] - 2 * radius - 35] if section_origin else
+                  [at[0] - radius - 20, at[1]])
         radii = sorted({s[1] for s in segments} | {s[2] for s in segments if s[2] > 0}, reverse=True)
         circles = []
         for r in radii:
@@ -210,13 +223,18 @@ def _part(ctx, spec):
                 raise input_error(
                     "INVALID_HOLE_PATTERN", "Hole circle must fit the part and have 1..100 holes"
                 )
+            start_angle = number(feature.get("start_angle", 0), "start_angle") % 360
+            pitch_circle = operations(ctx, [{"op": "add_circle", "center": center,
+                "diameter": pcd, "layer": "CENTER", "linetype": "CENTER"}])[0]["created"][0]
+            holes = []
             for i in range(count):
-                angle = math.radians(number(feature.get("start_angle", 0), "start_angle") + i * 360 / count)
+                angle = math.radians(start_angle + i * 360 / count)
                 c = [center[0] + pcd / 2 * math.cos(angle), center[1] + pcd / 2 * math.sin(angle)]
                 h = operations(
                     ctx, [{"op": "add_circle", "center": c, "diameter": diameter, "layer": "HOLES"}]
                 )[0]["created"][0]
                 circles.append(h)
+                holes.append(h)
                 put(
                     ctx.doc,
                     ctx.doc.entitydb[h],
@@ -229,25 +247,16 @@ def _part(ctx, spec):
                         "diameter": diameter,
                     },
                 )
+            patterns.append({"center": center, "center_handle": circles[0], "holes": holes, "pitch_circle": pitch_circle,
+                             "diameter": diameter, "pcd": pcd, "start_angle": start_angle})
         # One centre cross per physical circle, as required by the view engine.
         for h in circles:
             operations(ctx, [{"op": "add_center_mark", "target": h, "extension": 3, "layer": "CENTER"}])
-    if spec.get("dimension", True):
-        cursor = 0
-        for step, outer, _ in segments:
-            operations(
-                ctx,
-                [
-                    {
-                        "op": "add_linear_dim",
-                        "p1": [at[0] + cursor, at[1] + outer],
-                        "p2": [at[0] + cursor + step, at[1] + outer],
-                        "base": [at[0], at[1] + radius + 10],
-                        "layer": "DIM",
-                    }
-                ],
-            )
-            cursor += step
+    contract = mechanical_annotations.draw(ctx, at, segments, section_origin, patterns,
+                                           list(ctx.added[start:]), spec.get("dimension", True))
+    record = get(ctx.doc.entitydb[body], "mech")
+    record["manufacturing"] = contract
+    put(ctx.doc, ctx.doc.entitydb[body], "mech", record)
     return body
 
 
@@ -351,9 +360,12 @@ def draw(ctx, spec):
 
 
 def read(doc):
+    from . import mechanical_annotations
+
     rows = bom(doc)
     parts, balloons, circles, sections, issues = [], [], [], [], []
     frames, titles, tables = [], [], []
+    manufacturing = []
     for e in doc.modelspace():
         record = get(e, "mech")
         if not record:
@@ -378,9 +390,18 @@ def read(doc):
                 math.dist(a, b) > 1e-6 for a, b in zip(points, record["profile"])
             ):
                 issues.append({"code": "PART_PROFILE_CHANGED", "handle": e.dxf.handle})
+            contract = record.get("manufacturing")
+            annotation_issues, checked = mechanical_annotations.check(doc, contract, e.dxf.handle)
+            issues.extend(annotation_issues)
+            manufacturing.append({"part": record["name"], "handle": e.dxf.handle,
+                "enabled": contract.get("enabled") if isinstance(contract, dict) else None,
+                "annotations": checked, "passed": not annotation_issues})
         elif role == "balloon":
             balloons.append({**record, "handle": e.dxf.handle})
         elif role == "view_circle":
+            if e.dxftype() != "CIRCLE":
+                issues.append({"code": "INVALID_VIEW_CIRCLE", "handle": e.dxf.handle})
+                continue
             circles.append(
                 {
                     **record,
@@ -453,6 +474,7 @@ def read(doc):
         "balloons": balloons,
         "circles": circles,
         "sections": sections,
+        "manufacturing": manufacturing,
         "critique": issues,
     }
 

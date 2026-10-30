@@ -928,8 +928,12 @@ class Runtime:
         """Crash recovery. A commit interrupted after its pending marker (e.g. FILE_BUSY with partial_changes) is
         settled first: recorded if its content is in the file, dropped if not. Otherwise, if the file is unreadable
         or an older marker left it inconsistent, restore the most recent checkpoint whose content is a valid DXF (or
-        FreeCAD file, for a part)."""
+        FreeCAD file, for a part). Older runtimes' lock markers require manual offline handling;
+        recover never deletes them based on a PID check."""
         p, store = self._drawing(path, must_exist=False, part_ok=True)
+        if (store.dir / "lock").exists():
+            from .locking import refuse_legacy_marker
+            refuse_legacy_marker(self._rel(store.dir / "lock"))
         st = store.status()
         needed = (not st["exists"]) or (not st["readable"]) or bool(st["pending_transaction"])
         if not needed:
@@ -1068,7 +1072,8 @@ class Runtime:
                                      "LWPOLYLINE exported as POLYLINE; tags/metadata are not guaranteed"]
         elif fmt == "svg":
             try:
-                from ezdxf.addons.drawing import Frontend, RenderContext, layout, svg
+                from ezdxf.addons.drawing import RenderContext, layout, svg
+                from .drawing_frontend import DrawingFrontend
             except ImportError as exc:
                 raise AgentCADError("DEPENDENCY_MISSING", f"SVG preview needs an optional package: {exc}",
                                     category="dependency",
@@ -1076,7 +1081,7 @@ class Runtime:
             from ezdxf.addons.drawing.config import BackgroundPolicy, Configuration
             backend = svg.SVGBackend()
             cfg = Configuration(background_policy=BackgroundPolicy.WHITE)
-            Frontend(RenderContext(doc), backend, config=cfg).draw_layout(doc.modelspace())
+            DrawingFrontend(RenderContext(doc), backend, config=cfg).draw_layout(doc.modelspace())
             page = layout.Page(0, 0, layout.Units.mm, margins=layout.Margins.all(5))
             out.write_text(backend.get_string(page), "utf-8")
             extra = {}

@@ -40,6 +40,10 @@
       changesSummary: "{a} new · {m} changed · {d} removed", whatChanged: "What changed",
       historyTitle: "Change history", failed: "did not work", madeWith: "Made with AgentCAD",
       inFile: "in {f}",
+      tryThis: "Try saying one of these to your assistant:", copy: "Copy", copied: "Copied!",
+      try1: "Draw a 200 × 100 mounting plate with R8 corners and four 12 mm holes 15 mm from the edges. Save it as plate.dxf.",
+      try2: "Make a flange: 120 mm across, 14 mm thick, with six 12 mm bolt holes on a 90 mm circle.",
+      try3: "Make an A3 sheet for plate.dxf with a title block.",
     },
     zh: {
       title: "AgentCAD 实时查看", files: "我的图纸", filesEmpty: "这里还没有文件。",
@@ -71,6 +75,10 @@
       changesSummary: "新增 {a} · 修改 {m} · 删除 {d}", whatChanged: "改了什么",
       historyTitle: "修改记录", failed: "未成功", madeWith: "由 AgentCAD 生成",
       inFile: "（{f}）",
+      tryThis: "试着对助手说一句（点「复制」再粘贴过去）：", copy: "复制", copied: "已复制！",
+      try1: "画一块 200×100 的安装板，四个角倒圆 R8，四个 Ø12 的孔离边 15 毫米。保存为 plate.dxf。",
+      try2: "做一个法兰：直径 120 毫米、厚 14 毫米，在直径 90 的圆上均布六个 Ø12 螺栓孔。",
+      try3: "给 plate.dxf 做一张 A3 图纸，带标题栏。",
     },
   };
 

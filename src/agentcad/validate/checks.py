@@ -392,7 +392,7 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
         if txt and "<>" not in txt:
             plain = dimension_plain_text(txt)
             nums = text_values(plain)
-            shown = d.get("displayed", d["measurement"])
+            shown = d["scaled_measurement"]
             if nums and not any(abs(n - shown) <= max(tolerance, 0.005 * max(1, abs(n))) for n in nums):
                 # a bare value ("2700", "Ø12") that disagrees is an error; a note with several numbers or words
                 # ("10R @ 7.09\"", "8×Ø12 EQ SP") cannot be checked reliably, so it is only a warning
@@ -400,6 +400,15 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
                 out.append(issue("DIMENSION_TEXT_MISMATCH", "error" if simple else "warning",
                                  f"Dimension text {txt!r} disagrees with measured value {shown:.6g}",
                                  [d["id"]], expected=shown, actual_text=txt))
+        display = d["display_evidence"]
+        if display["value"] is None:
+            out.append(issue("DIMENSION_DISPLAY_UNVERIFIED", "error" if display["status"] == "hidden" else "warning",
+                             "Saved graphics do not establish a visible primary dimension value", [d["id"]],
+                             status=display["status"], texts=display["texts"]))
+        elif abs(display["value"] - d["scaled_measurement"]) > max(tolerance, (display["resolution"] or 0) / 2 + 1e-9):
+            out.append(issue("DIMENSION_RENDER_MISMATCH", "error",
+                             "Saved dimension graphics disagree with the scaled geometry beyond display precision",
+                             [d["id"]], expected=d["scaled_measurement"], displayed=display["value"], texts=display["texts"]))
         # '<>' of a diameter/radius dimension already carries the Ø / R prefix (seen in AutoCAD 2027 plots)
         before = txt.upper().split("<>")[0].rstrip() if "<>" in txt else ""
         doubled = (d["kind"] == "diameter" and before.endswith(("%%C", "Ø", "⌀"))) or \
