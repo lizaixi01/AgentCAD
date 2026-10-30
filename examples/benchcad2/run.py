@@ -21,6 +21,8 @@ REPO = HERE.parents[1]
 MODEL = "gpt-6.1-sol"
 EFFORT = "max"
 THREAD_ENV = {"OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"}
+CASE_IDS = tuple(f"task{task}_case{case}" for task, count in enumerate((1, 2, 2, 1, 1, 2), 1)
+                 for case in range(1, count + 1))
 
 
 def scorer_env() -> dict[str, str]:
@@ -51,6 +53,23 @@ def dump(path: Path, value) -> None:
     tmp = path.with_suffix(path.suffix + ".tmp")
     tmp.write_text(json.dumps(value, indent=2, ensure_ascii=False, allow_nan=False) + "\n", encoding="utf-8")
     tmp.replace(path)
+
+
+def protocol_errors(root: Path, protocol: dict | None) -> list[str]:
+    """Bind scoring to the model run and its validated standard answers."""
+    metadata_path = root / "metadata.json"
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8")) if metadata_path.exists() else {}
+    errors = []
+    if (not protocol or not protocol.get("benchcad_sha")
+            or metadata.get("benchcad_sha") != protocol["benchcad_sha"]
+            or metadata.get("scoring_protocol") != protocol):
+        errors.append("Scoring protocol differs from recorded run metadata")
+    for key in CASE_IDS:
+        path = root / key / "oracle.json"
+        checked = json.loads(path.read_text(encoding="utf-8")) if path.exists() else {}
+        if checked.get("score") != 1.0 or checked.get("scoring_protocol") != protocol:
+            errors.append(f"{key}: standard answer has not passed with the recorded scoring protocol")
+    return errors
 
 
 def staged_case(case: Path, workspace: Path, bench_source: Path) -> dict:
@@ -300,6 +319,10 @@ def score_one(case: Path, args, *, oracle: bool = False) -> dict:
     key = f"{case.parents[1].name}_{case.name}"
     out = args.out / key
     protocol = score_protocol(args.bench_source)
+    if not oracle:
+        errors = protocol_errors(args.out, protocol)
+        if errors:
+            raise ValueError("; ".join(errors))
     if not oracle and (out / "score.json").exists() and args.resume:
         previous = json.loads((out / "score.json").read_text(encoding="utf-8"))
         run = json.loads((out / "run.json").read_text(encoding="utf-8"))
@@ -340,7 +363,7 @@ def score_one(case: Path, args, *, oracle: bool = False) -> dict:
 
 
 def summarize(root: Path) -> dict:
-    by_task, records, protocols = {}, [], {}
+    by_task, records, protocols, errors = {}, [], {}, set()
     for p in sorted(root.glob("task*_case*/score.json")):
         s = json.loads(p.read_text(encoding="utf-8"))
         run_path = p.parent / "run.json"
@@ -349,6 +372,7 @@ def summarize(root: Path) -> dict:
             continue
         protocol = s.get("scoring_protocol")
         protocols[json.dumps(protocol, sort_keys=True)] = protocol
+        errors.update(protocol_errors(root, protocol))
         records.append({"case": s["case"], "score": s.get("score"), "status": s.get("status"),
                         "seconds": r.get("seconds"), "tool_calls": r.get("tool_calls"),
                         "submitted": r.get("submitted"), "kind": r.get("kind"),
@@ -360,12 +384,13 @@ def summarize(root: Path) -> dict:
                     "mean": sum(v for v in values if v is not None) / sum(v is not None for v in values)
                     if any(v is not None for v in values) else None} for task, values in by_task.items()}
     consistent = len(protocols) == 1 and None not in protocols.values()
-    complete = (consistent and len(tasks) == 6 and len(records) == 9
+    complete = (consistent and not errors and {r["case"] for r in records} == set(CASE_IDS)
                 and all(t["scored"] == t["total"] for t in tasks.values()))
     result = {"model": MODEL, "effort": EFFORT, "dataset": "BenchCAD 2 nine development samples",
               "harness": "AgentCAD custom Codex MCP harness; not leaderboard-comparable",
               "complete": complete, "tasks": tasks, "records": records,
               "scoring_protocols": list(protocols.values()),
+              "provenance_errors": sorted(errors),
               "mean_of_task_means": sum(t["mean"] for t in tasks.values()) / 6 if complete else None}
     dump(root / "summary.json", result)
     return result
@@ -459,6 +484,7 @@ def main() -> None:
                 raise SystemExit("All nine standard answers must pass with the current scoring protocol first: run oracle")
         source_sha = subprocess.check_output(["git", "-C", str(args.bench_source), "rev-parse", "HEAD"], text=True).strip()
         metadata = {"model": MODEL, "effort": EFFORT, "benchcad_sha": source_sha,
+                    "scoring_protocol": protocol,
                     "agentcad_sha": subprocess.check_output(["git", "-C", str(REPO), "rev-parse", "HEAD"], text=True).strip(),
                     "codex_version": subprocess.check_output(["codex", "--version"], text=True).strip(),
                     "tool_adapter_sha256": hashlib.sha256((HERE / "task_tools.py").read_bytes()).hexdigest(),

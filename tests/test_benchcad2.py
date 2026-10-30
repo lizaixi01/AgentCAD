@@ -20,6 +20,13 @@ def load(name):
 runner = load("run")
 tools = load("task_tools")
 IDENTITY = [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+PROTOCOL = {"benchcad_sha": "A", "mesh_guard": "0", "threads": runner.THREAD_ENV}
+
+
+def pinned_protocol(root):
+    runner.dump(root / "metadata.json", {"benchcad_sha": "A", "scoring_protocol": PROTOCOL})
+    for key in runner.CASE_IDS:
+        runner.dump(root / key / "oracle.json", {"score": 1., "scoring_protocol": PROTOCOL})
 
 
 def test_explicit_model_effort_and_no_unrelated_tools(tmp_path):
@@ -171,13 +178,14 @@ def test_submission_requires_real_output_inside_workspace(tmp_path):
 
 
 def test_summary_weights_tasks_equally_and_does_not_hide_evaluator_failure(tmp_path):
+    pinned_protocol(tmp_path)
     counts = [1, 2, 2, 1, 1, 2]
     for t, count in enumerate(counts, 1):
         for c in range(1, count + 1):
             out = tmp_path / f"task{t}_case{c}"
             runner.dump(out / "run.json", {"attempt": 1, "seconds": 1., "submitted": True})
             runner.dump(out / "score.json", {"case": out.name, "attempt": 1, "score": t / 10,
-                                              "scoring_protocol": {"revision": "same"}})
+                                              "scoring_protocol": PROTOCOL})
     summary = runner.summarize(tmp_path)
     assert summary["complete"]
     assert summary["mean_of_task_means"] == pytest.approx(.35)
@@ -190,16 +198,51 @@ def test_summary_weights_tasks_equally_and_does_not_hide_evaluator_failure(tmp_p
 
 
 def test_summary_refuses_mixed_scoring_revisions(tmp_path):
+    pinned_protocol(tmp_path)
     for t, count in enumerate([1, 2, 2, 1, 1, 2], 1):
         for c in range(1, count + 1):
             out = tmp_path / f"task{t}_case{c}"
             runner.dump(out / "run.json", {"attempt": 1})
             runner.dump(out / "score.json", {"case": out.name, "attempt": 1, "score": 1.,
-                                              "scoring_protocol": {"revision": "A" if t < 6 else "B"}})
+                                              "scoring_protocol": {**PROTOCOL, "benchcad_sha": "A" if t < 6 else "B"}})
     summary = runner.summarize(tmp_path)
     assert not summary["complete"]
     assert summary["mean_of_task_means"] is None
     assert len(summary["scoring_protocols"]) == 2
+
+
+@pytest.mark.parametrize("changed", ["scores", "oracles", "metadata"])
+def test_summary_binds_uniform_scores_to_recorded_run_and_oracles(tmp_path, changed):
+    pinned_protocol(tmp_path)
+    other = {**PROTOCOL, "benchcad_sha": "B"}
+    for key in runner.CASE_IDS:
+        out = tmp_path / key
+        runner.dump(out / "run.json", {"attempt": 1})
+        runner.dump(out / "score.json", {"case": key, "attempt": 1, "score": 1.,
+                                          "scoring_protocol": other if changed == "scores" else PROTOCOL})
+        if changed == "oracles":
+            runner.dump(out / "oracle.json", {"score": 1., "scoring_protocol": other})
+    if changed == "metadata":
+        runner.dump(tmp_path / "metadata.json", {"benchcad_sha": "B", "scoring_protocol": other})
+    summary = runner.summarize(tmp_path)
+    assert not summary["complete"]
+    assert summary["mean_of_task_means"] is None
+    assert summary["provenance_errors"]
+
+
+def test_offline_score_refuses_revision_drift_even_on_resume(tmp_path, monkeypatch):
+    from argparse import Namespace
+
+    pinned_protocol(tmp_path)
+    case = tmp_path / "bank/task1/cases/case1"
+    case.mkdir(parents=True)
+    args = Namespace(out=tmp_path, resume=True, bench_source=tmp_path)
+    other = {**PROTOCOL, "benchcad_sha": "B"}
+    monkeypatch.setattr(runner, "score_protocol", lambda source: other)
+    runner.dump(tmp_path / "task1_case1/run.json", {"attempt": 1})
+    runner.dump(tmp_path / "task1_case1/score.json", {"attempt": 1, "score": 1., "scoring_protocol": other})
+    with pytest.raises(ValueError, match="recorded run metadata"):
+        runner.score_one(case, args)
 
 
 def test_manifest_rejects_windows_line_ending_conversion(tmp_path):
@@ -226,7 +269,8 @@ def test_failed_episode_is_zero_even_when_partial_geometry_exists(tmp_path, monk
     (workspace / "partial.step").write_bytes(b"partial")
     args = Namespace(out=tmp_path / "out", resume=False, bench_python=Path("unused"), bench_source=tmp_path)
     # No external scorer is invoked for a failed episode.
-    monkeypatch.setattr(runner, "score_protocol", lambda source: {"test": True})
+    pinned_protocol(args.out)
+    monkeypatch.setattr(runner, "score_protocol", lambda source: PROTOCOL)
     runner.dump(args.out / "task1_case1/run.json", {
         "submitted": False, "status": "timeout", "attempt": 1, "workspace": str(workspace)})
     result = runner.score_one(case, args)

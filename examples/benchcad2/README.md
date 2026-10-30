@@ -58,7 +58,9 @@ performance. The user chose them because Core access was unavailable.
   to retry; all attempts remain in the summary.
   Scores of zero for absent answers are distinct from evaluator failures (`null`).
   Overall score is the mean of the six task means, only when all nine are scored.
-  Mixed scoring protocols/revisions never produce a complete aggregate.
+  Scoring must match the model run's recorded protocol and all nine passing
+  standard answers. Mixed or uniformly changed revisions never produce a
+  complete aggregate.
 
 ## Reproduce
 
@@ -80,7 +82,8 @@ $benchPython = '<BenchCAD environment python.exe>'
 ```
 
 `--cases task3_case2` selects one case. `--jobs` defaults to two model episodes or
-one offline scorer; this host uses `--jobs 1` for both under memory pressure.
+one offline scorer. This host uses two model episodes after limiting numerical
+library threads to one, and one offline scorer.
 All nine standard-answer checks must pass with the current scoring protocol before
 any model run. An initial integration trial was aborted after CAD imports/previews
 failed under memory pressure; its logs remain outside the final nine-case run,
