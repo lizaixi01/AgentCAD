@@ -173,6 +173,15 @@ unchanged viewer concurrency test, `test_commits_succeed_while_the_viewer_reads`
 a cached DXF could not be read during concurrent viewer requests. The isolated
 rerun passed (1 passed, 15.21 seconds). The failure remains recorded; its
 intermittent cause has not been established. No viewer code was changed here.
-The subsequent complete integrated-main rerun passed: **504 passed, 6 skipped
+The subsequent complete rerun with main `44aa822` passed: **504 passed, 6 skipped
 in 446.34 seconds**, with the viewer test included. Independent PR review also
 passed 42 focused measurement, harness and compatibility tests.
+
+Main then advanced to `aaf384a` (PR #31's image-comparison changes). Integration
+retains its seam masks and compact comparison result while exposing camera
+frames for both ordinary previews and reference comparisons. A regression
+assertion checks that the frames agree across those two paths. The model
+attempts remain pinned to `d9b1f0b`; their files and scores are unchanged.
+On this latest integration, all affected part, comparison, measurement, image,
+harness and interface checks passed: **187 passed, 6 skipped in 251.20 seconds**.
+The reviewer independently passed another 13 focused integration tests.
