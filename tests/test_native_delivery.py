@@ -111,3 +111,41 @@ def test_many_decimal_segments_and_fine_section_survive_native_dwg(rt,blank):
     assert report['critique']==[] and all(p['passed'] for p in report['manufacturing'])
     audit=ok(rt.autocad_audit('segments.dxf'))
     assert audit['passed'] and audit['audit_errors']==0
+
+
+def test_generic_precision_and_angular_sectors_match_native_regeneration(rt,ws):
+    from agentcad.backends.autocad import _run
+    from agentcad.dimension_display import read_display
+    from agentcad.model import measure_dimension
+    doc=ezdxf.new('R2010',setup=True,units=4)
+    msp=doc.modelspace()
+    line1=((0,0),(50,0));line2=((0,0),(40,30))
+    for line in (line1,line2):msp.add_line(*line)
+    expected=[]
+    for base,value in [((30,10),36.86989765),((0,30),143.13010235),
+                       ((-30,-10),36.86989765),((0,-30),143.13010235)]:
+        override=msp.add_angular_dim_2l(base=base,line1=line1,line2=line2,
+            dimstyle='EZDXF',override={'dimlfac':100,'dimadec':2})
+        override.render();expected.append((override.dimension.dxf.handle,value))
+    doc.saveas(ws/'angles.dxf')
+    for handle,_ in expected:
+        ok(rt.apply_operations('angles.dxf',[{'op':'modify','target':handle,'set':{'text_height':2.5}}]))
+    before=ezdxf.readfile(ws/'angles.dxf')
+    for handle,value in expected:
+        assert read_display(before.entitydb[handle])['value']==pytest.approx(round(value,2))
+        # Force AutoCAD to construct its own graphics and measurement. Merely
+        # re-exporting the cached block cannot independently verify our rendering.
+        before.entitydb[handle].dxf.discard('geometry')
+        before.entitydb[handle].dxf.discard('actual_measurement')
+    before.saveas(ws/'definitions.dxf')
+    job,_log=_run(ws/'native-jobs',{'in.dxf':ws/'definitions.dxf'},[
+        '(command "_.DXFIN" "__JOBDIR__/in.dxf")',
+        '(command "_.REGENALL")',
+        '(command "_.DXFOUT" "__JOBDIR__/out.dxf" "_V" "2018" "_Binary")'])
+    native=ezdxf.readfile(job/'out.dxf')
+    import math
+    for handle,value in expected:
+        dim=native.entitydb[handle]
+        assert math.degrees(dim.dxf.actual_measurement)==pytest.approx(value)
+        assert measure_dimension(dim)==pytest.approx(value)
+        assert read_display(dim)['value']==pytest.approx(round(value,2))

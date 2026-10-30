@@ -135,3 +135,36 @@ def test_zero_rounding_keeps_fractional_rendering_and_future_precision_changes(r
     saved=ezdxf.readfile(ws/blank);updated=saved.entitydb[dim.dxf.handle]
     assert updated.override().get('dimrnd',0)==0
     assert any('6.667' in e.text for e in saved.blocks[updated.dxf.geometry].query('MTEXT'))
+
+
+@pytest.mark.parametrize('base,expected', [((30,10),36.86989765), ((0,30),143.13010235),
+                                         ((-30,-10),36.86989765), ((0,-30),143.13010235)])
+@pytest.mark.parametrize('reverse', [False, True])
+def test_foreign_two_line_angle_uses_arc_sector_and_ignores_length_scale(rt,ws,base,expected,reverse):
+    from agentcad.dimension_display import read_display
+    from agentcad.model import measure_dimension
+    from agentcad.validate.features import extract
+    doc=ezdxf.new('R2010',setup=True,units=4)
+    line1=((0,0),(50,0));line2=((0,0),(40,30))
+    if reverse:line1,line2=tuple(reversed(line1)),tuple(reversed(line2))
+    for line in (line1,line2):doc.modelspace().add_line(*line)
+    dim=doc.modelspace().add_angular_dim_2l(base=base,line1=line1,line2=line2,
+        dimstyle='EZDXF',override={'dimlfac':100,'dimadec':2})
+    dim.render();handle=dim.dimension.dxf.handle;doc.saveas(ws/'angle.dxf')
+    moved=rt.apply_operations('angle.dxf',[{'op':'move','target':handle,'delta':[5,0]},
+        {'op':'move','target':handle,'delta':[-5,0]}],strict=True)
+    assert moved['ok'],moved
+    doc=ezdxf.readfile(ws/'angle.dxf');dim=doc.entitydb[handle]
+    assert measure_dimension(dim)==pytest.approx(expected)
+    assert read_display(dim)['value']==pytest.approx(round(expected,2))
+    assert extract(doc).dimensions[0]['scaled_measurement']==pytest.approx(expected)
+
+
+def test_foreign_rounded_deviation_retains_actual_nominal(rt,ws):
+    handle=example(ws,diameter=6.4)
+    doc=ezdxf.readfile(ws/'display.dxf');dim=doc.entitydb[handle]
+    override=dim.override();override.update({'dimtol':1,'dimtp':.025,'dimtm':.025,'dimtdec':2});override.commit()
+    doc.blocks[dim.dxf.geometry].query('MTEXT').first.text='%%c6.4{\\H0.7x;±0.03}'
+    doc.saveas(ws/'display.dxf')
+    response=rt.verify_dimensions('display.dxf',[{'id':'hole','handle':handle,'value':6.4}])
+    assert response['accepted'] and response['rows'][0]['displayed']==6.4,response

@@ -99,6 +99,23 @@ def line_line(a: Seg, b: Seg) -> tuple[float, float] | None:
     return cross(qp, s) / den, cross(qp, r) / den
 
 
+def angular_sector(a: Seg, b: Seg, arc: Vec) -> tuple[Vec, float, float]:
+    """Centre and CCW sector selected by a two-line dimension's arc point."""
+    intersection = line_line(a, b)
+    if intersection is None:
+        raise ValueError("Parallel angular dimension legs")
+    center = a.at(intersection[0])
+    if norm(sub(arc, center)) < EPS:
+        raise ValueError("Angular dimension arc has zero radius")
+    directions = [angle_of(sub(line.q, line.p)) for line in (a, b)]
+    rays = sorted([*directions, *((v + 180) % 360 for v in directions)])
+    selected = angle_of(sub(arc, center))
+    for start, end in zip(rays, rays[1:] + rays[:1]):
+        if (selected - start) % 360 < (end - start) % 360:
+            return center, start, end
+    raise ValueError("Angular dimension has no measurable sector")
+
+
 def line_circle(a: Seg, c: Circ) -> list[float]:
     """Params t on infinite line ``a`` where it meets the full circle."""
     d = sub(a.q, a.p)

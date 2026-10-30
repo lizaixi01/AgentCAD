@@ -15,6 +15,7 @@ NUMERIC_CHARACTERS = "0123456789.+-Ee/"
 
 
 def _plain(text: str) -> str:
+    text = re.sub(r"\\U\+([0-9A-Fa-f]{4})", lambda m: chr(int(m[1], 16)), text)
     return re.sub(r"\s+", " ", plain_mtext(text).replace("%%c", "Ø").replace("%%C", "Ø")
                   .replace("∅", "Ø").replace("%%d", "°").replace("%%p", "±")).strip()
 
@@ -65,7 +66,11 @@ def _primary(raw: str, override) -> str | None:
     if override.get("dimtol", 0) and "±" in text:
         nominal, deviation = text.rsplit("±", 1)
         number = _number(deviation.replace(separator, "."))
-        if number is None or abs(number - override.get("dimtp", 0)) > 1e-9 or abs(number - override.get("dimtm", 0)) > 1e-9:
+        precision = override.get("dimtdec", 3)
+        if not isinstance(precision, int) or not 0 <= precision <= 8:
+            return None
+        allowance = 10 ** -precision / 2 + 1e-12
+        if number is None or abs(number - override.get("dimtp", 0)) > allowance or abs(number - override.get("dimtm", 0)) > allowance:
             return None
         text = nominal.rstrip()
     return text

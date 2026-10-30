@@ -5,6 +5,8 @@ import math
 from typing import Any
 
 from ezdxf.entities.dimstyleoverride import DimStyleOverride
+from ezdxf.math import Vec2
+from ezdxf.render.dim_curved import AngularDimension
 
 from .. import geom as G
 from ..errors import input_error
@@ -60,6 +62,26 @@ def _finish_dim(ctx: Ctx, dimov, p: dict[str, Any], text: str | None) -> dict[st
     return {"created": [ctx.finish(dimov.dimension, p)]}
 
 
+class _TwoLineAngularRenderer(AngularDimension):
+    def get_center_of_arc(self):
+        center, start, end = G.angular_sector(
+            G.Seg(tuple(self.leg1_start), tuple(self.leg1_end)),
+            G.Seg(tuple(self.leg2_start), tuple(self.leg2_end)), tuple(self.dim_line_location))
+        self._start_dir = Vec2.from_deg_angle(start)
+        self._end_dir = Vec2.from_deg_angle(end)
+        leg1 = (self.leg1_end - self.leg1_start).normalize()
+        if abs(self._start_dir.det(leg1)) > 1e-8:
+            self.leg1_start, self.leg2_start = self.leg2_start, self.leg1_start
+            self.leg1_end, self.leg2_end = self.leg2_end, self.leg1_end
+        return Vec2(center)
+
+    def get_ext1_dir(self):
+        return self._start_dir
+
+    def get_ext2_dir(self):
+        return self._end_dir
+
+
 class _RenderingStyle(DimStyleOverride):
     def get(self, attribute: str, default=None):
         value = super().get(attribute, default)
@@ -67,6 +89,11 @@ class _RenderingStyle(DimStyleOverride):
         # instead rounds to an integer. None skips xround before DIMDEC.
         # Only the renderer sees None: the stored override dictionary is intact.
         return None if attribute == "dimrnd" and value == 0 else value
+
+    def get_renderer(self, ucs=None):
+        if self.dimension.dimtype == 2:
+            return _TwoLineAngularRenderer(self.dimension, ucs, self)
+        return super().get_renderer(ucs)
 
 
 def render_dimension(override) -> None:
