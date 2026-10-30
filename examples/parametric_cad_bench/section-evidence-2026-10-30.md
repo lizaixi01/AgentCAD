@@ -167,3 +167,12 @@ files remain unchanged.
 An empty-face-selector error guard was added after the benchmark; all seven
 measurement tests, including that case, passed. It does not change the recorded
 run version or any submission.
+
+The first integrated-main suite had 503 passes, 6 skips and one failure in the
+unchanged viewer concurrency test, `test_commits_succeed_while_the_viewer_reads`:
+a cached DXF could not be read during concurrent viewer requests. The isolated
+rerun passed (1 passed, 15.21 seconds). The failure remains recorded; its
+intermittent cause has not been established. No viewer code was changed here.
+The subsequent complete integrated-main rerun passed: **504 passed, 6 skipped
+in 446.34 seconds**, with the viewer test included. Independent PR review also
+passed 42 focused measurement, harness and compatibility tests.
