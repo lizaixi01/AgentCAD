@@ -47,11 +47,12 @@ def test_hole_references_and_explicit_recommendation_boundaries():
         (17,17.5,18.5),(21,22,24),(25,26,28)]
     # EXACT GS52 through M12; Thurmer larger sizes. These are recommendations.
     assert [library.TAP_DRILL[s] for s in sizes] == [2.5,3.3,4.2,5,6.8,8.5,10.2,12,14,17.5,21]
-    # Ifanger p32 omits M14. Never manufacture a source row for that legacy value.
+    # Ifanger p32 omits M14; its D/t are independently from GOST table 4 instead.
     assert [library.COUNTERBORE[s][0] for s in sizes if s != 'M14'] == [6.5,8,10,11,15,18,20,26,33,40]
-    # Supplier depth row, without washer; not a normative DIN verification.
-    assert [library.COUNTERBORE[s][1] for s in sizes] == [3.4,4.4,5.4,6.4,8.6,10.6,12.6,14.6,16.6,20.6,24.8]
-    assert library.hole_dims('M14', 'counterbore')['reference_status'] == 'unverified_counterbore'
+    # Other depths are supplier recommendations. GOST table 4 M14: D=24, t=15.
+    assert [library.COUNTERBORE[s][1] for s in sizes] == [3.4,4.4,5.4,6.4,8.6,10.6,12.6,15,16.6,20.6,24.8]
+    assert library.COUNTERBORE['M14'] == (24,15)
+    assert library.hole_dims('M14', 'counterbore')['reference_status'] == 'dimensions_checked_mixed_references'
     assert 'DIN' not in library.hole_dims('M14', 'counterbore')['standard']
 
 
@@ -62,7 +63,13 @@ def test_public_lookup_refuses_missing_rows_and_reports_scope(rt):
         assert 'not full standards' in result['provenance']['scope']
         assert rt.standard_library(item, 'M7')['error']['code'] == 'INVALID_SIZE'
     row = ok(rt.standard_library('counterbore', 'M14'))['rows']['M14']
-    assert row['reference_status'] == 'unverified_counterbore'
+    assert row['reference_status'] == 'dimensions_checked_mixed_references'
+    assert (row['diameter'], row['counterbore_diameter'], row['counterbore_depth']) == (15.5,24,15)
+    assert 'GOST 12876-67' in row['standard'] and 'DIN' not in row['standard']
+    assert set(row['component_references']) == {'diameter','counterbore_diameter','counterbore_depth'}
+    assert 'ISO 273' in row['component_references']['diameter']
+    assert 'table 4 M14, t: 15 mm' in row['component_references']['counterbore_depth']
+    assert all(term in row['note'] for term in ['not full GOST conformity', 'H14', 'chamfer', '14.6'])
     assert ok(rt.standard_library('tapped', 'M12'))['rows']['M12']['diameter'] == 10.2
 
 
@@ -72,10 +79,13 @@ def test_reference_dimensions_convert_to_saved_inch_geometry(rt, ws):
         {'op':'add_standard_hole', 'size':'M12', 'kind':'tapped', 'centers':[[0,0]], 'tag':'pilot'},
         {'op':'add_standard_hole', 'size':'M14', 'kind':'counterbore', 'centers':[[2,0]], 'tag':'cb'},
         {'op':'add_standard_part', 'part':'washer', 'size':'M24', 'view':'top', 'insert':[4,0]}]))
-    assert result['results'][1]['dims']['reference_status'] == 'unverified_counterbore'
+    assert result['results'][1]['dims']['reference_status'] == 'dimensions_checked_mixed_references'
     doc = ezdxf.readfile(ws / 'inch.dxf')
     pilot = [e for e in doc.modelspace().query('CIRCLE') if e.dxf.center.x == 0]
     assert len(pilot) == 1 and pilot[0].dxf.radius * 2 == pytest.approx(10.2 / 25.4)
+    cb = [e for e in doc.modelspace().query('CIRCLE') if e.dxf.center.x == 2]
+    assert sorted(e.dxf.radius * 2 for e in cb) == pytest.approx([15.5 / 25.4,24 / 25.4])
+    assert 'depth 15' in result['results'][1]['dims']['callout']
     washer = list(doc.modelspace().query('INSERT'))[-1]
     assert washer.dxf.xscale == pytest.approx(1 / 25.4)
     assert sorted(e.dxf.radius * 2 for e in doc.blocks[washer.dxf.name].query('CIRCLE')) == [25,44]

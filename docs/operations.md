@@ -846,7 +846,7 @@ Draw an orthogonal wall plan with hosted doors/windows, stairs, measured room la
 
 ### `draw_mechanical_assembly`
 
-Draw revolved parts with front/end/longitudinal-section views, chain dimensions, standard fasteners, an A3 sheet, a drawing-derived BOM and linked balloons.
+Draw revolved parts with front/end/longitudinal-section views, segment/overall lengths, outer/bore diameters, hole quantity/diameter/PCD/orientation, standard fasteners, an A3 sheet, a drawing-derived BOM and linked balloons. Saved annotation checks bind actual geometry, native definitions and displayed values. Hole depth, tolerances and finish are not inferred.
 
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|

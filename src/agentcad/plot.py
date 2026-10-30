@@ -14,13 +14,14 @@ import zlib
 from pathlib import Path
 from typing import Any, Iterable
 
-from ezdxf.addons.drawing import Frontend, RenderContext, recorder
+from ezdxf.addons.drawing import RenderContext, recorder
 from ezdxf.addons.drawing.backend import BackendInterface
 from ezdxf.addons.drawing.config import BackgroundPolicy, ColorPolicy, Configuration
 from ezdxf.math import Matrix44, Vec2
 from ezdxf.path import Command
 
 from .errors import input_error
+from .drawing_frontend import DrawingFrontend
 from .model import is_model
 from .ops.sheet import PAPER
 
@@ -255,7 +256,7 @@ def plot_pdf(doc, out: Path, layouts: list[str], *, paper: str | None = None, or
         cfg = Configuration(background_policy=BackgroundPolicy.WHITE,
                             color_policy=ColorPolicy.BLACK if monochrome or ctb == "monochrome.ctb" else ColorPolicy.COLOR)
         rec = recorder.Recorder()
-        Frontend(RenderContext(doc), rec, config=cfg).draw_layout(lay, finalize=True)
+        DrawingFrontend(RenderContext(doc), rec, config=cfg).draw_layout(lay, finalize=True)
         player = rec.player()
         box = player.bbox()
         info: dict[str, Any] = {"layout": "Model" if is_model(name) else name}

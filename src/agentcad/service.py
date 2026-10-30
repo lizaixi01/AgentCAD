@@ -928,18 +928,16 @@ class Runtime:
         """Crash recovery. A commit interrupted after its pending marker (e.g. FILE_BUSY with partial_changes) is
         settled first: recorded if its content is in the file, dropped if not. Otherwise, if the file is unreadable
         or an older marker left it inconsistent, restore the most recent checkpoint whose content is a valid DXF (or
-        FreeCAD file, for a part). An older AgentCAD's 'lock' marker is removed first, once the process it names
-        has exited."""
+        FreeCAD file, for a part). Older runtimes' lock markers require manual offline handling;
+        recover never deletes them based on a PID check."""
         p, store = self._drawing(path, must_exist=False, part_ok=True)
-        legacy = {}
         if (store.dir / "lock").exists():
-            from .locking import remove_legacy_marker
-            self.policy.check_write()
-            legacy = {"removed_legacy_lock": remove_legacy_marker(store.dir, self._rel(store.dir / "lock"))}
+            from .locking import refuse_legacy_marker
+            refuse_legacy_marker(self._rel(store.dir / "lock"))
         st = store.status()
         needed = (not st["exists"]) or (not st["readable"]) or bool(st["pending_transaction"])
         if not needed:
-            return {"drawing": self._rel(p), "recovered": bool(legacy), "status": st, **legacy}
+            return {"drawing": self._rel(p), "recovered": False, "status": st}
         self.policy.check_write()
         if st["exists"] and st["readable"] and st["pending_transaction"]:
             with self._lock(store):  # an interrupted commit in the file is recorded, an unstarted one dropped
@@ -950,7 +948,7 @@ class Runtime:
             if settled:
                 done, seq = settled
                 return {"drawing": self._rel(p), "recovered": True, "pending_commit": done["outcome"],
-                        "label": done["pending"]["label"], "sha256": done["sha256"], "journal_seq": seq, **legacy}
+                        "label": done["pending"]["label"], "sha256": done["sha256"], "journal_seq": seq}
         from .store import sha256_file
         candidates = []
         if store.committed_path.is_file() and sha256_file(store.committed_path) == st["committed_sha256"]:
@@ -970,7 +968,7 @@ class Runtime:
                 info = store.restore(cp["id"], label="recover")
                 seq = store.journal({"tool": "recover", "ok": True, "from_status": st, **info})
             return {"drawing": self._rel(p), "recovered": True, "restored_checkpoint": cp["id"], "previous_status": st,
-                    "journal_seq": seq, **legacy}
+                    "journal_seq": seq}
         raise AgentCADError("NO_VALID_CHECKPOINT", "No readable checkpoint to recover from", category="file",
                             details={"status": st})
 
@@ -1074,7 +1072,8 @@ class Runtime:
                                      "LWPOLYLINE exported as POLYLINE; tags/metadata are not guaranteed"]
         elif fmt == "svg":
             try:
-                from ezdxf.addons.drawing import Frontend, RenderContext, layout, svg
+                from ezdxf.addons.drawing import RenderContext, layout, svg
+                from .drawing_frontend import DrawingFrontend
             except ImportError as exc:
                 raise AgentCADError("DEPENDENCY_MISSING", f"SVG preview needs an optional package: {exc}",
                                     category="dependency",
@@ -1082,7 +1081,7 @@ class Runtime:
             from ezdxf.addons.drawing.config import BackgroundPolicy, Configuration
             backend = svg.SVGBackend()
             cfg = Configuration(background_policy=BackgroundPolicy.WHITE)
-            Frontend(RenderContext(doc), backend, config=cfg).draw_layout(doc.modelspace())
+            DrawingFrontend(RenderContext(doc), backend, config=cfg).draw_layout(doc.modelspace())
             page = layout.Page(0, 0, layout.Units.mm, margins=layout.Margins.all(5))
             out.write_text(backend.get_string(page), "utf-8")
             extra = {}

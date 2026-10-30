@@ -21,15 +21,39 @@ An unstated edition stays unstated; the retrieval date does not become its editi
 | Bearing `d,D,B` | [Timken E10857-GB](https://www.timken.com/wp-content/uploads/2023/06/E10857-GB.pdf), table 1, printed p. 2 / PDF p. 4 | All 33 rows. Outer dimensions only; excludes load ratings, internal geometry, seals and fit selection. |
 | Clearance fine/medium/coarse | [NBK clearance-hole reference](https://www.nbk1560.com/en-US/resources/other/article/technical-20-diameter-of-clearance-holes-and-counterbores-for-bolts-and-screws/), clearance table / ISO 273 note, published 2015-06-18 | All 11 rows agree with the stored ISO 273 size series. These are clearance series, **not** ISO 286 dimensional fits. |
 | Cutting-tap pilot drill | [EXACT GS52](https://exact.info/en/innovations/premium-thread-cutting-assortment/), 2020-10-01, M3–M12; [Thürmer core-hole recommendations](https://www.thurmer.com/special-sizes-faq/), M14/M16/M20/M24 | All 11 recommendations. EXACT supplies 10.2 for M12; Thürmer recommends 10.25. Either can be a process choice; the library uses 10.2. Not for forming taps; material and engagement affect selection. No unverified claim of ISO 2306 conformity. |
-| Counterbore diameter | [Ifanger cutting-tool catalogue](https://www.ifanger.com/content/freetext/Kataloge/03_Zerspanungswerkzr_stand_en/files/assets/common/downloads/publication.pdf?uni=f8a17257f4e8ef27ca8be03386f07be4), 03/2006, p. 32, DIN 974-1 table | Ten stored diameters agree. **M14 is absent**: its legacy 24 mm diameter remains an explicitly unverified engineering clearance, not a verified DIN row. |
-| Counterbore depth | [Schraube & Mutter drilling table](https://schraube-mutter.de/bohrtabelle-fuer-zylinderschrauben/), ISO 4762 depth row only | Eleven clearance recommendations without washers. This supplier page has discrepancies in other rows, so only its depth row is used; no claim that the whole page or these depths establish DIN conformity. M14 remains unverified as a normative counterbore. |
+| Counterbore diameter except M14 | [Ifanger cutting-tool catalogue](https://www.ifanger.com/content/freetext/Kataloge/03_Zerspanungswerkzr_stand_en/files/assets/common/downloads/publication.pdf?uni=f8a17257f4e8ef27ca8be03386f07be4), 03/2006, p. 32, DIN 974-1 table | Ten stored diameters agree. M14 is absent; its separate source below does not change the authority of the other rows. |
+| Counterbore depth except M14 | [Schraube & Mutter drilling table](https://schraube-mutter.de/bohrtabelle-fuer-zylinderschrauben/), ISO 4762 depth row only | Ten clearance recommendations without washers. This supplier page has discrepancies in other rows, so only these depths are used; no claim of full DIN conformity. |
+| M14 counterbore diameter and depth | [GOST 12876-67 scan](https://files.stroyinf.ru/Data/28/2834.pdf), amendment 4 (1983), figure 4 on printed p. 4 and table 4 continuation on printed p. 5 / PDF pp. 5–6 | Washer-free hexagon-socket cylindrical head: **D = 24, t = 15**. The new nominal depth replaces 14.6. These are the D/t columns, not D1/t1/t2. The through hole retains its separate ISO 273 source; complete DIN/GOST conformity is not asserted. |
 
 Independent numeric expectations in `tests/test_standard_sources.py` protect the
 checked facts and test unsupported-size refusal, provenance through the public
-tool, and unit conversion into a saved drawing. The exceptional M14 counterbore
-returns `reference_status: unverified_counterbore`; verified diameters still label
-depths as recommendations. Existing geometry is preserved rather than silently
-reclassifying a legacy recommendation as certified data.
+tool, and unit conversion into a saved drawing. M14 returns
+`reference_status: dimensions_checked_mixed_references` and a source for each
+dimension. Other counterbores retain `diameter_checked_depth_recommended`.
+Existing drawings and historical assessment evidence are not rewritten: an old
+14.6 mm depth does not acquire the new 15 mm source merely by updating metadata.
+
+## M14 interpretation and limits
+
+The [official catalogue](https://protect.gost.ru/gost/details/52f30749-edee-4bc3-92d1-5dcdc4b3bba2)
+and [amendment record](https://protect.gost.ru/gost/changesdetails/4282860c-8faa-4e4c-ab70-0b53136bbd88)
+identify amendment 4, registered 1983-04-14 and effective 1984-01-01. The inspected
+PDF is a third-party-hosted reproduction of the standard, not an authenticated
+official electronic edition. An independent reviewer checked both the figure and
+column headings against the M14 row; the scan is identified below and not bundled.
+
+The full standard also specifies H14 on D/t, a maximum internal corner radius
+of 0.3 mm and, for this case, a 0.5 × 45° seat/through-hole chamfer (clause 4).
+Clause 6 refers through holes to GOST 11284-75. Its amended M14 row contains
+15 / 16 (15.5) / 17 (16.5); parenthesized values are not recommended. AgentCAD
+deliberately retains **15.5 mm from the independently cited ISO 273 medium series**.
+The 2D symbol neither applies the GOST tolerance bands nor models its chamfer and
+corner. It is therefore a mixed-reference nominal drawing, not a fully compliant
+GOST hole. Clause 8 permits increased depths; it does not justify reducing 15 to 14.6.
+
+WASI's ISO 4762 M14 head has dk = 21 and k(max) = 14 mm. The selected 24 × 15
+nominals leave 1.5 mm radial and 1 mm axial space relative to those head dimensions.
+That is a geometric check, not a fit, tolerance-stack or manufacturing certificate.
 
 The generated fastener's minor diameter, hex-corner construction, chamfer,
 thread-length approximations and bearing internals are drawing conventions.
@@ -51,3 +75,4 @@ are not included. HTML sources may change even when their URL does not.
 | Timken PDF | `41fd6b2fdf4904d155014b6aa5aeb5e4ed3d2212d9b3cc5f312d28d34dddc495` |
 | Thürmer HTML | `d022f753d3ad66febe995252c0daa798cfa857f7c1bcf382ad29ce47b898c8f9` |
 | Ifanger 03/2006 PDF | `499a7bc0e067d0b577df40350bf13e2bcf165e5282b512c6c06dab7be5dcff4a` |
+| GOST 12876-67 scan with amendment 4 | `36ef405c0034672efa231a949ab3c1d793f2c6a060c571bb917afb4360b132b7` |

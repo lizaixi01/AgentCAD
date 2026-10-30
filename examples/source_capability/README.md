@@ -10,6 +10,19 @@ The [2026-10-30 result](results/2026-10-30/README.md) records AgentCAD **98** an
 Pro **96** under this method, including item deductions, pinned source references,
 complete regression/v8 records, native production examples and raw version timings.
 
+The [2026-10-31 follow-up](results/2026-10-31/README.md) retains a superseded
+100/93 assessment: final publication review found two additional false successes
+at `6699109`, so this is no longer the current score. Its measurements and
+performance baseline `69c1425` remain historical references. The repaired result is linked below.
+
+The [repaired-source assessment](results/2026-10-31-recheck/README.md) records
+**AgentCAD 100/100 · AutoCAD MCP Pro 93/100** at `290ced3` / `58a05dd`. Original failing
+files and controls were independently replayed; full native regression is
+**885 passed / 8 skipped**, with completed four-platform CI,
+original v8 **31/31**, fresh production PDFs and same-environment timings.
+See the [repair report](../../docs/source-capability-recheck.md) for score limits
+and the two companion archives needed for explicitly inherited evidence.
+
 ## Environment and regression evidence
 
 Check out the product commit named in a result, then install its dependency graph:
@@ -45,6 +58,8 @@ input is used. These are original synthetic examples beyond the v8 inputs:
 
 - A three-step sleeve and six-hole end cap, front/end/section views, five BOM rows,
   balloons, an A3 paper viewport at 1:1 and paper-space annotation.
+- A distinct fractional-length sleeve and eight-hole flange, two BOM rows,
+  supplied dimensions and hole placement, plus a separately sourced M14 detail.
 - Two rooms with a partition, doors, window, dimension chains and schedules;
   independent expected room areas are 26.9048 and 44.4808 m².
 - A pump, pneumatic control valve, panel instrument and vessel, with independently

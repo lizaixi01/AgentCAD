@@ -278,7 +278,8 @@ class Workspace:
 
     def _svg(self, rel: str, sha: str, before: str | None, hide: tuple[str, ...], frame: str | None = None) -> str:
         from ezdxf import bbox
-        from ezdxf.addons.drawing import Frontend, RenderContext, layout, svg
+        from ezdxf.addons.drawing import RenderContext, layout, svg
+        from .drawing_frontend import DrawingFrontend
         from ezdxf.addons.drawing.config import BackgroundPolicy, Configuration
         from ezdxf.math import BoundingBox2d
         _, doc = self._doc(rel, sha)
@@ -297,7 +298,7 @@ class Workspace:
                     else COLORS["other"]
 
         backend = svg.SVGBackend()
-        front = Frontend(RenderContext(doc), backend,
+        front = DrawingFrontend(RenderContext(doc), backend,
                          config=Configuration(background_policy=BackgroundPolicy.WHITE))
         front.push_property_override_function(override)
         front.draw_layout(msp)

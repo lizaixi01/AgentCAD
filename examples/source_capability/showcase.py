@@ -31,6 +31,18 @@ MECHANICAL = {
         {"part": "washer", "size": "M10", "insert": [160, 90]},
     ],
 }
+MECHANICAL_VARIANT = {
+    "sheet": {"title": "FRACTIONAL HOLES AND STEPPED BUSH", "drawing_no": "SC-2026-02"},
+    "parts": [
+        {"name":"BUSH", "at":[135,195], "views":["front","section"],
+         "segments":[{"length":17.5,"d_outer":42,"d_inner":19},
+                     {"length":23,"d_outer":60,"d_inner":19},
+                     {"length":11,"d_outer":34,"d_inner":19}]},
+        {"name":"FLANGE", "at":[350,190], "views":["front","side"],
+         "segments":[{"length":14,"d_outer":86,"d_inner":18}],
+         "features":[{"kind":"hole_circle","pcd":64,"count":8,"diameter":8.4,"start_angle":22.5}]},
+    ],
+}
 ARCHITECTURE = {
     "sheet": {"scale": 50},
     "walls": [{"id": "outer", "axis": [[0,0],[11000,0],[11000,7000],[0,7000]], "closed": True, "thickness": 240},
@@ -99,18 +111,35 @@ def main():
         save()
         assert result["ok"], result
         return result
-    for domain, spec, op in [("mechanical", MECHANICAL, "draw_mechanical_assembly"),
-                             ("architecture", ARCHITECTURE, "draw_arch_plan"), ("pid", PID, "draw_pid")]:
-        path = domain + ".dxf"
+    for case, domain, spec, op in [("mechanical", "mechanical", MECHANICAL, "draw_mechanical_assembly"),
+                                  ("mechanical-variant", "mechanical", MECHANICAL_VARIANT, "draw_mechanical_assembly"),
+                                  ("architecture", "architecture", ARCHITECTURE, "draw_arch_plan"),
+                                  ("pid", "pid", PID, "draw_pid")]:
+        path = case + ".dxf"
         call("apply_operations", path=path, operations=[{"op": op, "spec": spec}], create={"units": "mm"})
+        if case == "mechanical-variant":
+            row = call("standard_library", item="counterbore", size="M14")["rows"]["M14"]
+            assert (row["diameter"], row["counterbore_diameter"], row["counterbore_depth"]) == (15.5,24,15)
+            call("apply_operations", path=path, operations=[
+                {"op":"add_standard_hole", "size":"M14", "kind":"counterbore", "centers":[[65,90]]},
+                {"op":"add_leader", "points":[[77,90],[90,80],[95,80]], "text":row["callout"], "text_height":2.5},
+                {"op":"add_text", "text":"M14 nominal; mixed ISO/GOST references", "insert":[40,63], "height":2.5}])
         read = call("read_engineering", path=path, kind=domain)
         assert not read["critique"], read
         if domain == "mechanical":
             found = {p["name"]: p["measured"] for p in read["parts"]}
-            assert found == {"SLEEVE": {"length":55, "diameter":60}, "CAP": {"length":12, "diameter":70}}
+            expected_parts = ({"SLEEVE": {"length":55, "diameter":60}, "CAP": {"length":12, "diameter":70}}
+                              if case == "mechanical" else
+                              {"BUSH": {"length":51.5, "diameter":60}, "FLANGE": {"length":14, "diameter":86}})
+            assert found == expected_parts
             holes = [c for c in read["circles"] if c["kind"] == "bolt_hole"]
-            assert len(holes) == 6 and all(abs(h["diameter"] - 6.6) < 1e-8 for h in holes)
-            assert len(read["bom"]) == 5 and all(r["quantity"] == 1 for r in read["bom"])
+            count, hole_diameter, pcd, bom_count = (6,6.6,52,5) if case == "mechanical" else (8,8.4,64,2)
+            assert len(holes) == count and all(abs(h["diameter"] - hole_diameter) < 1e-8 for h in holes)
+            assert len(read["bom"]) == bom_count and all(r["quantity"] == 1 for r in read["bom"])
+            assert all(p["enabled"] and p["passed"] for p in read["manufacturing"])
+            dimensions = {a["kind"]:a["measurement"] for p in read["manufacturing"] for a in p["annotations"]}
+            assert abs(dimensions["hole_diameter.0"] - hole_diameter) < 1e-8
+            assert abs(dimensions["pitch_diameter.0"] - pcd) < 1e-8
             # A model-space frame needs a fixed-scale paper layout. Auto-fit is
             # useful for inspection, but cannot substantiate a printed 1:1 label.
             placed = call("apply_operations", path=path, operations=[
@@ -126,11 +155,11 @@ def main():
             assert read["graph"]["stats"]["dangling"] == 0
             assert [(r["line_class"], r["line_number"]) for r in read["line_list"]] == [
                 ("process_major", "DN80-SUPPLY"), ("process_major", "DN80-FEED"), ("pneumatic", None)]
-        call("deliver_drawing", path=path, output_dir=domain + "-delivery", formats=["dxf", "pdf", "svg", "json"])
+        call("deliver_drawing", path=path, output_dir=case + "-delivery", formats=["dxf", "pdf", "svg", "json"])
         if args.native:
-            call("export_drawing", path=path, output=domain + ".dwg", format="dwg")
-            reopened = domain + "-native.dxf"
-            call("import_drawing", source=domain + ".dwg", output=reopened)
+            call("export_drawing", path=path, output=case + ".dwg", format="dwg")
+            reopened = case + "-native.dxf"
+            call("import_drawing", source=case + ".dwg", output=reopened)
             after = call("read_engineering", path=reopened, kind=domain)
             assert not after["critique"], after
             if domain == "mechanical":
@@ -144,12 +173,20 @@ def main():
                 assert tuple(viewport.dxf.view_center_point)[:2] == (210,148.5)
                 assert any(t.dxf.text == "A3 - 1:1" and tuple(t.dxf.insert)[:2] == (24,278)
                            for t in sheet.query("TEXT"))
-                report["checks"]["native_A3_page_viewport_1to1"] = "passed"
+                report["checks"][case + "_native_A3_page_viewport_1to1"] = "passed"
+                assert all(p["passed"] for p in after["manufacturing"])
+                for part in after["manufacturing"]:
+                    for annotation in part["annotations"]:
+                        if annotation["kind"] == "hole_diameter.0":
+                            dim = native_doc.entitydb[annotation["handle"]]
+                            assert abs(dim.get_measurement() - hole_diameter) < 1e-8
+                            assert any(str(hole_diameter) in t.text for t in native_doc.blocks[dim.dxf.geometry]
+                                       if t.dxftype() == "MTEXT")
                 # AutoCAD DXFOUT can leave inactive paper viewports with id/status
                 # zero. Activate the actual native layout, regenerate and save a
                 # witness DXF; never rewrite IDs or geometry to fake visibility.
                 from agentcad.backends.autocad import _run
-                job, _ = _run(args.out.absolute() / "native-activation", {"in.dwg": args.out / "mechanical.dwg"}, [
+                job, _ = _run(args.out.absolute() / (case + "-native-activation"), {"in.dwg": args.out / (case + ".dwg")}, [
                     '(setvar "TILEMODE" 0)', '(setvar "CTAB" "A3-1to1")', '(command "_.REGENALL")',
                     '(command "_.DXFOUT" "__JOBDIR__/activated.dxf" "_V" "2018" "16")'], open_dwg="in.dwg")
                 witness = ezdxf.readfile(job / "activated.dxf")
@@ -158,17 +195,17 @@ def main():
                 assert activated.dxf.id > 1 and activated.dxf.status > 0
                 assert activated.dxf.width == 420 and activated.dxf.height / activated.dxf.view_height == 1
                 assert tuple(activated.dxf.view_center_point)[:2] == (210,148.5)
-                report["native_activation"] = {"job":job.relative_to(args.out.absolute()).as_posix(),
+                report[case + "_native_activation"] = {"job":job.relative_to(args.out.absolute()).as_posix(),
                     "before": {"id":viewport.dxf.id,"status":viewport.dxf.status},
                     "after": {"id":activated.dxf.id,"status":activated.dxf.status},
                     "scope":"Native layout activation and regeneration only; no geometry or viewport ID rewriting"}
                 call("export_drawing", path=(job / "activated.dxf").relative_to(args.out.absolute()).as_posix(),
-                     output="mechanical-native.pdf", format="pdf", layout="A3-1to1")
+                     output=case + "-native.pdf", format="pdf", layout="A3-1to1")
             audit = call("autocad_audit", path=reopened)
             assert audit["passed"] and audit["audit_errors"] == 0
-        report["checks"][domain] = "passed"
+        report["checks"][case] = "passed"
         save()
-        print(domain + " passed", flush=True)
+        print(case + " passed", flush=True)
     fit = call("standard_library", item="iso_fit", size="35 H7/g6")
     call("apply_operations", path="tolerance.dxf", create={"units":"mm"}, operations=[
         {"op":"add_circle", "center":[80,55], "diameter":35, "tag":"bore"},

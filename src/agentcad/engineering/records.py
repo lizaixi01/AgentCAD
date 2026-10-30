@@ -11,7 +11,17 @@ def put(doc, entity, domain, record):
     if app not in doc.appids:
         doc.appids.add(app)
     raw = json.dumps(record, sort_keys=True, ensure_ascii=True, allow_nan=False)
-    entity.set_xdata(app, [(1000, raw[i : i + 240]) for i in range(0, len(raw), 240)])
+    chunks = [raw[i : i + 240] for i in range(0, len(raw), 240)]
+    # AutoCAD limits all XDATA on one entity to 16 KiB. Large profile/annotation
+    # manifests belong in an entity-owned XRECORD; keep only a small locator in
+    # XDATA so existing domain discovery continues to work.
+    if len(raw) > 8000:
+        extension = entity.get_extension_dict() if entity.has_extension_dict else entity.new_extension_dict()
+        xrecord = extension.get(app) or extension.add_xrecord(app)
+        xrecord.reset([(1, chunk) for chunk in chunks])
+        entity.set_xdata(app, [(1000, "$AGENTCAD_XRECORD_V1")])
+    else:
+        entity.set_xdata(app, [(1000, chunk) for chunk in chunks])
 
 
 def get(entity, domain):
@@ -19,7 +29,15 @@ def get(entity, domain):
     if not entity.has_xdata(app):
         return None
     try:
-        record = json.loads("".join(t.value for t in entity.get_xdata(app) if t.code == 1000))
+        raw = "".join(t.value for t in entity.get_xdata(app) if t.code == 1000)
+        if raw == "$AGENTCAD_XRECORD_V1":
+            if not entity.has_extension_dict:
+                raise ValueError("Missing domain XRECORD")
+            xrecord = entity.get_extension_dict().get(app)
+            if xrecord is None or xrecord.dxftype() != "XRECORD":
+                raise ValueError("Missing domain XRECORD")
+            raw = "".join(t.value for t in xrecord.tags if t.code == 1)
+        record = json.loads(raw)
         if not isinstance(record, dict):
             raise ValueError("Domain record must be an object")
         return record

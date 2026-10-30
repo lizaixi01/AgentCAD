@@ -31,6 +31,30 @@ def _tags(entity) -> list:
     return [(t.code, str(t.value)) for t in TagCollector.dxftags(entity)]
 
 
+def _extension_records(doc) -> dict[str, list]:
+    """Snapshot owned extension data, including nested dictionaries and cycles.
+
+    Entity fingerprints contain only extension handles; preserving those handles
+    alone cannot prove the referenced manufacturing records survived export.
+    """
+    pending = [e.get_extension_dict().dictionary for e in doc.entitydb.values()
+               if e.is_alive and e.has_extension_dict]
+    records = {}
+    while pending:
+        entity = pending.pop()
+        if isinstance(entity, str):
+            entity = doc.entitydb.get(entity)
+        if entity is None or not entity.is_alive:
+            raise ValueError("Missing extension record")
+        handle = entity.dxf.handle
+        if handle in records:
+            continue
+        records[handle] = _tags(entity)
+        if entity.dxftype() == "DICTIONARY":
+            pending.extend(value for _, value in entity.items())
+    return records
+
+
 def dxf_snapshot(doc) -> dict[str, Any]:
     """Handle identity and DXF tags include geometry, XDATA, appearance and links."""
     return {
@@ -39,6 +63,7 @@ def dxf_snapshot(doc) -> dict[str, Any]:
             "$LUNITS", "$LUPREC", "$AUNITS", "$AUPREC", "$MEASUREMENT", "$INSBASE",
             "$MIRRTEXT", "$LTSCALE", "$CELTSCALE", "$PSLTSCALE"}},
         "metadata": all_meta(doc),
+        "extension_records": _extension_records(doc),
         "layouts": {s.name: {e.dxf.handle: fingerprint(e) for e in s} for s in doc.layouts},
         "blocks": {b.name: {"entities": {e.dxf.handle: fingerprint(e) for e in b},
                              "definition": _tags(b.block), "record": _tags(b.block_record)} for b in doc.blocks},
