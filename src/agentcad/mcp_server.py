@@ -48,15 +48,26 @@ Basics
   run_script (only if enabled) covers edits no op can express.
 
 3D parts (.FCStd)
-- For an engineering drawing image, inspect_image magnifies callouts and section views. Before modeling,
-  rotate vertical or inverted annotations upright with inspect_image(rotate=90/180/270). Recheck ambiguous
-  digits and decimal points at a readable orientation. Make a dimension ledger from the drawing, then
-  map each dimension to the edges/centres it measures, rather than a nearby feature. Use section extension
-  lines and hatching to distinguish cut depth from remaining wall thickness and to identify which side
-  each recess or protrusion occupies. Record signed face levels in the chosen coordinate frame.
-  For each thickness/depth callout, name BOTH measured surfaces and follow both witness lines to them;
-  a nearby number is not evidence for a surface pair. Resolve an ambiguous assignment against the other
-  views before building. State a short dimension ledger (value, measured features, source view, planned check).
+- Read an engineering drawing in this order: overview, boundary/section geometry, dimension endpoints,
+  then numerical values and the construction plan. inspect_image(rotate=90/180/270) makes text upright.
+  Keep the entire dimension line, both witness lines and their measured boundaries in the crop.
+- Before modeling an ambiguous linear section, use inspect_image(dimensions=[]) for source-coordinate
+  guides. Give stable names to the physical surfaces. Submit the linked callouts TOGETHER with dimensions=
+  [{id,view,value,unit:'mm',line:[[x,y],[x,y]],surfaces:[{name,point:[x,y]},{name,point:[x,y]}]}].
+  line points are the dimension/witness intersections (arrow tips), NOT the printed number's location;
+  each surface point is where that witness line reaches a physical boundary. Source coordinates remain
+  unchanged by crop rotation. Read the unmarked panel alongside the D1/D2 and S1/S2 overlay: verify each
+  point actually lies on the intended line/boundary, not on hatching, text or a neighbouring feature.
+  The tool checks witness projections and solves the supplied dimension graph; green/consistent means
+  arithmetic and anchor alignment ONLY, not that OCR or the surface assignment is true. Correct any
+  mismatched anchors, scale conflicts or contradictory cycles before trusting derived levels.
+- State a drawing-derived dimension ledger before building: callout id/value, source hash/view, both
+  endpoint/surface coordinates, and the corresponding model surfaces. Use the connected graph's relative
+  levels (source +x right, +y down) to derive gaps in ONE chosen CAD frame. Distinguish directly labelled
+  dimensions from derived gaps. Disconnected graph components have no determined relative offset.
+  If a later inspection changes a surface assignment, re-submit the WHOLE linked set with new anchors
+  and explain which witness endpoint changed. A new crop of the digits alone does not justify replacing
+  the ledger. Resolve remaining uncertainty against other views, independently of the current CAD model.
 - One PartDesign Body, one solid, every feature native and editable. Usual order: set_parameters (optional),
   add_sketch on a plane (XY normal +Z, XZ normal -Y, YZ normal +X; offset moves it along the normal) or
   on_face, then pad (adds along the normal) / pocket (cuts against it) / revolve / groove / hole, then fillet,
@@ -134,11 +145,17 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
                       max_size: Annotated[int, Field(ge=64, le=2048, description="Longest preview side in pixels; "
                           "small crops are magnified. This does not create additional source detail")] = 1536,
                       rotate: Annotated[Literal[0, 90, 180, 270], Field(description="Clockwise rotation AFTER cropping; "
-                          "make vertical dimensions upright. Region coordinates always refer to the source")] = 0) -> Any:
+                          "make vertical dimensions upright. Region coordinates always refer to the source")] = 0,
+                      dimensions: Annotated[list[dict] | None, Field(description="Optional linear-dimension evidence: "
+                          "[] gives source-coordinate guides; otherwise up to 12 {id,view,value,unit:'mm',"
+                          "line:[[x,y],[x,y]],surfaces:[{name,point:[x,y]},{name,point:[x,y]}]}. "
+                          "line=dimension/witness intersections; surfaces=corresponding boundary points, "
+                          "all in source pixels inside the crop. Returns an unmarked+marked image, alignment "
+                          "checks and relative levels from equations; does NOT recognize arrows/text or verify semantics.")] = None) -> Any:
         """Look closely at a drawing's dimensions, leaders, hatching or section view before modeling.
         Returns source dimensions, crop coordinates and an inline image. Read-only; writes no files.
         Pixel distances are not CAD dimensions: use the drawing's explicit callouts and datums."""
-        result = rt.inspect_image(path, region, max_size, rotate)
+        result = rt.inspect_image(path, region, max_size, rotate, dimensions)
         if result.get("ok"):
             png = base64.b64decode(result.pop("image_base64"))
             return [result, Image(data=png, format="png")]
