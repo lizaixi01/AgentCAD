@@ -3,7 +3,7 @@ from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 from .errors import policy_error, input_error
 
@@ -39,7 +39,13 @@ class Policy:
                 suffixes: tuple[str, ...] | None = None, hint_suffix: str = "") -> Path:
         if path is None or str(path).strip() == "":
             raise input_error("MISSING_PATH", "A file path is required")
-        p = Path(path)
+        spelling = os.fspath(path)
+        # Public paths travel between Windows agents and POSIX servers. Windows
+        # drives cannot become relative POSIX filenames; both separators mean a
+        # directory boundary, including for reserved state and '..' checks.
+        if os.name != "nt" and PureWindowsPath(spelling).drive:
+            raise policy_error("PATH_OUTSIDE_WORKSPACE", "A Windows drive or UNC path is outside this workspace")
+        p = Path(spelling.replace("\\", "/"))
         if not p.is_absolute():
             p = self.root / p
         p = p.resolve()

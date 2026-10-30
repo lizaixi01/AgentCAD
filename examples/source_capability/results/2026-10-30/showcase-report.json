@@ -1,0 +1,4553 @@
+{
+  "source_commit": "b4c04669238e771a0888114f1af3260d7c371834",
+  "source_sha256": {
+    "src/agentcad/__init__.py": "0cf3c6b11a60837047df4ef8ff581ebbe32ea447ac6f1e8a59efed1ac1c1efd0",
+    "src/agentcad/_script_runner.py": "36256bc268d029ef52ecdbc308a1de68f5c119364f6c86ff05816e9867a41616",
+    "src/agentcad/backends/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/agentcad/backends/acad_live.py": "3e5ac5487eaa6217de61af7afdc15005f995dd717e160c54d2430a6c464bfcd3",
+    "src/agentcad/backends/autocad.py": "1d8d3815f39caca7da75249b6a8164003eb01db587a9d2996100c115a0b7cbf2",
+    "src/agentcad/backends/freecad.py": "8eaa6ec237fc87f75730417d569111d19937ff7eb97cac2170b17616c4ae08c3",
+    "src/agentcad/cli.py": "a0174fb18534cde9c3fed4e5460978be0ecfabe15407b98487a932fe2d7d4872",
+    "src/agentcad/constraints.py": "b5789b985bf4a742ebe52337cdb919961d26bd17da0b958f619dda95e4b8335c",
+    "src/agentcad/delivery.py": "2f59d447f8392221cd790f9d2d099c0c33d4f4541004abfac1f3168bfccaa750",
+    "src/agentcad/discovery.py": "ea298092196bd6bb03e373fdbcaf7e544fa29fbb8f61c1b02fa74c34d4bb6d00",
+    "src/agentcad/docspec.py": "17fd570a4167c5dfa6eb303dab7fbb132cc9dacec9f298ac145b6cdea099bced",
+    "src/agentcad/engine.py": "00f50d0d57ca11441012e5ff4f7059af7a55c887b16c51310ffd29334ea6299e",
+    "src/agentcad/engineering/__init__.py": "9b0488135b54b44275e5906f106de14926a09a9f8f60971007d9cf0f8d5f538a",
+    "src/agentcad/engineering/architecture.py": "3ee9231463d2f1e20e4e9bcf016e7ab18b86e8ba0dac26a354ab6afafbbef9dd",
+    "src/agentcad/engineering/mechanical.py": "32663504615724351e712170ce15f3fc8dfcc8eec23791623532782c20a9e7a5",
+    "src/agentcad/engineering/pid.py": "388877962a332900cc54405dc202eaff7f3cdc134a947b526223d193d006155f",
+    "src/agentcad/engineering/plant.py": "b66b635b9e755ba57a074d27705c582ea7b86c832c520b43b55d64278bedc777",
+    "src/agentcad/engineering/records.py": "d6d9a96bc12c617029440e2b53201c9e1db155a0b854323397debe2c54dc0d9b",
+    "src/agentcad/errors.py": "3cb481be20980080b601410cb55ec4d9913dedee4d8de3d0f83c779b354f471a",
+    "src/agentcad/fits.py": "3e23b1355afa155ea2d964c323f7dcc9b415e970a0621ee1f0654bafcb46b581",
+    "src/agentcad/geom.py": "c189948de9fe0bbff71e7871c42dec70b04d3d4bb4fe09a970f8a7ba2335ca9b",
+    "src/agentcad/guards.py": "3b48ef66cb5ae86fb31add3f863660513d9d2ff067d1f50ca82327e0763720c1",
+    "src/agentcad/http_api.py": "596e6ddabf9dd446e8258a87afeaaa45f9a225f591ab569c2db90b90f0af8006",
+    "src/agentcad/image_dimensions.py": "9afc9318ff90a35147b532aa5bed3228ba4e28bb97b22d29a2e051db256a60d9",
+    "src/agentcad/images.py": "c4ded067213fbbb39ae1be2bf4a510e85bb335329084c01d5ca43f6025514419",
+    "src/agentcad/install.py": "f415642e55fda0c5690349fe8bd137e5d5a59292792840adf520d3cbc483392c",
+    "src/agentcad/locking.py": "992fca3bb03d85ff11ded80b424cc8538860ad7931e94e7bb38cb57d3d36373a",
+    "src/agentcad/mcp_config.py": "118c17938f14a3492210469af103ff97ba83b3c29c01e34e57578c27691ac0ce",
+    "src/agentcad/mcp_server.py": "fa70a18788c228af8a7513a2d87659adb3db9f35c2b22ce379a42d35138ee694",
+    "src/agentcad/measure.py": "eb379006b3f23ebc9e5c94472cd1344af8e88da53e816ba42379c5b1faa50145",
+    "src/agentcad/metadata.py": "ef439bc5bd33c189efae10102b7c153f877771f377d40c65506f2036692e3135",
+    "src/agentcad/model.py": "e157b2bbc9c085d568541f9e4113cabe6ce0b9306d7bd8e44f70d0655529d9e2",
+    "src/agentcad/ops/__init__.py": "47fa69ed995be1e6533d057fef849920c65040149ec8b7ec1940139bfe2fa2a0",
+    "src/agentcad/ops/analysis.py": "28e606161228100f73262b389eba2fd67e288c8ed7f3cc0efb3286db880c5a2b",
+    "src/agentcad/ops/annotate.py": "53a08b1988a9dcaea79750ab0eba56d1c32ba911077fb801282e675d574292fd",
+    "src/agentcad/ops/draw.py": "a57d92439085c188a1b42b4ece5645d543c061213b933ff9d88b58496804f7dd",
+    "src/agentcad/ops/edit.py": "30d56cd88ecf8550b53c4a2c9e94fa0214c5e07a711c336d2374e51aacb66645",
+    "src/agentcad/ops/engineering.py": "c11b87c7e0f668e83931569921e8fd704bf47bb9de6eef11e8d06d5d894ea7ac",
+    "src/agentcad/ops/library.py": "41ae6802d9bae49cf5d2d986545141ff014638c4f24d2c9ecf9b4979182fc88f",
+    "src/agentcad/ops/registry.py": "eff0b13154094bb6cc6231795a3806863f2505bb0400c781b6a2a7c04a0a83df",
+    "src/agentcad/ops/sheet.py": "13a58a342873b9936c515cd6d2daf60c3cf30cd39481a0f67945fe4d68d40f96",
+    "src/agentcad/ops/structure.py": "145c4df12a29941f548f876fe21108e2d90dc85735b7cd99174dd83444548cf9",
+    "src/agentcad/part/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "src/agentcad/part/_cq_runner.py": "6121069dc85a7c4e5c59c4591361fc218eb09f6a1bc4cf0ef0946873199b6434",
+    "src/agentcad/part/_fc_runner.py": "01bec5b670523e1797617de87e7946972ffe1f1297402ed00bd132428b0928dc",
+    "src/agentcad/part/compare.py": "3de83c77652697888ed803e60424e1daee0f9b6c29237d4764152d4bbdd13567",
+    "src/agentcad/part/ops.py": "aa1b03d81fe6e3718abc84753a0ba4b689a57573c4a4869cd2814a12cc2faabc",
+    "src/agentcad/part/service.py": "c02a4d39119911655dae42349e3bc051793e4bd063a09bdebe078f97d76ff9fe",
+    "src/agentcad/plot.py": "312802b53e3eda223d52dd10f196c24b230d6ff9d5b7d4500c5f41fd478e95fd",
+    "src/agentcad/policy.py": "e6fbc8207dde48166b1f45220f9a00475e910efe246ae26307e4796cc13f519f",
+    "src/agentcad/progress.py": "bfd6d55a6ea26afac2c802f2ab618ae2064a01cc0235c0a89d73208936b6c39b",
+    "src/agentcad/quality.py": "7029227c3b06dadb9af160555a47d0a294ba24a14c5778a2c881e325182be04b",
+    "src/agentcad/scripting.py": "6bc1b8ac866b5e5b9ebfe962e0689e5f41c860fca19e6a90795dd10b21a759df",
+    "src/agentcad/service.py": "f52d9ce92f433c2f65d703b5f4074b2e234648c21a29204c22925f513db1d68e",
+    "src/agentcad/spec.py": "67530f986f3efb4a4e65c8046af103364e1b484d878d82b257f614ecbe3f33e7",
+    "src/agentcad/stdlib.py": "3f5916a6c2331fbdf81b65cb0f2028f638e0d2550e37d448bbd170543a352925",
+    "src/agentcad/store.py": "2746f6f2777cc4c80383f47a8427f8a9d213e217c63bd591823b7b24991ef4a5",
+    "src/agentcad/tabular.py": "065a0b4ce0fafdfc446d5f97f07d9e7c618620418e5728fcd310615bab8fb5f2",
+    "src/agentcad/tolerances.py": "d77290c6a67411c7f864a7ab64959265c46d5bd21dcbf21178d7a959dfee42a7",
+    "src/agentcad/units.py": "625072a448cf679f50237837120ea031ff1884ffa1deef1c167dc900b7538bf0",
+    "src/agentcad/validate/__init__.py": "1aa2234055c33fe91adb93cf5e7bec96ad4d8935fb0b22dbe142b62a37bbf37b",
+    "src/agentcad/validate/checks.py": "cdfc9735c07d055d8e863373e5f8fc1461c12dc2b67572563280bdbb701b5847",
+    "src/agentcad/validate/features.py": "cef4f2d99d738294b8944e3d7343abb1d62a923b7708b950720c8814ccf1cebe",
+    "src/agentcad/validate/requirements.py": "cadf1b07f71bb1813cb469b83c8d1b64ce3edf48090f67e9f58dc59d840b4149",
+    "src/agentcad/verification.py": "529ac3f9a76db54ecdd433b422f2d4c6c0be9f21e4ab6a01e0d0061e24052b2f",
+    "src/agentcad/viewer.py": "ba19fbce9110b2731f26ff5a498cfb595e9ada37151cc55b7e38085e44fc0292",
+    "src/agentcad/worker.py": "182ca116aebd4919f79e40982f5e9ece65d9d67a861f97375c680b95e6bfe626"
+  },
+  "imported_from": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\__init__.py",
+  "harness_sha256": "2c8fe18a8f43a846ace218e77357436c63fba6b9ddfa20fdacfb94fb5511f9c1",
+  "native": true,
+  "calls": [
+    {
+      "tool": "apply_operations",
+      "arguments": {
+        "path": "mechanical.dxf",
+        "operations": [
+          {
+            "op": "draw_mechanical_assembly",
+            "spec": {
+              "sheet": {
+                "title": "STEPPED SLEEVE AND END CAP",
+                "drawing_no": "SC-2026-01",
+                "drawn_by": "AgentCAD"
+              },
+              "parts": [
+                {
+                  "name": "SLEEVE",
+                  "at": [
+                    130,
+                    190
+                  ],
+                  "views": [
+                    "front",
+                    "section"
+                  ],
+                  "material": "steel",
+                  "segments": [
+                    {
+                      "length": 18,
+                      "d_outer": 48,
+                      "d_inner": 25
+                    },
+                    {
+                      "length": 24,
+                      "d_outer": 60,
+                      "d_inner": 25
+                    },
+                    {
+                      "length": 13,
+                      "d_outer": 42,
+                      "d_inner": 25
+                    }
+                  ]
+                },
+                {
+                  "name": "CAP",
+                  "at": [
+                    345,
+                    190
+                  ],
+                  "views": [
+                    "front",
+                    "side"
+                  ],
+                  "material": "steel",
+                  "segments": [
+                    {
+                      "length": 12,
+                      "d_outer": 70,
+                      "d_inner": 25
+                    }
+                  ],
+                  "features": [
+                    {
+                      "kind": "hole_circle",
+                      "pcd": 52,
+                      "count": 6,
+                      "diameter": 6.6,
+                      "start_angle": 30
+                    }
+                  ]
+                }
+              ],
+              "fasteners": [
+                {
+                  "part": "hex_bolt",
+                  "size": "M10",
+                  "length": 40,
+                  "insert": [
+                    60,
+                    90
+                  ]
+                },
+                {
+                  "part": "hex_nut",
+                  "size": "M10",
+                  "insert": [
+                    110,
+                    90
+                  ]
+                },
+                {
+                  "part": "washer",
+                  "size": "M10",
+                  "insert": [
+                    160,
+                    90
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "create": {
+          "units": "mm"
+        }
+      },
+      "result": {
+        "ok": true,
+        "tool": "apply_operations",
+        "drawing": "mechanical.dxf",
+        "changes": {
+          "added": [
+            "98",
+            "9A",
+            "9B",
+            "9C",
+            "9D",
+            "9E",
+            "9F",
+            "A0",
+            "A1",
+            "A2",
+            "A3",
+            "A4",
+            "A5",
+            "A6",
+            "A7",
+            "A8",
+            "A9",
+            "AA",
+            "AB",
+            "AC",
+            "AD",
+            "AE",
+            "AF",
+            "B0",
+            "B1",
+            "B2",
+            "B3",
+            "B4",
+            "B5",
+            "B6",
+            "B7",
+            "B8",
+            "B9",
+            "D5",
+            "E0",
+            "E2",
+            "E3",
+            "E4",
+            "E5",
+            "E7",
+            "EA",
+            "EB",
+            "EC",
+            "ED",
+            "EE",
+            "FD",
+            "10C",
+            "11B",
+            "11C",
+            "11D",
+            "11E",
+            "11F",
+            "120",
+            "121",
+            "122",
+            "123",
+            "124",
+            "125",
+            "126",
+            "127",
+            "128",
+            "129",
+            "12A",
+            "12B",
+            "12C",
+            "12D",
+            "12E",
+            "12F",
+            "130",
+            "131",
+            "132",
+            "133",
+            "134",
+            "135",
+            "136",
+            "137",
+            "154",
+            "162",
+            "16E",
+            "174",
+            "175",
+            "176",
+            "177",
+            "178",
+            "179",
+            "17A",
+            "17B",
+            "17C",
+            "17D",
+            "17E",
+            "17F",
+            "180",
+            "181",
+            "182",
+            "183",
+            "184",
+            "185",
+            "186",
+            "187",
+            "188",
+            "189",
+            "18A",
+            "18B",
+            "18C",
+            "18D",
+            "18E",
+            "18F",
+            "190",
+            "191",
+            "192",
+            "193",
+            "194",
+            "195",
+            "196",
+            "197",
+            "199",
+            "19A",
+            "19B",
+            "19C",
+            "19D",
+            "19E",
+            "19F",
+            "1A0",
+            "1A1",
+            "1A2",
+            "1A3",
+            "1A4",
+            "1A5",
+            "1A6",
+            "1A7"
+          ],
+          "modified": [],
+          "deleted": []
+        },
+        "results": [
+          {
+            "index": 0,
+            "op": "draw_mechanical_assembly",
+            "created": [
+              "98",
+              "9A",
+              "9B",
+              "9C",
+              "9D",
+              "9E",
+              "9F",
+              "A0",
+              "A1",
+              "A2",
+              "A3",
+              "A4",
+              "A5",
+              "A6",
+              "A7",
+              "A8",
+              "A9",
+              "AA",
+              "AB",
+              "AC",
+              "AD",
+              "AE",
+              "AF",
+              "B0",
+              "B1",
+              "B2",
+              "B3",
+              "B4",
+              "B5",
+              "B6",
+              "B7",
+              "B8",
+              "B9",
+              "D5",
+              "E0",
+              "E2",
+              "E3",
+              "E4",
+              "E5",
+              "E7",
+              "EA",
+              "EB",
+              "EC",
+              "ED",
+              "EE",
+              "FD",
+              "10C",
+              "11B",
+              "11C",
+              "11D",
+              "11E",
+              "11F",
+              "120",
+              "121",
+              "122",
+              "123",
+              "124",
+              "125",
+              "126",
+              "127",
+              "128",
+              "129",
+              "12A",
+              "12B",
+              "12C",
+              "12D",
+              "12E",
+              "12F",
+              "130",
+              "131",
+              "132",
+              "133",
+              "134",
+              "135",
+              "136",
+              "137",
+              "154",
+              "162",
+              "16E",
+              "174",
+              "175",
+              "176",
+              "177",
+              "178",
+              "179",
+              "17A",
+              "17B",
+              "17C",
+              "17D",
+              "17E",
+              "17F",
+              "180",
+              "181",
+              "182",
+              "183",
+              "184",
+              "185",
+              "186",
+              "187",
+              "188",
+              "189",
+              "18A",
+              "18B",
+              "18C",
+              "18D",
+              "18E",
+              "18F",
+              "190",
+              "191",
+              "192",
+              "193",
+              "194",
+              "195",
+              "196",
+              "197",
+              "199",
+              "19A",
+              "19B",
+              "19C",
+              "19D",
+              "19E",
+              "19F",
+              "1A0",
+              "1A1",
+              "1A2",
+              "1A3",
+              "1A4",
+              "1A5",
+              "1A6",
+              "1A7"
+            ],
+            "parts": 2,
+            "bom": [
+              {
+                "item": 1,
+                "description": "CAP",
+                "standard": "steel",
+                "size": "",
+                "quantity": 1,
+                "handles": [
+                  "11B"
+                ]
+              },
+              {
+                "item": 2,
+                "description": "SLEEVE",
+                "standard": "steel",
+                "size": "",
+                "quantity": 1,
+                "handles": [
+                  "E0"
+                ]
+              },
+              {
+                "item": 3,
+                "description": "hex_bolt",
+                "standard": "ISO 4014",
+                "size": "M10x40",
+                "quantity": 1,
+                "handles": [
+                  "154"
+                ]
+              },
+              {
+                "item": 4,
+                "description": "hex_nut",
+                "standard": "ISO 4032",
+                "size": "M10",
+                "quantity": 1,
+                "handles": [
+                  "162"
+                ]
+              },
+              {
+                "item": 5,
+                "description": "washer",
+                "standard": "ISO 7089",
+                "size": "M10",
+                "quantity": 1,
+                "handles": [
+                  "16E"
+                ]
+              }
+            ]
+          }
+        ],
+        "validation": {
+          "passed": true,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "issues": [],
+          "requirements": [],
+          "requirements_passed": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": {
+              "size": [
+                390.0,
+                277.0
+              ],
+              "bbox": [
+                20.0,
+                10.0,
+                410.0,
+                287.0
+              ]
+            },
+            "circles": {
+              "count": 13,
+              "by_diameter": {
+                "70": 1,
+                "25": 1,
+                "6.6": 6,
+                "8": 5
+              }
+            },
+            "dimensions": {
+              "count": 4,
+              "by_kind": {
+                "linear": 4
+              }
+            },
+            "closed_contours": 6,
+            "entity_count": 130
+          }
+        },
+        "journal_seq": 2,
+        "checkpoint_before": "cp-0001",
+        "sha256": "45663c7148caef88da52228559baa79093787aceb5826946d6492a156470f0ae",
+        "bytes": 78280,
+        "revision": 2,
+        "created_drawing": {
+          "units": "mm",
+          "dxf_version": "R2010",
+          "template": "mechanical"
+        },
+        "metrics": {
+          "duration_ms": 261.39,
+          "input_bytes": 917,
+          "output_bytes": 3258
+        }
+      }
+    },
+    {
+      "tool": "read_engineering",
+      "arguments": {
+        "path": "mechanical.dxf",
+        "kind": "mechanical"
+      },
+      "result": {
+        "ok": true,
+        "tool": "read_engineering",
+        "drawing": "mechanical.dxf",
+        "parts": [
+          {
+            "handle": "E0",
+            "name": "SLEEVE",
+            "measured": {
+              "length": 55.0,
+              "diameter": 60.0
+            },
+            "views": [
+              "front",
+              "section"
+            ]
+          },
+          {
+            "handle": "11B",
+            "name": "CAP",
+            "measured": {
+              "length": 12.0,
+              "diameter": 70.0
+            },
+            "views": [
+              "front",
+              "side"
+            ]
+          }
+        ],
+        "bom": [
+          {
+            "item": 1,
+            "description": "CAP",
+            "standard": "steel",
+            "size": "",
+            "quantity": 1,
+            "handles": [
+              "11B"
+            ]
+          },
+          {
+            "item": 2,
+            "description": "SLEEVE",
+            "standard": "steel",
+            "size": "",
+            "quantity": 1,
+            "handles": [
+              "E0"
+            ]
+          },
+          {
+            "item": 3,
+            "description": "hex_bolt",
+            "standard": "ISO 4014",
+            "size": "M10x40",
+            "quantity": 1,
+            "handles": [
+              "154"
+            ]
+          },
+          {
+            "item": 4,
+            "description": "hex_nut",
+            "standard": "ISO 4032",
+            "size": "M10",
+            "quantity": 1,
+            "handles": [
+              "162"
+            ]
+          },
+          {
+            "item": 5,
+            "description": "washer",
+            "standard": "ISO 7089",
+            "size": "M10",
+            "quantity": 1,
+            "handles": [
+              "16E"
+            ]
+          }
+        ],
+        "balloons": [
+          {
+            "item": 1,
+            "leader": "19B",
+            "role": "balloon",
+            "targets": [
+              "11B"
+            ],
+            "text": "19A",
+            "handle": "199"
+          },
+          {
+            "item": 2,
+            "leader": "19E",
+            "role": "balloon",
+            "targets": [
+              "E0"
+            ],
+            "text": "19D",
+            "handle": "19C"
+          },
+          {
+            "item": 3,
+            "leader": "1A1",
+            "role": "balloon",
+            "targets": [
+              "154"
+            ],
+            "text": "1A0",
+            "handle": "19F"
+          },
+          {
+            "item": 4,
+            "leader": "1A4",
+            "role": "balloon",
+            "targets": [
+              "162"
+            ],
+            "text": "1A3",
+            "handle": "1A2"
+          },
+          {
+            "item": 5,
+            "leader": "1A7",
+            "role": "balloon",
+            "targets": [
+              "16E"
+            ],
+            "text": "1A6",
+            "handle": "1A5"
+          }
+        ],
+        "circles": [
+          {
+            "kind": "profile",
+            "part": "CAP",
+            "role": "view_circle",
+            "handle": "11F",
+            "center": [
+              290.0,
+              190.0
+            ],
+            "diameter": 70.0
+          },
+          {
+            "kind": "profile",
+            "part": "CAP",
+            "role": "view_circle",
+            "handle": "120",
+            "center": [
+              290.0,
+              190.0
+            ],
+            "diameter": 25.0
+          },
+          {
+            "diameter": 6.6,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "121",
+            "center": [
+              312.5166604983954,
+              203.0
+            ]
+          },
+          {
+            "diameter": 6.6,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "122",
+            "center": [
+              290.0,
+              216.0
+            ]
+          },
+          {
+            "diameter": 6.6,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "123",
+            "center": [
+              267.4833395016046,
+              203.0
+            ]
+          },
+          {
+            "diameter": 6.6,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "124",
+            "center": [
+              267.4833395016046,
+              177.0
+            ]
+          },
+          {
+            "diameter": 6.6,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "125",
+            "center": [
+              290.0,
+              164.0
+            ]
+          },
+          {
+            "diameter": 6.6,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "126",
+            "center": [
+              312.51666049839537,
+              177.0
+            ]
+          }
+        ],
+        "sections": [
+          {
+            "part": "SLEEVE",
+            "role": "section",
+            "style": "full",
+            "handle": "E5"
+          },
+          {
+            "part": "SLEEVE",
+            "role": "section",
+            "style": "full",
+            "handle": "EA"
+          }
+        ],
+        "critique": [],
+        "validation": {
+          "file": "D:\\Projects\\AgentCAD-output\\source-capability\\showcase-b4c0466\\mechanical.dxf",
+          "readable": true,
+          "issues": [],
+          "requirements": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": {
+              "entities": [
+                "98"
+              ],
+              "bbox": [
+                20.0,
+                10.0,
+                410.0,
+                287.0
+              ],
+              "size": [
+                390.0,
+                277.0
+              ]
+            },
+            "circles": [
+              {
+                "id": "11F",
+                "center": [
+                  290.0,
+                  190.0
+                ],
+                "diameter": 70.0
+              },
+              {
+                "id": "120",
+                "center": [
+                  290.0,
+                  190.0
+                ],
+                "diameter": 25.0
+              },
+              {
+                "id": "121",
+                "center": [
+                  312.516660498,
+                  203.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "122",
+                "center": [
+                  290.0,
+                  216.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "123",
+                "center": [
+                  267.483339502,
+                  203.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "124",
+                "center": [
+                  267.483339502,
+                  177.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "125",
+                "center": [
+                  290.0,
+                  164.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "126",
+                "center": [
+                  312.516660498,
+                  177.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "199",
+                "center": [
+                  345.0,
+                  270.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "19C",
+                "center": [
+                  130.0,
+                  265.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "19F",
+                "center": [
+                  50.7625,
+                  110.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "1A2",
+                "center": [
+                  100.7625,
+                  110.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "1A5",
+                "center": [
+                  150.0,
+                  110.0
+                ],
+                "diameter": 8.0
+              }
+            ],
+            "dimensions": [
+              {
+                "id": "EE",
+                "kind": "linear",
+                "measurement": 18.0
+              },
+              {
+                "id": "FD",
+                "kind": "linear",
+                "measurement": 24.0
+              },
+              {
+                "id": "10C",
+                "kind": "linear",
+                "measurement": 13.0
+              },
+              {
+                "id": "137",
+                "kind": "linear",
+                "measurement": 12.0
+              }
+            ],
+            "closed_contours": 6,
+            "entity_count": 130,
+            "ezdxf_version": "1.4.5"
+          },
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "passed": true,
+          "duration_ms": 25.86
+        },
+        "quality_score": 100,
+        "metrics": {
+          "duration_ms": 97.51,
+          "input_bytes": 54,
+          "output_bytes": 4256
+        }
+      }
+    },
+    {
+      "tool": "apply_operations",
+      "arguments": {
+        "path": "mechanical.dxf",
+        "operations": [
+          {
+            "op": "create_layout",
+            "name": "A3-1to1",
+            "paper": "A3"
+          },
+          {
+            "op": "add_viewport",
+            "layout": "A3-1to1",
+            "center": [
+              210,
+              148.5
+            ],
+            "view_center": [
+              210,
+              148.5
+            ],
+            "width": 420,
+            "height": 297,
+            "scale": 1,
+            "tag": "sheet.viewport"
+          },
+          {
+            "op": "add_text",
+            "layout": "A3-1to1",
+            "text": "A3 - 1:1",
+            "insert": [
+              24,
+              278
+            ],
+            "height": 2.5
+          }
+        ]
+      },
+      "result": {
+        "ok": true,
+        "tool": "apply_operations",
+        "drawing": "mechanical.dxf",
+        "changes": {
+          "added": [
+            "1B9",
+            "1BA"
+          ],
+          "modified": [],
+          "deleted": []
+        },
+        "results": [
+          {
+            "index": 0,
+            "op": "create_layout",
+            "layout": "A3-1to1",
+            "layout_created": true,
+            "paper": [
+              420,
+              297
+            ],
+            "hint": "Paper space origin is the lower-left paper corner; draw with layout='A3-1to1'"
+          },
+          {
+            "index": 1,
+            "op": "add_viewport",
+            "created": [
+              "1B9"
+            ],
+            "paper_rect": [
+              0.0,
+              0.0,
+              420.0,
+              297.0
+            ],
+            "model_window": [
+              0.0,
+              0.0,
+              420.0,
+              297.0
+            ],
+            "scale": 1.0,
+            "shows_all_model": true,
+            "model_extents": [
+              15.0,
+              4.305935,
+              415.0,
+              292.5
+            ]
+          },
+          {
+            "index": 2,
+            "op": "add_text",
+            "created": [
+              "1BA"
+            ]
+          }
+        ],
+        "validation": {
+          "passed": true,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "issues": [],
+          "requirements": [],
+          "requirements_passed": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": {
+              "size": [
+                390.0,
+                277.0
+              ],
+              "bbox": [
+                20.0,
+                10.0,
+                410.0,
+                287.0
+              ]
+            },
+            "circles": {
+              "count": 13,
+              "by_diameter": {
+                "70": 1,
+                "25": 1,
+                "6.6": 6,
+                "8": 5
+              }
+            },
+            "dimensions": {
+              "count": 4,
+              "by_kind": {
+                "linear": 4
+              }
+            },
+            "closed_contours": 6,
+            "entity_count": 130
+          }
+        },
+        "journal_seq": 3,
+        "checkpoint_before": "cp-0002",
+        "sha256": "5c162f32705a929a7dc6dd4b643d94174caa529e5205244bb6edc1fc4985cea0",
+        "bytes": 80321,
+        "revision": 3,
+        "metrics": {
+          "duration_ms": 263.81,
+          "input_bytes": 368,
+          "output_bytes": 1296
+        }
+      }
+    },
+    {
+      "tool": "deliver_drawing",
+      "arguments": {
+        "path": "mechanical.dxf",
+        "output_dir": "mechanical-delivery",
+        "formats": [
+          "dxf",
+          "pdf",
+          "svg",
+          "json"
+        ]
+      },
+      "result": {
+        "ok": true,
+        "tool": "deliver_drawing",
+        "status": "success",
+        "manifest": "mechanical-delivery/manifest.json",
+        "sha256": "2c2f815b75a119e256dcf8b892267f6bb16d59226794816cb9274245432b444a",
+        "version": 2,
+        "created": "2026-10-30T11:39:17.240+00:00",
+        "source": "mechanical.dxf",
+        "source_sha256": "5c162f32705a929a7dc6dd4b643d94174caa529e5205244bb6edc1fc4985cea0",
+        "revision": 3,
+        "quality_score": 94,
+        "validation": {
+          "file": "mechanical.dxf",
+          "readable": true,
+          "issues": [
+            {
+              "code": "UNDEFINED_LAYER",
+              "severity": "warning",
+              "category": "geometry",
+              "message": "Layer 'VIEWPORTS' has no layer table entry",
+              "entities": [
+                "1B8"
+              ],
+              "layout": "A3-1to1"
+            },
+            {
+              "code": "UNDEFINED_LAYER",
+              "severity": "warning",
+              "category": "geometry",
+              "message": "Layer 'VIEWPORTS' has no layer table entry",
+              "entities": [
+                "1B9"
+              ],
+              "layout": "A3-1to1"
+            }
+          ],
+          "requirements": [],
+          "coverage": {
+            "checked_layouts": [
+              "Model",
+              "A3-1to1"
+            ],
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": {
+              "entities": [
+                "98"
+              ],
+              "bbox": [
+                20.0,
+                10.0,
+                410.0,
+                287.0
+              ],
+              "size": [
+                390.0,
+                277.0
+              ]
+            },
+            "circles": [
+              {
+                "id": "11F",
+                "center": [
+                  290.0,
+                  190.0
+                ],
+                "diameter": 70.0
+              },
+              {
+                "id": "120",
+                "center": [
+                  290.0,
+                  190.0
+                ],
+                "diameter": 25.0
+              },
+              {
+                "id": "121",
+                "center": [
+                  312.516660498,
+                  203.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "122",
+                "center": [
+                  290.0,
+                  216.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "123",
+                "center": [
+                  267.483339502,
+                  203.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "124",
+                "center": [
+                  267.483339502,
+                  177.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "125",
+                "center": [
+                  290.0,
+                  164.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "126",
+                "center": [
+                  312.516660498,
+                  177.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "199",
+                "center": [
+                  345.0,
+                  270.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "19C",
+                "center": [
+                  130.0,
+                  265.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "19F",
+                "center": [
+                  50.7625,
+                  110.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "1A2",
+                "center": [
+                  100.7625,
+                  110.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "1A5",
+                "center": [
+                  150.0,
+                  110.0
+                ],
+                "diameter": 8.0
+              }
+            ],
+            "dimensions": [
+              {
+                "id": "EE",
+                "kind": "linear",
+                "measurement": 18.0
+              },
+              {
+                "id": "FD",
+                "kind": "linear",
+                "measurement": 24.0
+              },
+              {
+                "id": "10C",
+                "kind": "linear",
+                "measurement": 13.0
+              },
+              {
+                "id": "137",
+                "kind": "linear",
+                "measurement": 12.0
+              }
+            ],
+            "closed_contours": 6,
+            "entity_count": 130,
+            "ezdxf_version": "1.4.5"
+          },
+          "summary": {
+            "errors": 0,
+            "warnings": 2,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "passed": true,
+          "duration_ms": 30.4,
+          "requirements_source": null,
+          "engineering": {
+            "mechanical": {
+              "critique": [],
+              "passed": true
+            }
+          }
+        },
+        "artifacts": [
+          {
+            "path": "mechanical-delivery/mechanical.dxf",
+            "sha256": "6f7fa779df3ee7ebc735726904311b02b99af8c6f8cab24218811c42a180698e",
+            "bytes": 95849,
+            "format": "dxf",
+            "reread_ok": true,
+            "verification": {
+              "check": "dxf_layout_block_style_metadata_parity",
+              "passed": true,
+              "layouts": 3,
+              "blocks": 14
+            }
+          },
+          {
+            "path": "mechanical-delivery/mechanical.pdf",
+            "sha256": "a22171375e862fa54cd1d5d5e7adad9f609cf0988155cb1144b8faab921da416",
+            "bytes": 54404,
+            "format": "pdf",
+            "reread_ok": true,
+            "verification": {
+              "check": "pdf_pages_mediabox_content",
+              "passed": true,
+              "pages": 1,
+              "scope": "structural print validation; not full geometry parity"
+            }
+          },
+          {
+            "path": "mechanical-delivery/mechanical.svg",
+            "sha256": "6025a95b8b0dbc12b84ce8416a8d4da08540c316f99f2f8a1fb6616c03270cdd",
+            "bytes": 93740,
+            "format": "svg",
+            "reread_ok": true,
+            "verification": {
+              "check": "svg_xml_viewbox_content",
+              "passed": true,
+              "scope": "structural preview validation; model space only"
+            }
+          },
+          {
+            "path": "mechanical-delivery/mechanical.json",
+            "sha256": "1600202b5dcdec33333a796c77c63f5085db8e1046e3ee1165ccd2f153f6c727",
+            "bytes": 28072,
+            "format": "json",
+            "reread_ok": true,
+            "verification": {
+              "check": "json_source_projection_parity",
+              "passed": true
+            }
+          }
+        ],
+        "metrics": {
+          "duration_ms": 1173.8,
+          "input_bytes": 111,
+          "output_bytes": 3552
+        }
+      }
+    },
+    {
+      "tool": "export_drawing",
+      "arguments": {
+        "path": "mechanical.dxf",
+        "output": "mechanical.dwg",
+        "format": "dwg"
+      },
+      "result": {
+        "ok": true,
+        "tool": "export_drawing",
+        "drawing": "mechanical.dxf",
+        "output": "mechanical.dwg",
+        "format": "dwg",
+        "dwg_version": "2018",
+        "bytes": 33849,
+        "backend": "autocad",
+        "seconds": 3.82,
+        "readback": {
+          "readable": true,
+          "entities": 130,
+          "source_entities": 130,
+          "issues": []
+        },
+        "metrics": {
+          "duration_ms": 6280.32,
+          "input_bytes": 77,
+          "output_bytes": 277
+        }
+      }
+    },
+    {
+      "tool": "import_drawing",
+      "arguments": {
+        "source": "mechanical.dwg",
+        "output": "mechanical-native.dxf"
+      },
+      "result": {
+        "ok": true,
+        "tool": "import_drawing",
+        "drawing": "mechanical-native.dxf",
+        "source": "mechanical.dwg",
+        "backend": "autocad",
+        "seconds": 2.33,
+        "units": "mm",
+        "entity_count": 130,
+        "validation": {
+          "passed": true,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "issues": [],
+          "requirements": [],
+          "requirements_passed": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": {
+              "size": [
+                390.0,
+                277.0
+              ],
+              "bbox": [
+                20.0,
+                10.0,
+                410.0,
+                287.0
+              ]
+            },
+            "circles": {
+              "count": 13,
+              "by_diameter": {
+                "70": 1,
+                "25": 1,
+                "6.6": 6,
+                "8": 5
+              }
+            },
+            "dimensions": {
+              "count": 4,
+              "by_kind": {
+                "linear": 4
+              }
+            },
+            "closed_contours": 6,
+            "entity_count": 130
+          }
+        },
+        "journal_seq": 1,
+        "checkpoint_before": null,
+        "sha256": "7bf0ddad80faee10871d21af178ad572730942b054ee92079f3b9d681350dcae",
+        "bytes": 112739,
+        "revision": 1,
+        "metrics": {
+          "duration_ms": 2509.46,
+          "input_bytes": 69,
+          "output_bytes": 848
+        }
+      }
+    },
+    {
+      "tool": "read_engineering",
+      "arguments": {
+        "path": "mechanical-native.dxf",
+        "kind": "mechanical"
+      },
+      "result": {
+        "ok": true,
+        "tool": "read_engineering",
+        "drawing": "mechanical-native.dxf",
+        "parts": [
+          {
+            "handle": "E0",
+            "name": "SLEEVE",
+            "measured": {
+              "length": 55.0,
+              "diameter": 60.0
+            },
+            "views": [
+              "front",
+              "section"
+            ]
+          },
+          {
+            "handle": "11B",
+            "name": "CAP",
+            "measured": {
+              "length": 12.0,
+              "diameter": 70.0
+            },
+            "views": [
+              "front",
+              "side"
+            ]
+          }
+        ],
+        "bom": [
+          {
+            "item": 1,
+            "description": "CAP",
+            "standard": "steel",
+            "size": "",
+            "quantity": 1,
+            "handles": [
+              "11B"
+            ]
+          },
+          {
+            "item": 2,
+            "description": "SLEEVE",
+            "standard": "steel",
+            "size": "",
+            "quantity": 1,
+            "handles": [
+              "E0"
+            ]
+          },
+          {
+            "item": 3,
+            "description": "hex_bolt",
+            "standard": "ISO 4014",
+            "size": "M10x40",
+            "quantity": 1,
+            "handles": [
+              "154"
+            ]
+          },
+          {
+            "item": 4,
+            "description": "hex_nut",
+            "standard": "ISO 4032",
+            "size": "M10",
+            "quantity": 1,
+            "handles": [
+              "162"
+            ]
+          },
+          {
+            "item": 5,
+            "description": "washer",
+            "standard": "ISO 7089",
+            "size": "M10",
+            "quantity": 1,
+            "handles": [
+              "16E"
+            ]
+          }
+        ],
+        "balloons": [
+          {
+            "item": 1,
+            "leader": "19B",
+            "role": "balloon",
+            "targets": [
+              "11B"
+            ],
+            "text": "19A",
+            "handle": "199"
+          },
+          {
+            "item": 2,
+            "leader": "19E",
+            "role": "balloon",
+            "targets": [
+              "E0"
+            ],
+            "text": "19D",
+            "handle": "19C"
+          },
+          {
+            "item": 3,
+            "leader": "1A1",
+            "role": "balloon",
+            "targets": [
+              "154"
+            ],
+            "text": "1A0",
+            "handle": "19F"
+          },
+          {
+            "item": 4,
+            "leader": "1A4",
+            "role": "balloon",
+            "targets": [
+              "162"
+            ],
+            "text": "1A3",
+            "handle": "1A2"
+          },
+          {
+            "item": 5,
+            "leader": "1A7",
+            "role": "balloon",
+            "targets": [
+              "16E"
+            ],
+            "text": "1A6",
+            "handle": "1A5"
+          }
+        ],
+        "circles": [
+          {
+            "kind": "profile",
+            "part": "CAP",
+            "role": "view_circle",
+            "handle": "11F",
+            "center": [
+              290.0,
+              190.0
+            ],
+            "diameter": 70.0
+          },
+          {
+            "kind": "profile",
+            "part": "CAP",
+            "role": "view_circle",
+            "handle": "120",
+            "center": [
+              290.0,
+              190.0
+            ],
+            "diameter": 25.0
+          },
+          {
+            "diameter": 6.599999999999998,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "121",
+            "center": [
+              312.5166604983954,
+              203.0
+            ]
+          },
+          {
+            "diameter": 6.599999999999998,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "122",
+            "center": [
+              290.0,
+              216.0
+            ]
+          },
+          {
+            "diameter": 6.599999999999998,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "123",
+            "center": [
+              267.4833395016046,
+              203.0
+            ]
+          },
+          {
+            "diameter": 6.599999999999998,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "124",
+            "center": [
+              267.4833395016046,
+              177.0
+            ]
+          },
+          {
+            "diameter": 6.599999999999998,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "125",
+            "center": [
+              290.0,
+              164.0
+            ]
+          },
+          {
+            "diameter": 6.599999999999998,
+            "kind": "bolt_hole",
+            "part": "CAP",
+            "pcd": 52.0,
+            "role": "view_circle",
+            "handle": "126",
+            "center": [
+              312.5166604983954,
+              177.0
+            ]
+          }
+        ],
+        "sections": [
+          {
+            "part": "SLEEVE",
+            "role": "section",
+            "style": "full",
+            "handle": "E5"
+          },
+          {
+            "part": "SLEEVE",
+            "role": "section",
+            "style": "full",
+            "handle": "EA"
+          }
+        ],
+        "critique": [],
+        "validation": {
+          "file": "D:\\Projects\\AgentCAD-output\\source-capability\\showcase-b4c0466\\mechanical-native.dxf",
+          "readable": true,
+          "issues": [],
+          "requirements": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": {
+              "entities": [
+                "98"
+              ],
+              "bbox": [
+                20.0,
+                10.0,
+                410.0,
+                287.0
+              ],
+              "size": [
+                390.0,
+                277.0
+              ]
+            },
+            "circles": [
+              {
+                "id": "11F",
+                "center": [
+                  290.0,
+                  190.0
+                ],
+                "diameter": 70.0
+              },
+              {
+                "id": "120",
+                "center": [
+                  290.0,
+                  190.0
+                ],
+                "diameter": 25.0
+              },
+              {
+                "id": "121",
+                "center": [
+                  312.516660498,
+                  203.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "122",
+                "center": [
+                  290.0,
+                  216.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "123",
+                "center": [
+                  267.483339502,
+                  203.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "124",
+                "center": [
+                  267.483339502,
+                  177.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "125",
+                "center": [
+                  290.0,
+                  164.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "126",
+                "center": [
+                  312.516660498,
+                  177.0
+                ],
+                "diameter": 6.6
+              },
+              {
+                "id": "199",
+                "center": [
+                  345.0,
+                  270.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "19C",
+                "center": [
+                  130.0,
+                  265.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "19F",
+                "center": [
+                  50.7625,
+                  110.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "1A2",
+                "center": [
+                  100.7625,
+                  110.0
+                ],
+                "diameter": 8.0
+              },
+              {
+                "id": "1A5",
+                "center": [
+                  150.0,
+                  110.0
+                ],
+                "diameter": 8.0
+              }
+            ],
+            "dimensions": [
+              {
+                "id": "EE",
+                "kind": "linear",
+                "measurement": 18.0
+              },
+              {
+                "id": "FD",
+                "kind": "linear",
+                "measurement": 24.0
+              },
+              {
+                "id": "10C",
+                "kind": "linear",
+                "measurement": 13.0
+              },
+              {
+                "id": "137",
+                "kind": "linear",
+                "measurement": 12.0
+              }
+            ],
+            "closed_contours": 6,
+            "entity_count": 130,
+            "ezdxf_version": "1.4.5"
+          },
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "passed": true,
+          "duration_ms": 45.35
+        },
+        "quality_score": 100,
+        "metrics": {
+          "duration_ms": 80.96,
+          "input_bytes": 61,
+          "output_bytes": 4353
+        }
+      }
+    },
+    {
+      "tool": "export_drawing",
+      "arguments": {
+        "path": "native-activation/929306c511b0/activated.dxf",
+        "output": "mechanical-native.pdf",
+        "format": "pdf",
+        "layout": "A3-1to1"
+      },
+      "result": {
+        "ok": true,
+        "tool": "export_drawing",
+        "drawing": "native-activation/929306c511b0/activated.dxf",
+        "output": "mechanical-native.pdf",
+        "format": "pdf",
+        "pages": [
+          {
+            "layout": "A3-1to1",
+            "placement": "layout page setup",
+            "paper_mm": [
+              420.0,
+              297.0
+            ],
+            "scale": 1.0,
+            "scale_text": "1:1",
+            "empty": false
+          }
+        ],
+        "bytes": 54400,
+        "metrics": {
+          "duration_ms": 147.58,
+          "input_bytes": 135,
+          "output_bytes": 312
+        }
+      }
+    },
+    {
+      "tool": "autocad_audit",
+      "arguments": {
+        "path": "mechanical-native.dxf"
+      },
+      "result": {
+        "ok": true,
+        "tool": "autocad_audit",
+        "drawing": "mechanical-native.dxf",
+        "backend": "autocad",
+        "import_rejected": false,
+        "import_messages": [
+          "\u5171\u53d1\u73b0 0 \u4e2a\u9519\u8bef\uff0c\u5df2\u4fee\u590d 0 \u4e2a"
+        ],
+        "entities_seen_by_autocad": 133,
+        "insunits": 4,
+        "audit_errors": 0,
+        "messages": [],
+        "seconds": 3.02,
+        "passed": true,
+        "metrics": {
+          "duration_ms": 3021.38,
+          "input_bytes": 39,
+          "output_bytes": 334
+        }
+      }
+    },
+    {
+      "tool": "apply_operations",
+      "arguments": {
+        "path": "architecture.dxf",
+        "operations": [
+          {
+            "op": "draw_arch_plan",
+            "spec": {
+              "sheet": {
+                "scale": 50
+              },
+              "walls": [
+                {
+                  "id": "outer",
+                  "axis": [
+                    [
+                      0,
+                      0
+                    ],
+                    [
+                      11000,
+                      0
+                    ],
+                    [
+                      11000,
+                      7000
+                    ],
+                    [
+                      0,
+                      7000
+                    ]
+                  ],
+                  "closed": true,
+                  "thickness": 240
+                },
+                {
+                  "id": "partition",
+                  "axis": [
+                    [
+                      4200,
+                      0
+                    ],
+                    [
+                      4200,
+                      7000
+                    ]
+                  ],
+                  "thickness": 200
+                }
+              ],
+              "rooms": [
+                {
+                  "id": "office",
+                  "number": "11",
+                  "name": "Office",
+                  "at": [
+                    2100,
+                    4300
+                  ]
+                },
+                {
+                  "id": "shop",
+                  "number": "12",
+                  "name": "Workshop",
+                  "at": [
+                    7400,
+                    4300
+                  ]
+                }
+              ],
+              "openings": [
+                {
+                  "id": "D11",
+                  "kind": "door",
+                  "wall": "outer",
+                  "offset": 1500,
+                  "width": 1000
+                },
+                {
+                  "id": "D12",
+                  "kind": "door",
+                  "wall": "partition",
+                  "offset": 1500,
+                  "width": 900
+                },
+                {
+                  "id": "W11",
+                  "kind": "window",
+                  "wall": "outer",
+                  "offset": 22000,
+                  "width": 1800
+                }
+              ],
+              "chains": {
+                "sides": [
+                  "bottom",
+                  "left"
+                ]
+              },
+              "schedules": [
+                {
+                  "kind": "rooms",
+                  "at": [
+                    12500,
+                    6500
+                  ]
+                },
+                {
+                  "kind": "doors",
+                  "at": [
+                    12500,
+                    4500
+                  ]
+                }
+              ]
+            }
+          }
+        ],
+        "create": {
+          "units": "mm"
+        }
+      },
+      "result": {
+        "ok": true,
+        "tool": "apply_operations",
+        "drawing": "architecture.dxf",
+        "changes": {
+          "added": [
+            "A7",
+            "AB",
+            "AC",
+            "AD",
+            "AE",
+            "AF",
+            "B0",
+            "B9",
+            "BC",
+            "BD",
+            "BE",
+            "BF",
+            "C0",
+            "C1",
+            "C9",
+            "CC",
+            "CD",
+            "CE",
+            "CF",
+            "D0",
+            "D1",
+            "D2",
+            "E3",
+            "F2",
+            "101",
+            "110",
+            "121",
+            "130",
+            "141",
+            "150",
+            "161",
+            "170",
+            "171",
+            "172",
+            "173",
+            "174",
+            "175",
+            "176",
+            "177",
+            "178",
+            "179",
+            "17A",
+            "17B",
+            "17C",
+            "17D",
+            "17E",
+            "17F",
+            "180",
+            "181",
+            "182",
+            "183",
+            "184",
+            "185",
+            "186",
+            "187",
+            "188",
+            "189"
+          ],
+          "modified": [],
+          "deleted": []
+        },
+        "results": [
+          {
+            "index": 0,
+            "op": "draw_arch_plan",
+            "created": [
+              "A7",
+              "AB",
+              "AC",
+              "AD",
+              "AE",
+              "AF",
+              "B0",
+              "B9",
+              "BC",
+              "BD",
+              "BE",
+              "BF",
+              "C0",
+              "C1",
+              "C9",
+              "CC",
+              "CD",
+              "CE",
+              "CF",
+              "D0",
+              "D1",
+              "D2",
+              "E3",
+              "F2",
+              "101",
+              "110",
+              "121",
+              "130",
+              "141",
+              "150",
+              "161",
+              "170",
+              "171",
+              "172",
+              "173",
+              "174",
+              "175",
+              "176",
+              "177",
+              "178",
+              "179",
+              "17A",
+              "17B",
+              "17C",
+              "17D",
+              "17E",
+              "17F",
+              "180",
+              "181",
+              "182",
+              "183",
+              "184",
+              "185",
+              "186",
+              "187",
+              "188",
+              "189"
+            ],
+            "rooms": 2,
+            "omitted": []
+          }
+        ],
+        "validation": {
+          "passed": true,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "issues": [],
+          "requirements": [],
+          "requirements_passed": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": {
+              "size": [
+                2750.0,
+                1050.0
+              ],
+              "bbox": [
+                12500.0,
+                5450.0,
+                15250.0,
+                6500.0
+              ]
+            },
+            "circles": {
+              "count": 0,
+              "by_diameter": {}
+            },
+            "dimensions": {
+              "count": 10,
+              "by_kind": {
+                "linear": 10
+              }
+            },
+            "closed_contours": 10,
+            "entity_count": 57
+          }
+        },
+        "journal_seq": 2,
+        "checkpoint_before": "cp-0001",
+        "sha256": "4765e9c06995fc5f4c80792230eae62f4cfc1f03df261cafce48055126cfd73e",
+        "bytes": 70147,
+        "revision": 2,
+        "created_drawing": {
+          "units": "mm",
+          "dxf_version": "R2010",
+          "template": "mechanical"
+        },
+        "metrics": {
+          "duration_ms": 245.88,
+          "input_bytes": 877,
+          "output_bytes": 1705
+        }
+      }
+    },
+    {
+      "tool": "read_engineering",
+      "arguments": {
+        "path": "architecture.dxf",
+        "kind": "architecture"
+      },
+      "result": {
+        "ok": true,
+        "tool": "read_engineering",
+        "drawing": "architecture.dxf",
+        "rooms": [
+          {
+            "area": 26904800.0,
+            "id": "office",
+            "name": "Office",
+            "number": "11",
+            "role": "room",
+            "handle": "D0",
+            "detected_area": 26904800.0,
+            "label": "11 Office 26.90 m2"
+          },
+          {
+            "area": 44480800.0,
+            "id": "shop",
+            "name": "Workshop",
+            "number": "12",
+            "role": "room",
+            "handle": "D1",
+            "detected_area": 44480800.0,
+            "label": "12 Workshop 44.48 m2"
+          }
+        ],
+        "detected_rooms": [
+          {
+            "loop": [
+              [
+                120.0,
+                120.0
+              ],
+              [
+                1500.0,
+                120.0
+              ],
+              [
+                2500.0,
+                120.0
+              ],
+              [
+                4100.0,
+                120.0
+              ],
+              [
+                4100.0,
+                1500.0
+              ],
+              [
+                4100.0,
+                2400.0
+              ],
+              [
+                4100.0,
+                6880.0
+              ],
+              [
+                2500.0,
+                6880.0
+              ],
+              [
+                1500.0,
+                6880.0
+              ],
+              [
+                120.0,
+                6880.0
+              ],
+              [
+                120.0,
+                2400.0
+              ],
+              [
+                120.0,
+                1500.0
+              ]
+            ],
+            "area": 26904800.0,
+            "confidence": 1.0
+          },
+          {
+            "loop": [
+              [
+                4300.0,
+                120.0
+              ],
+              [
+                5200.0,
+                120.0
+              ],
+              [
+                7000.0,
+                120.0
+              ],
+              [
+                10880.0,
+                120.0
+              ],
+              [
+                10880.0,
+                1500.0
+              ],
+              [
+                10880.0,
+                2400.0
+              ],
+              [
+                10880.0,
+                6880.0
+              ],
+              [
+                7000.0,
+                6880.0
+              ],
+              [
+                5200.0,
+                6880.0
+              ],
+              [
+                4300.0,
+                6880.0
+              ],
+              [
+                4300.0,
+                2400.0
+              ],
+              [
+                4300.0,
+                1500.0
+              ]
+            ],
+            "area": 44480800.0,
+            "confidence": 1.0
+          }
+        ],
+        "openings": [
+          {
+            "height": null,
+            "id": "D11",
+            "kind": "door",
+            "nominal_width": 1000.0,
+            "role": "opening",
+            "sill": null,
+            "wall": "outer",
+            "tag": "D11",
+            "width": 1000.0,
+            "handle": "A7"
+          },
+          {
+            "height": null,
+            "id": "W11",
+            "kind": "window",
+            "nominal_width": 1800.0,
+            "role": "opening",
+            "sill": null,
+            "wall": "outer",
+            "tag": "W11",
+            "width": 1800.0,
+            "handle": "B9"
+          },
+          {
+            "height": null,
+            "id": "D12",
+            "kind": "door",
+            "nominal_width": 900.0,
+            "role": "opening",
+            "sill": null,
+            "wall": "partition",
+            "tag": "D12",
+            "width": 900.0,
+            "handle": "C9"
+          }
+        ],
+        "stairs": [],
+        "critique": [],
+        "schedules": {
+          "rooms": [
+            {
+              "area": 26904800.0,
+              "id": "office",
+              "name": "Office",
+              "number": "11",
+              "role": "room",
+              "handle": "D0",
+              "detected_area": 26904800.0,
+              "label": "11 Office 26.90 m2"
+            },
+            {
+              "area": 44480800.0,
+              "id": "shop",
+              "name": "Workshop",
+              "number": "12",
+              "role": "room",
+              "handle": "D1",
+              "detected_area": 44480800.0,
+              "label": "12 Workshop 44.48 m2"
+            }
+          ],
+          "doors": [
+            {
+              "height": null,
+              "id": "D11",
+              "kind": "door",
+              "nominal_width": 1000.0,
+              "role": "opening",
+              "sill": null,
+              "wall": "outer",
+              "tag": "D11",
+              "width": 1000.0,
+              "handle": "A7"
+            },
+            {
+              "height": null,
+              "id": "D12",
+              "kind": "door",
+              "nominal_width": 900.0,
+              "role": "opening",
+              "sill": null,
+              "wall": "partition",
+              "tag": "D12",
+              "width": 900.0,
+              "handle": "C9"
+            }
+          ],
+          "windows": [
+            {
+              "height": null,
+              "id": "W11",
+              "kind": "window",
+              "nominal_width": 1800.0,
+              "role": "opening",
+              "sill": null,
+              "wall": "outer",
+              "tag": "W11",
+              "width": 1800.0,
+              "handle": "B9"
+            }
+          ]
+        },
+        "validation": {
+          "file": "D:\\Projects\\AgentCAD-output\\source-capability\\showcase-b4c0466\\architecture.dxf",
+          "readable": true,
+          "issues": [],
+          "requirements": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": {
+              "entities": [
+                "170",
+                "176",
+                "173",
+                "174"
+              ],
+              "bbox": [
+                12500.0,
+                5450.0,
+                15250.0,
+                6500.0
+              ],
+              "size": [
+                2750.0,
+                1050.0
+              ]
+            },
+            "circles": [],
+            "dimensions": [
+              {
+                "id": "D2",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "E3",
+                "kind": "linear",
+                "measurement": 1380.0
+              },
+              {
+                "id": "F2",
+                "kind": "linear",
+                "measurement": 1000.0
+              },
+              {
+                "id": "101",
+                "kind": "linear",
+                "measurement": 8380.0
+              },
+              {
+                "id": "110",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "121",
+                "kind": "linear",
+                "measurement": 11240.0
+              },
+              {
+                "id": "130",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "141",
+                "kind": "linear",
+                "measurement": 6760.0
+              },
+              {
+                "id": "150",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "161",
+                "kind": "linear",
+                "measurement": 7240.0
+              }
+            ],
+            "closed_contours": 10,
+            "entity_count": 57,
+            "ezdxf_version": "1.4.5"
+          },
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "passed": true,
+          "duration_ms": 25.99
+        },
+        "quality_score": 100,
+        "metrics": {
+          "duration_ms": 47.27,
+          "input_bytes": 58,
+          "output_bytes": 3581
+        }
+      }
+    },
+    {
+      "tool": "deliver_drawing",
+      "arguments": {
+        "path": "architecture.dxf",
+        "output_dir": "architecture-delivery",
+        "formats": [
+          "dxf",
+          "pdf",
+          "svg",
+          "json"
+        ]
+      },
+      "result": {
+        "ok": true,
+        "tool": "deliver_drawing",
+        "status": "success",
+        "manifest": "architecture-delivery/manifest.json",
+        "sha256": "55359cf6034b6cfe018c39df463a3eedd65caf8e35e92291c583bfdaf3397eb9",
+        "version": 2,
+        "created": "2026-10-30T11:39:32.953+00:00",
+        "source": "architecture.dxf",
+        "source_sha256": "4765e9c06995fc5f4c80792230eae62f4cfc1f03df261cafce48055126cfd73e",
+        "revision": 2,
+        "quality_score": 100,
+        "validation": {
+          "file": "architecture.dxf",
+          "readable": true,
+          "issues": [],
+          "requirements": [],
+          "coverage": {
+            "checked_layouts": [
+              "Model"
+            ],
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": {
+              "entities": [
+                "170",
+                "176",
+                "173",
+                "174"
+              ],
+              "bbox": [
+                12500.0,
+                5450.0,
+                15250.0,
+                6500.0
+              ],
+              "size": [
+                2750.0,
+                1050.0
+              ]
+            },
+            "circles": [],
+            "dimensions": [
+              {
+                "id": "D2",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "E3",
+                "kind": "linear",
+                "measurement": 1380.0
+              },
+              {
+                "id": "F2",
+                "kind": "linear",
+                "measurement": 1000.0
+              },
+              {
+                "id": "101",
+                "kind": "linear",
+                "measurement": 8380.0
+              },
+              {
+                "id": "110",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "121",
+                "kind": "linear",
+                "measurement": 11240.0
+              },
+              {
+                "id": "130",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "141",
+                "kind": "linear",
+                "measurement": 6760.0
+              },
+              {
+                "id": "150",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "161",
+                "kind": "linear",
+                "measurement": 7240.0
+              }
+            ],
+            "closed_contours": 10,
+            "entity_count": 57,
+            "ezdxf_version": "1.4.5"
+          },
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "passed": true,
+          "duration_ms": 71.18,
+          "requirements_source": null,
+          "engineering": {
+            "architecture": {
+              "critique": [],
+              "passed": true
+            }
+          }
+        },
+        "artifacts": [
+          {
+            "path": "architecture-delivery/architecture.dxf",
+            "sha256": "e54e159a95f896025200e5577e6c9811ac25571ad56bc9d985c908142585ed47",
+            "bytes": 83617,
+            "format": "dxf",
+            "reread_ok": true,
+            "verification": {
+              "check": "dxf_layout_block_style_metadata_parity",
+              "passed": true,
+              "layouts": 2,
+              "blocks": 18
+            }
+          },
+          {
+            "path": "architecture-delivery/architecture.pdf",
+            "sha256": "af9bede3a0c4ed687475d4c59c7c95c68beda4a3309585291c3a2be7fa3cc9b1",
+            "bytes": 27742,
+            "format": "pdf",
+            "reread_ok": true,
+            "verification": {
+              "check": "pdf_pages_mediabox_content",
+              "passed": true,
+              "pages": 1,
+              "scope": "structural print validation; not full geometry parity"
+            }
+          },
+          {
+            "path": "architecture-delivery/architecture.svg",
+            "sha256": "9457c5f54ae2c6a1cc593efd7ecae9d33bb7da0849f7825b142e8ea0c08589e1",
+            "bytes": 47656,
+            "format": "svg",
+            "reread_ok": true,
+            "verification": {
+              "check": "svg_xml_viewbox_content",
+              "passed": true,
+              "scope": "structural preview validation; model space only"
+            }
+          },
+          {
+            "path": "architecture-delivery/architecture.json",
+            "sha256": "90e60d51ffb5184746d73129f3dbebb0b49863c2e3cc6baea9a23c6a20eddc30",
+            "bytes": 16060,
+            "format": "json",
+            "reread_ok": true,
+            "verification": {
+              "check": "json_source_projection_parity",
+              "passed": true
+            }
+          }
+        ],
+        "metrics": {
+          "duration_ms": 694.45,
+          "input_bytes": 115,
+          "output_bytes": 2800
+        }
+      }
+    },
+    {
+      "tool": "export_drawing",
+      "arguments": {
+        "path": "architecture.dxf",
+        "output": "architecture.dwg",
+        "format": "dwg"
+      },
+      "result": {
+        "ok": true,
+        "tool": "export_drawing",
+        "drawing": "architecture.dxf",
+        "output": "architecture.dwg",
+        "format": "dwg",
+        "dwg_version": "2018",
+        "bytes": 30457,
+        "backend": "autocad",
+        "seconds": 3.07,
+        "readback": {
+          "readable": true,
+          "entities": 57,
+          "source_entities": 57,
+          "issues": []
+        },
+        "metrics": {
+          "duration_ms": 5538.27,
+          "input_bytes": 81,
+          "output_bytes": 279
+        }
+      }
+    },
+    {
+      "tool": "import_drawing",
+      "arguments": {
+        "source": "architecture.dwg",
+        "output": "architecture-native.dxf"
+      },
+      "result": {
+        "ok": true,
+        "tool": "import_drawing",
+        "drawing": "architecture-native.dxf",
+        "source": "architecture.dwg",
+        "backend": "autocad",
+        "seconds": 2.35,
+        "units": "mm",
+        "entity_count": 57,
+        "validation": {
+          "passed": true,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "issues": [],
+          "requirements": [],
+          "requirements_passed": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": {
+              "size": [
+                2750.0,
+                1050.0
+              ],
+              "bbox": [
+                12500.0,
+                5450.0,
+                15250.0,
+                6500.0
+              ]
+            },
+            "circles": {
+              "count": 0,
+              "by_diameter": {}
+            },
+            "dimensions": {
+              "count": 10,
+              "by_kind": {
+                "linear": 10
+              }
+            },
+            "closed_contours": 10,
+            "entity_count": 57
+          }
+        },
+        "journal_seq": 1,
+        "checkpoint_before": null,
+        "sha256": "f19729e723f40183a8ca3126ec4aee6582203c8a003f9aec4d8c14a9f280f0b1",
+        "bytes": 104413,
+        "revision": 1,
+        "metrics": {
+          "duration_ms": 2500.23,
+          "input_bytes": 73,
+          "output_bytes": 828
+        }
+      }
+    },
+    {
+      "tool": "read_engineering",
+      "arguments": {
+        "path": "architecture-native.dxf",
+        "kind": "architecture"
+      },
+      "result": {
+        "ok": true,
+        "tool": "read_engineering",
+        "drawing": "architecture-native.dxf",
+        "rooms": [
+          {
+            "area": 26904800.0,
+            "id": "office",
+            "name": "Office",
+            "number": "11",
+            "role": "room",
+            "handle": "D0",
+            "detected_area": 26904800.0,
+            "label": "11 Office 26.90 m2"
+          },
+          {
+            "area": 44480800.0,
+            "id": "shop",
+            "name": "Workshop",
+            "number": "12",
+            "role": "room",
+            "handle": "D1",
+            "detected_area": 44480800.0,
+            "label": "12 Workshop 44.48 m2"
+          }
+        ],
+        "detected_rooms": [
+          {
+            "loop": [
+              [
+                120.0,
+                120.0
+              ],
+              [
+                1500.0,
+                120.0
+              ],
+              [
+                2500.0,
+                120.0
+              ],
+              [
+                4100.0,
+                120.0
+              ],
+              [
+                4100.0,
+                1500.0
+              ],
+              [
+                4100.0,
+                2400.0
+              ],
+              [
+                4100.0,
+                6880.0
+              ],
+              [
+                2500.0,
+                6880.0
+              ],
+              [
+                1500.0,
+                6880.0
+              ],
+              [
+                120.0,
+                6880.0
+              ],
+              [
+                120.0,
+                2400.0
+              ],
+              [
+                120.0,
+                1500.0
+              ]
+            ],
+            "area": 26904800.0,
+            "confidence": 1.0
+          },
+          {
+            "loop": [
+              [
+                4300.0,
+                120.0
+              ],
+              [
+                5200.0,
+                120.0
+              ],
+              [
+                7000.0,
+                120.0
+              ],
+              [
+                10880.0,
+                120.0
+              ],
+              [
+                10880.0,
+                1500.0
+              ],
+              [
+                10880.0,
+                2400.0
+              ],
+              [
+                10880.0,
+                6880.0
+              ],
+              [
+                7000.0,
+                6880.0
+              ],
+              [
+                5200.0,
+                6880.0
+              ],
+              [
+                4300.0,
+                6880.0
+              ],
+              [
+                4300.0,
+                2400.0
+              ],
+              [
+                4300.0,
+                1500.0
+              ]
+            ],
+            "area": 44480800.0,
+            "confidence": 1.0
+          }
+        ],
+        "openings": [
+          {
+            "height": null,
+            "id": "D11",
+            "kind": "door",
+            "nominal_width": 1000.0,
+            "role": "opening",
+            "sill": null,
+            "wall": "outer",
+            "tag": "D11",
+            "width": 1000.0,
+            "handle": "A7"
+          },
+          {
+            "height": null,
+            "id": "W11",
+            "kind": "window",
+            "nominal_width": 1800.0,
+            "role": "opening",
+            "sill": null,
+            "wall": "outer",
+            "tag": "W11",
+            "width": 1800.0,
+            "handle": "B9"
+          },
+          {
+            "height": null,
+            "id": "D12",
+            "kind": "door",
+            "nominal_width": 900.0,
+            "role": "opening",
+            "sill": null,
+            "wall": "partition",
+            "tag": "D12",
+            "width": 900.0,
+            "handle": "C9"
+          }
+        ],
+        "stairs": [],
+        "critique": [],
+        "schedules": {
+          "rooms": [
+            {
+              "area": 26904800.0,
+              "id": "office",
+              "name": "Office",
+              "number": "11",
+              "role": "room",
+              "handle": "D0",
+              "detected_area": 26904800.0,
+              "label": "11 Office 26.90 m2"
+            },
+            {
+              "area": 44480800.0,
+              "id": "shop",
+              "name": "Workshop",
+              "number": "12",
+              "role": "room",
+              "handle": "D1",
+              "detected_area": 44480800.0,
+              "label": "12 Workshop 44.48 m2"
+            }
+          ],
+          "doors": [
+            {
+              "height": null,
+              "id": "D11",
+              "kind": "door",
+              "nominal_width": 1000.0,
+              "role": "opening",
+              "sill": null,
+              "wall": "outer",
+              "tag": "D11",
+              "width": 1000.0,
+              "handle": "A7"
+            },
+            {
+              "height": null,
+              "id": "D12",
+              "kind": "door",
+              "nominal_width": 900.0,
+              "role": "opening",
+              "sill": null,
+              "wall": "partition",
+              "tag": "D12",
+              "width": 900.0,
+              "handle": "C9"
+            }
+          ],
+          "windows": [
+            {
+              "height": null,
+              "id": "W11",
+              "kind": "window",
+              "nominal_width": 1800.0,
+              "role": "opening",
+              "sill": null,
+              "wall": "outer",
+              "tag": "W11",
+              "width": 1800.0,
+              "handle": "B9"
+            }
+          ]
+        },
+        "validation": {
+          "file": "D:\\Projects\\AgentCAD-output\\source-capability\\showcase-b4c0466\\architecture-native.dxf",
+          "readable": true,
+          "issues": [],
+          "requirements": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": {
+              "entities": [
+                "170",
+                "176",
+                "173",
+                "174"
+              ],
+              "bbox": [
+                12500.0,
+                5450.0,
+                15250.0,
+                6500.0
+              ],
+              "size": [
+                2750.0,
+                1050.0
+              ]
+            },
+            "circles": [],
+            "dimensions": [
+              {
+                "id": "D2",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "E3",
+                "kind": "linear",
+                "measurement": 1380.0
+              },
+              {
+                "id": "F2",
+                "kind": "linear",
+                "measurement": 1000.0
+              },
+              {
+                "id": "101",
+                "kind": "linear",
+                "measurement": 8380.0
+              },
+              {
+                "id": "110",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "121",
+                "kind": "linear",
+                "measurement": 11240.0
+              },
+              {
+                "id": "130",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "141",
+                "kind": "linear",
+                "measurement": 6760.0
+              },
+              {
+                "id": "150",
+                "kind": "linear",
+                "measurement": 240.0
+              },
+              {
+                "id": "161",
+                "kind": "linear",
+                "measurement": 7240.0
+              }
+            ],
+            "closed_contours": 10,
+            "entity_count": 57,
+            "ezdxf_version": "1.4.5"
+          },
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "passed": true,
+          "duration_ms": 34.71
+        },
+        "quality_score": 100,
+        "metrics": {
+          "duration_ms": 66.35,
+          "input_bytes": 65,
+          "output_bytes": 3595
+        }
+      }
+    },
+    {
+      "tool": "autocad_audit",
+      "arguments": {
+        "path": "architecture-native.dxf"
+      },
+      "result": {
+        "ok": true,
+        "tool": "autocad_audit",
+        "drawing": "architecture-native.dxf",
+        "backend": "autocad",
+        "import_rejected": false,
+        "import_messages": [
+          "\u5171\u53d1\u73b0 0 \u4e2a\u9519\u8bef\uff0c\u5df2\u4fee\u590d 0 \u4e2a"
+        ],
+        "entities_seen_by_autocad": 57,
+        "insunits": 4,
+        "audit_errors": 0,
+        "messages": [],
+        "seconds": 3.2,
+        "passed": true,
+        "metrics": {
+          "duration_ms": 3203.69,
+          "input_bytes": 41,
+          "output_bytes": 334
+        }
+      }
+    },
+    {
+      "tool": "apply_operations",
+      "arguments": {
+        "path": "pid.dxf",
+        "operations": [
+          {
+            "op": "draw_pid",
+            "spec": {
+              "equipment": [
+                {
+                  "id": "P-11",
+                  "symbol": "centrifugal_pump",
+                  "x": 20,
+                  "y": 30
+                },
+                {
+                  "id": "V-11",
+                  "symbol": "vessel_vertical",
+                  "x": 160,
+                  "y": 45
+                }
+              ],
+              "valves": [
+                {
+                  "id": "CV-11",
+                  "symbol": "control_valve",
+                  "actuator": "pneumatic",
+                  "x": 95,
+                  "y": 45
+                }
+              ],
+              "instruments": [
+                {
+                  "id": "FC-11",
+                  "type": "panel",
+                  "x": 95,
+                  "y": 90
+                }
+              ],
+              "lines": [
+                {
+                  "from": "P-11.discharge",
+                  "to": "CV-11.in",
+                  "number": "DN80-SUPPLY"
+                },
+                {
+                  "from": "CV-11.out",
+                  "to": "V-11.in",
+                  "number": "DN80-FEED"
+                },
+                {
+                  "from": "FC-11.signal",
+                  "to": "CV-11.signal",
+                  "class": "pneumatic"
+                }
+              ]
+            }
+          }
+        ],
+        "create": {
+          "units": "mm"
+        }
+      },
+      "result": {
+        "ok": true,
+        "tool": "apply_operations",
+        "drawing": "pid.dxf",
+        "changes": {
+          "added": [
+            "9E",
+            "AC",
+            "B7",
+            "C1",
+            "C6",
+            "C8",
+            "C9",
+            "CA",
+            "CC"
+          ],
+          "modified": [],
+          "deleted": []
+        },
+        "results": [
+          {
+            "index": 0,
+            "op": "draw_pid",
+            "created": [
+              "9E",
+              "AC",
+              "B7",
+              "C1",
+              "C6",
+              "C8",
+              "C9",
+              "CA",
+              "CC"
+            ],
+            "nodes": 4,
+            "lines": 3
+          }
+        ],
+        "validation": {
+          "passed": true,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "issues": [],
+          "requirements": [],
+          "requirements_passed": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": null,
+            "circles": {
+              "count": 0,
+              "by_diameter": {}
+            },
+            "dimensions": {
+              "count": 0,
+              "by_kind": {}
+            },
+            "closed_contours": 0,
+            "entity_count": 9
+          }
+        },
+        "journal_seq": 2,
+        "checkpoint_before": "cp-0001",
+        "sha256": "3c92af557b5516f7c839456b1263ebfa187c33fc64d8e2c58c4d559db2181f89",
+        "bytes": 45426,
+        "revision": 2,
+        "created_drawing": {
+          "units": "mm",
+          "dxf_version": "R2010",
+          "template": "mechanical"
+        },
+        "metrics": {
+          "duration_ms": 195.36,
+          "input_bytes": 624,
+          "output_bytes": 964
+        }
+      }
+    },
+    {
+      "tool": "read_engineering",
+      "arguments": {
+        "path": "pid.dxf",
+        "kind": "pid"
+      },
+      "result": {
+        "ok": true,
+        "tool": "read_engineering",
+        "drawing": "pid.dxf",
+        "graph": {
+          "nodes": [
+            {
+              "id": "P-11",
+              "tag": "P-11",
+              "category": "equipment",
+              "handle": "9E",
+              "symbol": "centrifugal_pump"
+            },
+            {
+              "id": "V-11",
+              "tag": "V-11",
+              "category": "equipment",
+              "handle": "AC",
+              "symbol": "vessel_vertical"
+            },
+            {
+              "id": "CV-11",
+              "tag": "CV-11",
+              "category": "valves",
+              "handle": "B7",
+              "symbol": "control_valve"
+            },
+            {
+              "id": "FC-11",
+              "tag": "FC-11",
+              "category": "instruments",
+              "handle": "C1",
+              "symbol": "instrument_panel"
+            }
+          ],
+          "edges": [
+            {
+              "handle": "C6",
+              "from_tag": "P-11",
+              "to_tag": "CV-11",
+              "line_class": "process_major",
+              "line_number": "DN80-SUPPLY",
+              "number_source": "xdata",
+              "confidence": 1.0
+            },
+            {
+              "handle": "C9",
+              "from_tag": "CV-11",
+              "to_tag": "V-11",
+              "line_class": "process_major",
+              "line_number": "DN80-FEED",
+              "number_source": "xdata",
+              "confidence": 1.0
+            },
+            {
+              "handle": "CC",
+              "from_tag": "FC-11",
+              "to_tag": "CV-11",
+              "line_class": "pneumatic",
+              "line_number": null,
+              "number_source": "xdata",
+              "confidence": 1.0
+            }
+          ],
+          "stats": {
+            "dangling": 0,
+            "confidence_min": 1.0
+          }
+        },
+        "critique": [],
+        "line_list": [
+          {
+            "handle": "C6",
+            "from_tag": "P-11",
+            "to_tag": "CV-11",
+            "line_class": "process_major",
+            "line_number": "DN80-SUPPLY",
+            "number_source": "xdata",
+            "confidence": 1.0
+          },
+          {
+            "handle": "C9",
+            "from_tag": "CV-11",
+            "to_tag": "V-11",
+            "line_class": "process_major",
+            "line_number": "DN80-FEED",
+            "number_source": "xdata",
+            "confidence": 1.0
+          },
+          {
+            "handle": "CC",
+            "from_tag": "FC-11",
+            "to_tag": "CV-11",
+            "line_class": "pneumatic",
+            "line_number": null,
+            "number_source": "xdata",
+            "confidence": 1.0
+          }
+        ],
+        "instrument_index": [
+          {
+            "tag": "FC-11",
+            "connected_to": "CV-11"
+          }
+        ],
+        "equipment_list": [
+          {
+            "id": "P-11",
+            "tag": "P-11",
+            "category": "equipment",
+            "handle": "9E",
+            "symbol": "centrifugal_pump"
+          },
+          {
+            "id": "V-11",
+            "tag": "V-11",
+            "category": "equipment",
+            "handle": "AC",
+            "symbol": "vessel_vertical"
+          }
+        ],
+        "metrics": {
+          "duration_ms": 12.91,
+          "input_bytes": 40,
+          "output_bytes": 1820
+        }
+      }
+    },
+    {
+      "tool": "deliver_drawing",
+      "arguments": {
+        "path": "pid.dxf",
+        "output_dir": "pid-delivery",
+        "formats": [
+          "dxf",
+          "pdf",
+          "svg",
+          "json"
+        ]
+      },
+      "result": {
+        "ok": true,
+        "tool": "deliver_drawing",
+        "status": "success",
+        "manifest": "pid-delivery/manifest.json",
+        "sha256": "5f8570fab79046b13ec07a8dfd52658e8a37d17e5c599aca20148b86295c307d",
+        "version": 2,
+        "created": "2026-10-30T11:39:45.129+00:00",
+        "source": "pid.dxf",
+        "source_sha256": "3c92af557b5516f7c839456b1263ebfa187c33fc64d8e2c58c4d559db2181f89",
+        "revision": 2,
+        "quality_score": 100,
+        "validation": {
+          "file": "pid.dxf",
+          "readable": true,
+          "issues": [],
+          "requirements": [],
+          "coverage": {
+            "checked_layouts": [
+              "Model"
+            ],
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": null,
+            "circles": [],
+            "dimensions": [],
+            "closed_contours": 0,
+            "entity_count": 9,
+            "ezdxf_version": "1.4.5"
+          },
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "passed": true,
+          "duration_ms": 87.12,
+          "requirements_source": null,
+          "engineering": {
+            "pid": {
+              "critique": [],
+              "passed": true
+            }
+          }
+        },
+        "artifacts": [
+          {
+            "path": "pid-delivery/pid.dxf",
+            "sha256": "240a2ded2ccb68bdc24d27326db026ace3f69beda0929229f3efb9115ad3be4a",
+            "bytes": 54176,
+            "format": "dxf",
+            "reread_ok": true,
+            "verification": {
+              "check": "dxf_layout_block_style_metadata_parity",
+              "passed": true,
+              "layouts": 2,
+              "blocks": 9
+            }
+          },
+          {
+            "path": "pid-delivery/pid.pdf",
+            "sha256": "4302a8c14b03b16fec5a538a661b69ad7bee2967dce860911ef19ae28dea42b9",
+            "bytes": 7057,
+            "format": "pdf",
+            "reread_ok": true,
+            "verification": {
+              "check": "pdf_pages_mediabox_content",
+              "passed": true,
+              "pages": 1,
+              "scope": "structural print validation; not full geometry parity"
+            }
+          },
+          {
+            "path": "pid-delivery/pid.svg",
+            "sha256": "f8eb25d0873d95fc857d4aa5d211ab23692ddaca53056cec155831df735e3564",
+            "bytes": 12042,
+            "format": "svg",
+            "reread_ok": true,
+            "verification": {
+              "check": "svg_xml_viewbox_content",
+              "passed": true,
+              "scope": "structural preview validation; model space only"
+            }
+          },
+          {
+            "path": "pid-delivery/pid.json",
+            "sha256": "751906d8568f4c5cce7aa135b006e58b2eeaf87cd24adbf00fa74cd18e9e6055",
+            "bytes": 2373,
+            "format": "json",
+            "reread_ok": true,
+            "verification": {
+              "check": "json_source_projection_parity",
+              "passed": true
+            }
+          }
+        ],
+        "metrics": {
+          "duration_ms": 469.0,
+          "input_bytes": 97,
+          "output_bytes": 2027
+        }
+      }
+    },
+    {
+      "tool": "export_drawing",
+      "arguments": {
+        "path": "pid.dxf",
+        "output": "pid.dwg",
+        "format": "dwg"
+      },
+      "result": {
+        "ok": true,
+        "tool": "export_drawing",
+        "drawing": "pid.dxf",
+        "output": "pid.dwg",
+        "format": "dwg",
+        "dwg_version": "2018",
+        "bytes": 24274,
+        "backend": "autocad",
+        "seconds": 3.02,
+        "readback": {
+          "readable": true,
+          "entities": 9,
+          "source_entities": 9,
+          "issues": []
+        },
+        "metrics": {
+          "duration_ms": 5623.53,
+          "input_bytes": 63,
+          "output_bytes": 259
+        }
+      }
+    },
+    {
+      "tool": "import_drawing",
+      "arguments": {
+        "source": "pid.dwg",
+        "output": "pid-native.dxf"
+      },
+      "result": {
+        "ok": true,
+        "tool": "import_drawing",
+        "drawing": "pid-native.dxf",
+        "source": "pid.dwg",
+        "backend": "autocad",
+        "seconds": 2.4,
+        "units": "mm",
+        "entity_count": 9,
+        "validation": {
+          "passed": true,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "issues": [],
+          "requirements": [],
+          "requirements_passed": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": null,
+            "circles": {
+              "count": 0,
+              "by_diameter": {}
+            },
+            "dimensions": {
+              "count": 0,
+              "by_kind": {}
+            },
+            "closed_contours": 0,
+            "entity_count": 9
+          }
+        },
+        "journal_seq": 1,
+        "checkpoint_before": null,
+        "sha256": "b7689343f62b661d047d743e5b3d52efed0d8f71ad93002ff998bb96be7dab83",
+        "bytes": 77051,
+        "revision": 1,
+        "metrics": {
+          "duration_ms": 2520.68,
+          "input_bytes": 55,
+          "output_bytes": 726
+        }
+      }
+    },
+    {
+      "tool": "read_engineering",
+      "arguments": {
+        "path": "pid-native.dxf",
+        "kind": "pid"
+      },
+      "result": {
+        "ok": true,
+        "tool": "read_engineering",
+        "drawing": "pid-native.dxf",
+        "graph": {
+          "nodes": [
+            {
+              "id": "P-11",
+              "tag": "P-11",
+              "category": "equipment",
+              "handle": "9E",
+              "symbol": "centrifugal_pump"
+            },
+            {
+              "id": "V-11",
+              "tag": "V-11",
+              "category": "equipment",
+              "handle": "AC",
+              "symbol": "vessel_vertical"
+            },
+            {
+              "id": "CV-11",
+              "tag": "CV-11",
+              "category": "valves",
+              "handle": "B7",
+              "symbol": "control_valve"
+            },
+            {
+              "id": "FC-11",
+              "tag": "FC-11",
+              "category": "instruments",
+              "handle": "C1",
+              "symbol": "instrument_panel"
+            }
+          ],
+          "edges": [
+            {
+              "handle": "C6",
+              "from_tag": "P-11",
+              "to_tag": "CV-11",
+              "line_class": "process_major",
+              "line_number": "DN80-SUPPLY",
+              "number_source": "xdata",
+              "confidence": 1.0
+            },
+            {
+              "handle": "C9",
+              "from_tag": "CV-11",
+              "to_tag": "V-11",
+              "line_class": "process_major",
+              "line_number": "DN80-FEED",
+              "number_source": "xdata",
+              "confidence": 1.0
+            },
+            {
+              "handle": "CC",
+              "from_tag": "FC-11",
+              "to_tag": "CV-11",
+              "line_class": "pneumatic",
+              "line_number": null,
+              "number_source": "xdata",
+              "confidence": 1.0
+            }
+          ],
+          "stats": {
+            "dangling": 0,
+            "confidence_min": 1.0
+          }
+        },
+        "critique": [],
+        "line_list": [
+          {
+            "handle": "C6",
+            "from_tag": "P-11",
+            "to_tag": "CV-11",
+            "line_class": "process_major",
+            "line_number": "DN80-SUPPLY",
+            "number_source": "xdata",
+            "confidence": 1.0
+          },
+          {
+            "handle": "C9",
+            "from_tag": "CV-11",
+            "to_tag": "V-11",
+            "line_class": "process_major",
+            "line_number": "DN80-FEED",
+            "number_source": "xdata",
+            "confidence": 1.0
+          },
+          {
+            "handle": "CC",
+            "from_tag": "FC-11",
+            "to_tag": "CV-11",
+            "line_class": "pneumatic",
+            "line_number": null,
+            "number_source": "xdata",
+            "confidence": 1.0
+          }
+        ],
+        "instrument_index": [
+          {
+            "tag": "FC-11",
+            "connected_to": "CV-11"
+          }
+        ],
+        "equipment_list": [
+          {
+            "id": "P-11",
+            "tag": "P-11",
+            "category": "equipment",
+            "handle": "9E",
+            "symbol": "centrifugal_pump"
+          },
+          {
+            "id": "V-11",
+            "tag": "V-11",
+            "category": "equipment",
+            "handle": "AC",
+            "symbol": "vessel_vertical"
+          }
+        ],
+        "metrics": {
+          "duration_ms": 21.19,
+          "input_bytes": 47,
+          "output_bytes": 1827
+        }
+      }
+    },
+    {
+      "tool": "autocad_audit",
+      "arguments": {
+        "path": "pid-native.dxf"
+      },
+      "result": {
+        "ok": true,
+        "tool": "autocad_audit",
+        "drawing": "pid-native.dxf",
+        "backend": "autocad",
+        "import_rejected": false,
+        "import_messages": [
+          "\u5171\u53d1\u73b0 0 \u4e2a\u9519\u8bef\uff0c\u5df2\u4fee\u590d 0 \u4e2a"
+        ],
+        "entities_seen_by_autocad": 9,
+        "insunits": 4,
+        "audit_errors": 0,
+        "messages": [],
+        "seconds": 3.14,
+        "passed": true,
+        "metrics": {
+          "duration_ms": 3156.18,
+          "input_bytes": 32,
+          "output_bytes": 325
+        }
+      }
+    },
+    {
+      "tool": "standard_library",
+      "arguments": {
+        "item": "iso_fit",
+        "size": "35 H7/g6"
+      },
+      "result": {
+        "ok": true,
+        "tool": "standard_library",
+        "item": "iso_fit",
+        "designation": "H7/g6",
+        "nominal": 35.0,
+        "units": "mm",
+        "size_step": {
+          "over": 30,
+          "through": 50
+        },
+        "source": "https://www.skf.com/binaries/pub12/Images/0901d19680154a05-06116_1-EN_tcm_12-122020.pdf",
+        "source_page": 74,
+        "source_revision": "SKF 06116/1 EN, May 2013",
+        "hole": {
+          "class": "H7",
+          "lower": 0.0,
+          "upper": 0.025,
+          "minimum": 35.0,
+          "maximum": 35.025
+        },
+        "shaft": {
+          "class": "g6",
+          "lower": -0.025,
+          "upper": -0.009,
+          "minimum": 34.975,
+          "maximum": 34.991
+        },
+        "clearance": {
+          "minimum": 0.009,
+          "maximum": 0.05
+        },
+        "fit_type": "clearance",
+        "metrics": {
+          "duration_ms": 2.18,
+          "input_bytes": 45,
+          "output_bytes": 588
+        }
+      }
+    },
+    {
+      "tool": "apply_operations",
+      "arguments": {
+        "path": "tolerance.dxf",
+        "create": {
+          "units": "mm"
+        },
+        "operations": [
+          {
+            "op": "add_circle",
+            "center": [
+              80,
+              55
+            ],
+            "diameter": 35,
+            "tag": "bore"
+          },
+          {
+            "op": "add_diameter_dim",
+            "target": "tag:bore",
+            "text": "<> H7",
+            "tag": "limit",
+            "angle": 0,
+            "text_height": 2.5,
+            "tolerance": {
+              "lower": 0.0,
+              "upper": 0.025,
+              "precision": 3
+            }
+          },
+          {
+            "op": "add_text",
+            "insert": [
+              10,
+              20
+            ],
+            "text": "BORE 35 H7 / SHAFT g6 - dimensions in mm",
+            "height": 2.5
+          },
+          {
+            "op": "create_layout",
+            "name": "A4-1to1",
+            "paper": "A4"
+          },
+          {
+            "op": "add_viewport",
+            "layout": "A4-1to1",
+            "center": [
+              148.5,
+              105
+            ],
+            "view_center": [
+              75,
+              45
+            ],
+            "width": 277,
+            "height": 190,
+            "scale": 1
+          }
+        ]
+      },
+      "result": {
+        "ok": true,
+        "tool": "apply_operations",
+        "drawing": "tolerance.dxf",
+        "changes": {
+          "added": [
+            "96",
+            "98",
+            "A5",
+            "AB"
+          ],
+          "modified": [],
+          "deleted": []
+        },
+        "results": [
+          {
+            "index": 0,
+            "op": "add_circle",
+            "created": [
+              "96"
+            ]
+          },
+          {
+            "index": 1,
+            "op": "add_diameter_dim",
+            "created": [
+              "98"
+            ]
+          },
+          {
+            "index": 2,
+            "op": "add_text",
+            "created": [
+              "A5"
+            ]
+          },
+          {
+            "index": 3,
+            "op": "create_layout",
+            "layout": "A4-1to1",
+            "layout_created": true,
+            "paper": [
+              297,
+              210
+            ],
+            "hint": "Paper space origin is the lower-left paper corner; draw with layout='A4-1to1'"
+          },
+          {
+            "index": 4,
+            "op": "add_viewport",
+            "created": [
+              "AB"
+            ],
+            "paper_rect": [
+              10.0,
+              10.0,
+              287.0,
+              200.0
+            ],
+            "model_window": [
+              -63.5,
+              -50.0,
+              213.5,
+              140.0
+            ],
+            "scale": 1.0,
+            "shows_all_model": true,
+            "model_extents": [
+              10.0,
+              19.305935,
+              97.5,
+              72.5
+            ]
+          }
+        ],
+        "validation": {
+          "passed": true,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "issues": [],
+          "requirements": [],
+          "requirements_passed": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": null,
+            "circles": {
+              "count": 1,
+              "by_diameter": {
+                "35": 1
+              }
+            },
+            "dimensions": {
+              "count": 1,
+              "by_kind": {
+                "diameter": 1
+              }
+            },
+            "closed_contours": 0,
+            "entity_count": 3
+          }
+        },
+        "journal_seq": 2,
+        "checkpoint_before": "cp-0001",
+        "sha256": "587c888d5e0be7f1b7ab069390be310cc3c80c3f621d0d47ccb9e3142fe667b1",
+        "bytes": 40916,
+        "revision": 2,
+        "created_drawing": {
+          "units": "mm",
+          "dxf_version": "R2010",
+          "template": "mechanical"
+        },
+        "metrics": {
+          "duration_ms": 254.01,
+          "input_bytes": 624,
+          "output_bytes": 1422
+        }
+      }
+    },
+    {
+      "tool": "deliver_drawing",
+      "arguments": {
+        "path": "tolerance.dxf",
+        "output_dir": "tolerance-delivery",
+        "formats": [
+          "dxf",
+          "pdf",
+          "svg"
+        ]
+      },
+      "result": {
+        "ok": true,
+        "tool": "deliver_drawing",
+        "status": "success",
+        "manifest": "tolerance-delivery/manifest.json",
+        "sha256": "7d6ab45aa865f0e74c40eba5f5007ca84167aa6dd58f0d630facae61266f12a1",
+        "version": 2,
+        "created": "2026-10-30T11:39:57.230+00:00",
+        "source": "tolerance.dxf",
+        "source_sha256": "587c888d5e0be7f1b7ab069390be310cc3c80c3f621d0d47ccb9e3142fe667b1",
+        "revision": 2,
+        "quality_score": 94,
+        "validation": {
+          "file": "tolerance.dxf",
+          "readable": true,
+          "issues": [
+            {
+              "code": "UNDEFINED_LAYER",
+              "severity": "warning",
+              "category": "geometry",
+              "message": "Layer 'VIEWPORTS' has no layer table entry",
+              "entities": [
+                "AA"
+              ],
+              "layout": "A4-1to1"
+            },
+            {
+              "code": "UNDEFINED_LAYER",
+              "severity": "warning",
+              "category": "geometry",
+              "message": "Layer 'VIEWPORTS' has no layer table entry",
+              "entities": [
+                "AB"
+              ],
+              "layout": "A4-1to1"
+            }
+          ],
+          "requirements": [],
+          "coverage": {
+            "checked_layouts": [
+              "Model",
+              "A4-1to1"
+            ],
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": null,
+            "circles": [
+              {
+                "id": "96",
+                "center": [
+                  80.0,
+                  55.0
+                ],
+                "diameter": 35.0
+              }
+            ],
+            "dimensions": [
+              {
+                "id": "98",
+                "kind": "diameter",
+                "measurement": 35.0
+              }
+            ],
+            "closed_contours": 0,
+            "entity_count": 3,
+            "ezdxf_version": "1.4.5"
+          },
+          "summary": {
+            "errors": 0,
+            "warnings": 2,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "passed": true,
+          "duration_ms": 16.72,
+          "requirements_source": null,
+          "engineering": {}
+        },
+        "artifacts": [
+          {
+            "path": "tolerance-delivery/tolerance.dxf",
+            "sha256": "bd997b9221bfd8ad8d63854b7e1eea0112f804daf721358c64b2e451480dde0a",
+            "bytes": 49050,
+            "format": "dxf",
+            "reread_ok": true,
+            "verification": {
+              "check": "dxf_layout_block_style_metadata_parity",
+              "passed": true,
+              "layouts": 3,
+              "blocks": 7
+            }
+          },
+          {
+            "path": "tolerance-delivery/tolerance.pdf",
+            "sha256": "728ab53dd314f7e3cf59619f0adf5c2dcb978c4d32542861ed99d056e2ed2f98",
+            "bytes": 10646,
+            "format": "pdf",
+            "reread_ok": true,
+            "verification": {
+              "check": "pdf_pages_mediabox_content",
+              "passed": true,
+              "pages": 1,
+              "scope": "structural print validation; not full geometry parity"
+            }
+          },
+          {
+            "path": "tolerance-delivery/tolerance.svg",
+            "sha256": "66f53642f5ebd0b4b41376677a170908e687450e2b05c3e1682d8f0b6f0e6383",
+            "bytes": 18583,
+            "format": "svg",
+            "reread_ok": true,
+            "verification": {
+              "check": "svg_xml_viewbox_content",
+              "passed": true,
+              "scope": "structural preview validation; model space only"
+            }
+          }
+        ],
+        "metrics": {
+          "duration_ms": 341.55,
+          "input_bytes": 101,
+          "output_bytes": 2265
+        }
+      }
+    },
+    {
+      "tool": "export_drawing",
+      "arguments": {
+        "path": "tolerance.dxf",
+        "output": "tolerance.dwg",
+        "format": "dwg"
+      },
+      "result": {
+        "ok": true,
+        "tool": "export_drawing",
+        "drawing": "tolerance.dxf",
+        "output": "tolerance.dwg",
+        "format": "dwg",
+        "dwg_version": "2018",
+        "bytes": 22642,
+        "backend": "autocad",
+        "seconds": 3.09,
+        "readback": {
+          "readable": true,
+          "entities": 3,
+          "source_entities": 3,
+          "issues": []
+        },
+        "metrics": {
+          "duration_ms": 5759.59,
+          "input_bytes": 75,
+          "output_bytes": 271
+        }
+      }
+    },
+    {
+      "tool": "import_drawing",
+      "arguments": {
+        "source": "tolerance.dwg",
+        "output": "tolerance-native.dxf"
+      },
+      "result": {
+        "ok": true,
+        "tool": "import_drawing",
+        "drawing": "tolerance-native.dxf",
+        "source": "tolerance.dwg",
+        "backend": "autocad",
+        "seconds": 2.49,
+        "units": "mm",
+        "entity_count": 3,
+        "validation": {
+          "passed": true,
+          "summary": {
+            "errors": 0,
+            "warnings": 0,
+            "requirements_total": 0,
+            "requirements_failed": 0
+          },
+          "issues": [],
+          "requirements": [],
+          "requirements_passed": [],
+          "coverage": {
+            "checked_layout": "Model",
+            "unchecked_layouts": []
+          },
+          "recognized": {
+            "outline": null,
+            "circles": {
+              "count": 1,
+              "by_diameter": {
+                "35": 1
+              }
+            },
+            "dimensions": {
+              "count": 1,
+              "by_kind": {
+                "diameter": 1
+              }
+            },
+            "closed_contours": 0,
+            "entity_count": 3
+          }
+        },
+        "journal_seq": 1,
+        "checkpoint_before": null,
+        "sha256": "b12f9cb722dd74f30c62c25b5e07343ec6da3b145e046da38b9eb2aa58cbfbd8",
+        "bytes": 72494,
+        "revision": 1,
+        "metrics": {
+          "duration_ms": 2667.34,
+          "input_bytes": 67,
+          "output_bytes": 759
+        }
+      }
+    },
+    {
+      "tool": "autocad_audit",
+      "arguments": {
+        "path": "tolerance-native.dxf"
+      },
+      "result": {
+        "ok": true,
+        "tool": "autocad_audit",
+        "drawing": "tolerance-native.dxf",
+        "backend": "autocad",
+        "import_rejected": false,
+        "import_messages": [
+          "\u5171\u53d1\u73b0 0 \u4e2a\u9519\u8bef\uff0c\u5df2\u4fee\u590d 0 \u4e2a"
+        ],
+        "entities_seen_by_autocad": 5,
+        "insunits": 4,
+        "audit_errors": 0,
+        "messages": [],
+        "seconds": 3.14,
+        "passed": true,
+        "metrics": {
+          "duration_ms": 3141.77,
+          "input_bytes": 38,
+          "output_bytes": 331
+        }
+      }
+    }
+  ],
+  "checks": {
+    "native_A3_page_viewport_1to1": "passed",
+    "mechanical": "passed",
+    "architecture": "passed",
+    "pid": "passed",
+    "tolerance": "passed"
+  },
+  "visual_review": "pending separate inspection",
+  "imported_modules": {
+    "agentcad": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\__init__.py",
+    "agentcad.errors": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\errors.py",
+    "agentcad.policy": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\policy.py",
+    "agentcad.progress": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\progress.py",
+    "agentcad.model": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\model.py",
+    "agentcad.geom": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\geom.py",
+    "agentcad.units": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\units.py",
+    "agentcad.ops.registry": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\ops\\registry.py",
+    "agentcad.ops.annotate": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\ops\\annotate.py",
+    "agentcad.ops.draw": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\ops\\draw.py",
+    "agentcad.ops.edit": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\ops\\edit.py",
+    "agentcad.stdlib": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\stdlib.py",
+    "agentcad.ops.library": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\ops\\library.py",
+    "agentcad.ops.sheet": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\ops\\sheet.py",
+    "agentcad.ops.structure": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\ops\\structure.py",
+    "agentcad.measure": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\measure.py",
+    "agentcad.ops.analysis": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\ops\\analysis.py",
+    "agentcad.ops.engineering": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\ops\\engineering.py",
+    "agentcad.ops": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\ops\\__init__.py",
+    "agentcad.engine": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\engine.py",
+    "agentcad.store": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\store.py",
+    "agentcad.guards": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\guards.py",
+    "agentcad.spec": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\spec.py",
+    "agentcad.constraints": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\constraints.py",
+    "agentcad.metadata": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\metadata.py",
+    "agentcad.part": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\part\\__init__.py",
+    "agentcad.backends": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\backends\\__init__.py",
+    "agentcad.backends.freecad": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\backends\\freecad.py",
+    "agentcad.part.ops": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\part\\ops.py",
+    "agentcad.part.service": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\part\\service.py",
+    "agentcad.tolerances": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\tolerances.py",
+    "agentcad.validate.features": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\validate\\features.py",
+    "agentcad.validate.checks": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\validate\\checks.py",
+    "agentcad.validate.requirements": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\validate\\requirements.py",
+    "agentcad.validate": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\validate\\__init__.py",
+    "agentcad.service": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\service.py",
+    "agentcad.locking": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\locking.py",
+    "agentcad.engineering": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\engineering\\__init__.py",
+    "agentcad.engineering.records": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\engineering\\records.py",
+    "agentcad.engineering.mechanical": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\engineering\\mechanical.py",
+    "agentcad.viewer": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\viewer.py",
+    "agentcad.tabular": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\tabular.py",
+    "agentcad.delivery": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\delivery.py",
+    "agentcad.quality": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\quality.py",
+    "agentcad.engineering.architecture": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\engineering\\architecture.py",
+    "agentcad.engineering.pid": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\engineering\\pid.py",
+    "agentcad.plot": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\plot.py",
+    "agentcad.backends.autocad": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\backends\\autocad.py",
+    "agentcad.fits": "D:\\Projects\\AgentCAD-wt\\source-capability\\src\\agentcad\\fits.py"
+  },
+  "native_activation": {
+    "job": "native-activation/929306c511b0",
+    "before": {
+      "id": 0,
+      "status": 0
+    },
+    "after": {
+      "id": 2,
+      "status": 2
+    },
+    "scope": "Native layout activation and regeneration only; no geometry or viewport ID rewriting"
+  }
+}

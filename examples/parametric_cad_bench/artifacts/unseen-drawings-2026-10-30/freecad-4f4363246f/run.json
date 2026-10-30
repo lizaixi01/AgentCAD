@@ -1,0 +1,51 @@
+{
+  "id": "freecad-4f4363246f",
+  "kind": "drawing",
+  "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+  "instruction_sha256": "0c6a700bac0d32d4c69e48a0547166d4e5906e3b2559fa38f30236981c3bdcd3",
+  "task_toml_sha256": "4152f653a98931c955e5577b0e151c9c3122b1fd8b09c38a70a1ab85a95fd26e",
+  "public_input_sha256": {
+    "4f4363246f.png": "0dbd0ecf4167909d84e2232468e0280e314d89168d4195c5652a32a6730be142"
+  },
+  "status": "done",
+  "exit_code": 0,
+  "seconds": 318.16,
+  "workspace": "D:\\Projects\\bench-ws\\cadbench-v3-unseen-drawings-20261030\\freecad-4f4363246f",
+  "outputs": {
+    "answer.FCStd": "d197f3359c43931c0d856557ac6c8ed020298521be7ba39e43c0ff88ef59de0b"
+  },
+  "tool_calls": 22,
+  "tools": [
+    "inspect_image",
+    "inspect_image",
+    "list_operations",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "inspect_image",
+    "list_operations",
+    "apply_operations",
+    "export_drawing",
+    "inspect_entities",
+    "read_drawing",
+    "measure_entities",
+    "measure_entities",
+    "measure_entities",
+    "measure_entities",
+    "measure_entities",
+    "validate_drawing",
+    "validate_drawing",
+    "save_benchmark_stage"
+  ],
+  "tool_errors": [],
+  "unexpected_tools": [],
+  "usage": {
+    "input_tokens": 873501,
+    "cached_input_tokens": 789120,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 9281,
+    "reasoning_output_tokens": 5408
+  }
+}

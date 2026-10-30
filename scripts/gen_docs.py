@@ -5,6 +5,7 @@ docs/op_test_matrix.md (which test files exercise each op). Run after changes:
 from __future__ import annotations
 
 import re
+import argparse
 from pathlib import Path
 
 from agentcad.constraints import CHECK_TYPES, ENFORCE_TYPES
@@ -32,7 +33,8 @@ def ops_md() -> str:
                 rng = "".join(s for s in (f" >{p.gt}" if p.gt is not None else "", f" ≥{p.ge}" if p.ge is not None else "",
                                           f" ≤{p.le}" if p.le is not None else ""))
                 typ = p.type + (f" {p.enum}" if p.enum else "") + rng
-                lines.append(f"| `{k}` | {typ} | {'是' if p.required else ''} | {'' if p.default is None else p.default} | {p.description} |")
+                description = p.description.replace("|", "\\|")
+                lines.append(f"| `{k}` | {typ} | {'是' if p.required else ''} | {'' if p.default is None else p.default} | {description} |")
             lines.append("")
     lines += ["## 约束类型", "", f"- 可检查: {', '.join(sorted(CHECK_TYPES))}",
               f"- 可强制（顺序直接修改，非联立求解）: {', '.join(sorted(ENFORCE_TYPES))}", ""]
@@ -59,7 +61,18 @@ def matrix_md() -> str:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--check", action="store_true", help="Fail if generated operation docs are stale")
+    args = parser.parse_args()
+    files = {"operations.md": ops_md(), "op_test_matrix.md": matrix_md()}
+    if args.check:
+        stale = [name for name, expected in files.items()
+                 if not (DOCS / name).is_file() or (DOCS / name).read_text("utf-8") != expected]
+        if stale:
+            raise SystemExit("Stale generated documentation: " + ", ".join(stale))
+        print("operation catalog and test matrix match the source")
+        raise SystemExit(0)
     DOCS.mkdir(exist_ok=True)
-    (DOCS / "operations.md").write_text(ops_md(), "utf-8")
-    (DOCS / "op_test_matrix.md").write_text(matrix_md(), "utf-8")
+    for name, content in files.items():
+        (DOCS / name).write_text(content, "utf-8")
     print("wrote docs/operations.md, docs/op_test_matrix.md")

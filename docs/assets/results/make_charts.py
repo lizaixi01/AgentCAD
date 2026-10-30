@@ -32,10 +32,10 @@ RELIABILITY = [
     ("12 drafting tasks", "vs. writing code · Claude Code", 24, 23, 24),                      # comparison-claude-code.md
 ]
 # BenchCAD Vision2Code, 100 tasks at medium effort, mean voxel IoU: AgentCAD with CadQuery scripts and the
-# reference comparison (#26) vs. the same agent writing CadQuery itself      # examples/benchcad/README.md
+# reference comparison (#31) vs. the same agent writing CadQuery itself      # examples/benchcad/README.md
 BENCH = [
-    ("Claude Code · Opus 5.5", "vs. writing CadQuery itself", 0.754, 0.682),
-    ("Codex · gpt-6.1-sol", "vs. writing CadQuery itself", 0.857, 0.918),
+    ("Claude Code · Opus 5.5", "vs. writing CadQuery itself", 0.745, 0.682),
+    ("Codex · gpt-6.1-sol", "vs. writing CadQuery itself", 0.876, 0.918),
 ]
 
 # One accent (AgentCAD) and a de-emphasis gray, on GitHub's page colours. The accent is the dataviz reference

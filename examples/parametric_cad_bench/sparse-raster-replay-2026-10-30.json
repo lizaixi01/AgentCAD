@@ -1,0 +1,141 @@
+{
+  "purpose": "Post-review sparse-ink threshold regression against all successful image calls from final fixed-pair run; no new model attempt or rescore",
+  "recorded_product": "a6c673b69ca1160f9f2f30284efea629b1a55ad9",
+  "native_files_and_source_images_unchanged": true,
+  "calls": [
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_2",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_3",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_4",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_6",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_8",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_9",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_10",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_11",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_12",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_13",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_16",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-6fd69bd0c4",
+      "call": "item_23",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-686f17ce17",
+      "call": "item_2",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-686f17ce17",
+      "call": "item_3",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-686f17ce17",
+      "call": "item_4",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-686f17ce17",
+      "call": "item_5",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-686f17ce17",
+      "call": "item_6",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-686f17ce17",
+      "call": "item_7",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-686f17ce17",
+      "call": "item_10",
+      "metadata_equal": true,
+      "changed_fields": []
+    },
+    {
+      "task": "freecad-686f17ce17",
+      "call": "item_16",
+      "metadata_equal": true,
+      "changed_fields": []
+    }
+  ],
+  "replayed_product": "2bdc67593fff85641b8f0affaa25e9241757c725",
+  "recorded_ledger": {
+    "path": "dimension-witnesses-2026-10-30.json",
+    "sha256": "b853f2710518cfc87f6321663ba6a67fb627e1b8ed04fd018b8e96ccfba1b64f"
+  },
+  "compared_fields": [
+    "ok",
+    "source_sha256",
+    "source_size",
+    "region",
+    "rotate",
+    "dimension_evidence",
+    "panels"
+  ]
+}

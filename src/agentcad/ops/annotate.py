@@ -47,6 +47,9 @@ def _override(text_height, length_factor=None) -> dict[str, Any]:
 def _finish_dim(ctx: Ctx, dimov, p: dict[str, Any], text: str | None) -> dict[str, Any]:
     if text:
         dimov.dimension.dxf.text = text
+    if p.get("tolerance") is not None:
+        from ..tolerances import apply_tolerance
+        apply_tolerance(dimov, p["tolerance"], ctx.unit)
     dimov.render()
     store_measurement(dimov.dimension)
     return {"created": [ctx.finish(dimov.dimension, p)]}
@@ -65,6 +68,8 @@ def store_measurement(dim) -> None:
 
 
 DIM_COMMON = {"text": P("string", description="Text override; '<>' stands for the measured value"),
+              "tolerance": P("object", description="Signed lower/upper deviations in displayed drawing units (or unit strings); "
+                             "optional precision=3 and mode=deviations|limits. Linear/radius/diameter dimensions only."),
               "text_height": P("length", gt=0, description="Override text height"),
               "length_factor": P("number", gt=0, description="DIMLFAC: displayed value = measured length x factor, "
                                  "e.g. 1/0.325 on a sheet that shows the part at scale 0.325")}

@@ -14,7 +14,7 @@ Your coding agent creates, edits, checks and exports real engineering drawings a
 
 AgentCAD is an open-source program you install on your machine. It is not a GUI app and not a prompt or skill. It is the CAD engine your agent calls:
 
-- **An MCP server** (the main way to use it). Claude Code, Codex or any MCP client gets 24 CAD tools. You talk to your agent; the agent uses AgentCAD.
+- **An MCP server** (the main way to use it). Claude Code, Codex or any MCP client gets 34 CAD tools in the full profile, or 3 discovery tools with schemas fetched on demand. You talk to your agent; the agent uses AgentCAD.
 - **A CLI, a Python library and an HTTP API** with the same tools, for scripts and pipelines.
 
 Behind those tools:
@@ -43,19 +43,57 @@ Ask an agent to edit a drawing today and it writes a throwaway script against a 
 
 AgentCAD gives the agent a CAD runtime instead of a blank Python file:
 
-- **Operations, and scripts held to the same rules.** 62 typed 2D operations (draw, edit, annotate, layers, blocks, sheets and viewports, industry symbols) and 19 for 3D parts (sketch, pad, pocket, revolve, hole, fillet, pattern, loft, sweep…), each with a JSON schema. Batches are atomic: if one step fails, the file is untouched. A 3D part can also start from a CadQuery script, which runs as one transaction: validated, checkpointed and undoable like any operation.
+- **Operations, and scripts held to the same rules.** 71 typed 2D operations (draw, edit, annotate, layers, blocks, sheets and viewports, industry symbols) and 19 for 3D parts (sketch, pad, pocket, revolve, hole, fillet, pattern, loft, sweep…), each with a JSON schema. Batches are atomic: if one step fails, the file is untouched. A 3D part can also start from a CadQuery script, which runs as one transaction: validated, checkpointed and undoable like any operation.
 - **Every change is reversible.** Checkpoints before every edit, a diff of what changed, and a durable journal, so a new session can see and undo what an earlier one did.
 - **Checked by something other than the agent.** An independent validator re-reads the file from disk and reports problems as structured errors the agent can act on: geometry that doesn't close, dimensions that disagree with the part, text that will print too small, sheets it didn't check. For 3D parts: one valid solid, its size and volume, the holes it has, and features that failed to rebuild.
-- **The agent can see its work.** 3D parts export shaded PNG previews from any view direction, returned inline to the agent so it can compare them with what it was asked to build. Given a reference image, each view comes back aligned to it, with a match score and a diff. A live browser viewer shows you the same drawings and parts as they change.
+- **The agent can see its work.** 3D parts export shaded PNG previews from any view direction, returned inline to the agent so it can compare them with what it was asked to build. Given a reference image, each view comes back aligned to it, with a match score for its outline and the edges inside it, and a diff. A live browser viewer shows you the same drawings and parts as they change.
+- **It can inspect the source drawing closely.** `inspect_image` magnifies a region of a PNG/JPEG/WebP drawing, including small dimension callouts and section hatching. It returns an inline image and source pixel coordinates without changing the input. Section depths and the side of each feature still need to be interpreted from the drawing.
 - **Real drawings, not just new ones.** Paper-space layouts, title blocks with attributes, DWG import/export and AutoCAD AUDIT through an optional headless AutoCAD backend.
 - **Safe by default.** Workspace sandbox, read-only mode, operation allow-lists. Scripts (ezdxf for drawings; CadQuery or FreeCAD Part code for 3D parts) run as transactions and are off unless you turn them on.
+
+## Source-capability comparison
+
+**AgentCAD 98/100 · AutoCAD MCP Pro 96/100**, under the same frozen local rubric, reviewed on 2026-10-30. This uses the six categories and weights from Pro's source-capability chart, with 20 published scoring items applied to both pinned products. A separate AI reviewer assessed the source, counterexamples, saved outputs and test evidence; AgentCAD requested and publishes this review.
+
+| Source capability | Weight | AgentCAD `b4c0466` | MCP Pro `58a05dd` |
+|---|---:|---:|---:|
+| Functional coverage | 25 | 25 | 24 |
+| Correctness and delivery | 20 | 20 | 20 |
+| Backends and platforms | 15 | 15 | 15 |
+| Engineering production | 15 | 13 | 15 |
+| Tests and maintenance | 15 | 15 | 14 |
+| Security and operations | 10 | 10 | 8 |
+| **Total** | **100** | **98** | **96** |
+
+Pro's original **93/100** is its **v1.6.0 self-review from 2026-09-24**, using less detailed scoring anchors. It remains a separate historical result. The comparison above establishes a two-point lead under our published local method; it is **not an official upstream ranking or external certification**.
+
+The work repaired strict delivery checks, native tolerances, curved-pipe connectivity, HTTP defaults and process locks, and added sourced dimensional data, locked dependencies and cross-platform CI. Final verification: **685 passed / 8 skipped** locally with AutoCAD and FreeCAD enabled; four completed CI lanes; **31/31** again on the original v8 matrix. Skips are not passes. AgentCAD still loses two points: unverified M14 counterbore data and incomplete automatic manufacturing annotation in the mechanical template.
+
+[Scores, deductions and scope](docs/source-capability-review.md) · [Frozen rubric](docs/source-capability-rubric.md) · [Item-by-item assessment](examples/source_capability/results/2026-10-30/assessment.json) · [Reproduce / retained evidence](examples/source_capability/README.md)
+
+## AutoCAD MCP benchmark
+
+**100/100 on U-C4N's v8 runtime matrix: 31/31 tasks passed, tied with AutoCAD MCP Pro.** Checked on 2026-10-30: AgentCAD `39fa4b5` and Pro `58a05dd`, using matrix v8 / evaluator v8.1. AgentCAD's run uses the upstream runner and its public MCP interface; the reference was also rerun on this machine.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mcp-benchmark/leaderboard-dark.svg">
+    <img src="docs/assets/mcp-benchmark/leaderboard-light.svg" alt="U-C4N v8 runtime comparison: AgentCAD and AutoCAD MCP Pro both score 100 out of 100, passing 31 of 31 tasks. Estimated discovery schema size: AgentCAD 220 tokens, Pro 503, a 56.3% reduction. Locally reproduced results, not an official upstream listing. Pro's source-review score of 93 is a separate assessment." width="860">
+  </picture>
+</p>
+
+This is a fixed-task capability benchmark, without an LLM. It is not a speed or same-model success-rate ranking. AgentCAD's estimated discovery schema is **56.3% smaller** (220 vs. 503 tokens); both pass the 2,000-token ceiling, so this earns no extra score.
+
+Pro's **93/100** chart is a separate, upstream-authored **source-review self-assessment** of version 1.6.0. This chart uses the 31-task execution matrix instead. The [historical scoring explanation](docs/benchmark-leaderboard.md) and [new source-capability review](docs/source-capability-review.md) keep the measures and product versions separate.
+
+[Results and pinned sources](docs/assets/mcp-benchmark/data.json) · [31-task report](examples/autocad_benchmark/results/2026-10-30-v8/upstream/agentcad.json) · [Reproduce and inspect the evidence](examples/autocad_benchmark/README.md) · [Upstream submission](https://github.com/U-C4N/Autocad-MCP/pull/15) (pending review)
 
 ## Results
 
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="docs/assets/results/results-dark.svg">
-    <img src="docs/assets/results/results-light.svg" alt="Results chart. Typical minutes per run, AgentCAD vs. the alternative: five-round revision 4.1 vs 12.9 (writing code); real DWG edit 2.9 vs 6.0 (writing code); layer cleanup 1.0 vs 1.7 and dimensioning 1.8 vs 3.2 (AutoCAD MCP Pro); native DWG with AutoCAD open 3.0 vs 5.7 (AutoCAD MCP Pro). Runs that fully succeeded: undo across sessions 3/3 vs 0/3; native DWG 11/12 vs 10/12; 12 drafting tasks 24/24 vs 23/24. BenchCAD Vision2Code mean IoU, AgentCAD vs. the same agent writing CadQuery itself: Claude Code 0.754 vs 0.682; Codex 0.857 vs 0.918." width="860">
+    <img src="docs/assets/results/results-light.svg" alt="Results chart. Typical minutes per run, AgentCAD vs. the alternative: five-round revision 4.1 vs 12.9 (writing code); real DWG edit 2.9 vs 6.0 (writing code); layer cleanup 1.0 vs 1.7 and dimensioning 1.8 vs 3.2 (AutoCAD MCP Pro); native DWG with AutoCAD open 3.0 vs 5.7 (AutoCAD MCP Pro). Runs that fully succeeded: undo across sessions 3/3 vs 0/3; native DWG 11/12 vs 10/12; 12 drafting tasks 24/24 vs 23/24. BenchCAD Vision2Code mean IoU, AgentCAD vs. the same agent writing CadQuery itself: Claude Code 0.745 vs 0.682; Codex 0.876 vs 0.918." width="860">
   </picture>
 </p>
 
@@ -63,8 +101,8 @@ Every comparison keeps the agent and model the same and changes only the tools.
 
 - **Faster.** On most tasks, runs were 1.4–3× faster than the same agent writing ezdxf code. They were 1.7–1.9× faster than the same agent using AutoCAD MCP Pro, including with AutoCAD 2027 open.
 - **Undo that survives a new session.** In a five-round revision, AgentCAD restored an earlier hole size from its journal 3/3 times. With AutoCAD MCP Pro the agent could not, 0/3.
-- **3D from pictures.** On 100 [BenchCAD](https://arxiv.org/abs/2605.10865) Vision2Code tasks, Claude Code rebuilt parts from four views more accurately through AgentCAD than by writing CadQuery itself: mean IoU 0.754 vs 0.682. Through AgentCAD it still wrote CadQuery, but each script ran as a checked transaction, and it could compare its part with the target and get a match score. This is our own run, not the BenchCAD leaderboard, where models write CadQuery in one shot.
-- **Where it doesn't win yet:** Codex still rebuilt those parts more accurately by writing CadQuery itself (0.918 vs 0.857), though through AgentCAD it took 39% less time. For a batch of near-identical drawings, one generated script is faster and cheaper. AgentCAD sessions also read about 2× the input tokens.
+- **3D from pictures.** On 100 [BenchCAD](https://arxiv.org/abs/2605.10865) Vision2Code tasks, Claude Code rebuilt parts from four views more accurately through AgentCAD than by writing CadQuery itself: mean IoU 0.745 vs 0.682. Through AgentCAD it still wrote CadQuery, but each script ran as a checked transaction, and it could compare its part with the target and get a match score that also checks the edges inside the outline. This is our own run, not the BenchCAD leaderboard, where models write CadQuery in one shot.
+- **Where it doesn't win yet:** Codex still rebuilt those parts more accurately by writing CadQuery itself (0.918 vs 0.876), though through AgentCAD it took a third less time. For a batch of near-identical drawings, one generated script is faster and cheaper. AgentCAD sessions also read about 2× the input tokens.
 
 Samples are small (2–3 runs per task, one run per BenchCAD task). The full reports with logs and graders:
 - [vs. writing code, Claude Code](docs/comparison-claude-code.md)
@@ -72,6 +110,8 @@ Samples are small (2–3 runs per task, one run per BenchCAD task). The full rep
 - [vs. AutoCAD MCP Pro](docs/comparison-autocad-mcp-pro.md)
 - [native DWG in AutoCAD 2027](docs/comparison-native-dwg.md)
 - [BenchCAD](examples/benchcad/README.md)
+- [BenchCAD 2: nine public development samples, GPT-6.1 Sol max (snapshot `2583516`)](examples/benchcad2/report-2026-10-30.md)
+- [Parametric CAD Bench V3 pilot: six tasks with native PartDesign operations](examples/parametric_cad_bench/README.md)
 
 ## Get started in two minutes
 
@@ -116,7 +156,7 @@ More prompts to try: [playground/README.md](playground/README.md).
 
 ## Prefer the command line?
 
-Every tool is also a CLI command that prints one JSON envelope:
+Core drawing tools are also available as CLI commands that print one JSON envelope:
 
 ```bash
 agentcad --root ./work create part.dxf --units mm
@@ -135,16 +175,19 @@ The same `Runtime` is available from Python and over HTTP (`agentcad --root work
 
 ## What's inside
 
+The fixed [U-C4N v8 execution matrix](docs/comparison-upstream-benchmark-v8.md) now passes 31/31 through AgentCAD's native MCP workflows, tying the locally rerun reference. This is independent local evidence, not an official leaderboard listing.
+
 | | |
 |---|---|
-| Operations | 62: draw (lines to splines, hatches, polygons), edit (trim, fillet, offset, arrays, break/join, purge), annotate (linear, radial, angular, ordinate dimensions, leaders, tables, title blocks), layers, blocks with attributes, sheets and viewports, and industry libraries |
+| Operations | 71: draw (lines to splines, hatches, polygons), edit (trim, fillet, offset, arrays, break/join, purge), annotate (linear, radial, angular, ordinate dimensions, leaders, tables, title blocks), layers, blocks with attributes, sheets and viewports, and industry libraries |
 | Industry libraries | P&ID (ISO 10628 / ISA-5.1): 24 symbols, process and signal lines; a valve placed on a pipe cuts the pipe itself. GD&T (ISO 1101): feature control frames with all 14 characteristics, modifiers and datums, datum feature and surface texture symbols. ISO parts: bolts, nuts, washers, cap screws (M3–M24) and 60xx/62xx/63xx bearings, clearance, tapped and counterbored holes. One op each, sized to the annotation scale; `standard_library` looks up sizes and lists a drawing's parts |
-| Agent tools (MCP) | 24, including `apply_operations`, `apply_batch` (several drawings in one call), `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`, `standard_library`, `autocad_live`. `list_operations` returns a compact index and full schemas on request, so it fits in an agent's context |
+| Agent tools (MCP) | 34 in the default profile, including `apply_operations`, `apply_batch`, `validate_drawing`, `get_diff`, `rollback`, `history`, `export_drawing`, `standard_library`, `autocad_live`, `inspect_image`. Optional discovery profile advertises 3 tools; fetch complete schemas on demand |
+| Engineering workflows | Native P&ID connectivity/readback, orthogonal plans with measured room areas, revolved-part views with BOM/balloons, and preliminary foreign-plant takeoff. Guarded edits, physical dimension verification and formula-safe table exports. [Contracts and limits](docs/engineering-workflows.md) |
 | Live AutoCAD | `autocad_live` works next to the user's running AutoCAD (Windows, COM): shows the agent's drawing there, reloads it after every change (`AGENTCAD_LIVE_SYNC=1`), and pulls the user's edits back as a normal checkpointed, validated change. Raw command lines are off unless `AGENTCAD_ALLOW_LIVE_COMMANDS=1` |
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
 | 3D parts | Parametric FreeCAD parts (`.FCStd`) through the same tools: sketches, pad, pocket, revolve, holes, fillets, chamfers, shells, patterns, lofts, sweeps, helices, driven by named parameters. Edge and face selections survive edits. STEP/STL export and shaded PNG previews. Needs FreeCAD 1.1 (optional) — see [docs/part-3d.md](docs/part-3d.md) |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | 339 automated tests, including 27 cases checked against AutoCAD 2027 behaviour and 57 3D-part tests (51 of them build parts in FreeCAD 1.1) |
+| Tests | Latest recorded regression at `b4c0466`: 685 passed, 8 skipped (693 collected), with AutoCAD 2027 and FreeCAD 1.1.4 enabled. Eight CadQuery-dependent tests skipped. Windows/Linux/macOS CI results and their optional-backend skips are [reported separately](docs/source-capability-review.md#verification) |
 
 Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial software.
 

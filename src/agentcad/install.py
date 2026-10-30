@@ -15,6 +15,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Callable
 
+try:
+    import tomllib
+except ImportError:  # Python 3.10
+    import tomli as tomllib
+
 from .errors import AgentCADError, input_error
 
 REPO = "https://github.com/lizaixi01/AgentCAD"
@@ -236,11 +241,7 @@ def codex_table(name: str, entry: dict[str, Any], launcher: str) -> str:
     return toml
 
 
-def _parse_toml(text: str, path: Path, what: str) -> dict[str, Any] | None:
-    try:
-        import tomllib  # type: ignore[import-not-found]
-    except ImportError:  # Python 3.10: no TOML parser in the standard library
-        return None
+def _parse_toml(text: str, path: Path, what: str) -> dict[str, Any]:
     try:
         return tomllib.loads(text)
     except ValueError as exc:
@@ -249,8 +250,8 @@ def _parse_toml(text: str, path: Path, what: str) -> dict[str, Any] | None:
 
 
 def write_codex_config(path: Path, name: str, table: str, dry_run: bool = False) -> str:
-    """Replace this server's entry and keep everything else. Both the old and the new file must parse (Python
-    3.11+): an invalid file is left alone, and an invalid result is never written."""
+    """Replace this server's entry and keep everything else. Both the old and the new file must parse:
+    an invalid file is left alone, and an invalid result is never written."""
     text = path.read_text("utf-8-sig") if path.is_file() else ""
     _parse_toml(text, path, "as it is")
     rest, found = _drop_toml_table(text, name)
@@ -260,7 +261,7 @@ def write_codex_config(path: Path, name: str, table: str, dry_run: bool = False)
         return "unchanged"
     parsed = _parse_toml(new, path, "after the change")
     want = _parse_toml(table, path, "entry")
-    if parsed is not None and want is not None and parsed["mcp_servers"][name] != want["mcp_servers"][name]:
+    if parsed["mcp_servers"][name] != want["mcp_servers"][name]:
         raise input_error("BAD_CONFIG", f"{path}: could not replace mcp_servers.{name} cleanly",
                           hint=f"Delete the {name} entry from that file, then run setup again")
     if not dry_run:
@@ -519,10 +520,7 @@ def _client_entry(client: str, root: Path) -> tuple[str | None, dict[str, Any] |
         if not path.is_file():
             return None, None
         try:
-            import tomllib  # type: ignore[import-not-found]
             data = tomllib.loads(path.read_text("utf-8-sig"))
-        except ImportError:  # Python 3.10: only say whether the table is there
-            return (str(path), {}) if f"[mcp_servers.{NAME}]" in path.read_text("utf-8-sig") else (None, None)
         except ValueError:
             return str(path) + " (not valid TOML)", None
         e = (data.get("mcp_servers") or {}).get(NAME)

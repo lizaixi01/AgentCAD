@@ -1,0 +1,2 @@
+# Preserve evidence bytes across Windows checkouts; no original inputs are stored here.
+* -text whitespace=trailing-space,space-before-tab,cr-at-eol

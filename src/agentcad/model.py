@@ -232,6 +232,10 @@ def dimension_info(e: DXFGraphic) -> dict[str, Any]:
         info["angle"] = r(x.get("angle", 0.0))
     m = measure_dimension(e)
     info["measurement"] = None if m is None else r(m)
+    from .tolerances import tolerance_info
+    tolerance = tolerance_info(e)
+    if tolerance is not None:
+        info["tolerance"] = tolerance
     return info
 
 

@@ -1,0 +1,2292 @@
+{
+  "schema": "source-capability-verification/v1",
+  "product_commit": "b4c04669238e771a0888114f1af3260d7c371834",
+  "ci_run": {
+    "id": 41049567713,
+    "html_url": "https://github.com/lizaixi01/AgentCAD/actions/runs/41049567713",
+    "head_sha": "b4c04669238e771a0888114f1af3260d7c371834",
+    "status": "completed",
+    "conclusion": "success",
+    "event": "pull_request",
+    "created_at": "2026-10-30T11:38:50Z",
+    "updated_at": "2026-10-30T11:43:53Z"
+  },
+  "same_test_ids_in_all_five_lanes": true,
+  "test_id_count": 693,
+  "lanes": [
+    {
+      "path": "windows-native-b4c0466.xml",
+      "collected": 693,
+      "passed": 685,
+      "skipped": 8,
+      "failures": 0,
+      "errors": 0,
+      "sha256": "64d893298d32004625a6dfbc1063563fc4f6799747f0c3b1667a482148fa84c0",
+      "skip_reasons": [
+        {
+          "id": "tests.test_benchcad2::test_assembly_preview_handles_rigid_json_matrices_without_changing_step[matrix0]",
+          "reason": "could not import 'cadquery': No module named 'cadquery'"
+        },
+        {
+          "id": "tests.test_benchcad2::test_assembly_preview_handles_rigid_json_matrices_without_changing_step[matrix1]",
+          "reason": "could not import 'cadquery': No module named 'cadquery'"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cadquery_script_builds_a_part_that_ops_build_on",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nr = cq.Workplane().box(1, 1, 1)\\nresult = r.no_such_method()-SCRIPT_FAILED-AttributeError]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nx = cq.Workplane().box(1, 1, 1)-NO_RESULT-result]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nresult = cq.Workplane().rect(10, 5)-NOT_A_SOLID-no solid]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[code3-NOT_SINGLE_SOLID-2 separate solids]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cadquery_script_timeout",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        }
+      ]
+    },
+    {
+      "path": "reviewer-standards/ci-run-41049567713/evidence-macos-latest-py3.12/pytest.xml",
+      "collected": 693,
+      "passed": 549,
+      "skipped": 144,
+      "failures": 0,
+      "errors": 0,
+      "sha256": "362e4ea051e9c8c09644ce0da34fd04f98c5fa0f3316e9796cc394b840fc59c2",
+      "skip_reasons": [
+        {
+          "id": "tests.test_autocad_live::test_generated_drawing_passes_autocad_audit",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_r12_export_passes_autocad_audit",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_dwg_round_trip_keeps_spec_and_revises",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_autocad_audit_accepts_dwg",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_autocad_audit_detects_defects",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_validator_and_autocad_agree_on_rejected_file",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_benchcad2::test_assembly_preview_handles_rigid_json_matrices_without_changing_step[matrix0]",
+          "reason": "could not import 'cadquery': No module named 'cadquery'"
+        },
+        {
+          "id": "tests.test_benchcad2::test_assembly_preview_handles_rigid_json_matrices_without_changing_step[matrix1]",
+          "reason": "could not import 'cadquery': No module named 'cadquery'"
+        },
+        {
+          "id": "tests.test_k_pdf::test_chinese_text_gets_a_cjk_font",
+          "reason": "no CJK font installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_not_running",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_open_and_status",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_live_open_allows_atomic_commits_and_preserves_unsaved_gui_edits",
+          "reason": "Windows file sharing semantics"
+        },
+        {
+          "id": "tests.test_l_live_session::test_user_write_open_drawing_is_not_silently_closed",
+          "reason": "Windows file sharing semantics"
+        },
+        {
+          "id": "tests.test_l_live_session::test_live_sync_reopens_after_each_change_and_keeps_the_view",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_repeated_sync_after_zoom_does_not_mistake_view_changes_for_drawing_edits",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[1]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[2]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[4]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[17]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[25]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[32]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[64]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[VIEWDIR-value0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[VIEWTWIST-0.5]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[PERSPECTIVE-1]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[WORLDUCS-0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[TILEMODE-0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_restores_an_ordinary_paper_space_view[8]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_restores_an_ordinary_paper_space_view[16]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_restores_an_ordinary_paper_space_view[24]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_commits_the_users_edits",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_needs_write_access_and_an_open_drawing",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_zoom_and_gated_commands",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_refuses_to_revert_newer_agent_changes",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_of_a_drawing_this_runtime_did_not_open",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_keeps_edits_that_are_not_entities",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_failed_pull_keeps_autocads_copy",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_dry_runs_do_not_touch_autocad",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_sync_survives_unexpected_com_errors",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_drawing_the_user_opened_before_an_agent_change",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_unexpected_failure_in_pull_still_reports_autocads_copy",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_failing_reopen_does_not_fail_a_committed_pull",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_n_parts::test_build_a_parametric_plate",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_parameter_change_regenerates_and_selectors_follow",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_modify_and_delete_features",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_failed_batch_leaves_the_part_untouched",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_selector_errors_are_structured",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_inspect_previews_a_selector",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_revolved_shaft_with_groove_and_chamfer",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_rollback_diff_export",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_validator_enforces_the_cadbench_part_contract",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_strict_and_dry_run",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_primitives_mirror_and_shell",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_pocket_polar_pattern_loft_sweep_helix",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_create_in_one_call_and_batch",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_step_export_reads_back_as_the_part",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_export_refuses_a_part_that_is_not_one_solid",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_requirement_fields_are_checked",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_inch_part_reports_parameters_in_inches",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_create_is_part_of_the_batch",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_png_preview",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_mcp_returns_png_inline",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes0-H-4188.790204786391]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes1-H-4188.790204786391]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes2-V-9123.59240533107]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[179.9]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[180]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[180.01]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[270]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_concave_bulge_profile",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_slot[end0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_slot[end1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_aliased_ops_run_and_are_reported",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[architecture]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[mechanical]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[pid]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[tolerance]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_o_viewer::test_part_mesh_png_and_diff",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_o_viewer::test_store_waits_out_a_reader",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_o_viewer::test_mesh_skips_degenerate_edges[extra0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_o_viewer::test_mesh_skips_degenerate_edges[extra1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_committed_copy_still_commits_and_records",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_drawing_changes_nothing_and_is_retryable",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_head_before_the_replace_changes_nothing",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_head_after_the_replace_reports_applied_and_recover_records_it",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_next_commit_records_an_unrecorded_change_first",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_recover_clears_a_marker_whose_commit_never_happened",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_head_while_journaling_keeps_the_commit_and_seq",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_rollback_with_a_busy_drawing_changes_nothing_and_is_retryable",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_rollback_with_a_busy_committed_copy_succeeds_with_a_warning",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_rollback_with_head_busy_after_the_replace_is_settled_by_recover",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_b1_head_busy_after_the_checkpoint_keeps_record_and_file_together[commit]",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_b1_head_busy_after_the_checkpoint_keeps_record_and_file_together[rollback]",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_b2_a_busy_settle_leaves_the_earlier_marker_for_the_retry",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_n1_recover_with_head_busy_is_retryable",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_n2_the_recover_record_carries_the_operations",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_q_viewer_progress::test_a_3d_batch_reports_each_operation",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_q_viewer_progress::test_part_export_and_thumbnail",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cadquery_script_builds_a_part_that_ops_build_on",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nr = cq.Workplane().box(1, 1, 1)\\nresult = r.no_such_method()-SCRIPT_FAILED-AttributeError]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nx = cq.Workplane().box(1, 1, 1)-NO_RESULT-result]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nresult = cq.Workplane().rect(10, 5)-NOT_A_SOLID-no solid]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[code3-NOT_SINGLE_SOLID-2 separate solids]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cadquery_script_timeout",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_part_script",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_script_cannot_reach_the_part",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_swept_parts_report_their_true_size",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cross_drilled_pin_exports_to_step",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_a_reported_face_box_selects_that_face",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_validation_flags_geometry_outside_the_body",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_or_unsaved_part_scripts_change_nothing",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_preview_compared_with_a_reference",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_script_timeout_leaves_no_folder",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_real_native_edit_stages_preserve_base_and_are_immutable",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_t_image_inspection::test_native_pocket_and_pad_honor_opposite_face_levels",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_final_plane_levels_and_coplanar_boss_family_are_measured_read_only[XY-z-bottom]",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_final_plane_levels_and_coplanar_boss_family_are_measured_read_only[YZ-x-left]",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_local_validation_catches_wrong_stack_despite_correct_bbox_and_parameter",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_invalid_or_ambiguous_measurements_fail_explicitly",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_dxf_filter_cannot_silently_return_feature_history_for_a_part",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_camera_metadata_preserves_front_side_and_top_correspondence",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_cli_and_mcp_measure_real_saved_geometry",
+          "reason": "FreeCAD not installed"
+        }
+      ]
+    },
+    {
+      "path": "reviewer-standards/ci-run-41049567713/evidence-ubuntu-latest-py3.10/pytest.xml",
+      "collected": 693,
+      "passed": 528,
+      "skipped": 165,
+      "failures": 0,
+      "errors": 0,
+      "sha256": "e061f7dccd2747e4aab2ef2ba032bcc82ea5c677c3c725ad560c7b1b9c5507ba",
+      "skip_reasons": [
+        {
+          "id": "tests.test_autocad_live::test_generated_drawing_passes_autocad_audit",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_r12_export_passes_autocad_audit",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_dwg_round_trip_keeps_spec_and_revises",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_autocad_audit_accepts_dwg",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_autocad_audit_detects_defects",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_validator_and_autocad_agree_on_rejected_file",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_benchcad2::test_assembly_preview_handles_rigid_json_matrices_without_changing_step[matrix0]",
+          "reason": "could not import 'cadquery': No module named 'cadquery'"
+        },
+        {
+          "id": "tests.test_benchcad2::test_assembly_preview_handles_rigid_json_matrices_without_changing_step[matrix1]",
+          "reason": "could not import 'cadquery': No module named 'cadquery'"
+        },
+        {
+          "id": "tests.test_g_interfaces::test_mcp_config_launches_server",
+          "reason": "could not import 'tomllib': No module named 'tomllib'"
+        },
+        {
+          "id": "tests.test_k_pdf::test_chinese_text_gets_a_cjk_font",
+          "reason": "no CJK font installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_not_running",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_open_and_status",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_live_open_allows_atomic_commits_and_preserves_unsaved_gui_edits",
+          "reason": "Windows file sharing semantics"
+        },
+        {
+          "id": "tests.test_l_live_session::test_user_write_open_drawing_is_not_silently_closed",
+          "reason": "Windows file sharing semantics"
+        },
+        {
+          "id": "tests.test_l_live_session::test_live_sync_reopens_after_each_change_and_keeps_the_view",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_repeated_sync_after_zoom_does_not_mistake_view_changes_for_drawing_edits",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[1]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[2]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[4]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[17]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[25]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[32]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[64]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[VIEWDIR-value0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[VIEWTWIST-0.5]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[PERSPECTIVE-1]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[WORLDUCS-0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[TILEMODE-0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_restores_an_ordinary_paper_space_view[8]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_restores_an_ordinary_paper_space_view[16]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_restores_an_ordinary_paper_space_view[24]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_commits_the_users_edits",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_needs_write_access_and_an_open_drawing",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_zoom_and_gated_commands",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_refuses_to_revert_newer_agent_changes",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_of_a_drawing_this_runtime_did_not_open",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_keeps_edits_that_are_not_entities",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_failed_pull_keeps_autocads_copy",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_dry_runs_do_not_touch_autocad",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_sync_survives_unexpected_com_errors",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_drawing_the_user_opened_before_an_agent_change",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_unexpected_failure_in_pull_still_reports_autocads_copy",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_failing_reopen_does_not_fail_a_committed_pull",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_n_parts::test_build_a_parametric_plate",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_parameter_change_regenerates_and_selectors_follow",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_modify_and_delete_features",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_failed_batch_leaves_the_part_untouched",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_selector_errors_are_structured",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_inspect_previews_a_selector",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_revolved_shaft_with_groove_and_chamfer",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_rollback_diff_export",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_validator_enforces_the_cadbench_part_contract",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_strict_and_dry_run",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_primitives_mirror_and_shell",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_pocket_polar_pattern_loft_sweep_helix",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_create_in_one_call_and_batch",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_step_export_reads_back_as_the_part",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_export_refuses_a_part_that_is_not_one_solid",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_requirement_fields_are_checked",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_inch_part_reports_parameters_in_inches",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_create_is_part_of_the_batch",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_png_preview",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_mcp_returns_png_inline",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes0-H-4188.790204786391]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes1-H-4188.790204786391]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes2-V-9123.59240533107]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[179.9]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[180]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[180.01]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[270]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_concave_bulge_profile",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_slot[end0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_slot[end1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_aliased_ops_run_and_are_reported",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[architecture]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[mechanical]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[pid]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[tolerance]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_o_viewer::test_part_mesh_png_and_diff",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_o_viewer::test_store_waits_out_a_reader",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_o_viewer::test_mesh_skips_degenerate_edges[extra0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_o_viewer::test_mesh_skips_degenerate_edges[extra1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_committed_copy_still_commits_and_records",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_drawing_changes_nothing_and_is_retryable",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_head_before_the_replace_changes_nothing",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_head_after_the_replace_reports_applied_and_recover_records_it",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_next_commit_records_an_unrecorded_change_first",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_recover_clears_a_marker_whose_commit_never_happened",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_head_while_journaling_keeps_the_commit_and_seq",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_rollback_with_a_busy_drawing_changes_nothing_and_is_retryable",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_rollback_with_a_busy_committed_copy_succeeds_with_a_warning",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_rollback_with_head_busy_after_the_replace_is_settled_by_recover",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_b1_head_busy_after_the_checkpoint_keeps_record_and_file_together[commit]",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_b1_head_busy_after_the_checkpoint_keeps_record_and_file_together[rollback]",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_b2_a_busy_settle_leaves_the_earlier_marker_for_the_retry",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_n1_recover_with_head_busy_is_retryable",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_n2_the_recover_record_carries_the_operations",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_q_viewer_progress::test_a_3d_batch_reports_each_operation",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_q_viewer_progress::test_part_export_and_thumbnail",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cadquery_script_builds_a_part_that_ops_build_on",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nr = cq.Workplane().box(1, 1, 1)\\nresult = r.no_such_method()-SCRIPT_FAILED-AttributeError]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nx = cq.Workplane().box(1, 1, 1)-NO_RESULT-result]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nresult = cq.Workplane().rect(10, 5)-NOT_A_SOLID-no solid]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[code3-NOT_SINGLE_SOLID-2 separate solids]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cadquery_script_timeout",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_part_script",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_script_cannot_reach_the_part",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_swept_parts_report_their_true_size",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cross_drilled_pin_exports_to_step",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_a_reported_face_box_selects_that_face",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_validation_flags_geometry_outside_the_body",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_or_unsaved_part_scripts_change_nothing",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_preview_compared_with_a_reference",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_script_timeout_leaves_no_folder",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_selection_is_repeatable_stratified_and_detects_incomplete_cohort",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_staging_excludes_grader_solution_and_checks_instruction_hash",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_failed_validation_cannot_freeze_submission",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_real_native_edit_stages_preserve_base_and_are_immutable",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_command_limits_tools_and_does_not_load_personal_configuration",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_audit_detects_out_of_protocol_tools[shell]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_audit_detects_out_of_protocol_tools[other_mcp]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_audit_counts_mcp_failures_without_double_counting_runtime_errors[Error executing tool: max_size must be <= 2048-MCP_TOOL_ERROR]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_audit_counts_mcp_failures_without_double_counting_runtime_errors[{\"ok\": false, \"error\": {\"code\": \"BAD_IMAGE_REGION\", \"message\": \"Outside image\"}}-BAD_IMAGE_REGION]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_missing_submission_is_zero_but_scorer_crash_is_infrastructure_error[False]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_missing_submission_is_zero_but_scorer_crash_is_infrastructure_error[True]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_stage_audit_detects_base_modified_after_freeze",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_timeout_with_saved_file_is_still_zero",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_summary_combines_incremental_results_and_preserves_infrastructure_errors",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_score_reader_uses_harbor_contract_for_both_task_schemas[score]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_score_reader_uses_harbor_contract_for_both_task_schemas[reward]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_score_reader_rejects_invalid_rewards[True]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_score_reader_rejects_invalid_rewards[None]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_score_reader_rejects_invalid_rewards[nan]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_score_reader_rejects_invalid_rewards[1.1]",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_regression_selection_uses_baseline_and_detects_input_or_config_changes",
+          "reason": "The optional CAD Bench harness requires Python 3.11+"
+        },
+        {
+          "id": "tests.test_t_image_inspection::test_native_pocket_and_pad_honor_opposite_face_levels",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_final_plane_levels_and_coplanar_boss_family_are_measured_read_only[XY-z-bottom]",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_final_plane_levels_and_coplanar_boss_family_are_measured_read_only[YZ-x-left]",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_local_validation_catches_wrong_stack_despite_correct_bbox_and_parameter",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_invalid_or_ambiguous_measurements_fail_explicitly",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_dxf_filter_cannot_silently_return_feature_history_for_a_part",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_camera_metadata_preserves_front_side_and_top_correspondence",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_cli_and_mcp_measure_real_saved_geometry",
+          "reason": "FreeCAD not installed"
+        }
+      ]
+    },
+    {
+      "path": "reviewer-standards/ci-run-41049567713/evidence-ubuntu-latest-py3.12/pytest.xml",
+      "collected": 693,
+      "passed": 549,
+      "skipped": 144,
+      "failures": 0,
+      "errors": 0,
+      "sha256": "64bb8f1be014442e05f6f18c2be1f5e00b3ae6948ce49dfbf68f7a3fff1753c3",
+      "skip_reasons": [
+        {
+          "id": "tests.test_autocad_live::test_generated_drawing_passes_autocad_audit",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_r12_export_passes_autocad_audit",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_dwg_round_trip_keeps_spec_and_revises",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_autocad_audit_accepts_dwg",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_autocad_audit_detects_defects",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_validator_and_autocad_agree_on_rejected_file",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_benchcad2::test_assembly_preview_handles_rigid_json_matrices_without_changing_step[matrix0]",
+          "reason": "could not import 'cadquery': No module named 'cadquery'"
+        },
+        {
+          "id": "tests.test_benchcad2::test_assembly_preview_handles_rigid_json_matrices_without_changing_step[matrix1]",
+          "reason": "could not import 'cadquery': No module named 'cadquery'"
+        },
+        {
+          "id": "tests.test_k_pdf::test_chinese_text_gets_a_cjk_font",
+          "reason": "no CJK font installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_not_running",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_open_and_status",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_live_open_allows_atomic_commits_and_preserves_unsaved_gui_edits",
+          "reason": "Windows file sharing semantics"
+        },
+        {
+          "id": "tests.test_l_live_session::test_user_write_open_drawing_is_not_silently_closed",
+          "reason": "Windows file sharing semantics"
+        },
+        {
+          "id": "tests.test_l_live_session::test_live_sync_reopens_after_each_change_and_keeps_the_view",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_repeated_sync_after_zoom_does_not_mistake_view_changes_for_drawing_edits",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[1]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[2]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[4]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[17]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[25]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[32]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_protects_every_non_view_only_unsaved_change[64]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[VIEWDIR-value0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[VIEWTWIST-0.5]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[PERSPECTIVE-1]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[WORLDUCS-0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_keeps_unsaved_views_that_center_and_size_cannot_restore[TILEMODE-0]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_restores_an_ordinary_paper_space_view[8]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_restores_an_ordinary_paper_space_view[16]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_reload_restores_an_ordinary_paper_space_view[24]",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_commits_the_users_edits",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_needs_write_access_and_an_open_drawing",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_zoom_and_gated_commands",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_refuses_to_revert_newer_agent_changes",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_of_a_drawing_this_runtime_did_not_open",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_pull_keeps_edits_that_are_not_entities",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_failed_pull_keeps_autocads_copy",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_dry_runs_do_not_touch_autocad",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_sync_survives_unexpected_com_errors",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_drawing_the_user_opened_before_an_agent_change",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_unexpected_failure_in_pull_still_reports_autocads_copy",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_l_live_session::test_failing_reopen_does_not_fail_a_committed_pull",
+          "reason": "Windows pywin32 COM bindings not installed"
+        },
+        {
+          "id": "tests.test_n_parts::test_build_a_parametric_plate",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_parameter_change_regenerates_and_selectors_follow",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_modify_and_delete_features",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_failed_batch_leaves_the_part_untouched",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_selector_errors_are_structured",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_inspect_previews_a_selector",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_revolved_shaft_with_groove_and_chamfer",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_rollback_diff_export",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_validator_enforces_the_cadbench_part_contract",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_strict_and_dry_run",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_primitives_mirror_and_shell",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_pocket_polar_pattern_loft_sweep_helix",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_create_in_one_call_and_batch",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_step_export_reads_back_as_the_part",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_export_refuses_a_part_that_is_not_one_solid",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_requirement_fields_are_checked",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_inch_part_reports_parameters_in_inches",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_create_is_part_of_the_batch",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_png_preview",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_mcp_returns_png_inline",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes0-H-4188.790204786391]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes1-H-4188.790204786391]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes2-V-9123.59240533107]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[179.9]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[180]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[180.01]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[270]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_concave_bulge_profile",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_slot[end0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_slot[end1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_aliased_ops_run_and_are_reported",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[architecture]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[mechanical]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[pid]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[tolerance]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_o_viewer::test_part_mesh_png_and_diff",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_o_viewer::test_store_waits_out_a_reader",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_o_viewer::test_mesh_skips_degenerate_edges[extra0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_o_viewer::test_mesh_skips_degenerate_edges[extra1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_committed_copy_still_commits_and_records",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_drawing_changes_nothing_and_is_retryable",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_head_before_the_replace_changes_nothing",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_head_after_the_replace_reports_applied_and_recover_records_it",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_next_commit_records_an_unrecorded_change_first",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_recover_clears_a_marker_whose_commit_never_happened",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_busy_head_while_journaling_keeps_the_commit_and_seq",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_rollback_with_a_busy_drawing_changes_nothing_and_is_retryable",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_rollback_with_a_busy_committed_copy_succeeds_with_a_warning",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_rollback_with_head_busy_after_the_replace_is_settled_by_recover",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_b1_head_busy_after_the_checkpoint_keeps_record_and_file_together[commit]",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_b1_head_busy_after_the_checkpoint_keeps_record_and_file_together[rollback]",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_b2_a_busy_settle_leaves_the_earlier_marker_for_the_retry",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_n1_recover_with_head_busy_is_retryable",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_p_busy_files::test_n2_the_recover_record_carries_the_operations",
+          "reason": "POSIX rename never fails on an open target"
+        },
+        {
+          "id": "tests.test_q_viewer_progress::test_a_3d_batch_reports_each_operation",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_q_viewer_progress::test_part_export_and_thumbnail",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cadquery_script_builds_a_part_that_ops_build_on",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nr = cq.Workplane().box(1, 1, 1)\\nresult = r.no_such_method()-SCRIPT_FAILED-AttributeError]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nx = cq.Workplane().box(1, 1, 1)-NO_RESULT-result]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nresult = cq.Workplane().rect(10, 5)-NOT_A_SOLID-no solid]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[code3-NOT_SINGLE_SOLID-2 separate solids]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cadquery_script_timeout",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_part_script",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_script_cannot_reach_the_part",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_swept_parts_report_their_true_size",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cross_drilled_pin_exports_to_step",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_a_reported_face_box_selects_that_face",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_validation_flags_geometry_outside_the_body",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_or_unsaved_part_scripts_change_nothing",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_preview_compared_with_a_reference",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_script_timeout_leaves_no_folder",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_real_native_edit_stages_preserve_base_and_are_immutable",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_t_image_inspection::test_native_pocket_and_pad_honor_opposite_face_levels",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_final_plane_levels_and_coplanar_boss_family_are_measured_read_only[XY-z-bottom]",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_final_plane_levels_and_coplanar_boss_family_are_measured_read_only[YZ-x-left]",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_local_validation_catches_wrong_stack_despite_correct_bbox_and_parameter",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_invalid_or_ambiguous_measurements_fail_explicitly",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_dxf_filter_cannot_silently_return_feature_history_for_a_part",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_camera_metadata_preserves_front_side_and_top_correspondence",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_cli_and_mcp_measure_real_saved_geometry",
+          "reason": "FreeCAD not installed"
+        }
+      ]
+    },
+    {
+      "path": "reviewer-standards/ci-run-41049567713/evidence-windows-latest-py3.11/pytest.xml",
+      "collected": 693,
+      "passed": 600,
+      "skipped": 93,
+      "failures": 0,
+      "errors": 0,
+      "sha256": "27ea15bbf49ad111b0d96dcc36abd1ae8b85d18d9c097f3f918d2428a5fe99c0",
+      "skip_reasons": [
+        {
+          "id": "tests.test_autocad_live::test_generated_drawing_passes_autocad_audit",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_r12_export_passes_autocad_audit",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_dwg_round_trip_keeps_spec_and_revises",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_autocad_audit_accepts_dwg",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_autocad_audit_detects_defects",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_autocad_live::test_validator_and_autocad_agree_on_rejected_file",
+          "reason": "AutoCAD (accoreconsole.exe) not installed"
+        },
+        {
+          "id": "tests.test_benchcad2::test_assembly_preview_handles_rigid_json_matrices_without_changing_step[matrix0]",
+          "reason": "could not import 'cadquery': No module named 'cadquery'"
+        },
+        {
+          "id": "tests.test_benchcad2::test_assembly_preview_handles_rigid_json_matrices_without_changing_step[matrix1]",
+          "reason": "could not import 'cadquery': No module named 'cadquery'"
+        },
+        {
+          "id": "tests.test_n_parts::test_build_a_parametric_plate",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_parameter_change_regenerates_and_selectors_follow",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_modify_and_delete_features",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_failed_batch_leaves_the_part_untouched",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_selector_errors_are_structured",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_inspect_previews_a_selector",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_revolved_shaft_with_groove_and_chamfer",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_rollback_diff_export",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_validator_enforces_the_cadbench_part_contract",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_strict_and_dry_run",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_primitives_mirror_and_shell",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_pocket_polar_pattern_loft_sweep_helix",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_create_in_one_call_and_batch",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_step_export_reads_back_as_the_part",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_export_refuses_a_part_that_is_not_one_solid",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_requirement_fields_are_checked",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_inch_part_reports_parameters_in_inches",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_create_is_part_of_the_batch",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_png_preview",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_preview_and_edge_selection_skip_degenerate_edges[extra2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_mcp_returns_png_inline",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes0-H-4188.790204786391]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes1-H-4188.790204786391]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_half_circle_profiles[shapes2-V-9123.59240533107]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[179.9]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[180]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[180.01]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_arcs_around_half_a_turn[270]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[0-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[45-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210--0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-0.5]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_bulge_arcs_any_sign_and_size[210-2]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_concave_bulge_profile",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_slot[end0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_slot[end1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_n_parts::test_aliased_ops_run_and_are_reported",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[architecture]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[mechanical]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[pid]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_native_delivery::test_domain_and_tolerance_dwg_readback[tolerance]",
+          "reason": "AutoCAD accoreconsole not installed"
+        },
+        {
+          "id": "tests.test_o_viewer::test_part_mesh_png_and_diff",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_o_viewer::test_mesh_skips_degenerate_edges[extra0]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_o_viewer::test_mesh_skips_degenerate_edges[extra1]",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_q_viewer_progress::test_a_3d_batch_reports_each_operation",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_q_viewer_progress::test_part_export_and_thumbnail",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cadquery_script_builds_a_part_that_ops_build_on",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nr = cq.Workplane().box(1, 1, 1)\\nresult = r.no_such_method()-SCRIPT_FAILED-AttributeError]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nx = cq.Workplane().box(1, 1, 1)-NO_RESULT-result]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[import cadquery as cq\\nresult = cq.Workplane().rect(10, 5)-NOT_A_SOLID-no solid]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_cadquery_scripts_change_nothing[code3-NOT_SINGLE_SOLID-2 separate solids]",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cadquery_script_timeout",
+          "reason": "CadQuery not installed (pip install agentcad-runtime[cadquery])"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_part_script",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_script_cannot_reach_the_part",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_swept_parts_report_their_true_size",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_cross_drilled_pin_exports_to_step",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_a_reported_face_box_selects_that_face",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_validation_flags_geometry_outside_the_body",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_failed_or_unsaved_part_scripts_change_nothing",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_preview_compared_with_a_reference",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_r_part_scripts::test_freecad_script_timeout_leaves_no_folder",
+          "reason": "FreeCAD not installed (set AGENTCAD_FREECAD)"
+        },
+        {
+          "id": "tests.test_s_cadbench_pilot::test_real_native_edit_stages_preserve_base_and_are_immutable",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_t_image_inspection::test_native_pocket_and_pad_honor_opposite_face_levels",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_final_plane_levels_and_coplanar_boss_family_are_measured_read_only[XY-z-bottom]",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_final_plane_levels_and_coplanar_boss_family_are_measured_read_only[YZ-x-left]",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_local_validation_catches_wrong_stack_despite_correct_bbox_and_parameter",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_invalid_or_ambiguous_measurements_fail_explicitly",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_dxf_filter_cannot_silently_return_feature_history_for_a_part",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_camera_metadata_preserves_front_side_and_top_correspondence",
+          "reason": "FreeCAD not installed"
+        },
+        {
+          "id": "tests.test_v_part_measurements::test_cli_and_mcp_measure_real_saved_geometry",
+          "reason": "FreeCAD not installed"
+        }
+      ]
+    }
+  ],
+  "local_native_environment": "windows-native-b4c0466.environment.json",
+  "source_binding": "67 source files match pinned product and clean local v8/showcase evidence; cross-platform Git source comparisons normalize CRLF/LF only. Raw artifacts are always hashed without normalization.",
+  "limits": "CI lanes are portable/headless. Local native lane enables installed AutoCAD 2027 and FreeCAD 1.1.4. Eight local CadQuery-dependent cases skipped; skips are not passes."
+}

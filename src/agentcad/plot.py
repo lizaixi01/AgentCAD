@@ -251,6 +251,9 @@ def plot_pdf(doc, out: Path, layouts: list[str], *, paper: str | None = None, or
     pages, report = [], []
     for name in layouts:
         lay = doc.modelspace() if is_model(name) else doc.layouts.get(name)
+        ctb = "" if is_model(name) else lay.dxf_layout.dxf.get("current_style_sheet", "")
+        cfg = Configuration(background_policy=BackgroundPolicy.WHITE,
+                            color_policy=ColorPolicy.BLACK if monochrome or ctb == "monochrome.ctb" else ColorPolicy.COLOR)
         rec = recorder.Recorder()
         Frontend(RenderContext(doc), rec, config=cfg).draw_layout(lay, finalize=True)
         player = rec.player()
