@@ -28,6 +28,10 @@ Windows 上是 `.venv\Scripts\agentcad.exe`。启动后打印一行 JSON（`{"ok
 Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。三维零件要用 FreeCAD 出网格，启动查看器的环境里同样要设
 `AGENTCAD_FREECAD`（见 [part-3d.md](part-3d.md)）。
 
+`--open` 是给桌面上的 AgentCAD 图标用的：如果这个根目录已经有查看器在运行，就直接在浏览器里打开它；否则从 8770 起找
+一个空闲端口启动查看器，再打开。安装向导（`agentcad setup --gui`）和 `agentcad setup --shortcut` 会在桌面放上这个
+图标。文件夹里还没有图纸时，页面会给出几句可以复制给助手的话。
+
 仓库带的 `.claude/launch.json` 里有 `agentcad-viewer` 配置，在 Claude 桌面应用的内置浏览器里启动查看器（根目录
 `playground`，端口 8770）。它用的是 Windows venv 路径 `.venv/Scripts/python.exe`，macOS/Linux 改成 `.venv/bin/python`。
 
