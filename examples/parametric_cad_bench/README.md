@@ -34,8 +34,9 @@ merged workflow with the same model, effort and 900-second budget. Seed 42 fixes
 the sample before viewing: wire lanyard **11.64**, LCD module **58.65**, valve
 housing **99.83**, and stepped enclosure **15.66**, mean **46.45**. All four use
 dimension endpoints before modeling and submit valid editable parts within time.
-The spread shows uneven transfer; without an older-version run on the same four
-tasks, it does not measure a causal improvement. Every attempt, low score,
+The outcomes are uneven; without an older-version run on the same four tasks, they
+cannot show that the dimension-reading change carried over, or measure a causal
+improvement. Every attempt, low score,
 native file, preview and scorer record is preserved.
 
 V3 has 30 text-to-CAD creation tasks, 30 create-and-edit tasks and 40 tasks that

@@ -163,3 +163,12 @@ The [result index](../examples/source_capability/results/2026-10-30/README.md)
 links the assessment, raw reports, five inspected previews and a permanent evidence
 archive. Its manifest hashes every archived file without newline normalization.
 CI artifacts are retained there independently of GitHub's expiration policy.
+
+The figure in [benchmarks.md](benchmarks.md#source-capability-comparison) is drawn from the final assessment and the pinned upstream rows
+in [data.json](assets/mcp-benchmark/data.json). It shows the rubric-v1 pair and
+U-C4N's published board as separate panels and never ranks them together:
+
+```
+python docs/assets/source-capability/make_chart.py
+python docs/assets/source-capability/make_chart.py --check
+```

@@ -928,12 +928,18 @@ class Runtime:
         """Crash recovery. A commit interrupted after its pending marker (e.g. FILE_BUSY with partial_changes) is
         settled first: recorded if its content is in the file, dropped if not. Otherwise, if the file is unreadable
         or an older marker left it inconsistent, restore the most recent checkpoint whose content is a valid DXF (or
-        FreeCAD file, for a part)."""
+        FreeCAD file, for a part). An older AgentCAD's 'lock' marker is removed first, once the process it names
+        has exited."""
         p, store = self._drawing(path, must_exist=False, part_ok=True)
+        legacy = {}
+        if (store.dir / "lock").exists():
+            from .locking import remove_legacy_marker
+            self.policy.check_write()
+            legacy = {"removed_legacy_lock": remove_legacy_marker(store.dir, self._rel(store.dir / "lock"))}
         st = store.status()
         needed = (not st["exists"]) or (not st["readable"]) or bool(st["pending_transaction"])
         if not needed:
-            return {"drawing": self._rel(p), "recovered": False, "status": st}
+            return {"drawing": self._rel(p), "recovered": bool(legacy), "status": st, **legacy}
         self.policy.check_write()
         if st["exists"] and st["readable"] and st["pending_transaction"]:
             with self._lock(store):  # an interrupted commit in the file is recorded, an unstarted one dropped
@@ -944,7 +950,7 @@ class Runtime:
             if settled:
                 done, seq = settled
                 return {"drawing": self._rel(p), "recovered": True, "pending_commit": done["outcome"],
-                        "label": done["pending"]["label"], "sha256": done["sha256"], "journal_seq": seq}
+                        "label": done["pending"]["label"], "sha256": done["sha256"], "journal_seq": seq, **legacy}
         from .store import sha256_file
         candidates = []
         if store.committed_path.is_file() and sha256_file(store.committed_path) == st["committed_sha256"]:
@@ -964,7 +970,7 @@ class Runtime:
                 info = store.restore(cp["id"], label="recover")
                 seq = store.journal({"tool": "recover", "ok": True, "from_status": st, **info})
             return {"drawing": self._rel(p), "recovered": True, "restored_checkpoint": cp["id"], "previous_status": st,
-                    "journal_seq": seq}
+                    "journal_seq": seq, **legacy}
         raise AgentCADError("NO_VALID_CHECKPOINT", "No readable checkpoint to recover from", category="file",
                             details={"status": st})
 
