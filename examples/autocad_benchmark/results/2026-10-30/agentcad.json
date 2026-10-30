@@ -1,0 +1,1326 @@
+{
+  "schema_version": "2.0",
+  "matrix": "v8",
+  "adapter": "agentcad",
+  "adapter_metadata": {
+    "backend": "ezdxf",
+    "interface": "MCP stdio (official SDK)",
+    "python": "D:\\Projects\\AgentCAD-wt\\autocad-benchmark\\.venv\\Scripts\\python.exe",
+    "product_sha": "945e6c649de6db9d4cafd8069f2f8d1a5b845d44",
+    "product_dirty": false,
+    "source_sha256": {
+      "src/agentcad/__init__.py": "0cf3c6b11a60837047df4ef8ff581ebbe32ea447ac6f1e8a59efed1ac1c1efd0",
+      "src/agentcad/_script_runner.py": "36256bc268d029ef52ecdbc308a1de68f5c119364f6c86ff05816e9867a41616",
+      "src/agentcad/backends/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/agentcad/backends/acad_live.py": "3e5ac5487eaa6217de61af7afdc15005f995dd717e160c54d2430a6c464bfcd3",
+      "src/agentcad/backends/autocad.py": "1d8d3815f39caca7da75249b6a8164003eb01db587a9d2996100c115a0b7cbf2",
+      "src/agentcad/backends/freecad.py": "8eaa6ec237fc87f75730417d569111d19937ff7eb97cac2170b17616c4ae08c3",
+      "src/agentcad/cli.py": "d936e7fc5d61bf2e679626937da97c3070f7477aeca72d8f573d69a041516f44",
+      "src/agentcad/constraints.py": "b5789b985bf4a742ebe52337cdb919961d26bd17da0b958f619dda95e4b8335c",
+      "src/agentcad/docspec.py": "17fd570a4167c5dfa6eb303dab7fbb132cc9dacec9f298ac145b6cdea099bced",
+      "src/agentcad/engine.py": "00f50d0d57ca11441012e5ff4f7059af7a55c887b16c51310ffd29334ea6299e",
+      "src/agentcad/errors.py": "3cb481be20980080b601410cb55ec4d9913dedee4d8de3d0f83c779b354f471a",
+      "src/agentcad/geom.py": "c189948de9fe0bbff71e7871c42dec70b04d3d4bb4fe09a970f8a7ba2335ca9b",
+      "src/agentcad/http_api.py": "8df40f7a7e1970ad9a3c757009aaaa482cf3789f2612e14af54945e94785a9e5",
+      "src/agentcad/install.py": "02330db0e399479e0bf242c5ec4cf9983eaf3c90a29c654597d3c6b9c1259ae0",
+      "src/agentcad/mcp_config.py": "118c17938f14a3492210469af103ff97ba83b3c29c01e34e57578c27691ac0ce",
+      "src/agentcad/mcp_server.py": "c67ae62353915ad3a4ee544bb9150cae2acd8af30afe72d4791b188f372a0289",
+      "src/agentcad/metadata.py": "57d76e666fd8b308430080443e4261d512c09c836ab3c287700786f8c8d04807",
+      "src/agentcad/model.py": "c3846d4cb2691adc43b99fdb763d3a27fd4e731a14824e0f41e82891739554aa",
+      "src/agentcad/ops/__init__.py": "4fb03a63411b3d4abdfcb8114eb4957a683b9c764db092a55d5b6a0d7dc7fa30",
+      "src/agentcad/ops/annotate.py": "3c1b61bf3d5d4bb9975625d97a1afb6cd0a316c5e22263a9399535d8f0213278",
+      "src/agentcad/ops/draw.py": "59f73e5d07a27a7c03e4608da48150019f773ca1cc27c1680cc0296e7ada66f3",
+      "src/agentcad/ops/edit.py": "1740a55dd9a3c99322de0beda0c402a2f2aedcecd760e0422153325318022d4b",
+      "src/agentcad/ops/library.py": "41ae6802d9bae49cf5d2d986545141ff014638c4f24d2c9ecf9b4979182fc88f",
+      "src/agentcad/ops/registry.py": "eff0b13154094bb6cc6231795a3806863f2505bb0400c781b6a2a7c04a0a83df",
+      "src/agentcad/ops/sheet.py": "3db712789ca074e17d6b75a2a23c94c287127abaed6ea8c80ba25e91e6e5b070",
+      "src/agentcad/ops/structure.py": "4bbad78ccee84d0c56b025c2cd079c3511efbcec07a95e827dbd5604ab994c2a",
+      "src/agentcad/part/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/agentcad/part/_cq_runner.py": "6121069dc85a7c4e5c59c4591361fc218eb09f6a1bc4cf0ef0946873199b6434",
+      "src/agentcad/part/_fc_runner.py": "edf5c1ac4a9430f2f89cc560cbd3828411d1c3415f5873f86fe8d4733f576ef6",
+      "src/agentcad/part/compare.py": "61647e2c3d1d8a2c6d20aff9c346243952baf906b394fbbd2595518bc30d2b4d",
+      "src/agentcad/part/ops.py": "aa1b03d81fe6e3718abc84753a0ba4b689a57573c4a4869cd2814a12cc2faabc",
+      "src/agentcad/part/service.py": "8334e08962b594f40d1fe6fbde4615096f3147a13422e8101923083d2733f48a",
+      "src/agentcad/plot.py": "3b6eb8ae36ff8a0bfbba37d42c0665c24f61384c087c054b955a11b60bdc0994",
+      "src/agentcad/policy.py": "cb5a17796ae0392b36e2f151b0540a233fc93975db3e2601681a9444d901b774",
+      "src/agentcad/progress.py": "bfd6d55a6ea26afac2c802f2ab618ae2064a01cc0235c0a89d73208936b6c39b",
+      "src/agentcad/scripting.py": "6bc1b8ac866b5e5b9ebfe962e0689e5f41c860fca19e6a90795dd10b21a759df",
+      "src/agentcad/service.py": "8e6009e185332488406b8f589afa4d32ed43e413357999592318160089feefda",
+      "src/agentcad/spec.py": "67530f986f3efb4a4e65c8046af103364e1b484d878d82b257f614ecbe3f33e7",
+      "src/agentcad/stdlib.py": "fa9f12e7233bf911c08c064b1ee86c6774f0e2caaeca2ae030ffeb91f1366367",
+      "src/agentcad/store.py": "7484126cc79fad700ce99dd2658c667c0316365ad8456e3b5321beb205a11aaa",
+      "src/agentcad/units.py": "625072a448cf679f50237837120ea031ff1884ffa1deef1c167dc900b7538bf0",
+      "src/agentcad/validate/__init__.py": "12e1baa69967172b240cbb41dd6dd44974fc7be06e19dc76c294d924a69fe927",
+      "src/agentcad/validate/checks.py": "86b1b4ae3b269a3802881c84066e63727d095ddaad4c7564d4866678049bc614",
+      "src/agentcad/validate/features.py": "cef4f2d99d738294b8944e3d7343abb1d62a923b7708b950720c8814ccf1cebe",
+      "src/agentcad/validate/requirements.py": "cadf1b07f71bb1813cb469b83c8d1b64ce3edf48090f67e9f58dc59d840b4149",
+      "src/agentcad/viewer.py": "ba19fbce9110b2731f26ff5a498cfb595e9ada37151cc55b7e38085e44fc0292"
+    },
+    "scripts_enabled": false,
+    "live_autocad": false,
+    "server_environment": {
+      "module": "D:\\Projects\\AgentCAD-wt\\autocad-benchmark\\src\\agentcad\\__init__.py",
+      "python": "3.11.16 (main, Sep  1 2026, 14:15:24) [MSC v.1944 64 bit (AMD64)]",
+      "dependencies": {
+        "mcp": "1.30.0",
+        "ezdxf": "1.4.5",
+        "pypdf": "6.21.4"
+      }
+    },
+    "partial_score_policy": "0; only every original gate earns 100",
+    "server_lifecycle": "fresh MCP process per task; extra fresh reader where required",
+    "mcp_calls": 77
+  },
+  "git_sha": "945e6c649de6db9d4cafd8069f2f8d1a5b845d44",
+  "generated_at": "2026-10-30T05:49:52.753287+00:00",
+  "environment": {
+    "python": "3.11.16",
+    "implementation": "CPython",
+    "platform": "Windows-10-10.0.26200-SP0",
+    "machine": "AMD64"
+  },
+  "timeout_seconds": 180,
+  "manifest": {
+    "server_sha": "945e6c649de6db9d4cafd8069f2f8d1a5b845d44",
+    "dirty": false,
+    "source_sha256": {
+      "src/agentcad/__init__.py": "0cf3c6b11a60837047df4ef8ff581ebbe32ea447ac6f1e8a59efed1ac1c1efd0",
+      "src/agentcad/_script_runner.py": "36256bc268d029ef52ecdbc308a1de68f5c119364f6c86ff05816e9867a41616",
+      "src/agentcad/backends/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/agentcad/backends/acad_live.py": "3e5ac5487eaa6217de61af7afdc15005f995dd717e160c54d2430a6c464bfcd3",
+      "src/agentcad/backends/autocad.py": "1d8d3815f39caca7da75249b6a8164003eb01db587a9d2996100c115a0b7cbf2",
+      "src/agentcad/backends/freecad.py": "8eaa6ec237fc87f75730417d569111d19937ff7eb97cac2170b17616c4ae08c3",
+      "src/agentcad/cli.py": "d936e7fc5d61bf2e679626937da97c3070f7477aeca72d8f573d69a041516f44",
+      "src/agentcad/constraints.py": "b5789b985bf4a742ebe52337cdb919961d26bd17da0b958f619dda95e4b8335c",
+      "src/agentcad/docspec.py": "17fd570a4167c5dfa6eb303dab7fbb132cc9dacec9f298ac145b6cdea099bced",
+      "src/agentcad/engine.py": "00f50d0d57ca11441012e5ff4f7059af7a55c887b16c51310ffd29334ea6299e",
+      "src/agentcad/errors.py": "3cb481be20980080b601410cb55ec4d9913dedee4d8de3d0f83c779b354f471a",
+      "src/agentcad/geom.py": "c189948de9fe0bbff71e7871c42dec70b04d3d4bb4fe09a970f8a7ba2335ca9b",
+      "src/agentcad/http_api.py": "8df40f7a7e1970ad9a3c757009aaaa482cf3789f2612e14af54945e94785a9e5",
+      "src/agentcad/install.py": "02330db0e399479e0bf242c5ec4cf9983eaf3c90a29c654597d3c6b9c1259ae0",
+      "src/agentcad/mcp_config.py": "118c17938f14a3492210469af103ff97ba83b3c29c01e34e57578c27691ac0ce",
+      "src/agentcad/mcp_server.py": "c67ae62353915ad3a4ee544bb9150cae2acd8af30afe72d4791b188f372a0289",
+      "src/agentcad/metadata.py": "57d76e666fd8b308430080443e4261d512c09c836ab3c287700786f8c8d04807",
+      "src/agentcad/model.py": "c3846d4cb2691adc43b99fdb763d3a27fd4e731a14824e0f41e82891739554aa",
+      "src/agentcad/ops/__init__.py": "4fb03a63411b3d4abdfcb8114eb4957a683b9c764db092a55d5b6a0d7dc7fa30",
+      "src/agentcad/ops/annotate.py": "3c1b61bf3d5d4bb9975625d97a1afb6cd0a316c5e22263a9399535d8f0213278",
+      "src/agentcad/ops/draw.py": "59f73e5d07a27a7c03e4608da48150019f773ca1cc27c1680cc0296e7ada66f3",
+      "src/agentcad/ops/edit.py": "1740a55dd9a3c99322de0beda0c402a2f2aedcecd760e0422153325318022d4b",
+      "src/agentcad/ops/library.py": "41ae6802d9bae49cf5d2d986545141ff014638c4f24d2c9ecf9b4979182fc88f",
+      "src/agentcad/ops/registry.py": "eff0b13154094bb6cc6231795a3806863f2505bb0400c781b6a2a7c04a0a83df",
+      "src/agentcad/ops/sheet.py": "3db712789ca074e17d6b75a2a23c94c287127abaed6ea8c80ba25e91e6e5b070",
+      "src/agentcad/ops/structure.py": "4bbad78ccee84d0c56b025c2cd079c3511efbcec07a95e827dbd5604ab994c2a",
+      "src/agentcad/part/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "src/agentcad/part/_cq_runner.py": "6121069dc85a7c4e5c59c4591361fc218eb09f6a1bc4cf0ef0946873199b6434",
+      "src/agentcad/part/_fc_runner.py": "edf5c1ac4a9430f2f89cc560cbd3828411d1c3415f5873f86fe8d4733f576ef6",
+      "src/agentcad/part/compare.py": "61647e2c3d1d8a2c6d20aff9c346243952baf906b394fbbd2595518bc30d2b4d",
+      "src/agentcad/part/ops.py": "aa1b03d81fe6e3718abc84753a0ba4b689a57573c4a4869cd2814a12cc2faabc",
+      "src/agentcad/part/service.py": "8334e08962b594f40d1fe6fbde4615096f3147a13422e8101923083d2733f48a",
+      "src/agentcad/plot.py": "3b6eb8ae36ff8a0bfbba37d42c0665c24f61384c087c054b955a11b60bdc0994",
+      "src/agentcad/policy.py": "cb5a17796ae0392b36e2f151b0540a233fc93975db3e2601681a9444d901b774",
+      "src/agentcad/progress.py": "bfd6d55a6ea26afac2c802f2ab618ae2064a01cc0235c0a89d73208936b6c39b",
+      "src/agentcad/scripting.py": "6bc1b8ac866b5e5b9ebfe962e0689e5f41c860fca19e6a90795dd10b21a759df",
+      "src/agentcad/service.py": "8e6009e185332488406b8f589afa4d32ed43e413357999592318160089feefda",
+      "src/agentcad/spec.py": "67530f986f3efb4a4e65c8046af103364e1b484d878d82b257f614ecbe3f33e7",
+      "src/agentcad/stdlib.py": "fa9f12e7233bf911c08c064b1ee86c6774f0e2caaeca2ae030ffeb91f1366367",
+      "src/agentcad/store.py": "7484126cc79fad700ce99dd2658c667c0316365ad8456e3b5321beb205a11aaa",
+      "src/agentcad/units.py": "625072a448cf679f50237837120ea031ff1884ffa1deef1c167dc900b7538bf0",
+      "src/agentcad/validate/__init__.py": "12e1baa69967172b240cbb41dd6dd44974fc7be06e19dc76c294d924a69fe927",
+      "src/agentcad/validate/checks.py": "86b1b4ae3b269a3802881c84066e63727d095ddaad4c7564d4866678049bc614",
+      "src/agentcad/validate/features.py": "cef4f2d99d738294b8944e3d7343abb1d62a923b7708b950720c8814ccf1cebe",
+      "src/agentcad/validate/requirements.py": "cadf1b07f71bb1813cb469b83c8d1b64ce3edf48090f67e9f58dc59d840b4149",
+      "src/agentcad/viewer.py": "ba19fbce9110b2731f26ff5a498cfb595e9ada37151cc55b7e38085e44fc0292"
+    },
+    "evaluator": {
+      "server_sha": "58a05ddfc34a9832c626e82cd88ecdce8e16a62a",
+      "dirty": false,
+      "evaluator_version": "v8.1",
+      "fixtures": [
+        {
+          "path": "benchmarks/adapters/autocad_mcp_pro.py",
+          "sha256": "5c40688cd9de97a6a4e3ee17b64c347b2de12931191bdc196b1f908db4a1815e",
+          "size_bytes": 86335
+        },
+        {
+          "path": "engineering/arch/spec.py",
+          "sha256": "c273533e4df3a28ff0e08a0886a00aa2c69290d5a03cf0044438c37d23d78248",
+          "size_bytes": 14859
+        },
+        {
+          "path": "engineering/pid/spec.py",
+          "sha256": "efdb92d0cd4a8c5f0b7577c40fe7948c4160c431d31e9b6c48fbbbbd06e61850",
+          "size_bytes": 28426
+        },
+        {
+          "path": "tests/fixtures/plant_pair.py",
+          "sha256": "c683b62b24332670e8323e54519d17cd48ae8ae921d36b744a2e302ebce04248",
+          "size_bytes": 25419
+        }
+      ],
+      "dependencies": {
+        "ezdxf": "1.4.4",
+        "fastmcp": "3.4.5",
+        "mcp": "1.29.0",
+        "numpy": "2.4.6",
+        "openpyxl": "3.1.5",
+        "matplotlib": "3.11.1",
+        "pywin32": "312"
+      }
+    },
+    "adapter_sha256": "89a111db0016ab18102ca17a3e4f5ae763e2b0a2d1ad26e5b7071b0d26dea688",
+    "dependencies": {
+      "mcp": "1.29.0",
+      "ezdxf": "1.4.4",
+      "pypdf": "6.21.4"
+    }
+  },
+  "summary": {
+    "attempted": 30,
+    "passed": 9,
+    "supported": 20,
+    "unsupported": 10,
+    "not_run": 1,
+    "environment_blocked": 0,
+    "coverage_percent": 66.67,
+    "score": 30.0
+  },
+  "results": [
+    {
+      "task_id": "core_geometry",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 2558.13,
+      "artifacts": [
+        {
+          "filename": "core_geometry.dxf",
+          "size_bytes": 37374,
+          "sha256": "8834696c0888d4c84a41ab176093c5f082fcf9260945f272532ec8eafacf5128"
+        }
+      ],
+      "metrics": {
+        "line_length": 5.0
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "modify_query",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 2907.66,
+      "artifacts": [
+        {
+          "filename": "modify_query.dxf",
+          "size_bytes": 37278,
+          "sha256": "c178abf11776e6cf3c4d2566c2e3a3c7b7f5e440c279a2cb0f0d0adbe92fa026"
+        }
+      ],
+      "metrics": {
+        "start": [
+          5.0,
+          2.0
+        ]
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "layers_linetypes",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 4152.08,
+      "artifacts": [
+        {
+          "filename": "layers_linetypes.dxf",
+          "size_bytes": 37345,
+          "sha256": "ba5d349e31d771f346a98fced55fda6161c5eebadf27d9805a39e2e7c6d6d5f4"
+        }
+      ],
+      "metrics": {
+        "center_linetype": "CENTER"
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "dimensions",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 3186.32,
+      "artifacts": [
+        {
+          "filename": "dimensions.dxf",
+          "size_bytes": 38674,
+          "sha256": "55320a8e24272edb3b85328d342e0e66f8e93222858a77aaa5453fb9fbd4cd01"
+        }
+      ],
+      "metrics": {
+        "entity_type": "DIMENSION",
+        "render_block": "*D1"
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "table_mleader",
+      "status": "pass",
+      "score": 100.0,
+      "message": "The pinned reference also accepts composite representations; native TABLE/MLEADER is not claimed.",
+      "duration_ms": 2387.59,
+      "artifacts": [
+        {
+          "filename": "table_mleader.dxf",
+          "size_bytes": 38765,
+          "sha256": "f83a613785eb346b4095b2280cf81d0f0364a033127f421f772fbaf922c50149"
+        }
+      ],
+      "metrics": {
+        "representations": [
+          "composite grid + TEXT",
+          "LEADER + MTEXT"
+        ],
+        "native_table_mleader": false
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "transactions",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 3000.79,
+      "artifacts": [
+        {
+          "filename": "transactions.dxf",
+          "size_bytes": 37078,
+          "sha256": "317914c8695a4b9ac8f8927c6f3191d6049bbc9f3484b9301cdb2f5cfb429121"
+        }
+      ],
+      "metrics": {
+        "entity_count_after_rollback": 0
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "preflight",
+      "status": "unsupported",
+      "score": 0.0,
+      "message": "No native ready/spec_hash requirements preflight contract (drawing from a spec is a different contract).",
+      "duration_ms": 1.06,
+      "artifacts": [],
+      "metrics": {
+        "evidence": "setup tools.json; full operations and library in events.jsonl",
+        "probe": "documented public catalog capability assessment; no CAD execution"
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "quality_refiner",
+      "status": "partial",
+      "score": 0.0,
+      "message": "Duplicate detection exists; no public automatic quality-scoring/refiner loop.",
+      "duration_ms": 2151.75,
+      "artifacts": [
+        {
+          "filename": "quality_refiner.dxf",
+          "size_bytes": 37262,
+          "sha256": "cd4b8119d8e614537a28bc412308bb7a81993e8a1c6d14698bbb608ff86ea59a"
+        }
+      ],
+      "metrics": {
+        "duplicate_findings": [
+          {
+            "code": "DUPLICATE_ENTITY",
+            "severity": "error",
+            "category": "geometry",
+            "message": "LINE 97 duplicates 96",
+            "entities": [
+              "96",
+              "97"
+            ]
+          }
+        ]
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "dxf_roundtrip",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 4465.77,
+      "artifacts": [
+        {
+          "filename": "dxf_roundtrip.dxf",
+          "size_bytes": 37157,
+          "sha256": "0ac2b0e8e10aaa1dc1c5c5d59c686f39b73fa05e9e5dad4d1851f4db6d346085"
+        }
+      ],
+      "metrics": {
+        "entity_count": 1,
+        "fresh_process": true
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "auditable_delivery",
+      "status": "partial",
+      "score": 0.0,
+      "message": "Commit hashes and independent validation exist; no native hashed delivery manifest.",
+      "duration_ms": 2176.36,
+      "artifacts": [
+        {
+          "filename": "auditable_delivery.dxf",
+          "size_bytes": 37154,
+          "sha256": "413335ea9909d76c753bd3398df65d623a5e6c330f6925782e8daa7074a2b594"
+        }
+      ],
+      "metrics": {
+        "committed_sha256": "413335ea9909d76c753bd3398df65d623a5e6c330f6925782e8daa7074a2b594",
+        "export_readable": true
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "tool_discovery",
+      "status": "unsupported",
+      "score": 0.0,
+      "message": "Operation index/name/category lookup exists; no command-name search or ranked top-3 results.",
+      "duration_ms": 1816.15,
+      "artifacts": [],
+      "metrics": {
+        "discovery_parameters": [
+          "category",
+          "detail",
+          "ops"
+        ],
+        "queries": [
+          "FILLET",
+          "BPOLY",
+          "QSELECT",
+          "WBLOCK",
+          "OVERKILL",
+          "CHSPACE"
+        ]
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "token_budget",
+      "status": "fail",
+      "score": 0.0,
+      "message": "Same upstream JSON-schema ratio estimator; no opt-in hidden-tool search mode exists.",
+      "duration_ms": 2029.54,
+      "artifacts": [],
+      "metrics": {
+        "discovery_tokens": 6292,
+        "catalog_chars": 26363,
+        "advertised_tools": 24,
+        "ceiling": 2000,
+        "tokenizer": "ratio/v1 (estimate)",
+        "instructions_included": false
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "hatch_islands",
+      "status": "partial",
+      "score": 0.0,
+      "message": "Both loops persist. No public filled-area measurement or hatch-style=ignore edit, so the 300/400 gate is incomplete.",
+      "duration_ms": 2216.63,
+      "artifacts": [
+        {
+          "filename": "hatch_islands.dxf",
+          "size_bytes": 37787,
+          "sha256": "31faaae686b10f7ae55eb56967c9db68f6da72250fd86bf99f93c4e00cbd022d"
+        }
+      ],
+      "metrics": {
+        "saved_paths": 2,
+        "inspection_fields": [
+          "id",
+          "layer",
+          "loops",
+          "pattern",
+          "pattern_angle",
+          "pattern_scale",
+          "solid",
+          "type"
+        ],
+        "hatch_style": 0
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "selection_filter",
+      "status": "partial",
+      "score": 0.0,
+      "message": "Crossing and property filtering work; fully-contained window and polygon selectors are absent.",
+      "duration_ms": 1920.38,
+      "artifacts": [
+        {
+          "filename": "selection_filter.dxf",
+          "size_bytes": 37432,
+          "sha256": "af48716f4f1661679837595b6575e87224d3d94ad48fc257c2d8158f5d92e23a"
+        }
+      ],
+      "metrics": {
+        "crossing": 2,
+        "by_layer": 1,
+        "expected_window_crossing_bbox_polygon": [
+          1,
+          2,
+          3,
+          1
+        ]
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "measure_from_handle",
+      "status": "partial",
+      "score": 0.0,
+      "message": "Join preserves the curved boundary, but inspection has no analytic area measurement by handle.",
+      "duration_ms": 1957.63,
+      "artifacts": [
+        {
+          "filename": "measure_from_handle.dxf",
+          "size_bytes": 37346,
+          "sha256": "235719f50777a9aad030065a31be0e39e46fb95c1e7932350733befc284a0f61"
+        }
+      ],
+      "metrics": {
+        "boundary": {
+          "id": "9A",
+          "type": "LWPOLYLINE",
+          "layer": "0",
+          "tag": "boundary",
+          "points": [
+            [
+              0.0,
+              10.0
+            ],
+            [
+              0.0,
+              0.0
+            ],
+            [
+              10.0,
+              0.0
+            ],
+            [
+              10.0,
+              10.0,
+              1.0
+            ]
+          ],
+          "closed": true
+        },
+        "expected_area": 139.26990816987242
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "pid_roundtrip",
+      "status": "unsupported",
+      "score": 0.0,
+      "message": "P&ID symbols/lines exist, but no spec-to-graph reader with dangling/confidence checks, line list and instrument index.",
+      "duration_ms": 0.95,
+      "artifacts": [],
+      "metrics": {
+        "evidence": "setup tools.json; full operations and library in events.jsonl",
+        "probe": "documented public catalog capability assessment; no CAD execution"
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "page_setup_truth",
+      "status": "partial",
+      "score": 0.0,
+      "message": "ANSI B output can be created. Native layout operations cannot change an existing page setup to A3 or report a known CTB.",
+      "duration_ms": 2230.72,
+      "artifacts": [
+        {
+          "filename": "page_setup_truth.dxf",
+          "size_bytes": 38598,
+          "sha256": "4de58b8389d5a556ff3a6ea9d3192c498fd6629299573377aa1862a9aca0f570"
+        }
+      ],
+      "metrics": {
+        "ansi_b_mediabox_mm": [
+          432.0010833333333,
+          279.00136111111107
+        ],
+        "change_to_a3": {
+          "ok": false,
+          "tool": "apply_operations",
+          "error": {
+            "code": "LAYOUT_EXISTS",
+            "category": "input",
+            "message": "Layout 'BenchmarkSheet' already exists",
+            "entities": [],
+            "retryable": false,
+            "partial_changes": false,
+            "op_index": 0,
+            "op": "create_layout",
+            "hint": "Use if_exists='skip'"
+          },
+          "metrics": {
+            "duration_ms": 31.87,
+            "input_bytes": 142,
+            "output_bytes": 283
+          }
+        }
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "mech_assembly",
+      "status": "unsupported",
+      "score": 0.0,
+      "message": "Standard parts/title blocks exist, but no mechanical part/view engine, linked BOM/balloon critique and >=90 finalize score.",
+      "duration_ms": 1.41,
+      "artifacts": [],
+      "metrics": {
+        "evidence": "setup tools.json; full operations and library in events.jsonl",
+        "probe": "documented public catalog capability assessment; no CAD execution"
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "arch_roundtrip",
+      "status": "unsupported",
+      "score": 0.0,
+      "message": "No architectural wall/opening/room engine, room-area recognition or door/window/room schedule contract.",
+      "duration_ms": 1.19,
+      "artifacts": [],
+      "metrics": {
+        "evidence": "setup tools.json; full operations and library in events.jsonl",
+        "probe": "documented public catalog capability assessment; no CAD execution"
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "takeoff_roundtrip",
+      "status": "unsupported",
+      "score": 0.0,
+      "message": "No plant-scale inference or pipe/cable takeoff engine (RMST lengths, panels, allowance and service readback).",
+      "duration_ms": 1.48,
+      "artifacts": [],
+      "metrics": {
+        "evidence": "setup tools.json; full operations and library in events.jsonl",
+        "probe": "documented public catalog capability assessment; no CAD execution"
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "understand_foreign",
+      "status": "unsupported",
+      "score": 0.0,
+      "message": "Summary/validation exist, but no inferred-units versus INSUNITS warning, distant-cluster or P&ID service classifier.",
+      "duration_ms": 1.3,
+      "artifacts": [],
+      "metrics": {
+        "evidence": "setup tools.json; full operations and library in events.jsonl",
+        "probe": "documented public catalog capability assessment; no CAD execution"
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "requirements_roundtrip",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 4002.76,
+      "artifacts": [
+        {
+          "filename": "requirements_roundtrip.dxf",
+          "size_bytes": 46461,
+          "sha256": "02c2032922bcac6c8770b3257fdc31e81b2f92f9b754b3f08c127c97dc947b73"
+        }
+      ],
+      "metrics": {
+        "document": {
+          "failed": [],
+          "constraints": [
+            {
+              "id": "R1",
+              "type": "diameter",
+              "satisfied": true,
+              "expected": 20.0,
+              "actual": 20.0,
+              "error": 0.0,
+              "tolerance": 1e-06,
+              "entities": [
+                "95"
+              ]
+            },
+            {
+              "id": "R2",
+              "type": "distance",
+              "satisfied": true,
+              "expected": 90.0,
+              "actual": 90.0,
+              "error": 0.0,
+              "tolerance": 1e-06,
+              "entities": [
+                "96",
+                "97"
+              ]
+            },
+            {
+              "id": "R3",
+              "type": "distance",
+              "satisfied": true,
+              "expected": 51.478150705,
+              "actual": 51.478150705,
+              "error": 0.0,
+              "tolerance": 1e-06,
+              "entities": [
+                "96",
+                "95"
+              ]
+            }
+          ],
+          "count": [
+            {
+              "id": "R4",
+              "type": "hole_count",
+              "status": "pass",
+              "expected": 4,
+              "actual": 4,
+              "deviation": 0.0,
+              "tolerance": 0,
+              "entities": [
+                "96",
+                "97",
+                "98",
+                "99"
+              ],
+              "message": ""
+            }
+          ]
+        },
+        "artifact": {
+          "failed": [
+            "R3"
+          ],
+          "constraints": [
+            {
+              "id": "R1",
+              "type": "diameter",
+              "satisfied": true,
+              "expected": 20.0,
+              "actual": 20.0,
+              "error": 0.0,
+              "tolerance": 1e-06,
+              "entities": [
+                "95"
+              ]
+            },
+            {
+              "id": "R2",
+              "type": "distance",
+              "satisfied": true,
+              "expected": 90.0,
+              "actual": 90.0,
+              "error": 0.0,
+              "tolerance": 1e-06,
+              "entities": [
+                "96",
+                "97"
+              ]
+            },
+            {
+              "id": "R3",
+              "type": "distance",
+              "satisfied": false,
+              "expected": 51.478150705,
+              "actual": 54.120236511,
+              "error": 2.642085806,
+              "tolerance": 1e-06,
+              "entities": [
+                "96",
+                "95"
+              ]
+            }
+          ],
+          "count": [
+            {
+              "id": "R4",
+              "type": "hole_count",
+              "status": "pass",
+              "expected": 4,
+              "actual": 4,
+              "deviation": 0.0,
+              "tolerance": 0,
+              "entities": [
+                "96",
+                "97",
+                "98",
+                "99"
+              ],
+              "message": ""
+            }
+          ]
+        },
+        "fresh_process": {
+          "failed": [
+            "R3"
+          ],
+          "constraints": [
+            {
+              "id": "R1",
+              "type": "diameter",
+              "satisfied": true,
+              "expected": 20.0,
+              "actual": 20.0,
+              "error": 0.0,
+              "tolerance": 1e-06,
+              "entities": [
+                "95"
+              ]
+            },
+            {
+              "id": "R2",
+              "type": "distance",
+              "satisfied": true,
+              "expected": 90.0,
+              "actual": 90.0,
+              "error": 0.0,
+              "tolerance": 1e-06,
+              "entities": [
+                "96",
+                "97"
+              ]
+            },
+            {
+              "id": "R3",
+              "type": "distance",
+              "satisfied": false,
+              "expected": 51.478150705,
+              "actual": 54.120236511,
+              "error": 2.642085806,
+              "tolerance": 1e-06,
+              "entities": [
+                "96",
+                "95"
+              ]
+            }
+          ],
+          "count": [
+            {
+              "id": "R4",
+              "type": "hole_count",
+              "status": "pass",
+              "expected": 4,
+              "actual": 4,
+              "deviation": 0.0,
+              "tolerance": 0,
+              "entities": [
+                "96",
+                "97",
+                "98",
+                "99"
+              ],
+              "message": ""
+            }
+          ]
+        },
+        "moved_mm": 3,
+        "equivalent_contract": "native check-only constraints R1-R3 + geometry count R4"
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "cancel_safety",
+      "status": "not_run",
+      "score": 0.0,
+      "message": "No equivalent deterministic held-worker/event-trace fixture for the public MCP interface. Cancellation safety is unmeasured, not a product failure.",
+      "duration_ms": 1805.73,
+      "artifacts": [],
+      "metrics": {},
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "qa_large_drawing",
+      "status": "fail",
+      "score": 0.0,
+      "message": "Full model and paper validation called separately; all reference construction findings and the duplicate are required.",
+      "duration_ms": 25362.48,
+      "artifacts": [
+        {
+          "filename": "qa_large_drawing.dxf",
+          "size_bytes": 1517173,
+          "sha256": "d641f86552056219f7f75ba0693e73a3706de420319a09ba4f06153641974226"
+        }
+      ],
+      "metrics": {
+        "construction": {
+          "at_5001": "1414",
+          "after_10000": "279C",
+          "paper": "279D"
+        },
+        "missing_construction": [
+          "at_5001",
+          "after_10000",
+          "paper"
+        ],
+        "duplicate_found": true,
+        "issue_codes": [
+          "DUPLICATE_ENTITY",
+          "LAYOUT_NOT_VALIDATED"
+        ]
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "export_safety",
+      "status": "unsupported",
+      "score": 0.0,
+      "message": "CSV and XLSX exports are both refused (UNSUPPORTED_FORMAT).",
+      "duration_ms": 1932.83,
+      "artifacts": [
+        {
+          "filename": "export_safety.dxf",
+          "size_bytes": 37078,
+          "sha256": "e35354067714fac2b2cc2dd97b70637465181d600754311159348912ce84e218"
+        }
+      ],
+      "metrics": {
+        "refusals": {
+          "csv": {
+            "ok": false,
+            "protocol_error": "Error executing tool export_drawing: 1 validation error for export_drawingArguments\nformat\n  Input should be 'dxf', 'svg', 'json', 'pdf', 'dwg', 'step', 'iges', 'brep', 'stl', 'obj' or 'png' [type=literal_error, input_value='csv', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/literal_error"
+          },
+          "xlsx": {
+            "ok": false,
+            "protocol_error": "Error executing tool export_drawing: 1 validation error for export_drawingArguments\nformat\n  Input should be 'dxf', 'svg', 'json', 'pdf', 'dwg', 'step', 'iges', 'brep', 'stl', 'obj' or 'png' [type=literal_error, input_value='xlsx', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/literal_error"
+          }
+        }
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "stale_preview",
+      "status": "fail",
+      "score": 0.0,
+      "message": "Dry run returns no reusable fingerprint/revision token; unguarded apply moves the externally edited line.",
+      "duration_ms": 2169.63,
+      "artifacts": [
+        {
+          "filename": "stale_preview.dxf",
+          "size_bytes": 37282,
+          "sha256": "1e7d4192d3c08dedf071e57a8f8097ea648514eb5cf5af990d8178be53ba1a8b"
+        }
+      ],
+      "metrics": {
+        "preview_keys": [
+          "drawing",
+          "dry_run",
+          "metrics",
+          "ok",
+          "results",
+          "tool",
+          "would_change"
+        ],
+        "apply": {
+          "ok": true,
+          "tool": "apply_operations",
+          "drawing": "stale_preview.dxf",
+          "changes": {
+            "added": [],
+            "modified": [
+              "96"
+            ],
+            "deleted": []
+          },
+          "results": [
+            {
+              "index": 0,
+              "op": "move",
+              "modified": [
+                "96"
+              ]
+            }
+          ],
+          "validation": {
+            "passed": true,
+            "summary": {
+              "errors": 0,
+              "warnings": 0,
+              "requirements_total": 0,
+              "requirements_failed": 0
+            },
+            "issues": [],
+            "requirements": [],
+            "requirements_passed": [],
+            "coverage": {
+              "checked_layout": "Model",
+              "unchecked_layouts": []
+            },
+            "recognized": {
+              "outline": null,
+              "circles": {
+                "count": 0,
+                "by_diameter": {}
+              },
+              "dimensions": {
+                "count": 0,
+                "by_kind": {}
+              },
+              "closed_contours": 0,
+              "entity_count": 1
+            }
+          },
+          "journal_seq": 3,
+          "checkpoint_before": "cp-0002",
+          "sha256": "1e7d4192d3c08dedf071e57a8f8097ea648514eb5cf5af990d8178be53ba1a8b",
+          "bytes": 37282,
+          "metrics": {
+            "duration_ms": 89.79,
+            "input_bytes": 128,
+            "output_bytes": 750
+          }
+        },
+        "moved_over_stale_preview": true,
+        "expected_revision_parameter": false
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "revision_guarded_edit",
+      "status": "unsupported",
+      "score": 0.0,
+      "message": "apply_operations has no expected_revision or fingerprint precondition input; journal sequence is not an optimistic concurrency guard.",
+      "duration_ms": 1903.65,
+      "artifacts": [
+        {
+          "filename": "revision_guarded_edit.dxf",
+          "size_bytes": 37076,
+          "sha256": "818a311d28fe4a28b65bbb990262eccc3dc814f3ec0e479d4e778deafba70846"
+        }
+      ],
+      "metrics": {
+        "apply_parameters": [
+          "bounds",
+          "create",
+          "dry_run",
+          "label",
+          "layout",
+          "operations",
+          "path",
+          "requirements",
+          "strict"
+        ]
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "pid_file_roundtrip",
+      "status": "unsupported",
+      "score": 0.0,
+      "message": "No P&ID graph/line-number/instrument-index reader to prove their semantic roundtrip across processes.",
+      "duration_ms": 1.85,
+      "artifacts": [],
+      "metrics": {
+        "evidence": "setup tools.json; full operations and library in events.jsonl",
+        "probe": "documented public catalog capability assessment; no CAD execution"
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "foreign_edit_verified",
+      "status": "partial",
+      "score": 0.0,
+      "message": "Native diameter/count checks and one-entity repair work; original gate also requires fingerprint-guarded repair. No full credit.",
+      "duration_ms": 1922.14,
+      "artifacts": [
+        {
+          "filename": "foreign_edit_verified.dxf",
+          "size_bytes": 15909,
+          "sha256": "8b388c835289fb34502b1822e4fa7d92d5819222ba2da51ca9e40197c319473e"
+        }
+      ],
+      "metrics": {
+        "before_failed": [
+          "H3"
+        ],
+        "after_failed": [],
+        "pitch_before": [
+          {
+            "id": "P",
+            "type": "distance",
+            "satisfied": true,
+            "expected": 60.0,
+            "actual": 60.0,
+            "error": 0.0,
+            "tolerance": 1e-06,
+            "entities": [
+              "30",
+              "31"
+            ]
+          }
+        ],
+        "pitch_after": [
+          {
+            "id": "P",
+            "type": "distance",
+            "satisfied": true,
+            "expected": 60.0,
+            "actual": 60.0,
+            "error": 0.0,
+            "tolerance": 1e-06,
+            "entities": [
+              "30",
+              "31"
+            ]
+          }
+        ],
+        "changed": [
+          "32"
+        ],
+        "added": [],
+        "removed": [],
+        "fingerprint_guard": false
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "damaged_dxf_refusal",
+      "status": "pass",
+      "score": 100.0,
+      "message": "",
+      "duration_ms": 2036.66,
+      "artifacts": [
+        {
+          "filename": "damaged_dxf_refusal.dxf",
+          "size_bytes": 37154,
+          "sha256": "bbddbfb515f5a3c356411e1f66c38532504ba142f4d8764e13466393f6bf5c10"
+        }
+      ],
+      "metrics": {
+        "cases": {
+          "truncated.dxf": {
+            "refused": true,
+            "error": {
+              "code": "DXF_PARSE_ERROR",
+              "category": "file",
+              "message": "truncated.dxf is not a valid DXF: DXFStructureError: missing ENDSEC tag.",
+              "entities": [],
+              "retryable": false,
+              "partial_changes": false,
+              "hint": "The file is corrupt or not DXF; use recover or rollback to a checkpoint"
+            },
+            "named": true
+          },
+          "not-a-drawing.dxf": {
+            "refused": true,
+            "error": {
+              "code": "DXF_PARSE_ERROR",
+              "category": "file",
+              "message": "not-a-drawing.dxf is not a DXF file: File 'D:\\Projects\\AgentCAD-output\\autocad-benchmark-20261030\\agentcad-final\\artifacts\\workspace\\not-a-drawing.dxf' is not a DXF file.",
+              "entities": [],
+              "retryable": false,
+              "partial_changes": false,
+              "hint": "The file is corrupt or not DXF; use recover or rollback to a checkpoint"
+            },
+            "named": true
+          }
+        },
+        "document_kept": true,
+        "identity": "file path + exact bytes; server is stateless"
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    },
+    {
+      "task_id": "dimension_binding",
+      "status": "fail",
+      "score": 0.0,
+      "message": "Gate requires both the text override and DIMLFAC to be flagged against physical geometry.",
+      "duration_ms": 1862.11,
+      "artifacts": [
+        {
+          "filename": "dimension_binding.dxf",
+          "size_bytes": 51223,
+          "sha256": "0164f1bc41060997a03d5cd834343bf2530e076b74b53631d272a488b7894b30"
+        }
+      ],
+      "metrics": {
+        "handles": {
+          "D1": "8C",
+          "D2": "9E",
+          "D3": "B0",
+          "D4": "C1"
+        },
+        "mismatches": [
+          {
+            "code": "DIMENSION_TEXT_MISMATCH",
+            "severity": "error",
+            "category": "geometry",
+            "message": "Dimension text '42' disagrees with measured value 40",
+            "entities": [
+              "9E"
+            ],
+            "details": {
+              "expected": 40.0,
+              "actual_text": "42"
+            }
+          }
+        ],
+        "accepted": false,
+        "both_lies_flagged": false,
+        "dimension_measurements": [
+          {
+            "id": "8C",
+            "type": "DIMENSION",
+            "layer": "0",
+            "dimtype": "linear",
+            "text_override": "<>",
+            "defpoints": {
+              "defpoint": [
+                0.0,
+                30.0
+              ],
+              "defpoint2": [
+                0.0,
+                0.0
+              ],
+              "defpoint3": [
+                42.0,
+                0.0
+              ],
+              "text_midpoint": [
+                21.0,
+                30.0
+              ]
+            },
+            "angle": 0.0,
+            "measurement": 42.0
+          },
+          {
+            "id": "9E",
+            "type": "DIMENSION",
+            "layer": "0",
+            "dimtype": "linear",
+            "text_override": "42",
+            "defpoints": {
+              "defpoint": [
+                100.0,
+                30.0
+              ],
+              "defpoint2": [
+                100.0,
+                0.0
+              ],
+              "defpoint3": [
+                140.0,
+                0.0
+              ],
+              "text_midpoint": [
+                120.0,
+                30.0
+              ]
+            },
+            "angle": 0.0,
+            "measurement": 40.0
+          },
+          {
+            "id": "B0",
+            "type": "DIMENSION",
+            "layer": "0",
+            "dimtype": "linear",
+            "text_override": "<>",
+            "defpoints": {
+              "defpoint": [
+                200.0,
+                30.0
+              ],
+              "defpoint2": [
+                200.0,
+                0.0
+              ],
+              "defpoint3": [
+                221.0,
+                0.0
+              ],
+              "text_midpoint": [
+                210.5,
+                30.0
+              ]
+            },
+            "angle": 0.0,
+            "measurement": 21.0
+          },
+          {
+            "id": "C1",
+            "type": "DIMENSION",
+            "layer": "0",
+            "dimtype": "diameter",
+            "text_override": "<>",
+            "defpoints": {
+              "defpoint": [
+                370.0,
+                10.0
+              ],
+              "defpoint4": [
+                330.0,
+                10.0
+              ],
+              "text_midpoint": [
+                327.625,
+                10.0
+              ]
+            },
+            "measurement": 40.0
+          }
+        ],
+        "missing_dimension_requirement_handle_binding": true
+      },
+      "stdout_summary": "",
+      "stderr_summary": ""
+    }
+  ],
+  "v2_summary": {
+    "attempted": 10,
+    "passed": 7,
+    "supported": 9,
+    "unsupported": 1,
+    "not_run": 0,
+    "environment_blocked": 0,
+    "coverage_percent": 90.0,
+    "score": 70.0
+  },
+  "fixed_matrix_full_pass_percent": 29.03,
+  "evidence_boundary": "Local independent adapter; not an upstream-certified leaderboard submission. Partial gates score 0."
+}
