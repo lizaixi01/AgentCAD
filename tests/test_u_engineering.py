@@ -102,3 +102,44 @@ def test_mechanical_bom_and_balloons_detect_deleted_fastener(rt, blank, ws):
     doc.saveas(ws / blank)
     report = rt.read_engineering(blank, "mechanical")
     assert {i["code"] for i in report["critique"]} >= {"BOM_MISMATCH", "BALLOON_LINK_MISMATCH"}
+
+
+def test_changed_visible_room_label_cannot_keep_clean_quality(rt, blank, ws):
+    spec = {
+        "walls": [
+            {
+                "id": "outer",
+                "axis": [[0, 0], [5000, 0], [5000, 4000], [0, 4000]],
+                "closed": True,
+                "thickness": 200,
+            }
+        ],
+        "rooms": [{"id": "living", "number": "01", "name": "Living", "at": [2000, 2000]}],
+    }
+    assert rt.apply_operations(blank, [{"op": "draw_arch_plan", "spec": spec}])["ok"]
+    report = rt.read_engineering(blank, "architecture")
+    doc = ezdxf.readfile(ws / blank)
+    doc.entitydb[report["rooms"][0]["handle"]].dxf.text = "01 Living 999.00 m2"
+    doc.saveas(ws / blank)
+    report = Runtime(rt.policy).read_engineering(blank, "architecture")
+    assert report["rooms"][0]["detected_area"] == 4800 * 3800
+    assert report["rooms"][0]["label"] == "01 Living 999.00 m2"
+    assert "ROOM_LABEL_MISMATCH" in {i["code"] for i in report["critique"]}
+    assert report["quality_score"] < 90
+
+
+def test_deleted_last_part_invalidates_retained_bom_and_balloon(rt, blank, ws):
+    spec = {"fasteners": [{"part": "hex_bolt", "size": "M8", "length": 30, "insert": [60, 90]}]}
+    assert rt.apply_operations(blank, [{"op": "draw_mechanical_assembly", "spec": spec}])["ok"]
+    report = rt.read_engineering(blank, "mechanical")
+    doc = ezdxf.readfile(ws / blank)
+    doc.modelspace().delete_entity(doc.entitydb[report["bom"][0]["handles"][0]])
+    doc.saveas(ws / blank)
+    report = Runtime(rt.policy).read_engineering(blank, "mechanical")
+    assert report["bom"] == []
+    assert {i["code"] for i in report["critique"]} >= {
+        "BOM_MISMATCH",
+        "BALLOON_LINK_MISMATCH",
+        "EMPTY_ASSEMBLY",
+    }
+    assert report["quality_score"] < 90

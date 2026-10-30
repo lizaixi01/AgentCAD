@@ -406,10 +406,20 @@ def read(doc):
         if role == "room" and e.dxftype() == "TEXT":
             matches = [f for f in faces if G.point_in_polygon(tuple(e.dxf.insert)[:2], f["loop"])]
             area = matches[0]["area"] if len(matches) == 1 else None
-            row = {**record, "handle": e.dxf.handle, "detected_area": area}
+            row = {**record, "handle": e.dxf.handle, "detected_area": area, "label": e.dxf.text}
             rooms.append(row)
             if area is None or abs(area - record["area"]) > max(1e-6, record["area"] * 0.001):
                 issues.append({"code": "ROOM_AREA_MISMATCH", "handle": e.dxf.handle})
+            expected_label = f"{record['number']} {record['name']} {record['area'] / 1e6:.2f} m2"
+            if " ".join(e.dxf.text.split()) != " ".join(expected_label.split()):
+                issues.append(
+                    {
+                        "code": "ROOM_LABEL_MISMATCH",
+                        "handle": e.dxf.handle,
+                        "expected": expected_label,
+                        "actual": e.dxf.text,
+                    }
+                )
         elif role == "opening" and e.dxftype() == "INSERT":
             seals = [p for p in e.virtual_entities() if p.dxftype() == "LWPOLYLINE" and p.dxf.layer == SEAL]
             width = max(

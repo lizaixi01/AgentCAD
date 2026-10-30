@@ -117,7 +117,7 @@ More prompts to try: [playground/README.md](playground/README.md).
 
 ## Prefer the command line?
 
-Every tool is also a CLI command that prints one JSON envelope:
+Core drawing tools are also available as CLI commands that print one JSON envelope:
 
 ```bash
 agentcad --root ./work create part.dxf --units mm

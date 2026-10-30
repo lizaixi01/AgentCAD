@@ -409,7 +409,15 @@ def read(doc):
         issues.append(
             {"code": "SHEET_STRUCTURE", "frames": len(frames), "titles": len(titles), "tables": len(tables)}
         )
-    cells = {get_tag(e): e.dxf.text for e in doc.modelspace().query("TEXT") if get_tag(e)}
+    cells = defaultdict(list)
+    for e in doc.modelspace().query("TEXT"):
+        tag = get_tag(e)
+        if tag and tag.startswith("assembly.bom.r"):
+            cells[tag].append(e.dxf.text)
+    expected_cells = {
+        f"assembly.bom.r0c{i}": [text]
+        for i, text in enumerate(["ITEM", "DESCRIPTION", "STANDARD / SIZE", "QTY"])
+    }
     for row in rows:
         want = [
             str(row["item"]),
@@ -417,12 +425,20 @@ def read(doc):
             row["standard"] + " " + row["size"],
             str(row["quantity"]),
         ]
-        if any(cells.get(f"assembly.bom.r{row['item']}c{c}") != value for c, value in enumerate(want)):
-            issues.append({"code": "BOM_MISMATCH", "item": row["item"]})
+        expected_cells.update({f"assembly.bom.r{row['item']}c{c}": [value] for c, value in enumerate(want)})
         linked = [b for b in balloons if b["item"] == row["item"]]
         if len(linked) != 1 or set(linked[0]["targets"]) != set(row["handles"]):
             issues.append({"code": "BALLOON_LINK_MISMATCH", "item": row["item"]})
+    if dict(cells) != expected_cells:
+        issues.append(
+            {"code": "BOM_MISMATCH", "expected_cells": len(expected_cells), "actual_cells": len(cells)}
+        )
+    if not rows:
+        issues.append({"code": "EMPTY_ASSEMBLY"})
+    items = {row["item"] for row in rows}
     for balloon in balloons:
+        if balloon["item"] not in items or any(doc.entitydb.get(h) is None for h in balloon["targets"]):
+            issues.append({"code": "BALLOON_LINK_MISMATCH", "item": balloon["item"]})
         text, leader = doc.entitydb.get(balloon["text"]), doc.entitydb.get(balloon["leader"])
         if (
             text is None

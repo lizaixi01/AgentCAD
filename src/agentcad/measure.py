@@ -130,6 +130,36 @@ def measure_entity(entity):
     return result
 
 
+def _segment_in_polygon(start, end, polygon):
+    """Check every interval split by boundary intersections, not just endpoints."""
+    edges = list(zip(polygon, polygon[1:] + polygon[:1]))
+
+    def contains(point):
+        return G.point_in_polygon(point, polygon) or any(
+            G.dist_to_segment(point, a, b) <= 1e-9 for a, b in edges
+        )
+
+    if not contains(start) or not contains(end):
+        return False
+    if G.dist(start, end) <= 1e-12:
+        return True
+    cuts = {0.0, 1.0}
+    segment = G.Seg(start, end)
+    for a, b in edges:
+        crossing = G.line_line(segment, G.Seg(a, b))
+        if crossing is not None:
+            t, u = crossing
+            if -1e-9 <= t <= 1 + 1e-9 and -1e-9 <= u <= 1 + 1e-9:
+                cuts.add(max(0, min(1, t)))
+        else:
+            # Collinear polygon vertices also split a boundary-aligned segment.
+            for p in (a, b):
+                if G.dist_to_segment(p, start, end) <= 1e-9:
+                    cuts.add(max(0, min(1, segment.param(p))))
+    ordered = sorted(cuts)
+    return all(contains(segment.at((a + b) / 2)) for a, b in zip(ordered, ordered[1:]))
+
+
 def spatial_filter(entities, window=None, polygon=None, mode="crossing"):
     if mode not in {"crossing", "window"}:
         raise input_error("INVALID_ENUM", "selection_mode must be crossing or window")
@@ -156,7 +186,7 @@ def spatial_filter(entities, window=None, polygon=None, mode="crossing"):
         elif polygon is not None:
             # The entire entity bounding box must fit: conservative for circles and rotated geometry.
             corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
-            keep = all(G.point_in_polygon(p, polygon) for p in corners)
+            keep = all(_segment_in_polygon(a, b, polygon) for a, b in zip(corners, corners[1:] + corners[:1]))
             # A concave selection polygon can enter a rectangle despite all four corners being inside.
             keep &= not any(x0 < p[0] < x1 and y0 < p[1] < y1 for p in polygon)
         else:

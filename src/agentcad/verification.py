@@ -6,12 +6,31 @@ import math
 
 from . import geom as G
 from .errors import input_error
+from .model import circle_wcs
 from .validate.checks import crosses, dimension_plain_text, text_values
 from .validate.features import extract
 
 
+def _binding_geometry(doc):
+    """Preserve finite arc sweeps, including bulged polyline segments."""
+    segments, curves = [], []
+    for entity in doc.modelspace():
+        if entity.dxftype() in {"LWPOLYLINE", "POLYLINE"}:
+            primitives = entity.virtual_entities()
+        else:
+            primitives = (entity,)
+        for e in primitives:
+            if e.dxftype() == "LINE":
+                segments.append((tuple(e.dxf.start)[:2], tuple(e.dxf.end)[:2]))
+            elif e.dxftype() in {"ARC", "CIRCLE"}:
+                c, r, start, end = circle_wcs(e)
+                curves.append(G.Circ(c, r, start if e.dxftype() == "ARC" else None, end))
+    return segments, curves
+
+
 def verify_dimensions(doc, requirements, tolerance=1e-6):
     features = extract(doc)
+    segments, curves = _binding_geometry(doc)
     dimensions = {d["id"]: d for d in features.dimensions}
     rows, findings = [], []
     ids = set()
@@ -51,10 +70,22 @@ def verify_dimensions(doc, requirements, tolerance=1e-6):
         if bound:
             for a in d["anchors"]:
                 attached = any(G.dist(a, p) <= tol for p, _ in features.points)
-                attached |= any(abs(G.dist(a, c) - r) <= tol for c, r, _ in features.curves)
+                attached |= any(
+                    abs(G.dist(a, curve.c) - curve.r) <= tol
+                    and (
+                        curve.start is None
+                        or G.angle_in_arc(
+                            G.angle_of(G.sub(a, curve.c)),
+                            curve.start,
+                            curve.end,
+                            math.degrees(tol / max(curve.r, 1e-12)),
+                        )
+                    )
+                    for curve in curves
+                )
                 attached |= any(
                     G.dist_to_segment(a, start, end) <= tol and crosses(start, end, d["direction"])
-                    for start, end in features.segments
+                    for start, end in segments
                 )
                 bound &= attached
         actual = d["measurement"] if bound else None

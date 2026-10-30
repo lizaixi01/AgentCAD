@@ -219,3 +219,60 @@ def test_delivery_refuses_source_mutation_without_manifest(rt, monkeypatch):
     result = rt.deliver_drawing("source.dxf", "bundle", formats=["dxf"])
     assert result["error"]["code"] == "STALE_REVISION"
     assert not (rt.policy.root / "bundle" / "manifest.json").exists()
+
+
+@pytest.mark.parametrize("missing", [True, False])
+def test_dimension_binding_respects_finite_arc_sweep(rt, missing):
+    rt.create_drawing("arc.dxf")
+    points = [[-10, 0], [0, -10]] if missing else [[10, 0], [0, 10]]
+    assert rt.apply_operations(
+        "arc.dxf",
+        [
+            {"op": "add_arc", "center": [0, 0], "radius": 10, "start_angle": 0, "end_angle": 90},
+            {
+                "op": "add_linear_dim",
+                "p1": points[0],
+                "p2": points[1],
+                "base": [0, -20],
+                "orientation": "horizontal",
+            },
+        ],
+    )["ok"]
+    handle = rt.inspect_entities("arc.dxf", filter={"type": "DIMENSION"})["entities"][0]["id"]
+    report = rt.verify_dimensions("arc.dxf", [{"id": "arc", "handle": handle, "value": 10}])
+    assert report["accepted"] is (not missing)
+    assert report["rows"][0]["bound"] is (not missing)
+
+
+def test_dimension_cannot_bind_to_missing_bulge_chord(rt):
+    rt.create_drawing("bulge.dxf")
+    assert rt.apply_operations(
+        "bulge.dxf",
+        [
+            {"op": "add_polyline", "points": [[-10, 0, 1], [10, 0]]},
+            {"op": "add_line", "start": [0, 10], "end": [1, 10]},
+            {"op": "add_linear_dim", "p1": [0, 0], "p2": [0, 10], "base": [20, 0], "orientation": "vertical"},
+        ],
+    )["ok"]
+    handle = rt.inspect_entities("bulge.dxf", filter={"type": "DIMENSION"})["entities"][0]["id"]
+    report = rt.verify_dimensions("bulge.dxf", [{"id": "chord", "handle": handle, "value": 10}])
+    assert not report["accepted"] and not report["rows"][0]["bound"]
+
+
+@pytest.mark.parametrize("shape", ["line", "rectangle"])
+def test_concave_polygon_excludes_entities_crossing_an_outside_notch(rt, shape):
+    rt.create_drawing("polygon.dxf")
+    op = (
+        {"op": "add_line", "start": [-2, 0], "end": [2, 0]}
+        if shape == "line"
+        else {"op": "add_rectangle", "corner": [-2, -1], "width": 4, "height": 2}
+    )
+    assert rt.apply_operations("polygon.dxf", [op])["ok"]
+    polygon = [[-3, -3], [3, -3], [3, 3], [1, 3], [1, -2], [-1, -2], [-1, 3], [-3, 3]]
+    assert rt.inspect_entities("polygon.dxf", polygon=polygon, selection_mode="window")["total"] == 0
+    assert (
+        rt.inspect_entities(
+            "polygon.dxf", polygon=[[-2, -1], [2, -1], [2, 1], [-2, 1]], selection_mode="window"
+        )["total"]
+        == 1
+    )
