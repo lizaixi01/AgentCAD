@@ -174,8 +174,12 @@ def _run_once(task: Path, agent: str, arm: str, label: str, effort: str, timeout
         except subprocess.TimeoutExpired:
             status, code = "timeout", None
     log = (logs / f"{tid}.jsonl").read_text(encoding="utf-8", errors="replace")
-    # The reference lives under DATA; an agent that names it has looked outside its workspace.
-    leak = str(DATA).replace("\\", "/").lower() in log.replace("\\\\", "/").replace("\\", "/").lower()
+    # The reference lives under DATA; an agent that names it has looked outside its workspace. A pinned AgentCAD copy
+    # (AGENTCAD_SRC) may sit under DATA too: its paths, in tracebacks, are not the reference.
+    seen = log.replace("\\\\", "/").replace("\\", "/").lower()
+    if os.environ.get("AGENTCAD_SRC"):
+        seen = seen.replace(Path(os.environ["AGENTCAD_SRC"]).as_posix().lower(), "")
+    leak = str(DATA).replace("\\", "/").lower() in seen
     submitted = (ws / "submission.step").exists()
     tail = log[-4000:] + (logs / f"{tid}.stderr.log").read_text(encoding="utf-8", errors="replace")[-4000:]
     return {"suite": suite, "id": tid, "agent": agent, "arm": arm, "effort": effort, "status": status, "exit": code,

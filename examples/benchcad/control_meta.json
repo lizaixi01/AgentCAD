@@ -22,13 +22,17 @@
   "codex-mcp-opt-medium",
   "claude-mcp-opt2-medium",
   "claude-hybrid-medium",
-  "codex-hybrid-medium"
+  "codex-hybrid-medium",
+  "claude-hybrid3-medium",
+  "codex-hybrid3-medium"
  ],
  "reruns": {
   "claude-mcp-opt-medium": "7f6fb16d809a96f4eec1d4952bc9634c86fe487b (PR #24 head)",
   "codex-mcp-opt-medium": "7f6fb16d809a96f4eec1d4952bc9634c86fe487b (PR #24 head)",
   "claude-mcp-opt2-medium": "5116d412d7123bc0ee7e5756c070a955fe079994 (PR #25 first commit)",
   "claude-hybrid-medium": "8f1eeb7252ea41719499576eed7775dfd4992d37 (main after #26), cadquery 2.8.0",
-  "codex-hybrid-medium": "8f1eeb7252ea41719499576eed7775dfd4992d37 (main after #26), cadquery 2.8.0"
+  "codex-hybrid-medium": "8f1eeb7252ea41719499576eed7775dfd4992d37 (main after #26), cadquery 2.8.0",
+  "claude-hybrid3-medium": "8fb0f95cfe6b466c24069cfd6cd3d1f99c06a87f (PR #31), loaded from a frozen copy of its src/ (AGENTCAD_SRC), cadquery 2.8.0; 8 tasks run again after a machine failure: 4 CadQuery out of memory, 2 agent crashes, 2 AgentCAD servers that did not start, all early in the run while other jobs used the machine's memory",
+  "codex-hybrid3-medium": "8fb0f95cfe6b466c24069cfd6cd3d1f99c06a87f (PR #31), loaded from a frozen copy of its src/ (AGENTCAD_SRC), cadquery 2.8.0; 15 tasks run again after a machine failure: 4 agent crashes and 1 CadQuery out of memory early in the run, 10 killed when the session driving the harness restarted"
  }
 }

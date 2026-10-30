@@ -19,13 +19,16 @@ sys.path.insert(0, str(HERE.parent / "trials"))
 from summarize_run import summarize  # noqa: E402
 
 LABELS = ["claude-mcp-medium", "claude-mcp-opt-medium", "claude-mcp-opt2-medium", "claude-hybrid-medium",
-          "claude-code-medium", "codex-mcp-medium", "codex-mcp-opt-medium", "codex-hybrid-medium", "codex-code-medium"]
+          "claude-hybrid3-medium", "claude-code-medium", "codex-mcp-medium", "codex-mcp-opt-medium",
+          "codex-hybrid-medium", "codex-hybrid3-medium", "codex-code-medium"]
 CONTRASTS = [("claude-mcp-opt2-medium", "claude-mcp-medium"), ("claude-mcp-opt2-medium", "claude-code-medium"),
              ("claude-mcp-medium", "claude-code-medium"), ("claude-mcp-opt-medium", "claude-code-medium"),
              ("claude-hybrid-medium", "claude-code-medium"), ("claude-hybrid-medium", "claude-mcp-opt2-medium"),
              ("codex-mcp-opt-medium", "codex-mcp-medium"),
              ("codex-mcp-opt-medium", "codex-code-medium"), ("codex-mcp-medium", "codex-code-medium"),
-             ("codex-hybrid-medium", "codex-code-medium"), ("codex-hybrid-medium", "codex-mcp-opt-medium")]
+             ("codex-hybrid-medium", "codex-code-medium"), ("codex-hybrid-medium", "codex-mcp-opt-medium"),
+             ("claude-hybrid3-medium", "claude-code-medium"), ("claude-hybrid3-medium", "claude-hybrid-medium"),
+             ("codex-hybrid3-medium", "codex-code-medium"), ("codex-hybrid3-medium", "codex-hybrid-medium")]
 
 
 def scores(label: str) -> dict[str, float]:

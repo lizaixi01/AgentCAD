@@ -27,10 +27,10 @@ for one view, two columns for up to four views (three beyond), one cell for a si
 6. score = (outline + edges) / 2; the outline alone where neither image has an edge inside it, or where the
    reference has none in any view (a flat silhouette or a bare outline): edges is None there.
 
-Checked offline against BenchCAD's voxel IoU (examples/benchcad, 1,098 graded parts of 100 tasks): of two parts
-for the same task whose grades differ by 0.1 or more, it ranks 90.3 % the grader's way (silhouette IoU with the
-bounding-box alignment it replaces: 83.7 %), and the true part scores 0.974 against its own picture on average
-(before: 0.949). It still cannot see what no view shows: hollow insides, wall thickness behind a face.
+Checked offline against BenchCAD's voxel IoU (examples/benchcad/compare_check.py, 1,297 graded parts of 100 tasks):
+of two parts for the same task whose grades differ by 0.1 or more, it ranks 89.6 % the grader's way (silhouette IoU
+with the bounding-box alignment it replaces: 83.2 %), and the true part scores 0.967 against its own picture on
+average (before: 0.942). It still cannot see what no view shows: hollow insides, wall thickness behind a face.
 
 The output image is laid out like the reference, one cell per view: grey where both have material, light red where
 only the reference has, light blue where only ours has; edges dark grey where both have one, red where only the
