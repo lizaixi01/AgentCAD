@@ -134,3 +134,8 @@ Its `recheck/` subdirectory contains the clean `514de72` run after independent
 review fixes: v8 31/31, v2 10/10 and 416 passed / 73 skipped regression tests.
 The original full-pass evidence and reference result remain unchanged; the recheck
 manifest links their hashes instead of claiming another reference rerun.
+
+`integrated/` is the final verification after merging main's image-inspection
+change: clean product `39fa4b5`, v8 31/31, v2 10/10, and 435 passed / 74 skipped.
+Both MCP profiles preserve native image content. This third archive keeps the
+earlier two intact and links the unchanged pinned reference result.

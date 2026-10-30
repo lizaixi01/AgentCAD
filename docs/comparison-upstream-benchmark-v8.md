@@ -90,6 +90,20 @@ AgentCAD 自带的 `quality_score` 也保留，但与上游分数分列，不能
 含 `agentcad.json`、新哈希清单、成品预览及 `evidence.zip`。第一轮 `c2cd0f5` 的报告、
 339 份归档证据及参考结果逐字节保留；旧的 `945e6c6` 基线也未改写。
 
+## 合入新主线后的验证
+
+PR 合并前，主线又合入 [PR #37](https://github.com/lizaixi01/AgentCAD/pull/37) 的
+图片检查功能。本分支正常合入 `583b0e8`，保留两边的能力和评估记录；精简工具模式
+也保留原生图片内容，不把图片埋进 JSON 文本。完整/精简模式的真实 MCP 图片检查均通过。
+[集成代码独立复审](https://github.com/lizaixi01/AgentCAD/pull/36#issuecomment-6518267178)无剩余问题。
+
+干净集成提交 **`39fa4b55899233ab7ac5cbb52714a4767ca164c6`** 的最终完整复测：
+**v8 31/31、v2 10/10；435 passed、74 skipped**。建筑/机械原版质量分仍为 100/92。
+默认 MCP 目录现为 34 个工具，discovery 仍为 3 个、约 220 token。
+本轮日志、299 项归档、源代码字节和成品单独存入
+[integrated/](../examples/autocad_benchmark/results/2026-10-30-v8/integrated/)；
+首轮和 `recheck/` 的记录、参考结果均保留，没有改写或重新挑选历史成绩。
+
 ## 结论的实际边界
 
 这是确定性合成任务的能力验收，不是同模型完成任务率或速度排行榜。AgentCAD 每项
