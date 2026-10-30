@@ -39,6 +39,12 @@ def assess(rt, p, doc):
                               ("mechanical", "MECH", mechanical.read), ("pid", "PID", pid.read)):
         if "AGENTCAD_" + app in doc.appids:
             critique = reader(doc)["critique"]
+            outside = [(s.name, e.dxf.handle) for s in doc.layouts if s.name != "Model"
+                       for e in s if e.has_xdata("AGENTCAD_" + app)]
+            outside.extend((b.name, e.dxf.handle) for b in doc.blocks if not b.block_record.is_any_layout
+                           for e in b if e.has_xdata("AGENTCAD_" + app))
+            critique.extend({"code": "DOMAIN_LAYOUT_UNSUPPORTED", "handle": handle, "space": space}
+                            for space, handle in outside)
             domains[name] = {"critique": critique, "passed": not critique}
             issues.extend({"code": i["code"], "severity": "error", "category": "engineering",
                            "message": f"{name}: {i['code']}", "entities": [i["handle"]] if i.get("handle") else [],

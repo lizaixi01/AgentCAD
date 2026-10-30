@@ -6,6 +6,7 @@ needs a signed-in licence, which a test cannot provide."""
 from __future__ import annotations
 
 import os
+import importlib.util
 import shutil
 from pathlib import Path
 
@@ -16,7 +17,8 @@ from agentcad.policy import Policy
 from agentcad.service import Runtime
 from conftest import ok
 
-pytest.importorskip("pythoncom")
+pytestmark = pytest.mark.skipif(importlib.util.find_spec("pythoncom") is None,
+                                reason="Windows pywin32 COM bindings not installed")
 
 
 class FakeDoc:

@@ -5,11 +5,13 @@ import argparse
 import importlib.util
 import json
 import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 
-pytest.importorskip("tomllib", reason="The optional CAD Bench harness requires Python 3.11+")
+pytestmark = pytest.mark.skipif(sys.version_info < (3, 11),
+                              reason="The optional CAD Bench harness requires Python 3.11+")
 from agentcad.backends import freecad
 from agentcad.policy import Policy
 from agentcad.service import Runtime
@@ -23,8 +25,8 @@ def load_example(name):
     return module
 
 
-pilot = load_example("pilot")
-stages = load_example("stage_server")
+pilot = load_example("pilot") if sys.version_info >= (3, 11) else None
+stages = load_example("stage_server") if sys.version_info >= (3, 11) else None
 
 
 def test_selection_is_repeatable_stratified_and_detects_incomplete_cohort(tmp_path):

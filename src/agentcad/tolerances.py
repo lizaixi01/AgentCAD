@@ -15,8 +15,10 @@ def apply_tolerance(override, value, unit: str) -> None:
     if (not isinstance(value, dict) or not {"lower", "upper"} <= value.keys()
             or value.keys() - {"lower", "upper", "precision", "mode"}):
         raise input_error("INVALID_TOLERANCE", "tolerance needs signed lower/upper deviations, optional precision and mode")
-    if override.dimension.dxf.dimtype & 15 not in {0, 1, 3, 4}:
+    if (override.dimension.dxf.dimtype & 15) not in {0, 1, 3, 4}:
         raise input_error("UNSUPPORTED_TOLERANCE", "Tolerance rendering supports linear, aligned, radius and diameter dimensions")
+    if isinstance(value["lower"], bool) or isinstance(value["upper"], bool):
+        raise input_error("INVALID_TOLERANCE", "Deviation values must be lengths, not booleans")
     lower = parse_length(value["lower"], unit, "tolerance.lower")
     upper = parse_length(value["upper"], unit, "tolerance.upper")
     precision = value.get("precision", 3)
@@ -26,6 +28,14 @@ def apply_tolerance(override, value, unit: str) -> None:
         raise input_error("INVALID_TOLERANCE", "Require finite lower <= upper, precision 0..8 and mode deviations|limits")
     if any(abs(v - round(v, precision)) > 1e-10 for v in (lower, upper)):
         raise input_error("TOLERANCE_PRECISION_LOSS", "Increase precision so the displayed deviations retain the supplied values")
+    if mode == "limits":
+        from .model import measure_dimension
+        nominal = measure_dimension(override.dimension)
+        if nominal is None:
+            raise input_error("INVALID_TOLERANCE", "Dimension has no measurable nominal value")
+        nominal *= float(override.get("dimlfac", 1))
+        if any(abs(v - round(v, precision)) > 1e-10 for v in (nominal + lower, nominal + upper)):
+            raise input_error("TOLERANCE_PRECISION_LOSS", "Increase precision so displayed limits retain nominal plus deviations")
     text = override.dimension.dxf.get("text", "")
     if text and "<>" not in text:
         raise input_error("TOLERANCE_TEXT_OVERRIDE", "Toleranced dimensions must display the measured value (<>)")

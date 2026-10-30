@@ -57,6 +57,12 @@ def test_tolerance_cannot_hide_behind_fake_nominal_text(rt, blank):
     assert result["error"]["code"] == "TOLERANCE_TEXT_OVERRIDE"
 
 
+def test_limit_precision_cannot_round_away_nominal_digits(rt, blank):
+    result = rt.apply_operations(blank, [{"op": "add_linear_dim", "p1": [0, 0], "p2": [1.234, 0],
+                                        "tolerance": {"lower": -0.1, "upper": 0.1, "precision": 1, "mode": "limits"}}])
+    assert result["error"]["code"] == "TOLERANCE_PRECISION_LOSS"
+
+
 def test_sourced_fit_lookup_drives_saved_dimension(rt, blank):
     fit = rt.standard_library(item="iso_fit", size="25 H7/g6")
     assert fit["ok"] and fit["source_page"] == 74

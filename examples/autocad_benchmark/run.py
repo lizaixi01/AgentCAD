@@ -1317,7 +1317,9 @@ def main():
     tasks = [t for t in TASKS_V8 if not args.task or t.task_id in args.task]
     if args.task and set(args.task) - {t.task_id for t in tasks}:
         parser.error("unknown task id")
-    adapter = AgentCADAdapter(args.python.resolve())
+    # POSIX venv interpreters are symlinks. Resolving one loses pyvenv.cfg and
+    # launches the base Python, where this checkout is not installed.
+    adapter = AgentCADAdapter(args.python.absolute())
     report = asyncio.run(run_tasks(adapter, tasks, args.out / "artifacts", timeout=args.timeout, matrix="v8"))
     # Upstream's manifest names its own repository. Explicitly identify the measured
     # product and retain the upstream manifest under evaluator instead of relabelling it.

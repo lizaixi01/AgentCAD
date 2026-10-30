@@ -128,8 +128,11 @@ def test_feed_and_http_serve_progress(rt, ws, blank, viewer):
     last = feed.last_id
     ok(rt.apply_operations(blank, OPS))
     deadline = time.time() + 10
-    while time.time() < deadline and not any(e["kind"] == "activity" and e["activity"]["state"] == "done"
-                                             for e in feed.since(last, progress=True)):
+    while time.time() < deadline:
+        current = feed.since(last, progress=True)
+        if ({"activity", "changed"} <= {e["kind"] for e in current}
+                and any(e["kind"] == "activity" and e["activity"]["state"] == "done" for e in current)):
+            break
         feed.wait(feed.last_id, 0.5, progress=True)
     kinds = {e["kind"] for e in feed.since(last, progress=True)}
     assert {"activity", "changed"} <= kinds
@@ -325,8 +328,13 @@ def test_markup_in_names_texts_notes_and_errors_is_escaped(rt, ws, viewer):
     assert headers["Content-Type"].startswith("application/json") and headers["X-Content-Type-Options"] == "nosniff"
     svg = get(viewer, "/api/svg", path=name)[2].decode("utf-8")
     assert "<img" not in svg and "<script" not in svg
-    acts = json.loads(get(viewer, "/api/activity")[2])["events"]
-    assert any(e.get("state") == "error" and "<img" in json.dumps(e, ensure_ascii=False) for e in acts)
+    deadline = time.monotonic() + 10
+    while True:
+        acts = json.loads(get(viewer, "/api/activity")[2])["events"]
+        if any(e.get("state") == "error" and "<img" in json.dumps(e, ensure_ascii=False) for e in acts):
+            break
+        assert time.monotonic() < deadline, acts
+        viewer.feed.wait(viewer.feed.last_id, 0.2, progress=True)
     # the export: the payload appears only JSON-escaped, the page has exactly its own three scripts
     page = get(viewer, "/api/export", path=name)[2].decode("utf-8")
     assert "<img src=x" not in page and "<script>window" not in page  # each "<" of the data is \u003c in JSON

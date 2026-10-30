@@ -1,6 +1,7 @@
 """Delivery gates must fail when independently saved intent or artifacts disagree."""
 import ezdxf
 import pytest
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from agentcad.service import Runtime
 from conftest import PLATE_SPEC
@@ -122,3 +123,43 @@ def test_delivery_checks_paper_space_integrity(rt, ws, blank):
     result = rt.deliver_drawing(blank, "bad")
     assert result["error"]["code"] == "DELIVERY_REJECTED", result
     assert any(i.get("layout") == "Sheet" for i in result["error"]["details"]["validation"]["issues"])
+
+
+@pytest.mark.parametrize("space", ["paper", "block"])
+def test_native_domain_records_outside_model_are_not_silently_passed(rt, ws, blank, space):
+    from agentcad.engineering.records import put
+    doc = ezdxf.readfile(ws / blank)
+    layout = doc.layouts.new("Sheet") if space == "paper" else doc.blocks.new("ROOM")
+    label = layout.add_text("01 Living 999.00 m2")
+    put(doc, label, "arch", {"role": "room", "number": "01", "name": "Living", "area": 18240000})
+    doc.saveas(ws / blank)
+    result = rt.deliver_drawing(blank, "bad", min_score=0)
+    assert result["error"]["code"] == "DELIVERY_REJECTED", result
+    critique = result["error"]["details"]["validation"]["engineering"]["architecture"]["critique"]
+    assert any(i["code"] == "DOMAIN_LAYOUT_UNSUPPORTED" for i in critique)
+
+
+@pytest.mark.parametrize("member,old,new", [
+    ("xl/_rels/workbook.xml.rels", "worksheets/sheet1.xml", "worksheets/missing.xml"),
+    ("_rels/.rels", "xl/workbook.xml", "xl/missing.xml"),
+    ("xl/workbook.xml", 'r:id="rId1"', 'r:id="wrong"'),
+    ("xl/worksheets/sheet1.xml", 'r="A1"', 'r="Z1"'),
+    ("[Content_Types].xml", "spreadsheetml.sheet.main+xml", "wrong+xml"),
+])
+def test_delivery_rejects_valid_zip_with_broken_workbook(rt, ws, blank, monkeypatch, member, old, new):
+    assert rt.apply_operations(blank, [{"op": "add_text", "text": "drawing", "insert": [0, 0], "height": 3}])["ok"]
+    export = rt.export_drawing
+    def broken(path, output, fmt):
+        result = export(path, output, fmt)
+        with ZipFile(ws / output) as archive:
+            files = {name: archive.read(name) for name in archive.namelist()}
+        assert old.encode() in files[member]
+        files[member] = files[member].replace(old.encode(), new.encode())
+        with ZipFile(ws / output, "w", ZIP_DEFLATED) as archive:
+            for name, data in files.items():
+                archive.writestr(name, data)
+        return result
+    monkeypatch.setattr(rt, "export_drawing", broken)
+    result = rt.deliver_drawing(blank, "broken", formats=["xlsx"])
+    assert result["error"]["code"] == "DELIVERY_PARITY_FAILED", result
+    assert not (ws / "broken" / "manifest.json").exists()

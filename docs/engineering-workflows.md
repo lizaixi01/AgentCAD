@@ -69,6 +69,9 @@ architecture and mechanical critique into its quality gate. Each error or failed
 requirement costs 15 points; each warning costs 3. Default `strict=true` also rejects
 any error or failed requirement regardless of `min_score`. An explicit non-strict,
 lower-threshold diagnostic delivery retains every failure in its manifest.
+Domain reconstruction currently supports model space. Native domain records in
+paper space or block definitions are explicitly rejected as unverified instead
+of being labelled as passed; generic layout validation still runs.
 
 Manifest version 2 records format-specific readback checks. DXF compares all layout
 entities, block definitions, attributes, styles, page settings, selected drawing

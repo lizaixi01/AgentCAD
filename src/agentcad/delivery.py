@@ -56,11 +56,37 @@ def _xlsx_rows(path: Path) -> list[list[Any]]:
         # One pass: an escaped literal _x0041_ must not become A.
         return re.sub(r"_x([0-9a-fA-F]{4})_", lambda m: chr(int(m[1], 16)), value)
     with ZipFile(path) as archive:
+        required = {"[Content_Types].xml", "_rels/.rels", "xl/workbook.xml",
+                    "xl/_rels/workbook.xml.rels", "xl/worksheets/sheet1.xml"}
+        if set(archive.namelist()) != required or len(archive.namelist()) != len(required):
+            raise ValueError("Unexpected XLSX package members")
         if archive.testzip() is not None:
             raise ValueError("XLSX checksum failure")
         sheet = ET.fromstring(archive.read("xl/worksheets/sheet1.xml"))
-        for required in ("[Content_Types].xml", "_rels/.rels", "xl/workbook.xml", "xl/_rels/workbook.xml.rels"):
-            ET.fromstring(archive.read(required))
+        rel_ns = "http://schemas.openxmlformats.org/package/2006/relationships"
+        office_ns = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+        for name, target, kind in (("_rels/.rels", "xl/workbook.xml", "officeDocument"),
+                                   ("xl/_rels/workbook.xml.rels", "worksheets/sheet1.xml", "worksheet")):
+            root = ET.fromstring(archive.read(name))
+            links = list(root)
+            if (root.tag != f"{{{rel_ns}}}Relationships" or len(links) != 1
+                    or links[0].tag != f"{{{rel_ns}}}Relationship"
+                    or links[0].attrib != {"Id": "rId1", "Type": f"{office_ns}/{kind}", "Target": target}):
+                raise ValueError("XLSX workbook relationship differs from exported contract")
+        workbook = ET.fromstring(archive.read("xl/workbook.xml"))
+        sheets = workbook.findall("s:sheets/s:sheet", ns)
+        if (workbook.tag != f"{{{ns['s']}}}workbook" or len(sheets) != 1
+                or sheets[0].attrib != {"name": "Drawing", "sheetId": "1", f"{{{office_ns}}}id": "rId1"}):
+            raise ValueError("XLSX workbook does not expose the verified sheet")
+        types = ET.fromstring(archive.read("[Content_Types].xml"))
+        type_ns = "http://schemas.openxmlformats.org/package/2006/content-types"
+        overrides = {node.get("PartName"): node.get("ContentType")
+                     for node in types.findall(f"{{{type_ns}}}Override")}
+        if overrides != {"/xl/workbook.xml": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml",
+                         "/xl/worksheets/sheet1.xml": "application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"}:
+            raise ValueError("XLSX content types do not describe a workbook and worksheet")
+        if sheet.tag != f"{{{ns['s']}}}worksheet":
+            raise ValueError("XLSX sheet has an invalid root")
         rows = []
         for index, row in enumerate(sheet.findall("s:sheetData/s:row", ns), 1):
             if row.get("r") != str(index):

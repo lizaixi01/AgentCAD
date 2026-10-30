@@ -137,7 +137,7 @@ def test_mcp_returns_metadata_and_inline_image(ws, profile):
                     return await client.call_tool("call_tool", {"name":"inspect_image", "arguments":arguments})
                 return await client.call_tool("inspect_image", arguments)
     result = asyncio.run(run())
-    assert [block.type for block in result.content] == ["text", "image"]
+    assert [block.type for block in result.content] == ["text", "image"], result
     metadata = json.loads(result.content[0].text)
     assert metadata["ok"] and "image_base64" not in metadata
     assert result.content[1].mimeType == "image/png"
@@ -166,3 +166,24 @@ def test_native_pocket_and_pad_honor_opposite_face_levels(ws):
     shape = result["validation"]["shape"]
     assert shape["bbox"] == [[-10, -10, -1.5], [10, 10, 4]]
     assert shape["volume"] == pytest.approx(20 * 20 * 4 - 10 * 10 * 1.5 + math.pi * 3**2 * 1.5 - math.pi * 4)
+
+
+@pytest.mark.parametrize("profile", ["full", "discovery"])
+def test_png_export_preserves_inline_image_through_sdk(ws, monkeypatch, profile):
+    """Mixed media must use MCP content, not a JSON output-model serializer."""
+    from agentcad.mcp_server import build_server
+
+    drawing(ws / "preview.png")
+    monkeypatch.setattr(Runtime, "export_drawing", lambda *a, **kw: {"ok": True, "output": "preview.png"})
+    server = build_server(Policy(root=ws), profile=profile)
+
+    async def run():
+        args = {"path": "part.FCStd", "output": "preview.png", "format": "png"}
+        if profile == "discovery":
+            return await server.call_tool("call_tool", {"name": "export_drawing", "arguments": args})
+        return await server.call_tool("export_drawing", args)
+
+    result = asyncio.run(run())
+    assert [block.type for block in result] == ["text", "image"]
+    assert json.loads(result[0].text)["ok"]
+    assert Image.open(BytesIO(base64.b64decode(result[1].data))).size == (120, 80)

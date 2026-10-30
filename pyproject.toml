@@ -11,6 +11,7 @@ dependencies = [
     "pypdf>=4",
     "pillow>=10",  # SVG export and image previews; a core dependency so a plain uvx/pipx install can do them
     "numpy",  # comparing previews with reference images (part/compare.py); ezdxf requires it as well
+    "tomli>=2; python_version < '3.11'",  # validate user configuration on every supported Python
 ]
 
 [project.optional-dependencies]
