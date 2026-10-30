@@ -357,7 +357,8 @@ def _modify_dimension(ctx: Ctx, e, fields: dict[str, Any]) -> dict[str, Any]:
     if "tolerance" in fields:
         from ..tolerances import apply_tolerance
         apply_tolerance(ov, fields["tolerance"], ctx.unit)
-    elif (ov.get("dimtol", 0) or ov.get("dimlim", 0)) and e.dxf.get("text", "") and "<>" not in e.dxf.text:
+    elif "text" in fields and (ov.get("dimtol", 0) or ov.get("dimlim", 0)) and e.dxf.get("text", "") \
+            and "<>" not in e.dxf.text:  # text this call writes; an existing override is checked on redraw
         raise input_error("TOLERANCE_TEXT_OVERRIDE", "Toleranced dimensions must display the measured value (<>)")
     ov.commit()
     rerender_dimension(ctx, e)

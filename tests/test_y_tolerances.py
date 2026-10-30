@@ -167,6 +167,67 @@ def test_stacked_tolerance_glyphs_clear_the_radial_dimension_line(rt, ws, blank,
     assert recording.player().bbox().extmin.y > 0.1
 
 
+def _foreign_tolerances(path, dimtp=0.5):
+    """Tolerances a drawing's author set: in the dimension style, and on one angular dimension itself."""
+    doc = ezdxf.new("R2010", setup=True, units=4)
+    style = doc.dimstyles.duplicate_entry("EZDXF", "TOL")
+    style.dxf.dimtol, style.dxf.dimtp, style.dxf.dimtm, style.dxf.dimtdec = 1, 0.5, 0.5, 1
+    msp = doc.modelspace()
+    x, slope, y = ((0, 0), (50, 0)), ((0, 0), (40, 30)), ((0, 0), (0, 40))
+    for line in (x, slope, y):
+        msp.add_line(*line)
+    msp.add_angular_dim_2l(base=(30, 10), line1=x, line2=slope, dimstyle="TOL").render()
+    msp.add_linear_dim(base=(0, -10), p1=(0, 0), p2=(50, 0), text="REF", dimstyle="TOL").render()
+    msp.add_angular_dim_2l(base=(10, 30), line1=slope, line2=y, dimstyle="EZDXF",
+                           override={"dimtol": 1, "dimtp": dimtp, "dimtm": 0.5, "dimtdec": 1}).render()
+    doc.saveas(path)
+
+
+def test_tolerances_the_drawing_author_set_do_not_block_edits_or_delivery(rt, ws):
+    _foreign_tolerances(ws / "foreign.dxf")
+    issues = rt.validate_drawing("foreign.dxf")["validation"]["issues"]
+    assert not [i for i in issues if "TOLERANCE" in i["code"]], issues
+    dims = rt.inspect_entities("foreign.dxf", filter={"type": "DIMENSION"})["entities"]
+    assert [d["tolerance"].get("from_style", False) for d in dims] == [True, True, False]
+    for d in dims:
+        assert rt.apply_operations("foreign.dxf", [{"op": "move", "target": d["id"], "delta": [5, 0]}])["ok"]
+    assert rt.apply_operations("foreign.dxf", [{"op": "modify", "target": dims[1]["id"], "set": {"text_height": 3}},
+                                               {"op": "add_line", "start": [0, 50], "end": [10, 50]}], strict=True)["ok"]
+    # Text AgentCAD writes is still held to the rule, wherever the tolerance comes from.
+    fake = rt.apply_operations("foreign.dxf", [{"op": "modify", "target": dims[0]["id"], "set": {"text": "40"}}])
+    assert fake["error"]["code"] == "TOLERANCE_TEXT_OVERRIDE"
+    assert rt.deliver_drawing("foreign.dxf", "bundle", formats=["dxf"])["ok"]
+
+
+def test_corrupt_foreign_tolerance_values_are_still_refused(rt, ws):
+    _foreign_tolerances(ws / "foreign.dxf", dimtp=float("nan"))
+    issues = rt.validate_drawing("foreign.dxf")["validation"]["issues"]
+    assert [i["code"] for i in issues if "TOLERANCE" in i["code"]] == ["INVALID_TOLERANCE"]
+
+
+def test_a_dimension_naming_a_missing_style_can_be_inspected(rt, ws):
+    doc = ezdxf.new("R2010", setup=True)
+    dim = doc.modelspace().add_linear_dim(base=(0, 10), p1=(0, 0), p2=(50, 0), dimstyle="EZDXF")
+    dim.render()
+    dim.dimension.dxf.dimstyle = "GONE"
+    doc.saveas(ws / "foreign.dxf")
+    found = rt.inspect_entities("foreign.dxf", filter={"type": "DIMENSION"})
+    assert found["ok"] and "tolerance" not in found["entities"][0], found
+    assert rt.export_drawing("foreign.dxf", "foreign.json", "json")["ok"]
+
+
+def test_clearing_a_tolerance_restores_the_dimension_look(rt, ws, blank):
+    dims = [{"op": "add_linear_dim", "p1": [0, 0], "p2": [50, 0], "text_height": 3.5, "tag": tag} for tag in "ab"]
+    dims[1]["tolerance"] = {"lower": -0.1, "upper": 0.1}
+    assert rt.apply_operations(blank, [{"op": "add_line", "start": [0, 0], "end": [50, 0]}, *dims])["ok"]
+    assert rt.apply_operations(blank, [{"op": "modify", "target": "tag:b", "set": {"tolerance": None}}])["ok"]
+    doc = ezdxf.readfile(ws / blank)
+    plain, cleared = (doc.entitydb[Runtime(rt.policy).inspect_entities(blank, {"tag": t})["entities"][0]["id"]].override()
+                      for t in "ab")
+    assert {k: cleared.get(k) for k in ("dimgap", "dimtolj", "dimtfac")} == \
+           {k: plain.get(k) for k in ("dimgap", "dimtolj", "dimtfac")}
+
+
 def test_sourced_fit_lookup_drives_saved_dimension(rt, blank):
     fit = rt.standard_library(item="iso_fit", size="25 H7/g6")
     assert fit["ok"] and fit["source_page"] == 74

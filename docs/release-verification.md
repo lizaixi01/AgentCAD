@@ -50,8 +50,9 @@ and runtime calls are serialized. This API does not expose a browser/CORS contra
 Writers use nonblocking OS locks held until the operation finishes or the process
 exits. An old timestamp cannot evict a live writer. The persistent `write.lock`
 file is normal; deleting it while writers are running is unsafe on POSIX. A legacy
-`lock` marker is conservatively refused regardless of age and should be removed
-only after confirming its old writer has exited. Do not mix old and new runtime
+`lock` marker is conservatively refused regardless of age. `recover` removes it once
+the process whose ID it records has exited; a marker without a readable process ID
+must be removed by hand after confirming its old writer has exited. Do not mix old and new runtime
 versions in one active workspace. Foreign editors that ignore the lock still need
 the revision/hash conflict checks; this is not an OS-wide lock on the DXF file.
 
