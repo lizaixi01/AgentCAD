@@ -177,3 +177,28 @@ def test_foreign_rounded_deviation_retains_actual_nominal(rt,ws):
     doc.saveas(ws/'display.dxf')
     response=rt.verify_dimensions('display.dxf',[{'id':'hole','handle':handle,'value':6.4}])
     assert response['accepted'] and response['rows'][0]['displayed']==6.4,response
+
+
+@pytest.mark.parametrize('linear_units',[2,4,5])
+def test_angular_precision_never_uses_the_linear_fraction_format(rt,blank,ws,linear_units):
+    from agentcad.dimension_display import read_display
+    result=rt.apply_operations(blank,[{'op':'add_line','start':[0,0],'end':[10,0]},
+        {'op':'add_line','start':[0,0],'end':[5,8.660254037844386]},
+        {'op':'add_angular_dim','center':[0,0],'p1':[10,0],'p2':[5,8.660254037844386]}])
+    assert result['ok'],result
+    doc=ezdxf.readfile(ws/blank);dim=doc.modelspace().query('DIMENSION').first
+    override=dim.override();override.update({'dimlunit':linear_units,'dimadec':4});override.commit()
+    doc.blocks[dim.dxf.geometry].query('MTEXT').first.text='60.0100°';doc.saveas(ws/blank)
+    assert read_display(dim)['resolution']==.0001
+    validation=rt.validate_drawing(blank)['validation']
+    assert any(i['code']=='DIMENSION_RENDER_MISMATCH' for i in validation['issues'])
+    assert rt.deliver_drawing(blank,'angle-damaged',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'
+
+
+def test_non_decimal_angular_units_cannot_be_misread_as_decimal_degrees(rt,blank,ws):
+    from agentcad.dimension_display import read_display
+    assert rt.apply_operations(blank,[{'op':'add_angular_dim','center':[0,0],'p1':[10,0],'p2':[0,10]}])['ok']
+    doc=ezdxf.readfile(ws/blank);dim=doc.modelspace().query('DIMENSION').first
+    override=dim.override();override.update({'dimaunit':2});override.commit()
+    doc.blocks[dim.dxf.geometry].query('MTEXT').first.text='90'
+    assert read_display(dim)['value'] is None

@@ -31,7 +31,14 @@ with drawing_lock(Path(sys.argv[1])):
         child.kill()
         child.wait(timeout=10)
         # No timestamp, PID polling or manual deletion is needed after a crash.
-        result = rt.apply_operations(blank, [{"op": "add_line", "start": [0, 0], "end": [10, 0]}])
+        # On Windows Popen can name the venv launcher; its actual Python child
+        # briefly outlives kill+wait. The lock must remain held until that writer exits.
+        deadline = time.monotonic() + 5
+        while True:
+            result = rt.apply_operations(blank, [{"op": "add_line", "start": [0, 0], "end": [10, 0]}])
+            if result['ok'] or result['error']['code'] != 'DRAWING_LOCKED' or time.monotonic() >= deadline:
+                break
+            time.sleep(.02)
         assert result["ok"], result
     finally:
         if child.poll() is None:

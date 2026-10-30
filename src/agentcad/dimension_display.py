@@ -130,7 +130,11 @@ def read_display(dim) -> dict:
     if not isinstance(digits, int) or not 0 <= digits <= 8:
         return result
     units = override.get("dimlunit", 2)
-    result["resolution"] = 2.0 ** -digits if units in {4, 5} else 10.0 ** -digits
+    result["resolution"] = 2.0 ** -digits if not angular and units in {4, 5} else 10.0 ** -digits
+    if angular and override.get("dimaunit", 0) != 0:
+        # Non-decimal angular formats need their own unit-aware parser. A bare
+        # number in radians/grads/DMS must never be certified as decimal degrees.
+        return {**result, "status": "unsupported_angular_format"}
     rounding = override.get("dimrnd", 0)
     if not isinstance(rounding, (int, float)) or not math.isfinite(rounding) or rounding < 0:
         return result
