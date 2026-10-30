@@ -21,6 +21,6 @@ lookup-to-native-DIMENSION-to-file-readback workflow. The output uses mm even
 when the drawing uses another unit. Numeric tolerance annotations do not claim
 complete ISO drawing compliance.
 
-Existing standard-part tables in `stdlib.py` have a different provenance level:
-they cite ISO/DIN identifiers but do not retain a primary-source revision for
-every row. This new verification does not retroactively certify those tables.
+Other standard-part tables have a separate [dimensional source audit](standard-tables.md).
+It distinguishes verified dimensions, cutting-tool recommendations and unverified
+counterbore data; neither audit certifies complete manufacturing compliance.

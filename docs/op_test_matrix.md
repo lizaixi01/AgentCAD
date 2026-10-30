@@ -73,7 +73,7 @@
 | `set_attributes` | block | test_h_operations.py |
 | `set_page_setup` | layout | **无** |
 | `set_properties` | edit | test_h_operations.py |
-| `stretch` | edit | test_b_revision.py, test_h_operations.py |
+| `stretch` | edit | test_b_revision.py, test_h_operations.py, test_y_tolerances.py |
 | `trace_boundary` | draw | **无** |
 | `trim` | edit | test_autocad_findings.py, test_d_errors.py, test_h_operations.py |
 | `add_sketch` | part_sketch | test_n_parts.py |
