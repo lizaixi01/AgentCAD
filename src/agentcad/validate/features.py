@@ -15,6 +15,7 @@ from ezdxf.document import Drawing
 
 from .. import geom as G
 from ..model import circle_wcs, get_tag, lwpoly_wcs
+from ..dimension_display import read_display
 
 CONNECT_TOL = 1e-6
 FLATTEN = 0.01
@@ -174,8 +175,10 @@ def extract(doc: Drawing, layout: str | None = None) -> Features:
                 lfac = float(e.override().get("dimlfac") or 1.0)
             except Exception:
                 lfac = 1.0
+            display = read_display(e)
             f.dimensions.append({"id": h, "kind": kind, "measurement": m, "layer": e.dxf.layer,
-                                 "displayed": None if m is None else m * lfac,
+                                 "scaled_measurement": None if m is None else m * lfac,
+                                 "displayed": display["value"], "display_evidence": display,
                                  "text": e.dxf.get("text", ""), "anchors": dimension_anchor_points(e),
                                  "direction": dimension_direction(e),
                                  "stored": e.dxf.get("actual_measurement"), "tag": get_tag(e)})

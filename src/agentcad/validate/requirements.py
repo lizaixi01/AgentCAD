@@ -110,14 +110,15 @@ def check_requirements(feats: Features, reqs: list[dict[str, Any]],
             elif t == "dimension":
                 kinds = {"linear": {"linear", "aligned"}, "aligned": {"linear", "aligned"}, "diameter": {"diameter"},
                          "radius": {"radius"}, "angular": {"angular", "angular3p"}}.get(req.get("kind", "linear"))
-                cands = [d for d in feats.dimensions if (kinds is None or d["kind"] in kinds) and d["measurement"] is not None
+                cands = [d for d in feats.dimensions if (kinds is None or d["kind"] in kinds)
+                         and d["measurement"] is not None and d["displayed"] is not None
                          and (not req.get("tag") or d["tag"] == req["tag"])
                          and (not req.get("layer") or d["layer"] == req["layer"])]
                 if not cands:
                     out.append(_res(req, False, expected=req["value"], actual=None, deviation=None, tol=tol,
                                     message=f"No {req.get('kind', 'linear')} dimension in the drawing"))
                     continue
-                shown = lambda d: d.get("displayed", d["measurement"])  # noqa: E731  value as printed (DIMLFAC)
+                shown = lambda d: d["displayed"]  # noqa: E731  actual saved graphics, not inferred geometry
                 best = min(cands, key=lambda d: abs(shown(d) - req["value"]))
                 dev = abs(shown(best) - req["value"])
                 out.append(_res(req, dev <= tol, expected=req["value"], actual=round(shown(best), 9),

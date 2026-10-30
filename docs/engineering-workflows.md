@@ -56,6 +56,14 @@ into a reusable block with a base point, preserving the source entities.
 It binds DIMENSION anchors to actual geometry and compares the physical measurement
 with the requirement. Displayed text/DIMLFAC mismatches remain separate findings:
 a physical requirement can pass while the drawing is rejected for misleading text.
+The displayed primary value comes from saved visible TEXT/MTEXT in the dimension
+block, not measurement multiplied by DIMLFAC. Reports retain that text and distinguish
+it from geometry. Missing, hidden or ambiguous display cannot satisfy a dimension
+requirement. Decimal separators, scientific and common fractional formats, known
+literal prefixes/suffixes and native limits are handled explicitly; nominal readback
+does not certify every note, fit or tolerance string. Ordinary display rounding is
+allowed by generic integrity checks, but an explicit dimension requirement still
+uses its own tolerance and the value actually printed.
 Existing `validate_drawing` dimension requirements retain their displayed-value
 semantics, so existing clients do not silently change meaning.
 

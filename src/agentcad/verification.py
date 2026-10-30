@@ -90,15 +90,18 @@ def verify_dimensions(doc, requirements, tolerance=1e-6):
                 bound &= attached
         actual = d["measurement"] if bound else None
         displayed = None if not d else d["displayed"]
+        override_value = actual
         if d and (d["text"] or "").strip() and "<>" not in d["text"]:
             values = text_values(dimension_plain_text(d["text"]))
-            displayed = values[0] if len(values) == 1 else None
+            override_value = values[0] if len(values) == 1 else None
         ok = actual is not None and abs(actual - req["value"]) <= tol
         row_findings = []
         if not bound:
             row_findings.append("dimension_unbound")
         elif displayed is None or abs(displayed - actual) > tol:
             row_findings.append("dimension_mismatch")
+        if bound and (override_value is None or abs(override_value - actual) > tol):
+            row_findings.append("dimension_override_mismatch")
         for kind in row_findings:
             findings.append({"requirement": req["id"], "kind": kind, "handle": req["handle"]})
         rows.append(
@@ -108,6 +111,7 @@ def verify_dimensions(doc, requirements, tolerance=1e-6):
                 "status": "pass" if ok else "fail",
                 "measured": actual,
                 "displayed": displayed,
+                "display_evidence": None if not d else d["display_evidence"],
                 "bound": bound,
                 "findings": row_findings,
             }
