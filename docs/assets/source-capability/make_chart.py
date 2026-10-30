@@ -1,4 +1,4 @@
-"""Render the README source-capability figure.
+"""Render the source-capability figure in docs/benchmarks.md.
 
 Run: python docs/assets/source-capability/make_chart.py
 Requires matplotlib. --check verifies the committed SVGs; --preview-dir writes

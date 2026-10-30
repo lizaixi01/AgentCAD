@@ -62,6 +62,13 @@ The fixed [U-C4N v8 execution matrix](comparison-upstream-benchmark-v8.md) now p
 | Security and operations | 10 | 10 | 8 |
 | **Total** | **100** | **98** | **96** |
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/source-capability/source-capability-dark.svg">
+    <img src="assets/source-capability/source-capability-light.svg" alt="Source-capability review, 2026-10-30. Under the same local rubric v1: AgentCAD 98 out of 100, AutoCAD MCP Pro 96. Separately, U-C4N's published board, which does not list AgentCAD: U-C4N/Autocad-MCP 93 (Pro 1.6.0 self-review, 2026-09-24), varavista 84, beiming183-cloud 83, LokmenoWer 74, AnCode666 73, puran-water 70, NCO-1986 68, daobataotie 35, zh19980811 30 (July snapshots). The two lists use different assessors and scoring detail and are not ranked together." width="860">
+  </picture>
+</p>
+
 Pro's original **93/100** is its **v1.6.0 self-review from 2026-09-24**, using less detailed scoring anchors. It remains a separate historical result. The comparison above establishes a two-point lead under our published local method; it is **not an official upstream ranking or external certification**.
 
 The work repaired strict delivery checks, native tolerances, curved-pipe connectivity, HTTP defaults and process locks, and added sourced dimensional data, locked dependencies and cross-platform CI. Final verification: **685 passed / 8 skipped** locally with AutoCAD and FreeCAD enabled; four completed CI lanes; **31/31** again on the original v8 matrix. Skips are not passes. AgentCAD still loses two points: unverified M14 counterbore data and incomplete automatic manufacturing annotation in the mechanical template.
