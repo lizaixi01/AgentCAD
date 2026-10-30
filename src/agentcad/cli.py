@@ -193,6 +193,10 @@ def build_parser() -> argparse.ArgumentParser:
                         "codex appends to PATH (default ~/.codex/config.toml)")
     s = sub.add_parser("serve", help="Run the HTTP JSON API"); s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8765)
+    s = sub.add_parser("demo", help="Show people what AgentCAD does: the live viewer opens and a plate is drawn "
+                                    "step by step (in <workspace>/demo)")
+    s.add_argument("--no-browser", action="store_true", help="Print the viewer link, do not open a browser")
+    s.add_argument("--shortcut", action="store_true", help="Put a demo icon on the desktop instead of running it")
     s = sub.add_parser("viewer", help="Live web viewer of the root's drawings and parts (read-only)")
     s.add_argument("--host", default="127.0.0.1"); s.add_argument("--port", type=int, default=8770)
     s.add_argument("--allow-remote", action="store_true",
@@ -241,6 +245,20 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
     a = build_parser().parse_args(argv)
     if a.cmd in ("setup", "doctor"):
         return _setup_or_doctor(a)
+    if a.cmd == "demo":
+        from . import install
+        root = install.workspace_root(a.root)
+        if a.shortcut:
+            info = install.install_info()
+            launcher = install.choose_launcher("auto", info)
+            print(json.dumps(install.create_shortcut(root, launcher, info["source"], name=install.demo_name(),
+                                                     action=install.DEMO), ensure_ascii=False), flush=True)
+            return {"ok": True}, 0
+        from .demo import run as run_demo
+        try:
+            return {"ok": True}, run_demo(root, open_browser=not a.no_browser)
+        except FileExistsError as exc:
+            return {"ok": False, "error": {"code": "FOLDER_NOT_EMPTY", "category": "input", "message": str(exc)}}, 2
     if a.cmd == "mcp" and not a.root:
         from .install import ensure_workspace
         a.root = str(ensure_workspace())  # never the folder the client happens to start in

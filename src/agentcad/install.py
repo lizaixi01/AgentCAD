@@ -342,11 +342,23 @@ def open_folder(path: Path) -> None:
 STATIC = Path(__file__).resolve().parent / "viewer_static"
 
 
-def viewer_command(root: Path, launcher: str, source: str | None = None) -> tuple[str, list[str]]:
-    """(command, args) that starts the live viewer of ``root`` and opens it in the browser: the desktop icon."""
+VIEWER = ("viewer", "--open")  # the AgentCAD icon: the drawings in the live viewer
+DEMO = ("demo",)                # the demo icon: the viewer, drawing a plate step by step
+
+
+def demo_name() -> str:
+    """The demo icon's name, in the language of the computer."""
+    import locale
+    lang = (locale.getlocale()[0] or os.environ.get("LANG") or "").lower()
+    return "AgentCAD 演示" if lang.startswith(("zh", "chinese")) else "AgentCAD Demo"
+
+
+def viewer_command(root: Path, launcher: str, source: str | None = None,
+                   action: tuple[str, ...] = VIEWER) -> tuple[str, list[str]]:
+    """(command, args) that runs ``agentcad --root <root> <action>``: what a desktop icon starts."""
     command, args = launcher_command(launcher, source)
     args = args[:-1] + ["agentcad"] if launcher in ("uvx", "pipx") else ["-m", "agentcad.cli"]
-    return command, args + ["--root", str(root), "viewer", "--open"]
+    return command, args + ["--root", str(root), *action]
 
 
 PS_QUOTES = "'\u2018\u2019\u201a\u201b"  # PowerShell ends a '...' string at any of these, not only at '
@@ -368,22 +380,24 @@ def _desktop_quote(arg: str) -> str:
 
 
 def create_shortcut(root: Path, launcher: str, source: str | None = None, *, platform: str = sys.platform,
-                    runner: Runner | None = None, dry_run: bool = False) -> dict[str, Any]:
-    """Put an "AgentCAD" icon on the desktop that opens the user's drawings in the live viewer. Windows: a .lnk
+                    runner: Runner | None = None, dry_run: bool = False, name: str = "AgentCAD",
+                    action: tuple[str, ...] = VIEWER) -> dict[str, Any]:
+    """Put an icon called ``name`` on the desktop that runs ``agentcad <action>`` for ``root``: by default the
+    "AgentCAD" icon that opens the user's drawings in the live viewer; ``action=DEMO`` the demo. Windows: a .lnk
     (made by PowerShell, which knows a desktop moved by OneDrive); macOS: AgentCAD.command; Linux: a .desktop
     file. The icon image is copied into <root>/.agentcad, which outlives a uvx cache."""
-    command, args = viewer_command(root, launcher, source)
+    command, args = viewer_command(root, launcher, source, action)
     state = root / ".agentcad"
     if platform == "win32":
         ico = state / "agentcad.ico"
         script = ("[Console]::OutputEncoding = [Text.Encoding]::UTF8; "  # else a Chinese desktop path comes back as ????
-                  "$d = [Environment]::GetFolderPath('Desktop'); $p = Join-Path $d 'AgentCAD.lnk'; "
+                  "$d = [Environment]::GetFolderPath('Desktop'); $p = Join-Path $d " + _ps_quote(name + ".lnk") + "; "
                   "$had = Test-Path $p; "
                   + ("" if dry_run else
                      "$s = (New-Object -ComObject WScript.Shell).CreateShortcut($p); "
                      f"$s.TargetPath = {_ps_quote(command)}; $s.Arguments = {_ps_quote(subprocess.list2cmdline(args))}; "
                      f"$s.WorkingDirectory = {_ps_quote(str(root))}; $s.IconLocation = {_ps_quote(str(ico))}; "
-                     "$s.Description = 'AgentCAD'; $s.WindowStyle = 7; $s.Save(); ")
+                     f"$s.Description = {_ps_quote(name)}; $s.WindowStyle = 7; $s.Save(); ")
                   + "Write-Output $had; Write-Output $p")
         if not dry_run:
             state.mkdir(parents=True, exist_ok=True)
@@ -398,11 +412,11 @@ def create_shortcut(root: Path, launcher: str, source: str | None = None, *, pla
         desk = Path.home() / "Desktop"
         if platform == "darwin":
             import shlex
-            path = desk / "AgentCAD.command"
+            path = desk / f"{name}.command"
             text = "#!/bin/sh\nexec " + " ".join(shlex.quote(a) for a in [command, *args]) + "\n"
         else:
-            path = desk / "AgentCAD.desktop"
-            text = ("[Desktop Entry]\nType=Application\nName=AgentCAD\nComment=Your drawings, live\n"
+            path = desk / f"{name}.desktop"
+            text = (f"[Desktop Entry]\nType=Application\nName={name}\nComment=AgentCAD, live\n"
                     f"Exec={' '.join(_desktop_quote(a) for a in [command, *args])}\n"
                     f"Icon={state / 'agentcad.png'}\nTerminal=false\n")
         status = "updated" if path.exists() else "added"
@@ -427,6 +441,7 @@ class SetupResult:
     autocad: str | None = None
     self_cmd: str = "agentcad"
     shortcut: dict[str, Any] | None = None
+    demo_shortcut: dict[str, Any] | None = None
 
     @property
     def ok(self) -> bool:
@@ -435,7 +450,7 @@ class SetupResult:
     def to_dict(self) -> dict[str, Any]:
         return {"ok": self.ok, "dry_run": self.dry_run, "workspace": str(self.root), "launcher": self.launcher,
                 "server": self.entry, "clients": self.clients, "freecad": self.freecad, "autocad": self.autocad,
-                "shortcut": self.shortcut}
+                "shortcut": self.shortcut, "demo_shortcut": self.demo_shortcut}
 
 
 def find_freecad_path() -> str | None:
@@ -552,6 +567,11 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
                                            dry_run=dry_run)
         except (OSError, subprocess.SubprocessError) as exc:
             res.shortcut = {"status": "error", "code": "SHORTCUT_FAILED", "message": str(exc)}
+        try:  # the second icon: a live demo to show people
+            res.demo_shortcut = create_shortcut(root_path, launcher, source or info["source"], runner=runner,
+                                                dry_run=dry_run, name=demo_name(), action=DEMO)
+        except (OSError, subprocess.SubprocessError) as exc:
+            res.demo_shortcut = {"status": "error", "code": "SHORTCUT_FAILED", "message": str(exc)}
         tell("shortcut", "error" if res.shortcut["status"] == "error" else "done", res.shortcut)
     return res
 
