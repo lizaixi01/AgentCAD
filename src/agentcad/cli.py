@@ -56,6 +56,15 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("inspect", help="Drawing summary: units, extents, layers, counts, tags, metadata")
     s.add_argument("path")
 
+    s = sub.add_parser("measure", help="Exact DXF entity or 3D plane/distance measurements")
+    s.add_argument("path")
+    s.add_argument("--target", required=True, help="JSON entity selector, planar_levels or face_distance target")
+
+    s = sub.add_parser("image", help="Inspect/magnify a workspace image; JSON contains a base64 PNG")
+    s.add_argument("path"); s.add_argument("--region", help="JSON [left,top,right,bottom] in source pixels")
+    s.add_argument("--max-size", type=int, default=1536)
+    s.add_argument("--rotate", type=int, choices=(0, 90, 180, 270), default=0, help="Clockwise degrees after cropping")
+
     s = sub.add_parser("entities", help="List entities (filtered, paginated)")
     s.add_argument("path"); s.add_argument("--type"); s.add_argument("--layer"); s.add_argument("--tag")
     s.add_argument("--tag-prefix"); s.add_argument("--ids", help="Comma-separated handles")
@@ -254,6 +263,10 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         r = rt.create_drawing(a.path, a.units, a.template, a.dxf_version, a.overwrite, a.annotation_scale)
     elif c == "inspect":
         r = rt.read_drawing(a.path)
+    elif c == "image":
+        r = rt.inspect_image(a.path, _json_arg(a.region, None, "region"), a.max_size, a.rotate)
+    elif c == "measure":
+        r = rt.measure_entities(a.path, _json_arg(a.target, None, "target"))
     elif c == "entities":
         flt = {k: v for k, v in (("type", a.type), ("layer", a.layer), ("tag", a.tag), ("tag_prefix", a.tag_prefix)) if v}
         r = rt.inspect_entities(a.path, filter=flt or None, ids=a.ids.split(",") if a.ids else None,

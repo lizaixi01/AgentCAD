@@ -4,6 +4,10 @@ AGENTCAD_READ_ONLY=1 and AGENTCAD_ALLOWED_OPS=op1,op2. The live viewer starts on
 (AGENTCAD_VIEWER=0: not at all; AGENTCAD_VIEWER_OPEN=1: also open it in the browser)."""
 from __future__ import annotations
 
+import base64
+import os
+import json
+from functools import wraps
 from typing import Annotated, Any, Literal
 
 from mcp.server.fastmcp import FastMCP, Image
@@ -11,6 +15,7 @@ from pydantic import Field
 
 from .policy import Policy
 from .service import Runtime
+from .worker import CADWorker
 
 INLINE_IMAGE_MAX = 2 * 1024 * 1024  # bytes: a png export larger than this is not returned inline
 
@@ -43,6 +48,15 @@ Basics
   run_script (only if enabled) covers edits no op can express.
 
 3D parts (.FCStd)
+- For an engineering drawing image, inspect_image magnifies callouts and section views. Before modeling,
+  rotate vertical or inverted annotations upright with inspect_image(rotate=90/180/270). Recheck ambiguous
+  digits and decimal points at a readable orientation. Make a dimension ledger from the drawing, then
+  map each dimension to the edges/centres it measures, rather than a nearby feature. Use section extension
+  lines and hatching to distinguish cut depth from remaining wall thickness and to identify which side
+  each recess or protrusion occupies. Record signed face levels in the chosen coordinate frame.
+  For each thickness/depth callout, name BOTH measured surfaces and follow both witness lines to them;
+  a nearby number is not evidence for a surface pair. Resolve an ambiguous assignment against the other
+  views before building. State a short dimension ledger (value, measured features, source view, planned check).
 - One PartDesign Body, one solid, every feature native and editable. Usual order: set_parameters (optional),
   add_sketch on a plane (XY normal +Z, XZ normal -Y, YZ normal +X; offset moves it along the normal) or
   on_face, then pad (adds along the normal) / pocket (cuts against it) / revolve / groove / hole, then fillet,
@@ -54,10 +68,22 @@ Basics
   ("top", {"type": "circle", "radius": 6}) are re-resolved after every edit; '=Params.w' drives dimensions: change them later with set_parameters or
   modify_feature and the part rebuilds.
 - The result's validation.shape gives size, volume and holes: check them against what you meant to build.
+  Derive validation targets independently from explicit drawing callouts, not from the geometry you just
+  created. Check that the signed face-level differences agree with those callouts before saving.
+  A valid solid with matching overall size/hole count can still have wrong local geometry. Compare opposite
+  faces and section depth levels, and use inspect_entities for the relevant face positions.
+  Use inspect_entities(filter={kind:'faces'}), not the default feature history or the DXF type filter.
+  measure_entities(target={kind:'planar_levels',axis:'z'}) lists the final solid's plane levels. Measure
+  each intended local thickness with target={kind:'face_distance',from:'FaceN',to:'FaceM'}; validation
+  supports requirements={type:'face_distance',from:...,to:...,value:...,tolerance:...} in its list.
 - See what you built: export_drawing(path, "preview.png", "png", views=[...]); a view is a name (iso, front,
   top, right, ...) or the camera position [x, y, z] relative to the part. The image comes back in the result.
   Each view is scaled to fill its cell (fit='view'), so compare shapes and proportions within a view, not
   sizes across views; fit='uniform' uses one scale. To match a reference image, use its camera positions.
+  Keep one consistent orientation across front/top/side views; establish the drawing's projection layout
+  and track the same named features between views. Do not mirror individual views to make them fit.
+  The preview's camera_frames report screen-right/up directions, so left/right correspondence is explicit.
+  Angle operands on operations are numeric degrees; set_parameters does not accept strings ending in 'deg'.
 - Deliver with export_drawing(path, "part.step", "step") (also stl, iges, brep, obj): read back and compared.
 
 3D scripts and reference images
@@ -69,8 +95,13 @@ Basics
   rebuilds those ops on the new solid).
 - Compare with a reference image: export_drawing(path, "cmp.png", "png", views=[...], reference="ref.png"),
   views in the reference's order and grid (2 columns up to 4 views). Each view is scaled and centred onto the
-  reference's silhouette, so overall size is not compared, only shape and proportions. The image shows the
-  reference, ours and a diff (red: only reference, blue: only ours); compare.views[].iou and mean_iou score it.
+  reference's silhouette, so overall size is not compared, only shape and proportions. compare.score (per view:
+  views[].score) is the mean of outline (silhouette IoU) and edges (lines and shading steps inside the part). A part
+  that matches usually scores 0.95 or more (thin flanges, springs and hollow parts can score lower); below 0.9, look
+  where the diff shows red or blue. The
+  image is a diff per view: grey where both have material, light red / light blue where only the reference / only
+  ours has; red edges only in the reference (a feature yours lacks or misplaces), blue only in yours. views[].cut
+  names sides where the reference runs out of its picture: nothing beyond them is compared.
 
 Live viewer: results that change a file carry viewer_url, a page on this computer where the user watches the
 work step by step and can save or share it. Give the user that link once, the first time you change something."""
@@ -79,9 +110,39 @@ Path_ = Annotated[str, Field(description="Drawing path (.dxf) or 3D part (.FCStd
                                         "root")]
 
 
-def build_server(policy: Policy | None = None) -> FastMCP:
+class CADServer(FastMCP):
+    """Run all synchronous CAD work on one cancellation-safe worker, keeping SDK validation."""
+    def __init__(self, *args, **kwargs):
+        self.worker = CADWorker()
+        super().__init__(*args, **kwargs)
+
+    def add_tool(self, fn, *args, **kwargs):
+        @wraps(fn)
+        async def serialized(*a, **kw):
+            return await self.worker.run(fn, *a, **kw)
+        return super().add_tool(serialized, *args, **kwargs)
+
+
+def build_server(policy: Policy | None = None, profile: str | None = None) -> FastMCP:
     rt = Runtime(policy or Policy(), auto_viewer=True)
-    mcp = FastMCP("agentcad", instructions=INSTRUCTIONS)
+    mcp = CADServer("agentcad", instructions=INSTRUCTIONS)
+
+    @mcp.tool()
+    def inspect_image(path: Annotated[str, Field(description="PNG/JPEG/WebP image in the workspace")],
+                      region: Annotated[list[int] | None, Field(description="[left, top, right, bottom] in source "
+                          "pixels, top-left origin; omit for an overview showing source dimensions")] = None,
+                      max_size: Annotated[int, Field(ge=64, le=2048, description="Longest preview side in pixels; "
+                          "small crops are magnified. This does not create additional source detail")] = 1536,
+                      rotate: Annotated[Literal[0, 90, 180, 270], Field(description="Clockwise rotation AFTER cropping; "
+                          "make vertical dimensions upright. Region coordinates always refer to the source")] = 0) -> Any:
+        """Look closely at a drawing's dimensions, leaders, hatching or section view before modeling.
+        Returns source dimensions, crop coordinates and an inline image. Read-only; writes no files.
+        Pixel distances are not CAD dimensions: use the drawing's explicit callouts and datums."""
+        result = rt.inspect_image(path, region, max_size, rotate)
+        if result.get("ok"):
+            png = base64.b64decode(result.pop("image_base64"))
+            return [result, Image(data=png, format="png")]
+        return result
 
     @mcp.tool()
     def list_operations(category: Annotated[str | None, Field(description="draw|edit|annotate|layer|block|layout|library: "
@@ -120,16 +181,20 @@ def build_server(policy: Policy | None = None) -> FastMCP:
 
     @mcp.tool()
     def inspect_entities(path: Path_,
-                         filter: Annotated[dict | None, Field(description="{type, layer, tag, tag_prefix, layout}")] = None,  # noqa: A002
+                         filter: Annotated[dict | None, Field(description="DXF: {type, layer, tag, tag_prefix, layout}. "
+                             "FCStd: {kind: 'features'|'faces'|'edges', feature?: <ref>, selector?: {...}}; "
+                             "selector is for faces/edges, type/layer are DXF-only")] = None,  # noqa: A002
                          ids: Annotated[list[str] | None, Field(description="Entity handles or 'tag:<name>'")] = None,
                          window: Annotated[list[list[float]] | None, Field(description="[[x0,y0],[x1,y1]] crossing window")] = None,
                          limit: Annotated[int, Field(ge=1, le=5000)] = 200, offset: int = 0, detail: bool = True,
                          layout: Annotated[str | None, Field(description="'Model' (default), a paper layout name "
-                                                                "from read_drawing.layouts, or '*' for all")] = None) -> dict:
+                                                                "from read_drawing.layouts, or '*' for all")] = None,
+                         selection_mode: Literal["crossing", "window"] = "crossing",
+                         polygon: list[list[float]] | None = None) -> dict:
         """List entities with geometry (paginated, filterable). Paper-space entities carry a 'layout' field.
         3D part: filter={kind: features|faces|edges, feature: <ref> (default the Body), selector: {...}} lists
         features, or faces/edges with their geometry; pass the selector you plan to use to see what it picks."""
-        return rt.inspect_entities(path, filter, ids, limit, offset, detail, window, layout)
+        return rt.inspect_entities(path, filter, ids, limit, offset, detail, window, layout, selection_mode, polygon)
 
     @mcp.tool()
     def apply_operations(path: Path_,
@@ -146,14 +211,18 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                          bounds: Annotated[list[list[float]] | None, Field(description="[[x0,y0],[x1,y1]] for the "
                                            "validation")] = None,
                          layout: Annotated[str | None, Field(description="Validate this paper-space sheet instead of "
-                                           "model space (ops choose their own layout)")] = None) -> dict:
+                                           "model space (ops choose their own layout)")] = None,
+                         expected_revision: int | None = None,
+                         preconditions: Annotated[dict | None, Field(description="Carry preview.preconditions "
+                             "back unchanged; stale file/entity fingerprints refuse the edit")] = None) -> dict:
         """Execute an operation batch as one transaction: all params are checked first, any failure aborts with the
         file untouched; success checkpoints the old file, saves atomically, journals, and validates the result.
         The returned 'validation' is the same independent re-read of the saved file as validate_drawing (issues,
         failed requirements, passed ids, recognized counts, coverage): no separate validate_drawing call is needed
         unless you want its detail=true report. With 'create' a new drawing takes one call.
         On a .FCStd part the ops are part_operations (list_operations(category='part'))."""
-        return rt.apply_operations(path, operations, dry_run, requirements, strict, label, create, bounds, layout)
+        return rt.apply_operations(path, operations, dry_run, requirements, strict, label, create, bounds, layout,
+                                   expected_revision, preconditions)
 
     @mcp.tool()
     def apply_batch(jobs: Annotated[list[dict[str, Any]], Field(description="[{path, operations, create?, "
@@ -288,7 +357,7 @@ def build_server(policy: Policy | None = None) -> FastMCP:
 
     @mcp.tool()
     def export_drawing(path: Path_, output: str,
-                       format: Literal["dxf", "svg", "json", "pdf", "dwg", "step", "iges", "brep", "stl", "obj",
+                       format: Literal["dxf", "svg", "json", "pdf", "dwg", "csv", "xlsx", "step", "iges", "brep", "stl", "obj",
                                        "png"] = "dxf",  # noqa: A002
                        dxf_version: Literal["R12", "R2000", "R2004", "R2007", "R2010", "R2013", "R2018"] | None = None,
                        overwrite: bool = False,
@@ -312,20 +381,22 @@ def build_server(policy: Policy | None = None) -> FastMCP:
                            "one scale for every view")] = None,
                        reference: Annotated[str | None, Field(description="png of a 3D part: a reference image in the "
                            "workspace laid out as the same grid of views (same order; 2 columns up to 4 views). The "
-                           "png then shows per view the reference, our render aligned to its silhouette and a diff; "
-                           "the result gives each view's silhouette IoU and mean_iou")] = None,
+                           "png is then a diff of each view, aligned to the reference's silhouette; the result scores "
+                           "each view (outline, edges inside it) and their mean, compare.score: usually 0.95 or more "
+                           "when the part matches")] = None,
                        inline_image: Annotated[bool, Field(description="png: also return the image in this result, "
-                           "so you see it without opening the file (not above 2 MB)")] = True) -> Any:
+                           "so you see it without opening the file (not above 2 MB)")] = True,
+                       table: Literal["entities", "pid_lines", "bom"] = "entities") -> Any:
         """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, PDF (plotted without
         external software: one page per layout, paper layouts 1:1 on their sheet, vector output, reports scale and
-        too-small printed text), or DWG (optional AutoCAD backend; dxf_version selects the DWG release).
+        too-small printed text), CSV/XLSX (table: entities, pid_lines or bom), or DWG (optional AutoCAD backend).
         3D parts: step, iges, brep, stl, obj, or png: a shaded preview (parallel projection, part centred and
         filling the frame, edges drawn) to look at what you built, e.g. against a reference image. It renders
         even a part that is not one valid solid, to show what went wrong.
         STEP/IGES/BREP are read back and compared with the part; a part that is not one valid solid is refused.
         A png comes back in the result as an image too (inline_image), after the usual JSON."""
         r = rt.export_drawing(path, output, format, dxf_version, overwrite, layout, paper, scale, orientation,
-                              monochrome, views, image_size, fit, reference)
+                              monochrome, views, image_size, fit, reference, table)
         if format == "png" and inline_image and r.get("ok"):
             png = rt.policy.root / r["output"]
             if png.is_file() and png.stat().st_size <= INLINE_IMAGE_MAX:
@@ -381,7 +452,51 @@ def build_server(policy: Policy | None = None) -> FastMCP:
         """Tool-call counts, durations and payload sizes for this server session (no model calls are made)."""
         return rt.get_metrics()
 
-    return mcp
+    for name in ("preflight", "measure_entities", "verify_dimensions", "refine_drawing", "deliver_drawing", "search_tools",
+                 "read_engineering", "understand_drawing", "plant_takeoff"):
+        mcp.add_tool(getattr(rt, name))
+    profile = profile or os.environ.get("AGENTCAD_TOOL_PROFILE", "full")
+    if profile == "full":
+        return mcp
+    if profile != "discovery":
+        raise ValueError("AGENTCAD_TOOL_PROFILE must be full or discovery")
+    discovery = FastMCP("agentcad", instructions="Search tools and operations, fetch their schema, then call a tool. "
+                        "Operations execute through apply_operations. Paths are relative to the workspace.")
+
+    @discovery.tool()
+    async def search_tools(query: str, limit: int = 3) -> dict:
+        """Find native tools and operations by task description or AutoCAD command name."""
+        return await mcp.worker.run(rt.search_tools, query, limit)
+
+    @discovery.tool()
+    async def tool_schema(name: str) -> dict:
+        """Get the complete input schema for one tool or drawing operation."""
+        for t in await mcp.list_tools():
+            if t.name == name:
+                return t.model_dump(by_alias=True, exclude_none=True)
+        return await mcp.worker.run(rt.list_operations, ops=[name], detail=True)
+
+    @discovery.tool()
+    async def call_tool(name: str, arguments: dict[str, Any]) -> Any:
+        """Call a discovered tool with its schema's arguments; the same validation and policy apply."""
+        result = await mcp.call_tool(name, arguments)
+        if isinstance(result, tuple) and len(result) == 2:
+            content, structured = result
+            if isinstance(structured, dict) and all(block.type == "text" for block in content):
+                return structured
+            result = content
+        if isinstance(result, dict):
+            return result
+        if len(result) == 1 and result[0].type == "text":
+            try:
+                return json.loads(result[0].text)
+            except ValueError:
+                pass
+        # Preserve native image/audio content instead of burying it in a JSON
+        # string. This also handles full-profile tools returning mixed content.
+        return result
+
+    return discovery
 
 
 def serve_stdio(policy: Policy | None = None) -> None:

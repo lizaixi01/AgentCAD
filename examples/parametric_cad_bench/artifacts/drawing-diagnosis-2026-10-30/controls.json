@@ -1,0 +1,2198 @@
+{
+  "task": "freecad-6fd69bd0c4",
+  "not_agent_results": true,
+  "replay": "Execute each recipe entry in order with Runtime.apply_operations in a fresh root; score part.FCStd with the frozen task scorer.",
+  "notes": "Parent-side posthoc diagnostic repairs. No benchmark reference models, scripts or drawings included. Never supplied to the fresh agents.",
+  "controls": [
+    {
+      "id": "depth_only",
+      "manual_posthoc_control": true,
+      "recipe": [
+        {
+          "path": "part.FCStd",
+          "create": {
+            "units": "mm"
+          },
+          "operations": [
+            {
+              "op": "set_parameters",
+              "params": {
+                "PlateSpan": 70,
+                "TabSpan": 72.12,
+                "OverallThickness": 5.6,
+                "PerimeterThickness": 4.1,
+                "WebThickness": 2,
+                "BossDiameter": 8,
+                "InnerHolePitch": 30.5,
+                "OuterHolePitch": 62.23,
+                "OuterHoleShortPitch": 45.25,
+                "MountHoleDiameter": 3.2,
+                "InnerHoleDiameter": 3,
+                "ReliefSpan": 58,
+                "WindowRadius": 3,
+                "SlotRadius": 1.3
+              }
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 1.5,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -35,
+                      15.25
+                    ],
+                    [
+                      -36.06,
+                      23.57
+                    ],
+                    [
+                      -23.57,
+                      36.06
+                    ],
+                    [
+                      -15.25,
+                      35
+                    ],
+                    [
+                      15.25,
+                      35
+                    ],
+                    [
+                      23.57,
+                      36.06
+                    ],
+                    [
+                      36.06,
+                      23.57
+                    ],
+                    [
+                      35,
+                      15.25
+                    ],
+                    [
+                      35,
+                      -15.25
+                    ],
+                    [
+                      36.06,
+                      -23.57
+                    ],
+                    [
+                      23.57,
+                      -36.06
+                    ],
+                    [
+                      15.25,
+                      -35
+                    ],
+                    [
+                      -15.25,
+                      -35
+                    ],
+                    [
+                      -23.57,
+                      -36.06
+                    ],
+                    [
+                      -36.06,
+                      -23.57
+                    ],
+                    [
+                      -35,
+                      -15.25
+                    ]
+                  ]
+                }
+              ],
+              "tag": "PlateOutline"
+            },
+            {
+              "op": "pad",
+              "sketch": "tag:PlateOutline",
+              "length": "=Params.PerimeterThickness",
+              "tag": "PerimeterBlank"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 1.5,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -29,
+                      -17.5
+                    ],
+                    [
+                      -17.5,
+                      -29
+                    ],
+                    [
+                      17.5,
+                      -29
+                    ],
+                    [
+                      29,
+                      -17.5
+                    ],
+                    [
+                      29,
+                      17.5
+                    ],
+                    [
+                      17.5,
+                      29
+                    ],
+                    [
+                      -17.5,
+                      29
+                    ],
+                    [
+                      -29,
+                      17.5
+                    ]
+                  ]
+                }
+              ],
+              "tag": "UndersideReliefProfile"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:UndersideReliefProfile",
+              "depth": 2.0,
+              "reversed": true,
+              "tag": "UndersideRelief"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 3.6,
+              "shapes": [
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                }
+              ],
+              "tag": "FourBossProfiles"
+            },
+            {
+              "op": "pad",
+              "sketch": "tag:FourBossProfiles",
+              "length": 3.6,
+              "reversed": true,
+              "tag": "MountingBosses"
+            }
+          ],
+          "label": "Plate outline, recessed underside, and four mounting bosses"
+        },
+        {
+          "path": "part.FCStd",
+          "operations": [
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "circle",
+                  "center": [
+                    -31.115,
+                    -22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -22.625,
+                    -31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -31.115,
+                    22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -22.625,
+                    31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    31.115,
+                    -22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    22.625,
+                    -31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    31.115,
+                    22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    22.625,
+                    31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                }
+              ],
+              "tag": "PerimeterHolePattern"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:PerimeterHolePattern",
+              "through_all": true,
+              "tag": "EightMountingHoles"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                }
+              ],
+              "tag": "InnerHolePattern"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:InnerHolePattern",
+              "through_all": true,
+              "tag": "FourBossHoles"
+            }
+          ],
+          "label": "Drill the eight outer and four inner mounting holes"
+        },
+        {
+          "path": "part.FCStd",
+          "label": "Rounded tapered lightening openings and paired C slots",
+          "operations": [
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -14.44386047232665,
+                      24.302939493282643,
+                      -0.6035361620326025
+                    ],
+                    [
+                      -11.97,
+                      29,
+                      0
+                    ],
+                    [
+                      11.97,
+                      29,
+                      -0.6035361620326025
+                    ],
+                    [
+                      14.44386047232665,
+                      24.302939493282643,
+                      0
+                    ],
+                    [
+                      6.897895054020699,
+                      13.302939493282643,
+                      -0.2472434656321375
+                    ],
+                    [
+                      4.424034581694051,
+                      12,
+                      0
+                    ],
+                    [
+                      -4.424034581694051,
+                      12,
+                      -0.2472434656321375
+                    ],
+                    [
+                      -6.897895054020699,
+                      13.302939493282643,
+                      0
+                    ]
+                  ]
+                },
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      14.44386047232665,
+                      -24.302939493282643,
+                      -0.6035361620326025
+                    ],
+                    [
+                      11.97,
+                      -29,
+                      0
+                    ],
+                    [
+                      -11.97,
+                      -29,
+                      -0.6035361620326025
+                    ],
+                    [
+                      -14.44386047232665,
+                      -24.302939493282643,
+                      0
+                    ],
+                    [
+                      -6.897895054020699,
+                      -13.302939493282643,
+                      -0.2472434656321375
+                    ],
+                    [
+                      -4.424034581694051,
+                      -12,
+                      0
+                    ],
+                    [
+                      4.424034581694051,
+                      -12,
+                      -0.2472434656321375
+                    ],
+                    [
+                      6.897895054020699,
+                      -13.302939493282643,
+                      0
+                    ]
+                  ]
+                }
+              ],
+              "tag": "TaperedWindowProfiles"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:TaperedWindowProfiles",
+              "through_all": true,
+              "tag": "PairedLighteningWindows"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -27.5,
+                      -6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      -26.2,
+                      -7.5,
+                      0
+                    ],
+                    [
+                      -18.8,
+                      -7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -17.5,
+                      -6.199999999999999,
+                      0
+                    ],
+                    [
+                      -17.5,
+                      -2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      -18.8,
+                      -1.5,
+                      0
+                    ],
+                    [
+                      -19.2,
+                      -1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -20.5,
+                      -2.8000000000000003,
+                      0
+                    ],
+                    [
+                      -20.5,
+                      -3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -21.8,
+                      -5,
+                      0
+                    ],
+                    [
+                      -23.2,
+                      -5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -24.5,
+                      -3.6999999999999997,
+                      0
+                    ],
+                    [
+                      -24.5,
+                      3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -23.2,
+                      5,
+                      0
+                    ],
+                    [
+                      -21.8,
+                      5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -20.5,
+                      3.6999999999999997,
+                      0
+                    ],
+                    [
+                      -20.5,
+                      2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      -19.2,
+                      1.5,
+                      0
+                    ],
+                    [
+                      -18.8,
+                      1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -17.5,
+                      2.8000000000000003,
+                      0
+                    ],
+                    [
+                      -17.5,
+                      6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      -18.8,
+                      7.5,
+                      0
+                    ],
+                    [
+                      -26.2,
+                      7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -27.5,
+                      6.199999999999999,
+                      0
+                    ]
+                  ]
+                },
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      27.5,
+                      6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      26.2,
+                      7.5,
+                      0
+                    ],
+                    [
+                      18.8,
+                      7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      17.5,
+                      6.199999999999999,
+                      0
+                    ],
+                    [
+                      17.5,
+                      2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      18.8,
+                      1.5,
+                      0
+                    ],
+                    [
+                      19.2,
+                      1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      20.5,
+                      2.8000000000000003,
+                      0
+                    ],
+                    [
+                      20.5,
+                      3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      21.8,
+                      5,
+                      0
+                    ],
+                    [
+                      23.2,
+                      5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      24.5,
+                      3.6999999999999997,
+                      0
+                    ],
+                    [
+                      24.5,
+                      -3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      23.2,
+                      -5,
+                      0
+                    ],
+                    [
+                      21.8,
+                      -5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      20.5,
+                      -3.6999999999999997,
+                      0
+                    ],
+                    [
+                      20.5,
+                      -2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      19.2,
+                      -1.5,
+                      0
+                    ],
+                    [
+                      18.8,
+                      -1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      17.5,
+                      -2.8000000000000003,
+                      0
+                    ],
+                    [
+                      17.5,
+                      -6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      18.8,
+                      -7.5,
+                      0
+                    ],
+                    [
+                      26.2,
+                      -7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      27.5,
+                      -6.199999999999999,
+                      0
+                    ]
+                  ]
+                }
+              ],
+              "tag": "RoundedSideSlotProfiles"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:RoundedSideSlotProfiles",
+              "through_all": true,
+              "tag": "PairedSideSlots"
+            }
+          ]
+        }
+      ],
+      "recipe_sha256": "8d8b15993096787e380affea19b8524702396d4d3eca8ddfb3673bb1397f70ad",
+      "candidate_sha256": "498074909e8c9aa26c7b05150faa59a788b90ca5a5e3da0856efa6c36fcbd79c",
+      "evaluation": {
+        "reward": 0.251274,
+        "geometry_similarity": 0.14904407765798097,
+        "cad_spec_consistency": 0.8,
+        "combined": 0.251274445377984,
+        "geometry_similarity_reason": "reference.FCStd vs part.FCStd: overall=0.149 [solid_count=1 (matched)] (surface_types=0.000, volume=0.000, surface_area=0.584, principal_moments=0.451, icp=0.012); surface_types_diff=29.405% (Far); volume_diff=3.160% (Far); surface_area_diff=2.608% (Close); bbox_diff=0.007% (OCCT OBB; gate passed); principal_moments_diff=3.537% (Close); icp[reference.FCStd vs part.FCStd: reward=0.012 rmse=1.3364e+00 max_residual=4.1922e+00 mm]",
+        "cad_spec_consistency_reason": "spec.json vs part.FCStd: spec_score=0.800 (35/37 consistent, 0 inconsistent, 2 not_found; failure_budget=10)"
+      }
+    },
+    {
+      "id": "sides_only",
+      "manual_posthoc_control": true,
+      "recipe": [
+        {
+          "path": "part.FCStd",
+          "create": {
+            "units": "mm"
+          },
+          "operations": [
+            {
+              "op": "set_parameters",
+              "params": {
+                "PlateSpan": 70,
+                "TabSpan": 72.12,
+                "OverallThickness": 5.6,
+                "PerimeterThickness": 4.1,
+                "WebThickness": 2,
+                "BossDiameter": 8,
+                "InnerHolePitch": 30.5,
+                "OuterHolePitch": 62.23,
+                "OuterHoleShortPitch": 45.25,
+                "MountHoleDiameter": 3.2,
+                "InnerHoleDiameter": 3,
+                "ReliefSpan": 58,
+                "WindowRadius": 3,
+                "SlotRadius": 1.3
+              }
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 1.5,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -35,
+                      15.25
+                    ],
+                    [
+                      -36.06,
+                      23.57
+                    ],
+                    [
+                      -23.57,
+                      36.06
+                    ],
+                    [
+                      -15.25,
+                      35
+                    ],
+                    [
+                      15.25,
+                      35
+                    ],
+                    [
+                      23.57,
+                      36.06
+                    ],
+                    [
+                      36.06,
+                      23.57
+                    ],
+                    [
+                      35,
+                      15.25
+                    ],
+                    [
+                      35,
+                      -15.25
+                    ],
+                    [
+                      36.06,
+                      -23.57
+                    ],
+                    [
+                      23.57,
+                      -36.06
+                    ],
+                    [
+                      15.25,
+                      -35
+                    ],
+                    [
+                      -15.25,
+                      -35
+                    ],
+                    [
+                      -23.57,
+                      -36.06
+                    ],
+                    [
+                      -36.06,
+                      -23.57
+                    ],
+                    [
+                      -35,
+                      -15.25
+                    ]
+                  ]
+                }
+              ],
+              "tag": "PlateOutline"
+            },
+            {
+              "op": "pad",
+              "sketch": "tag:PlateOutline",
+              "length": "=Params.PerimeterThickness",
+              "tag": "PerimeterBlank"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -29,
+                      -17.5
+                    ],
+                    [
+                      -17.5,
+                      -29
+                    ],
+                    [
+                      17.5,
+                      -29
+                    ],
+                    [
+                      29,
+                      -17.5
+                    ],
+                    [
+                      29,
+                      17.5
+                    ],
+                    [
+                      17.5,
+                      29
+                    ],
+                    [
+                      -17.5,
+                      29
+                    ],
+                    [
+                      -29,
+                      17.5
+                    ]
+                  ]
+                }
+              ],
+              "tag": "UndersideReliefProfile"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:UndersideReliefProfile",
+              "depth": 2.1,
+              "reversed": false,
+              "tag": "UndersideRelief"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 1.5,
+              "shapes": [
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                }
+              ],
+              "tag": "FourBossProfiles"
+            },
+            {
+              "op": "pad",
+              "sketch": "tag:FourBossProfiles",
+              "length": 1.5,
+              "reversed": true,
+              "tag": "MountingBosses"
+            }
+          ],
+          "label": "Plate outline, recessed underside, and four mounting bosses"
+        },
+        {
+          "path": "part.FCStd",
+          "operations": [
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "circle",
+                  "center": [
+                    -31.115,
+                    -22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -22.625,
+                    -31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -31.115,
+                    22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -22.625,
+                    31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    31.115,
+                    -22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    22.625,
+                    -31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    31.115,
+                    22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    22.625,
+                    31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                }
+              ],
+              "tag": "PerimeterHolePattern"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:PerimeterHolePattern",
+              "through_all": true,
+              "tag": "EightMountingHoles"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                }
+              ],
+              "tag": "InnerHolePattern"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:InnerHolePattern",
+              "through_all": true,
+              "tag": "FourBossHoles"
+            }
+          ],
+          "label": "Drill the eight outer and four inner mounting holes"
+        },
+        {
+          "path": "part.FCStd",
+          "label": "Rounded tapered lightening openings and paired C slots",
+          "operations": [
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -14.44386047232665,
+                      24.302939493282643,
+                      -0.6035361620326025
+                    ],
+                    [
+                      -11.97,
+                      29,
+                      0
+                    ],
+                    [
+                      11.97,
+                      29,
+                      -0.6035361620326025
+                    ],
+                    [
+                      14.44386047232665,
+                      24.302939493282643,
+                      0
+                    ],
+                    [
+                      6.897895054020699,
+                      13.302939493282643,
+                      -0.2472434656321375
+                    ],
+                    [
+                      4.424034581694051,
+                      12,
+                      0
+                    ],
+                    [
+                      -4.424034581694051,
+                      12,
+                      -0.2472434656321375
+                    ],
+                    [
+                      -6.897895054020699,
+                      13.302939493282643,
+                      0
+                    ]
+                  ]
+                },
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      14.44386047232665,
+                      -24.302939493282643,
+                      -0.6035361620326025
+                    ],
+                    [
+                      11.97,
+                      -29,
+                      0
+                    ],
+                    [
+                      -11.97,
+                      -29,
+                      -0.6035361620326025
+                    ],
+                    [
+                      -14.44386047232665,
+                      -24.302939493282643,
+                      0
+                    ],
+                    [
+                      -6.897895054020699,
+                      -13.302939493282643,
+                      -0.2472434656321375
+                    ],
+                    [
+                      -4.424034581694051,
+                      -12,
+                      0
+                    ],
+                    [
+                      4.424034581694051,
+                      -12,
+                      -0.2472434656321375
+                    ],
+                    [
+                      6.897895054020699,
+                      -13.302939493282643,
+                      0
+                    ]
+                  ]
+                }
+              ],
+              "tag": "TaperedWindowProfiles"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:TaperedWindowProfiles",
+              "through_all": true,
+              "tag": "PairedLighteningWindows"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -27.5,
+                      -6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      -26.2,
+                      -7.5,
+                      0
+                    ],
+                    [
+                      -18.8,
+                      -7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -17.5,
+                      -6.199999999999999,
+                      0
+                    ],
+                    [
+                      -17.5,
+                      -2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      -18.8,
+                      -1.5,
+                      0
+                    ],
+                    [
+                      -19.2,
+                      -1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -20.5,
+                      -2.8000000000000003,
+                      0
+                    ],
+                    [
+                      -20.5,
+                      -3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -21.8,
+                      -5,
+                      0
+                    ],
+                    [
+                      -23.2,
+                      -5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -24.5,
+                      -3.6999999999999997,
+                      0
+                    ],
+                    [
+                      -24.5,
+                      3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -23.2,
+                      5,
+                      0
+                    ],
+                    [
+                      -21.8,
+                      5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -20.5,
+                      3.6999999999999997,
+                      0
+                    ],
+                    [
+                      -20.5,
+                      2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      -19.2,
+                      1.5,
+                      0
+                    ],
+                    [
+                      -18.8,
+                      1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -17.5,
+                      2.8000000000000003,
+                      0
+                    ],
+                    [
+                      -17.5,
+                      6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      -18.8,
+                      7.5,
+                      0
+                    ],
+                    [
+                      -26.2,
+                      7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -27.5,
+                      6.199999999999999,
+                      0
+                    ]
+                  ]
+                },
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      27.5,
+                      6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      26.2,
+                      7.5,
+                      0
+                    ],
+                    [
+                      18.8,
+                      7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      17.5,
+                      6.199999999999999,
+                      0
+                    ],
+                    [
+                      17.5,
+                      2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      18.8,
+                      1.5,
+                      0
+                    ],
+                    [
+                      19.2,
+                      1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      20.5,
+                      2.8000000000000003,
+                      0
+                    ],
+                    [
+                      20.5,
+                      3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      21.8,
+                      5,
+                      0
+                    ],
+                    [
+                      23.2,
+                      5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      24.5,
+                      3.6999999999999997,
+                      0
+                    ],
+                    [
+                      24.5,
+                      -3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      23.2,
+                      -5,
+                      0
+                    ],
+                    [
+                      21.8,
+                      -5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      20.5,
+                      -3.6999999999999997,
+                      0
+                    ],
+                    [
+                      20.5,
+                      -2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      19.2,
+                      -1.5,
+                      0
+                    ],
+                    [
+                      18.8,
+                      -1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      17.5,
+                      -2.8000000000000003,
+                      0
+                    ],
+                    [
+                      17.5,
+                      -6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      18.8,
+                      -7.5,
+                      0
+                    ],
+                    [
+                      26.2,
+                      -7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      27.5,
+                      -6.199999999999999,
+                      0
+                    ]
+                  ]
+                }
+              ],
+              "tag": "RoundedSideSlotProfiles"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:RoundedSideSlotProfiles",
+              "through_all": true,
+              "tag": "PairedSideSlots"
+            }
+          ]
+        }
+      ],
+      "recipe_sha256": "935feb71158e477b77048aab64de77f64088685c38c852e94d1a6b0c8488e973",
+      "candidate_sha256": "ad0a945d14671dd306a0fce71ad899c2294f9960d318e467328e652000529fd6",
+      "evaluation": {
+        "reward": 0.464095,
+        "geometry_similarity": 0.3126606648867022,
+        "cad_spec_consistency": 0.9,
+        "combined": 0.4640945427620058,
+        "geometry_similarity_reason": "reference.FCStd vs part.FCStd: overall=0.313 [solid_count=1 (matched)] (surface_types=0.462, volume=0.000, surface_area=1.000, principal_moments=0.622, icp=0.201); surface_types_diff=3.454% (Close); volume_diff=1.763% (Far); surface_area_diff=0.205% (Matched); bbox_diff=0.007% (OCCT OBB; gate passed); principal_moments_diff=2.391% (Close); icp[reference.FCStd vs part.FCStd: reward=0.201 rmse=4.2494e-01 max_residual=1.5207e+00 mm]",
+        "cad_spec_consistency_reason": "spec.json vs part.FCStd: spec_score=0.900 (36/37 consistent, 0 inconsistent, 1 not_found; failure_budget=10)"
+      }
+    },
+    {
+      "id": "section_stack",
+      "manual_posthoc_control": true,
+      "recipe": [
+        {
+          "path": "part.FCStd",
+          "create": {
+            "units": "mm"
+          },
+          "operations": [
+            {
+              "op": "set_parameters",
+              "params": {
+                "PlateSpan": 70,
+                "TabSpan": 72.12,
+                "OverallThickness": 5.6,
+                "PerimeterThickness": 4.1,
+                "WebThickness": 2,
+                "BossDiameter": 8,
+                "InnerHolePitch": 30.5,
+                "OuterHolePitch": 62.23,
+                "OuterHoleShortPitch": 45.25,
+                "MountHoleDiameter": 3.2,
+                "InnerHoleDiameter": 3,
+                "ReliefSpan": 58,
+                "WindowRadius": 3,
+                "SlotRadius": 1.3
+              }
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 1.5,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -35,
+                      15.25
+                    ],
+                    [
+                      -36.06,
+                      23.57
+                    ],
+                    [
+                      -23.57,
+                      36.06
+                    ],
+                    [
+                      -15.25,
+                      35
+                    ],
+                    [
+                      15.25,
+                      35
+                    ],
+                    [
+                      23.57,
+                      36.06
+                    ],
+                    [
+                      36.06,
+                      23.57
+                    ],
+                    [
+                      35,
+                      15.25
+                    ],
+                    [
+                      35,
+                      -15.25
+                    ],
+                    [
+                      36.06,
+                      -23.57
+                    ],
+                    [
+                      23.57,
+                      -36.06
+                    ],
+                    [
+                      15.25,
+                      -35
+                    ],
+                    [
+                      -15.25,
+                      -35
+                    ],
+                    [
+                      -23.57,
+                      -36.06
+                    ],
+                    [
+                      -36.06,
+                      -23.57
+                    ],
+                    [
+                      -35,
+                      -15.25
+                    ]
+                  ]
+                }
+              ],
+              "tag": "PlateOutline"
+            },
+            {
+              "op": "pad",
+              "sketch": "tag:PlateOutline",
+              "length": "=Params.PerimeterThickness",
+              "tag": "PerimeterBlank"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -29,
+                      -17.5
+                    ],
+                    [
+                      -17.5,
+                      -29
+                    ],
+                    [
+                      17.5,
+                      -29
+                    ],
+                    [
+                      29,
+                      -17.5
+                    ],
+                    [
+                      29,
+                      17.5
+                    ],
+                    [
+                      17.5,
+                      29
+                    ],
+                    [
+                      -17.5,
+                      29
+                    ],
+                    [
+                      -29,
+                      17.5
+                    ]
+                  ]
+                }
+              ],
+              "tag": "UndersideReliefProfile"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:UndersideReliefProfile",
+              "depth": 2.0,
+              "reversed": false,
+              "tag": "UndersideRelief"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 1.5,
+              "shapes": [
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.BossDiameter"
+                }
+              ],
+              "tag": "FourBossProfiles"
+            },
+            {
+              "op": "pad",
+              "sketch": "tag:FourBossProfiles",
+              "length": 1.5,
+              "reversed": true,
+              "tag": "MountingBosses"
+            }
+          ],
+          "label": "Plate outline, recessed underside, and four mounting bosses"
+        },
+        {
+          "path": "part.FCStd",
+          "operations": [
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "circle",
+                  "center": [
+                    -31.115,
+                    -22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -22.625,
+                    -31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -31.115,
+                    22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -22.625,
+                    31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    31.115,
+                    -22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    22.625,
+                    -31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    31.115,
+                    22.625
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    22.625,
+                    31.115
+                  ],
+                  "diameter": "=Params.MountHoleDiameter"
+                }
+              ],
+              "tag": "PerimeterHolePattern"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:PerimeterHolePattern",
+              "through_all": true,
+              "tag": "EightMountingHoles"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    -15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    -15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                },
+                {
+                  "type": "circle",
+                  "center": [
+                    15.25,
+                    15.25
+                  ],
+                  "diameter": "=Params.InnerHoleDiameter"
+                }
+              ],
+              "tag": "InnerHolePattern"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:InnerHolePattern",
+              "through_all": true,
+              "tag": "FourBossHoles"
+            }
+          ],
+          "label": "Drill the eight outer and four inner mounting holes"
+        },
+        {
+          "path": "part.FCStd",
+          "label": "Rounded tapered lightening openings and paired C slots",
+          "operations": [
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -14.44386047232665,
+                      24.302939493282643,
+                      -0.6035361620326025
+                    ],
+                    [
+                      -11.97,
+                      29,
+                      0
+                    ],
+                    [
+                      11.97,
+                      29,
+                      -0.6035361620326025
+                    ],
+                    [
+                      14.44386047232665,
+                      24.302939493282643,
+                      0
+                    ],
+                    [
+                      6.897895054020699,
+                      13.302939493282643,
+                      -0.2472434656321375
+                    ],
+                    [
+                      4.424034581694051,
+                      12,
+                      0
+                    ],
+                    [
+                      -4.424034581694051,
+                      12,
+                      -0.2472434656321375
+                    ],
+                    [
+                      -6.897895054020699,
+                      13.302939493282643,
+                      0
+                    ]
+                  ]
+                },
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      14.44386047232665,
+                      -24.302939493282643,
+                      -0.6035361620326025
+                    ],
+                    [
+                      11.97,
+                      -29,
+                      0
+                    ],
+                    [
+                      -11.97,
+                      -29,
+                      -0.6035361620326025
+                    ],
+                    [
+                      -14.44386047232665,
+                      -24.302939493282643,
+                      0
+                    ],
+                    [
+                      -6.897895054020699,
+                      -13.302939493282643,
+                      -0.2472434656321375
+                    ],
+                    [
+                      -4.424034581694051,
+                      -12,
+                      0
+                    ],
+                    [
+                      4.424034581694051,
+                      -12,
+                      -0.2472434656321375
+                    ],
+                    [
+                      6.897895054020699,
+                      -13.302939493282643,
+                      0
+                    ]
+                  ]
+                }
+              ],
+              "tag": "TaperedWindowProfiles"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:TaperedWindowProfiles",
+              "through_all": true,
+              "tag": "PairedLighteningWindows"
+            },
+            {
+              "op": "add_sketch",
+              "plane": "XY",
+              "offset": 5.6,
+              "shapes": [
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      -27.5,
+                      -6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      -26.2,
+                      -7.5,
+                      0
+                    ],
+                    [
+                      -18.8,
+                      -7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -17.5,
+                      -6.199999999999999,
+                      0
+                    ],
+                    [
+                      -17.5,
+                      -2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      -18.8,
+                      -1.5,
+                      0
+                    ],
+                    [
+                      -19.2,
+                      -1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -20.5,
+                      -2.8000000000000003,
+                      0
+                    ],
+                    [
+                      -20.5,
+                      -3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -21.8,
+                      -5,
+                      0
+                    ],
+                    [
+                      -23.2,
+                      -5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -24.5,
+                      -3.6999999999999997,
+                      0
+                    ],
+                    [
+                      -24.5,
+                      3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -23.2,
+                      5,
+                      0
+                    ],
+                    [
+                      -21.8,
+                      5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      -20.5,
+                      3.6999999999999997,
+                      0
+                    ],
+                    [
+                      -20.5,
+                      2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      -19.2,
+                      1.5,
+                      0
+                    ],
+                    [
+                      -18.8,
+                      1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -17.5,
+                      2.8000000000000003,
+                      0
+                    ],
+                    [
+                      -17.5,
+                      6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      -18.8,
+                      7.5,
+                      0
+                    ],
+                    [
+                      -26.2,
+                      7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      -27.5,
+                      6.199999999999999,
+                      0
+                    ]
+                  ]
+                },
+                {
+                  "type": "polygon",
+                  "points": [
+                    [
+                      27.5,
+                      6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      26.2,
+                      7.5,
+                      0
+                    ],
+                    [
+                      18.8,
+                      7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      17.5,
+                      6.199999999999999,
+                      0
+                    ],
+                    [
+                      17.5,
+                      2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      18.8,
+                      1.5,
+                      0
+                    ],
+                    [
+                      19.2,
+                      1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      20.5,
+                      2.8000000000000003,
+                      0
+                    ],
+                    [
+                      20.5,
+                      3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      21.8,
+                      5,
+                      0
+                    ],
+                    [
+                      23.2,
+                      5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      24.5,
+                      3.6999999999999997,
+                      0
+                    ],
+                    [
+                      24.5,
+                      -3.6999999999999997,
+                      -0.41421356237309503
+                    ],
+                    [
+                      23.2,
+                      -5,
+                      0
+                    ],
+                    [
+                      21.8,
+                      -5,
+                      -0.41421356237309503
+                    ],
+                    [
+                      20.5,
+                      -3.6999999999999997,
+                      0
+                    ],
+                    [
+                      20.5,
+                      -2.8000000000000003,
+                      0.41421356237309503
+                    ],
+                    [
+                      19.2,
+                      -1.5,
+                      0
+                    ],
+                    [
+                      18.8,
+                      -1.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      17.5,
+                      -2.8000000000000003,
+                      0
+                    ],
+                    [
+                      17.5,
+                      -6.199999999999999,
+                      0.41421356237309503
+                    ],
+                    [
+                      18.8,
+                      -7.5,
+                      0
+                    ],
+                    [
+                      26.2,
+                      -7.5,
+                      0.41421356237309503
+                    ],
+                    [
+                      27.5,
+                      -6.199999999999999,
+                      0
+                    ]
+                  ]
+                }
+              ],
+              "tag": "RoundedSideSlotProfiles"
+            },
+            {
+              "op": "pocket",
+              "sketch": "tag:RoundedSideSlotProfiles",
+              "through_all": true,
+              "tag": "PairedSideSlots"
+            }
+          ]
+        }
+      ],
+      "recipe_sha256": "deaf07e527b9f18f614ad3b9cad766c5634b8d68616a5c7a1a25784170e4a79b",
+      "candidate_sha256": "185bde06c91e2794d90dd8a7c7a6f46d473a0c39c17e714e9f42ab40735ab063",
+      "evaluation": {
+        "reward": 0.69407,
+        "geometry_similarity": 0.5314759991875124,
+        "cad_spec_consistency": 1.0,
+        "combined": 0.6940702948912999,
+        "geometry_similarity_reason": "reference.FCStd vs part.FCStd: overall=0.531 [solid_count=1 (matched)] (surface_types=0.305, volume=0.869, surface_area=1.000, principal_moments=1.000, icp=0.202); surface_types_diff=4.958% (Close); volume_diff=0.135% (Close); surface_area_diff=0.074% (Matched); bbox_diff=0.007% (OCCT OBB; gate passed); principal_moments_diff=0.004% (Matched); icp[reference.FCStd vs part.FCStd: reward=0.202 rmse=4.2425e-01 max_residual=1.5203e+00 mm]",
+        "cad_spec_consistency_reason": "spec.json vs part.FCStd: spec_score=1.000 (37/37 consistent, 0 inconsistent, 0 not_found; failure_budget=10)"
+      }
+    }
+  ]
+}

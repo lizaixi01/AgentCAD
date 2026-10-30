@@ -3143,10 +3143,10 @@ L 576.288 451.149623
    <g id="matplotlib.axis_6"/>
    <g id="patch_37">
     <path d="M 248.088 466.514209 
-L 491.8128 466.514209 
-Q 494.8128 466.514209 494.8128 463.514209 
-L 494.8128 462.634543 
-Q 494.8128 459.634543 491.8128 459.634543 
+L 488.832 466.514209 
+Q 491.832 466.514209 491.832 463.514209 
+L 491.832 462.634543 
+Q 491.832 459.634543 488.832 459.634543 
 L 248.088 459.634543 
 Q 245.088 459.634543 245.088 462.634543 
 L 245.088 463.514209 
@@ -3156,8 +3156,8 @@ z
    </g>
    <g id="patch_38">
     <path d="M 245.088 466.514209 
-L 491.8128 466.514209 
-L 491.8128 459.634543 
+L 488.832 466.514209 
+L 488.832 459.634543 
 L 245.088 459.634543 
 z
 " clip-path="url(#p3e6d321179)" style="fill: #3987e5"/>
@@ -3185,10 +3185,10 @@ z
    </g>
    <g id="patch_41">
     <path d="M 248.088 495.179481 
-L 525.9264 495.179481 
-Q 528.9264 495.179481 528.9264 492.179481 
-L 528.9264 491.299816 
-Q 528.9264 488.299816 525.9264 488.299816 
+L 532.2192 495.179481 
+Q 535.2192 495.179481 535.2192 492.179481 
+L 535.2192 491.299816 
+Q 535.2192 488.299816 532.2192 488.299816 
 L 248.088 488.299816 
 Q 245.088 488.299816 245.088 491.299816 
 L 245.088 492.179481 
@@ -3198,8 +3198,8 @@ z
    </g>
    <g id="patch_42">
     <path d="M 245.088 495.179481 
-L 525.9264 495.179481 
-L 525.9264 488.299816 
+L 532.2192 495.179481 
+L 532.2192 488.299816 
 L 245.088 488.299816 
 z
 " clip-path="url(#p3e6d321179)" style="fill: #3987e5"/>
@@ -3231,8 +3231,8 @@ L 635.904 511.92
 " style="fill: none; stroke: #262c33; stroke-width: 0.8; stroke-linejoin: miter; stroke-linecap: square"/>
    </g>
    <g id="text_49">
-    <!-- 0.754 -->
-    <g style="fill: #e6edf3" transform="translate(497.939328 465.412267) scale(0.09 -0.09)">
+    <!-- 0.745 -->
+    <g style="fill: #e6edf3" transform="translate(494.958528 465.412267) scale(0.09 -0.09)">
      <defs>
       <path id="DejaVuSans-Bold-1a" d="M 428 4666 
 L 3944 4666 
@@ -3273,8 +3273,8 @@ z
      <use xlink:href="#DejaVuSans-Bold-13"/>
      <use xlink:href="#DejaVuSans-Bold-11" transform="translate(69.578125 0)"/>
      <use xlink:href="#DejaVuSans-Bold-1a" transform="translate(107.5625 0)"/>
-     <use xlink:href="#DejaVuSans-Bold-18" transform="translate(177.140625 0)"/>
-     <use xlink:href="#DejaVuSans-Bold-17" transform="translate(246.71875 0)"/>
+     <use xlink:href="#DejaVuSans-Bold-17" transform="translate(177.140625 0)"/>
+     <use xlink:href="#DejaVuSans-Bold-18" transform="translate(246.71875 0)"/>
     </g>
    </g>
    <g id="text_50">
@@ -3398,13 +3398,45 @@ z
     </g>
    </g>
    <g id="text_53">
-    <!-- 0.857 -->
-    <g style="fill: #e6edf3" transform="translate(532.052928 494.077539) scale(0.09 -0.09)">
+    <!-- 0.876 -->
+    <g style="fill: #e6edf3" transform="translate(538.345728 494.077539) scale(0.09 -0.09)">
+     <defs>
+      <path id="DejaVuSans-Bold-19" d="M 2316 2303 
+Q 2000 2303 1842 2098 
+Q 1684 1894 1684 1484 
+Q 1684 1075 1842 870 
+Q 2000 666 2316 666 
+Q 2634 666 2792 870 
+Q 2950 1075 2950 1484 
+Q 2950 1894 2792 2098 
+Q 2634 2303 2316 2303 
+z
+M 3803 4544 
+L 3803 3681 
+Q 3506 3822 3243 3889 
+Q 2981 3956 2731 3956 
+Q 2194 3956 1894 3657 
+Q 1594 3359 1544 2772 
+Q 1750 2925 1990 3001 
+Q 2231 3078 2516 3078 
+Q 3231 3078 3670 2659 
+Q 4109 2241 4109 1563 
+Q 4109 813 3618 361 
+Q 3128 -91 2303 -91 
+Q 1394 -91 895 523 
+Q 397 1138 397 2266 
+Q 397 3422 980 4083 
+Q 1563 4744 2578 4744 
+Q 2900 4744 3203 4694 
+Q 3506 4644 3803 4544 
+z
+" transform="scale(0.015625)"/>
+     </defs>
      <use xlink:href="#DejaVuSans-Bold-13"/>
      <use xlink:href="#DejaVuSans-Bold-11" transform="translate(69.578125 0)"/>
      <use xlink:href="#DejaVuSans-Bold-1b" transform="translate(107.5625 0)"/>
-     <use xlink:href="#DejaVuSans-Bold-18" transform="translate(177.140625 0)"/>
-     <use xlink:href="#DejaVuSans-Bold-1a" transform="translate(246.71875 0)"/>
+     <use xlink:href="#DejaVuSans-Bold-1a" transform="translate(177.140625 0)"/>
+     <use xlink:href="#DejaVuSans-Bold-19" transform="translate(246.71875 0)"/>
     </g>
    </g>
    <g id="text_54">
