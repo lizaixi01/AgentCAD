@@ -4,13 +4,35 @@ AgentCAD lets an AI agent (Claude Code, Codex, Claude Desktop or Cursor) draw an
 gets it running in about five minutes. You do not need to know Python, and you do not need to download the source
 code.
 
+## Easiest: double-click the installer
+
+No terminal and nothing to type. A setup page opens in your browser, with big buttons and a progress bar, in
+English or Chinese.
+
+1. Download the installer for your computer:
+   - **Windows:** [AgentCAD-Setup.cmd](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup.cmd)
+   - **macOS / Linux:** [AgentCAD-Setup.command](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup.command)
+2. Double-click it.
+   - Windows may say "Windows protected your PC". Click **More info**, then **Run anyway**.
+   - macOS may say it cannot check the developer. Right-click the file, choose **Open**, then **Open** again.
+3. On the page: tap **Start**, keep the apps it ticked (the ones found on your computer) and tap **Install now**.
+   Each step gets a green tick as it finishes.
+4. The last page says what is left (restart your app) and gives example sentences to copy to your assistant.
+   Tap **Finish**; the installer window closes by itself.
+
+The first run downloads uv and Python (about a minute). It does the same as `agentcad setup` below, so running it
+again is safe. Under the hood: the installer runs `uvx --from <GitHub zip> agentcad setup --gui`, which serves the page
+on `127.0.0.1` only, behind a random token in its link.
+
+## With a terminal
+
 There are three steps:
 
 1. Install **uv**, a small tool that downloads and runs Python programs.
 2. Run **one command** that connects AgentCAD to your apps.
 3. Restart your app and try a first prompt.
 
-## 1. Install uv
+### 1. Install uv
 
 Open a terminal:
 
@@ -35,7 +57,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 **Close the terminal and open a new one** so it finds `uv`. If you already have uv, skip this step. uv also installs
 Python for you if you don't have it.
 
-## 2. Connect AgentCAD to your apps
+### 2. Connect AgentCAD to your apps
 
 Run this in the new terminal (the same line on Windows, macOS and Linux):
 
@@ -60,7 +82,7 @@ anything, add `--dry-run`. To skip the question, name the apps: `--client claude
 How it starts AgentCAD: your app runs `uvx --from git+https://github.com/lizaixi01/AgentCAD agentcad-mcp` whenever it
 needs it. uv keeps a copy, so this takes a couple of seconds, and it picks up new versions of AgentCAD by itself.
 
-## 3. Try it
+### 3. Try it
 
 Restart the app you connected:
 

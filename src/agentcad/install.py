@@ -71,6 +71,8 @@ def install_info() -> dict[str, Any]:
     if vcs.get("vcs") == "git":
         rev = vcs.get("requested_revision")
         info["source"] = f"git+{direct['url']}" + (f"@{rev}" if rev else "")
+    elif "archive_info" in direct and str(direct.get("url", "")).startswith("https://"):
+        info["source"] = direct["url"]  # a .zip from GitHub (the double-click installers): no git needed
     info["editable"] = bool((direct.get("dir_info") or {}).get("editable"))
     return info
 
@@ -327,6 +329,15 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
                           timeout=120)
 
 
+def open_folder(path: Path) -> None:
+    """Show a folder in Explorer / Finder / the desktop's file manager (the setup wizard's button)."""
+    path.mkdir(parents=True, exist_ok=True)
+    if os.name == "nt":
+        os.startfile(str(path))  # noqa: S606
+    else:
+        subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", str(path)], shell=False)
+
+
 # --- setup -----------------------------------------------------------------------------------------------------
 @dataclass
 class SetupResult:
@@ -388,25 +399,36 @@ def find_autocad_path() -> str | None:
 
 def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher: str = "auto",
           source: str | None = None, freecad: str | None = None, dry_run: bool = False, read_only: bool = False,
-          allow_scripts: bool = False, name: str = NAME, runner: Runner | None = None) -> SetupResult:
+          allow_scripts: bool = False, name: str = NAME, runner: Runner | None = None,
+          progress: Callable[[str, str, dict[str, Any]], None] | None = None) -> SetupResult:
+    """``progress(step, state, info)`` is told when each step starts ('run') and ends ('done' / 'error'); steps:
+    'workspace', 'freecad', 'autocad', then one per client (the setup wizard draws its progress bar from them)."""
+    tell = progress or (lambda step, state, info: None)
     info = install_info()
     launcher = choose_launcher(launcher, info)
     if freecad and not freecad_at(freecad):
         raise input_error("FREECAD_NOT_FOUND", f"No FreeCAD found at {freecad}",
                           hint="Give FreeCAD's install folder, its bin folder or its python / freecadcmd")
     root_path = workspace_root(root)
+    tell("workspace", "run", {})
+    if not dry_run:
+        root_path.mkdir(parents=True, exist_ok=True)
+    tell("workspace", "done", {"path": str(root_path)})
+    tell("freecad", "run", {})
     found = find_freecad_path()
     if not freecad and not found:  # keep a FreeCAD that an earlier 'setup --freecad' wrote
         freecad = configured_freecad(root_path)
-    if not dry_run:
-        root_path.mkdir(parents=True, exist_ok=True)
+    tell("freecad", "done", {"path": freecad or found})
     entry = server_entry(root_path, launcher, source or info["source"], freecad=freecad, read_only=read_only,
                          allow_scripts=allow_scripts)
     res = SetupResult(root_path, launcher, entry, dry_run, self_cmd=self_command(info))
     res.freecad = freecad or found
+    tell("autocad", "run", {})
     res.autocad = find_autocad_path()
+    tell("autocad", "done", {"path": res.autocad})
     run = runner or _run
     for client in clients:
+        tell(client, "run", {})
         rec: dict[str, Any] = {"client": client, "label": LABELS[client]}
         try:
             cmds = claude_cli_commands(name, entry) if client == "claude-code" and shutil.which("claude") else None
@@ -438,6 +460,7 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
         except (OSError, ValueError, subprocess.SubprocessError) as exc:
             rec.update(status="error", message=str(exc))
         res.clients.append(rec)
+        tell(client, "error" if rec["status"] == "error" else "done", rec)
     return res
 
 

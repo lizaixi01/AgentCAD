@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>AgentCAD Setup</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<style>
+:root {
+  --bg: #f3f5f8; --panel: #ffffff; --ink: #111827; --muted: #5b6474; --line: #e3e7ee; --soft: #eef2f7;
+  --accent: #1f6feb; --accent-ink: #ffffff; --accent-soft: #e6efff;
+  --ok: #15803d; --ok-soft: #e3f6e8; --warn: #b45309; --warn-soft: #fdf1dc; --bad: #c62828; --bad-soft: #fde8e8;
+  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 28px rgba(16,24,40,.08); --radius: 18px;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1116; --panel: #161b22; --ink: #eef2f7; --muted: #a3acb9; --line: #29303b; --soft: #1d232c;
+    --accent: #5b9cff; --accent-ink: #0b1220; --accent-soft: #1b2a44;
+    --ok: #4ade80; --ok-soft: #12291b; --warn: #fbbf24; --warn-soft: #2d230f; --bad: #f87171; --bad-soft: #321616;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1116; --panel: #161b22; --ink: #eef2f7; --muted: #a3acb9; --line: #29303b; --soft: #1d232c;
+  --accent: #5b9cff; --accent-ink: #0b1220; --accent-soft: #1b2a44;
+  --ok: #4ade80; --ok-soft: #12291b; --warn: #fbbf24; --warn-soft: #2d230f; --bad: #f87171; --bad-soft: #321616;
+  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { margin: 0; min-height: 100%; }
+body { background: var(--bg); color: var(--ink); font: 18px/1.55 system-ui, -apple-system, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", sans-serif; }
+button { font: inherit; color: inherit; }
+header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; max-width: 760px; margin: 0 auto; }
+.brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; }
+.brand img { width: 38px; height: 38px; border-radius: 9px; }
+.spacer { flex: 1; }
+.lang { min-height: 44px; padding: 6px 16px; border-radius: 22px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; font-size: 16px; }
+main { max-width: 760px; margin: 0 auto; padding: 4px 16px 40px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px 32px 28px; }
+h1 { font-size: 32px; line-height: 1.25; margin: 0 0 10px; }
+h2 { font-size: 22px; margin: 26px 0 12px; }
+p.lead { font-size: 20px; color: var(--muted); margin: 0 0 22px; }
+.btn { min-height: 56px; padding: 12px 26px; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); cursor: pointer;
+       display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; font-size: 19px; }
+.btn:hover { background: var(--soft); }
+.btn:focus-visible, .app:focus-within, .lang:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+.btn:disabled { opacity: .45; cursor: default; }
+.btn svg { width: 24px; height: 24px; flex: none; }
+.btn.small { min-height: 44px; padding: 8px 16px; font-size: 16px; border-radius: 12px; }
+.actions { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 28px; }
+.actions .primary { flex: 1 1 240px; }
+.demo { background: var(--warn-soft); color: var(--warn); border-radius: 12px; padding: 10px 16px; font-weight: 600; margin-bottom: 16px; font-size: 16px; }
+
+/* step dots */
+.dots { display: flex; align-items: center; gap: 8px; margin: 0 0 22px; flex-wrap: wrap; }
+.dot { display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 600; font-size: 16px; }
+.dot b { width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center; background: var(--soft); font-size: 16px; }
+.dot.on { color: var(--accent); }
+.dot.on b { background: var(--accent); color: var(--accent-ink); }
+.dot.past b { background: var(--ok); color: #fff; }
+.dot + .dot::before { content: ""; width: 26px; height: 2px; background: var(--line); margin-right: 6px; }
+
+/* welcome */
+.hero { display: grid; place-items: center; text-align: center; padding: 8px 0; }
+.hero img { width: 112px; height: 112px; border-radius: 26px; box-shadow: var(--shadow); margin-bottom: 18px; }
+.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 8px 0 0; text-align: left; }
+.three div { background: var(--soft); border-radius: 14px; padding: 16px; }
+.three b { display: block; font-size: 18px; }
+.three span { color: var(--muted); font-size: 16px; }
+.three i { font-style: normal; font-size: 28px; display: block; margin-bottom: 4px; }
+
+/* apps */
+.apps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.app { position: relative; display: grid; grid-template-columns: 56px 1fr 30px; gap: 14px; align-items: center; padding: 16px; border-radius: 16px;
+       border: 2px solid var(--line); background: var(--panel); cursor: pointer; min-height: 88px; }
+.app:hover { background: var(--soft); }
+.app.sel { border-color: var(--accent); background: var(--accent-soft); }
+.app input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.tile { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; font-weight: 800; font-size: 22px; color: #fff; }
+.app .name { font-weight: 700; font-size: 19px; line-height: 1.25; }
+.app .found { font-size: 15px; color: var(--muted); }
+.app .found.yes { color: var(--ok); font-weight: 600; }
+.check { width: 30px; height: 30px; border-radius: 50%; border: 2px solid var(--line); display: grid; place-items: center; }
+.app.sel .check { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.check svg { width: 18px; height: 18px; visibility: hidden; }
+.app.sel .check svg { visibility: visible; }
+.folder { display: flex; gap: 12px; align-items: center; background: var(--soft); border-radius: 14px; padding: 14px 16px; margin-top: 18px; }
+.folder svg { width: 30px; height: 30px; color: var(--accent); flex: none; }
+.folder code { font: 600 16px/1.4 ui-monospace, Consolas, monospace; overflow-wrap: anywhere; }
+.folder span { color: var(--muted); font-size: 15px; display: block; }
+.none { background: var(--warn-soft); color: var(--ink); border-radius: 14px; padding: 14px 16px; margin-top: 14px; font-size: 16px; }
+
+/* progress */
+.big { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.pct { font-size: 40px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+.bar { height: 18px; border-radius: 10px; background: var(--soft); overflow: hidden; margin: 10px 0 8px; }
+.bar i { display: block; height: 100%; width: 0; border-radius: 10px; transition: width .45s ease;
+         background: linear-gradient(90deg, var(--accent), #4f9bff); background-size: 200% 100%; animation: shine 2s linear infinite; }
+.done .bar i { background: var(--ok); animation: none; }
+@keyframes shine { to { background-position: -200% 0; } }
+#nowText { color: var(--muted); font-size: 18px; min-height: 28px; }
+.steps { list-style: none; padding: 0; margin: 18px 0 0; display: grid; gap: 8px; }
+.steps li { display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: center; padding: 12px 14px; border-radius: 14px; background: var(--soft); }
+.steps li .ic { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--panel); color: var(--muted); }
+.steps li .ic svg { width: 22px; height: 22px; }
+.steps li b { display: block; font-size: 18px; }
+.steps li span { color: var(--muted); font-size: 15px; overflow-wrap: anywhere; }
+.steps li[data-s="run"] .ic { color: var(--accent); }
+.steps li[data-s="done"] .ic { background: var(--ok); color: #fff; }
+.steps li[data-s="opt"] .ic { background: var(--warn-soft); color: var(--warn); }
+.steps li[data-s="error"] { background: var(--bad-soft); }
+.steps li[data-s="error"] .ic { background: var(--bad); color: #fff; }
+.steps li[data-s="wait"] { opacity: .55; }
+.spin { animation: spin 1s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.pop { animation: pop .35s ease; }
+@keyframes pop { 0% { transform: scale(.6); } 70% { transform: scale(1.15); } 100% { transform: scale(1); } }
+
+/* done */
+.yay { display: grid; place-items: center; text-align: center; }
+.yay .ring { width: 104px; height: 104px; border-radius: 50%; background: var(--ok-soft); color: var(--ok); display: grid; place-items: center; margin-bottom: 14px; }
+.yay .ring.bad { background: var(--bad-soft); color: var(--bad); }
+.yay .ring svg { width: 58px; height: 58px; }
+ol.todo { padding: 0; margin: 0; list-style: none; counter-reset: n; display: grid; gap: 10px; }
+ol.todo li { counter-increment: n; display: grid; grid-template-columns: 40px 1fr; gap: 14px; align-items: center; background: var(--soft); border-radius: 14px; padding: 14px; }
+ol.todo li::before { content: counter(n); width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--accent-ink); font-weight: 800; }
+.prompts { display: grid; gap: 10px; }
+.prompt { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; border: 2px dashed var(--line); border-radius: 14px; padding: 14px 16px; }
+.prompt q { font-size: 18px; quotes: "“" "”"; }
+.prompt .btn.copied { background: var(--ok); color: #fff; border-color: var(--ok); }
+details { margin-top: 18px; color: var(--muted); font-size: 15px; }
+details summary { cursor: pointer; min-height: 44px; display: flex; align-items: center; }
+details pre { white-space: pre-wrap; overflow-wrap: anywhere; background: var(--soft); padding: 12px; border-radius: 10px; font-size: 14px; }
+.toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: var(--ink); color: var(--bg); padding: 12px 22px; border-radius: 24px; font-weight: 600; box-shadow: var(--shadow); z-index: 30; }
+canvas#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 20; }
+
+@media (max-width: 640px) {
+  body { font-size: 17px; }
+  .card { padding: 22px 18px; border-radius: 16px; }
+  h1 { font-size: 26px; }
+  p.lead { font-size: 18px; }
+  .apps, .three { grid-template-columns: 1fr; }
+  .dot span { display: none; }
+  .actions .btn { flex: 1 1 100%; }
+  .prompt { grid-template-columns: 1fr; }
+}
+@media (prefers-reduced-motion: reduce) { .spin, .pop, .bar i { animation: none; } }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><img src="/logo.svg" alt=""><span>AgentCAD</span></div>
+  <div class="spacer"></div>
+  <button class="lang" id="lang" type="button"></button>
+</header>
+<main>
+  <div class="card" id="card" aria-live="polite"></div>
+</main>
+<canvas id="confetti" hidden></canvas>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+"use strict";
+const TOKEN = new URLSearchParams(location.search).get("t") || "";
+const T = {
+  en: {
+    title: "AgentCAD Setup", other: "中文",
+    welcome: "Welcome to AgentCAD", welcomeLead: "Let your AI assistant draw engineering drawings and 3D parts for you. Setup takes 3 steps and about a minute.",
+    w1: "Pick your apps", w1s: "Claude, Codex or Cursor", w2: "We set it up", w2s: "Nothing to type", w3: "Start talking", w3s: "Just say what to draw",
+    start: "Start", demo: "Demo mode: nothing on this computer will be changed.",
+    s1: "Choose apps", s2: "Install", s3: "Done",
+    pickTitle: "Which apps should use AgentCAD?", pickLead: "We ticked the ones we found on this computer. Tap to change.",
+    found: "Found on this computer", notFound: "Not found on this computer",
+    folderTitle: "Your drawings will be saved in", noneFound: "We didn't find an AI app on this computer. Install Claude or Codex first, then tap “Look again”. You can also tick an app now and install it later.",
+    lookAgain: "Look again", back: "Back", install: "Install now", pickOne: "Choose at least one app",
+    working: "Setting things up…", almost: "Almost there…", allDone: "Finished",
+    stWorkspace: "Prepare your drawings folder", stFreecad: "Look for FreeCAD (3D parts)", stAutocad: "Look for AutoCAD (DWG files)", stApp: "Connect {app}",
+    waiting: "Waiting", running: "Working on it…", folderReady: "Ready: {p}",
+    fcYes: "Found. 3D parts will work.", fcNo: "Not found. 2D drawings work fine; FreeCAD is optional.",
+    acYes: "Found. DWG files will work.", acNo: "Not found. That's fine, it's optional.",
+    connected: "Connected", already: "Already connected", wouldConnect: "Demo: would connect here", failed: "Didn't work",
+    doneTitle: "All set!", doneLead: "AgentCAD is ready. A few easy steps left:",
+    errTitle: "Almost: something didn't work", errLead: "The parts with a red mark were not set up. Nothing else was changed.",
+    retry: "Try again", lastStep: "Last steps",
+    restart_claude_code: "Open a new Claude Code session.", restart_codex: "Open a new Codex session.",
+    restart_claude_desktop: "Quit Claude completely (also the icon next to the clock) and open it again.",
+    restart_cursor: "Restart Cursor. If AgentCAD is switched off, turn it on in Settings → MCP.",
+    sayThis: "Then say one of these to your assistant:",
+    p1: "Draw a 200 × 100 mounting plate with R8 corners and four 12 mm holes 15 mm from the edges. Save it as plate.dxf and show me a picture.",
+    p2: "Make a flange: 120 mm across, 14 mm thick, with six 12 mm bolt holes on a 90 mm circle. Show me a preview.",
+    p3: "Make the plate 240 wide and tell me what changed.",
+    copy: "Copy", copied: "Copied!", openFolder: "Open my drawings folder", share: "Tell a friend", finish: "Finish",
+    shareText: "I use AgentCAD: my AI assistant draws CAD drawings for me. Free and open source:",
+    shared: "Link copied. Paste it into a chat to share.",
+    bye: "You can close this page now.", byeLead: "The setup window closes by itself. To set up again, double-click the installer.",
+    details: "Technical details", lost: "The setup window was closed. Double-click the installer to start again.",
+    noFolder: "Couldn't open the folder: {m}",
+  },
+  zh: {
+    title: "AgentCAD 安装", other: "English",
+    welcome: "欢迎使用 AgentCAD", welcomeLead: "让 AI 助手帮你画工程图和 3D 零件。安装只要 3 步，大约 1 分钟。",
+    w1: "选应用", w1s: "Claude、Codex 或 Cursor", w2: "自动安装", w2s: "不用敲任何命令", w3: "开口就画", w3s: "用平常说话的方式告诉它",
+    start: "开始安装", demo: "演示模式：不会改动这台电脑上的任何设置。",
+    s1: "选择应用", s2: "安装", s3: "完成",
+    pickTitle: "想在哪些应用里使用 AgentCAD？", pickLead: "我们已经勾上了在这台电脑上找到的应用，点一下可以修改。",
+    found: "在这台电脑上找到了", notFound: "这台电脑上没找到",
+    folderTitle: "你的图纸会保存在", noneFound: "这台电脑上没找到 AI 应用。可以先安装 Claude 或 Codex，再点「重新查找」；也可以现在先勾上，以后再装。",
+    lookAgain: "重新查找", back: "返回", install: "马上安装", pickOne: "请至少选一个应用",
+    working: "正在为你安装…", almost: "马上就好…", allDone: "完成",
+    stWorkspace: "准备图纸文件夹", stFreecad: "查找 FreeCAD（做 3D 零件用）", stAutocad: "查找 AutoCAD（打开 DWG 文件用）", stApp: "连接 {app}",
+    waiting: "等待中", running: "正在进行…", folderReady: "已准备好：{p}",
+    fcYes: "找到了，可以做 3D 零件。", fcNo: "没找到。二维图纸照样能用，FreeCAD 是可选的。",
+    acYes: "找到了，可以打开 DWG 文件。", acNo: "没找到。没关系，这是可选的。",
+    connected: "已连接", already: "之前已经连好了", wouldConnect: "演示：会在这里连接", failed: "没有成功",
+    doneTitle: "装好了！", doneLead: "AgentCAD 已经准备好了，最后几步很简单：",
+    errTitle: "差一点：有一项没成功", errLead: "标红的项目没有装好，其他设置都没有被改动。",
+    retry: "再试一次", lastStep: "最后几步",
+    restart_claude_code: "打开一个新的 Claude Code 会话。", restart_codex: "打开一个新的 Codex 会话。",
+    restart_claude_desktop: "完全退出 Claude（包括屏幕右下角托盘里的图标），再重新打开。",
+    restart_cursor: "重启 Cursor。如果 AgentCAD 是关着的，在 设置 → MCP 里把它打开。",
+    sayThis: "然后对助手说一句（点「复制」再粘贴过去）：",
+    p1: "画一块 200×100 的安装板，四个角倒圆 R8，四个 Ø12 的孔离边 15 毫米。保存为 plate.dxf，并给我看一张图。",
+    p2: "做一个法兰：直径 120 毫米、厚 14 毫米，在直径 90 的圆上均布六个 Ø12 螺栓孔。给我看预览。",
+    p3: "把安装板改成 240 宽，告诉我改了什么。",
+    copy: "复制", copied: "已复制！", openFolder: "打开我的图纸文件夹", share: "分享给朋友", finish: "完成",
+    shareText: "我在用 AgentCAD：让 AI 助手帮我画 CAD 图纸，免费开源：",
+    shared: "链接已复制，粘贴到聊天里就能分享。",
+    bye: "可以关闭这个页面了。", byeLead: "安装窗口会自己关掉。想重新安装，再双击一次安装程序就行。",
+    details: "技术细节", lost: "安装窗口已经关闭。想重新安装，请再双击一次安装程序。",
+    noFolder: "没能打开文件夹：{m}",
+  },
+};
+const REPO = "https://github.com/lizaixi01/AgentCAD";
+const COLORS = { "claude-code": "#d97757", "codex": "#4b5563", "claude-desktop": "#b8613f", "cursor": "#2f6fdf" };
+const INITIALS = { "claude-code": "CC", "codex": "Cx", "claude-desktop": "C", "cursor": "Cu" };
+const ICON = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  x: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg>',
+  dash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M7 12h10"/></svg>',
+  dot: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg>',
+  spin: '<svg class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 3a9 9 0 1 1-9 9"/></svg>',
+  folder: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>',
+  arrow: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  share: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/></svg>',
+  redo: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 1 0-2.3 5.7M20 4v7h-7"/></svg>',
+};
+
+let lang = (() => { try { const s = localStorage.getItem("agentcad-lang"); if (s === "en" || s === "zh") return s; } catch (e) {} return /^zh\b/i.test(navigator.language || "") ? "zh" : "en"; })();
+let info = null, view = "welcome", picked = new Set(), state = null, shown = 0, shownAt = 0, timer = null, ended = false;
+const t = (k, v) => (T[lang][k] || T.en[k] || k).replace(/\{(\w+)\}/g, (_, n) => v && v[n] != null ? v[n] : "");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const $ = id => document.getElementById(id);
+
+async function api(path, body) {
+  const r = await fetch(path, body === undefined ? { headers: { "X-AgentCAD-Token": TOKEN } }
+    : { method: "POST", headers: { "X-AgentCAD-Token": TOKEN, "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  return r.json();
+}
+function toast(msg) { const el = $("toast"); el.textContent = msg; el.hidden = false; clearTimeout(toast.t); toast.t = setTimeout(() => el.hidden = true, 2600); }
+
+function dots(on) {
+  return '<div class="dots">' + [t("s1"), t("s2"), t("s3")].map((s, i) =>
+    `<div class="dot ${i === on ? "on" : i < on ? "past" : ""}"><b>${i < on ? ICON.check.replace("<svg", '<svg width="16" height="16"') : i + 1}</b><span>${esc(s)}</span></div>`).join("") + "</div>";
+}
+const demo = () => info && info.dry_run ? `<div class="demo">${esc(t("demo"))}</div>` : "";
+
+function render() {
+  document.documentElement.lang = lang === "zh" ? "zh-CN" : "en";
+  document.title = t("title");
+  $("lang").textContent = t("other");
+  const card = $("card");
+  if (ended) { card.innerHTML = `<div class="yay"><div class="ring">${ICON.check}</div><h1>${esc(t("bye"))}</h1><p class="lead">${esc(t("byeLead"))}</p></div>`; return; }
+  if (!info) { card.innerHTML = `<p class="lead">${ICON.spin.replace("<svg", '<svg width="28" height="28"')}</p>`; return; }
+  if (view === "welcome") {
+    card.innerHTML = demo() + `<div class="hero"><img src="/logo.svg" alt=""><h1>${esc(t("welcome"))}</h1><p class="lead">${esc(t("welcomeLead"))}</p></div>
+      <div class="three"><div><i>👆</i><b>1. ${esc(t("w1"))}</b><span>${esc(t("w1s"))}</span></div>
+      <div><i>⚙️</i><b>2. ${esc(t("w2"))}</b><span>${esc(t("w2s"))}</span></div>
+      <div><i>💬</i><b>3. ${esc(t("w3"))}</b><span>${esc(t("w3s"))}</span></div></div>
+      <div class="actions"><button class="btn primary" id="go" type="button">${esc(t("start"))} ${ICON.arrow}</button></div>`;
+    $("go").onclick = () => { view = "pick"; render(); };
+    $("go").focus();
+  } else if (view === "pick") {
+    const none = !info.apps.some(a => a.found);
+    card.innerHTML = demo() + dots(0) + `<h1>${esc(t("pickTitle"))}</h1><p class="lead">${esc(t("pickLead"))}</p>
+      <div class="apps">${info.apps.map(a => `<label class="app ${picked.has(a.id) ? "sel" : ""}" data-id="${a.id}">
+        <input type="checkbox" ${picked.has(a.id) ? "checked" : ""} aria-label="${esc(a.label)}">
+        <span class="tile" style="background:${COLORS[a.id]}">${INITIALS[a.id]}</span>
+        <span><span class="name">${esc(a.label)}</span><br><span class="found ${a.found ? "yes" : ""}">${esc(a.found ? t("found") : t("notFound"))}</span></span>
+        <span class="check">${ICON.check}</span></label>`).join("")}</div>
+      ${none ? `<div class="none">${esc(t("noneFound"))} <button class="btn small" id="again" type="button">${ICON.redo} ${esc(t("lookAgain"))}</button></div>` : ""}
+      <div class="folder">${ICON.folder}<div><span>${esc(t("folderTitle"))}</span><code>${esc(info.workspace)}</code></div></div>
+      <div class="actions"><button class="btn" id="back" type="button">${esc(t("back"))}</button>
+      <button class="btn primary" id="install" type="button" ${picked.size ? "" : "disabled"}>${esc(picked.size ? t("install") : t("pickOne"))} ${ICON.arrow}</button></div>`;
+    card.querySelectorAll(".app input").forEach(inp => inp.onchange = () => {
+      const id = inp.closest(".app").dataset.id;
+      inp.checked ? picked.add(id) : picked.delete(id);
+      render(); card.querySelector(`.app[data-id="${id}"] input`).focus();
+    });
+    $("back").onclick = () => { view = "welcome"; render(); };
+    $("install").onclick = install;
+    if ($("again")) $("again").onclick = async () => { await loadInfo(); render(); };
+  } else {
+    renderProgress();
+  }
+}
+
+function stepText(s) {
+  const app = (info.apps.find(a => a.id === s.id) || {}).label;
+  const name = s.id === "workspace" ? t("stWorkspace") : s.id === "freecad" ? t("stFreecad") : s.id === "autocad" ? t("stAutocad") : t("stApp", { app });
+  let sub = t("waiting"), st = s.state;
+  if (st === "run") sub = t("running");
+  else if (st === "done" || st === "error") {
+    const p = s.info && s.info.path;
+    if (s.id === "workspace") sub = t("folderReady", { p });
+    else if (s.id === "freecad") { sub = p ? t("fcYes") : t("fcNo"); if (!p) st = "opt"; }
+    else if (s.id === "autocad") { sub = p ? t("acYes") : t("acNo"); if (!p) st = "opt"; }
+    else {
+      const k = s.info.status || "";
+      sub = st === "error" ? t("failed") + (s.info.message ? ": " + s.info.message : "") : k === "unchanged" ? t("already")
+        : k.startsWith("would") ? t("wouldConnect") : t("connected");
+    }
+  }
+  const ic = st === "run" ? ICON.spin : st === "done" ? ICON.check : st === "opt" ? ICON.dash : st === "error" ? ICON.x : ICON.dot;
+  return `<li data-s="${st}"><span class="ic ${st === "done" || st === "error" ? "pop" : ""}">${ic}</span><div><b>${esc(name)}</b><span>${esc(sub)}</span></div></li>`;
+}
+
+// The real steps take a second or two in all; reveal them one by one so the progress can be followed.
+function visible() {
+  const steps = state ? state.steps : [];
+  const finished = state && (state.phase === "done" || state.phase === "error") ? steps.length  // also a failure before any step
+    : steps.filter(s => s.state === "done" || s.state === "error").length;
+  if (shown < finished && Date.now() - shownAt > 550) { shown++; shownAt = Date.now(); }
+  return steps.map((s, i) => i < shown ? s : i === shown && state.phase !== "ready" ? { ...s, state: "run" } : { ...s, state: "wait" });
+}
+
+function renderProgress() {
+  const card = $("card");
+  const steps = visible(), n = steps.length || 1;
+  const finished = shown >= steps.length && state && state.phase !== "running";
+  const pct = Math.round(100 * Math.min(shown, n) / n);
+  if (!finished) {
+    const cur = steps[shown];
+    const now = cur ? stepText(cur).match(/<b>(.*?)<\/b>/)[1] : t("almost");
+    card.innerHTML = demo() + dots(1) + `<div class="big"><h1>${esc(t("working"))}</h1><span class="pct">${pct}%</span></div>
+      <div class="bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}"><i style="width:${pct}%"></i></div>
+      <div id="nowText">${now}</div><ul class="steps">${steps.map(stepText).join("")}</ul>`;
+    return;
+  }
+  clearInterval(timer); timer = null;
+  const ok = state.phase === "done";
+  const res = state.result || {};
+  const good = (res.clients || []).filter(c => c.status !== "error");
+  const todo = good.map(c => `<li>${esc(t("restart_" + c.client.replace("-", "_")))}</li>`).join("");
+  const prompts = ["p1", "p2", "p3"].map(k => `<div class="prompt"><q>${esc(t(k))}</q><button class="btn small" type="button" data-copy="${k}">${esc(t("copy"))}</button></div>`).join("");
+  card.innerHTML = demo() + dots(ok ? 3 : 1) + `<div class="done"><div class="yay"><div class="ring ${ok ? "" : "bad"} pop">${ok ? ICON.check : ICON.x}</div>
+      <h1>${esc(ok ? t("doneTitle") : t("errTitle"))}</h1><p class="lead">${esc(ok ? t("doneLead") : t("errLead"))}</p></div>
+      ${ok ? "" : `<ul class="steps">${steps.map(stepText).join("")}</ul>${state.error ? `<p class="none">${esc(state.error.message)}${state.error.hint ? " — " + esc(state.error.hint) : ""}</p>` : ""}`}
+      ${todo ? `<h2>${esc(t("lastStep"))}</h2><ol class="todo">${todo}<li>${esc(t("sayThis"))}</li></ol><div class="prompts" style="margin-top:12px">${prompts}</div>` : ""}
+      <div class="actions">${ok ? "" : `<button class="btn primary" id="retry" type="button">${ICON.redo} ${esc(t("retry"))}</button>`}
+        <button class="btn" id="folder" type="button">${ICON.folder} ${esc(t("openFolder"))}</button>
+        <button class="btn" id="share" type="button">${ICON.share} ${esc(t("share"))}</button>
+        ${ok ? `<button class="btn primary" id="finish" type="button">${esc(t("finish"))}</button>` : ""}</div>
+      <details><summary>${esc(t("details"))}</summary><pre>${esc(JSON.stringify(res && res.clients ? res : state, null, 1))}</pre></details></div>`;
+  card.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
+    await copy(t(b.dataset.copy)); b.textContent = t("copied"); b.classList.add("copied");
+    setTimeout(() => { b.textContent = t("copy"); b.classList.remove("copied"); }, 1800);
+  });
+  $("folder").onclick = async () => { const r = await api("/api/open-folder", {}); if (!r.ok) toast(t("noFolder", { m: r.error.message })); };
+  $("share").onclick = share;
+  if ($("retry")) $("retry").onclick = () => { view = "pick"; render(); };
+  if ($("finish")) $("finish").onclick = async () => { try { await api("/api/quit", {}); } catch (e) {} ended = true; render(); };
+  if (ok && !renderProgress.celebrated) { renderProgress.celebrated = true; confetti(); }
+}
+
+async function copy(text) {
+  try { await navigator.clipboard.writeText(text); return; } catch (e) {}
+  const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); } catch (e) {} ta.remove();
+}
+async function share() {
+  const text = t("shareText") + " " + REPO;
+  if (navigator.share) { try { await navigator.share({ title: "AgentCAD", text, url: REPO }); return; } catch (e) { if (e.name === "AbortError") return; } }
+  await copy(text); toast(t("shared"));
+}
+
+async function install() {
+  const r = await api("/api/start", { clients: [...picked] });
+  if (!r.ok) { toast(r.error.message); return; }
+  view = "progress"; state = { phase: "running", steps: [] }; shown = 0; shownAt = Date.now(); renderProgress.celebrated = false;
+  render();
+  timer = setInterval(poll, 250);
+}
+async function poll() {
+  try { state = await api("/api/state"); } catch (e) { clearInterval(timer); $("card").innerHTML = `<p class="lead">${esc(t("lost"))}</p>`; return; }
+  renderProgress();
+}
+
+function confetti() {
+  if (matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = $("confetti"), x = c.getContext("2d"); c.hidden = false;
+  c.width = innerWidth * devicePixelRatio; c.height = innerHeight * devicePixelRatio; x.scale(devicePixelRatio, devicePixelRatio);
+  const cols = ["#1f6feb", "#15803d", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4"];
+  const ps = Array.from({ length: 140 }, () => ({ x: innerWidth / 2 + (Math.random() - .5) * 200, y: innerHeight / 3, vx: (Math.random() - .5) * 14,
+    vy: -Math.random() * 13 - 4, r: Math.random() * 6 + 4, c: cols[Math.random() * cols.length | 0], a: Math.random() * 6 }));
+  const t0 = performance.now();
+  (function frame(now) {
+    x.clearRect(0, 0, innerWidth, innerHeight);
+    for (const p of ps) { p.x += p.vx; p.y += p.vy; p.vy += .35; p.vx *= .99; p.a += .2;
+      x.save(); x.translate(p.x, p.y); x.rotate(p.a); x.fillStyle = p.c; x.fillRect(-p.r / 2, -p.r / 4, p.r, p.r / 2); x.restore(); }
+    if (now - t0 < 3200) requestAnimationFrame(frame); else c.hidden = true;
+  })(t0);
+}
+
+async function loadInfo() {
+  info = await api("/api/info");
+  if (!picked.size) info.apps.filter(a => a.found).forEach(a => picked.add(a.id));
+}
+$("lang").onclick = () => { lang = lang === "zh" ? "en" : "zh"; try { localStorage.setItem("agentcad-lang", lang); } catch (e) {} render(); };
+render();
+loadInfo().then(render).catch(() => { $("card").innerHTML = `<p class="lead">${esc(t("lost"))}</p>`; });
+</script>
+</body>
+</html>

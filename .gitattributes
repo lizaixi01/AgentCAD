@@ -11,3 +11,5 @@ docs/assets/native-dwg-live-lock.svg export-ignore
 docs/assets/native-dwg-live-lock-results.json export-ignore
 docs/assets/native-dwg-fixed-repeat.svg export-ignore
 docs/assets/native-dwg-fixed-repeat-results.json export-ignore
+*.cmd text eol=crlf
+*.command text eol=lf
