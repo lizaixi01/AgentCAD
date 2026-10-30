@@ -16,10 +16,12 @@ MAX_PREVIEW_BYTES = 2 * 1024 * 1024
 FORMATS = {"PNG", "JPEG", "WEBP"}
 
 
-def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size: int) -> dict:
+def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size: int, rotate: int = 0) -> dict:
     source = policy.resolve(path, must_exist=True, suffixes=(".png", ".jpg", ".jpeg", ".webp"))
     if isinstance(max_size, bool) or not isinstance(max_size, int) or not 64 <= max_size <= 2048:
         raise input_error("BAD_IMAGE_SIZE", "max_size must be an integer from 64 to 2048")
+    if isinstance(rotate, bool) or not isinstance(rotate, int) or rotate not in (0, 90, 180, 270):
+        raise input_error("BAD_IMAGE_ROTATION", "rotate must be 0, 90, 180 or 270 clockwise degrees")
     if source.stat().st_size > min(policy.max_file_bytes, MAX_INPUT_BYTES):
         raise file_error("IMAGE_TOO_LARGE", "Source image exceeds the byte budget")
     raw = source.read_bytes()
@@ -43,6 +45,9 @@ def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size:
             background = Image.new("RGBA", rgba.size, "white")
             background.alpha_composite(rgba)
             crop = background.convert("RGB")
+            if rotate:
+                crop = crop.transpose({90: Image.Transpose.ROTATE_270, 180: Image.Transpose.ROTATE_180,
+                                       270: Image.Transpose.ROTATE_90}[rotate])
             scale = max_size / max(crop.size)
             size = (max(1, round(crop.width * scale)), max(1, round(crop.height * scale)))
             preview = crop.resize(size, Image.Resampling.LANCZOS)
@@ -55,5 +60,5 @@ def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size:
         raise input_error("IMAGE_PREVIEW_TOO_LARGE", "Preview exceeds 2 MB", hint="Use a smaller max_size")
     return {"source": source.relative_to(policy.root).as_posix(),
             "source_sha256": hashlib.sha256(raw).hexdigest(), "source_size": [width, height],
-            "region": list(box), "preview_size": list(size), "pixel_scale": scale,
+            "region": list(box), "rotate": rotate, "preview_size": list(size), "pixel_scale": scale,
             "mime_type": "image/png", "image_base64": base64.b64encode(png).decode("ascii")}

@@ -60,6 +60,23 @@ def test_overview_and_exif_rotation_share_displayed_coordinates(ws):
     assert decode(crop).size == (64, 64)
 
 
+@pytest.mark.parametrize("rotate,expected_size,blue,white", [
+    (90, (80, 160), (60, 10), (10, 150)),
+    (180, (160, 80), (150, 60), (10, 10)),
+    (270, (80, 160), (10, 150), (60, 10)),
+])
+def test_rotation_is_clockwise_after_source_coordinate_crop(ws, rotate, expected_size, blue, white):
+    source = ws / "drawing.png"
+    drawing(source)
+    original = source.read_bytes()
+    result = Runtime(Policy(root=ws, read_only=True)).inspect_image("drawing.png", [20, 10, 100, 50], 160, rotate)
+    preview = decode(result)
+    assert preview.size == expected_size
+    assert preview.getpixel(blue) == (0, 0, 255) and preview.getpixel(white) == (255, 255, 255)
+    assert result["region"] == [20, 10, 100, 50] and result["rotate"] == rotate
+    assert source.read_bytes() == original
+
+
 @pytest.mark.parametrize("region", [[-1, 0, 10, 10], [0, 0, 121, 80], [10, 10, 10, 20],
                                     [0, 0, 10], [0, 0, 10.5, 20], [False, 0, 10, 20]])
 def test_invalid_regions_are_rejected_without_silent_clipping(ws, region):
@@ -77,6 +94,7 @@ def test_workspace_boundary_and_invalid_image(ws):
     assert runtime.inspect_image("bad.png")["error"]["code"] == "IMAGE_READ_FAILED"
     drawing(ws / "drawing.png")
     assert runtime.inspect_image("drawing.png", max_size=0)["error"]["code"] == "BAD_IMAGE_SIZE"
+    assert runtime.inspect_image("drawing.png", rotate=45)["error"]["code"] == "BAD_IMAGE_ROTATION"
 
 
 def test_input_and_output_budgets(ws, monkeypatch):
@@ -95,9 +113,9 @@ def test_input_and_output_budgets(ws, monkeypatch):
 def test_cli_image_uses_the_same_read_only_crop(ws):
     drawing(ws / "drawing.png")
     result = subprocess.run([sys.executable, "-m", "agentcad.cli", "--root", str(ws), "--read-only", "image",
-                             "drawing.png", "--region", "[20,10,100,50]", "--max-size", "160"],
+                             "drawing.png", "--region", "[20,10,100,50]", "--max-size", "160", "--rotate", "90"],
                             capture_output=True, text=True, check=True)
-    assert decode(json.loads(result.stdout)).size == (160, 80)
+    assert decode(json.loads(result.stdout)).size == (80, 160)
 
 
 def test_mcp_returns_metadata_and_inline_image(ws):
@@ -113,13 +131,13 @@ def test_mcp_returns_metadata_and_inline_image(ws):
             async with ClientSession(reader, writer) as client:
                 await client.initialize()
                 return await client.call_tool("inspect_image", {"path": "drawing.png", "region": [20, 10, 100, 50],
-                                                                "max_size": 160})
+                                                                "max_size": 160, "rotate": 90})
     result = asyncio.run(run())
     assert [block.type for block in result.content] == ["text", "image"]
     metadata = json.loads(result.content[0].text)
     assert metadata["ok"] and "image_base64" not in metadata
     assert result.content[1].mimeType == "image/png"
-    assert Image.open(BytesIO(base64.b64decode(result.content[1].data))).size == (160, 80)
+    assert Image.open(BytesIO(base64.b64decode(result.content[1].data))).size == (80, 160)
 
 
 @pytest.mark.skipif(not freecad.available(), reason="FreeCAD not installed")

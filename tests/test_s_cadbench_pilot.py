@@ -121,6 +121,20 @@ def test_audit_detects_out_of_protocol_tools(tmp_path, foreign):
     assert len(pilot.audit_log(log)["unexpected_tools"]) == 1
 
 
+@pytest.mark.parametrize("body,expected", [
+    ("Error executing tool: max_size must be <= 2048", "MCP_TOOL_ERROR"),
+    (json.dumps({"ok": False, "error": {"code": "BAD_IMAGE_REGION", "message": "Outside image"}}),
+     "BAD_IMAGE_REGION"),
+])
+def test_audit_counts_mcp_failures_without_double_counting_runtime_errors(tmp_path, body, expected):
+    log = tmp_path / "trajectory.jsonl"
+    log.write_text(json.dumps({"type": "item.completed", "item": {
+        "type": "mcp_tool_call", "server": "agentcad", "tool": "inspect_image", "status": "failed",
+        "result": {"content": [{"type": "text", "text": body}]}}}) + "\n", "utf-8")
+    errors = pilot.audit_log(log)["tool_errors"]
+    assert len(errors) == 1 and errors[0]["code"] == expected
+
+
 @pytest.mark.parametrize("has_output", [False, True])
 def test_missing_submission_is_zero_but_scorer_crash_is_infrastructure_error(tmp_path, monkeypatch, has_output):
     item = {"id": "sample", "kind": "create"}

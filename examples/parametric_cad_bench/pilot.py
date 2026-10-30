@@ -143,9 +143,12 @@ def audit_log(log: Path) -> dict:
             tools.append(item.get("tool"))
             if item.get("server") != "agentcad" or item.get("tool") not in TOOLS:
                 foreign.append(item)
+            prior_errors = len(errors)
+            messages = []
             for block in (item.get("result") or {}).get("content", []):
                 if block.get("type") != "text":
                     continue
+                messages.append(block.get("text", ""))
                 try:
                     body = json.loads(block["text"])
                 except (ValueError, KeyError):
@@ -154,6 +157,10 @@ def audit_log(log: Path) -> dict:
                     error = body.get("error", {})
                     errors.append({"tool": item.get("tool"), "code": error.get("code"),
                                    "message": error.get("message", "")[:300]})
+            # MCP/schema failures can be plain text, outside Runtime's JSON envelope.
+            if len(errors) == prior_errors and (item.get("status") == "failed" or item.get("error")):
+                errors.append({"tool": item.get("tool"), "code": "MCP_TOOL_ERROR",
+                               "message": ("\n".join(messages) or str(item.get("error")))[:300]})
         elif kind not in {"reasoning", "agent_message", "image_view"}:
             foreign.append({"type": kind, "id": item.get("id")})
     return {"tool_calls": len(tools), "tools": tools, "tool_errors": errors,
