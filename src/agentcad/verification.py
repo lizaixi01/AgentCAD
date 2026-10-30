@@ -103,6 +103,11 @@ def verify_dimensions(doc, requirements, tolerance=1e-6):
         if bound and (override_value is None or abs(override_value - actual) > tol):
             row_findings.append("dimension_override_mismatch")
         for kind in row_findings:
+            # A wrong cached value and its matching numeric override are one
+            # primary display mismatch. Preserve both causes on the row without
+            # replacing the public aggregate classification for that dimension.
+            if kind == "dimension_override_mismatch" and "dimension_mismatch" in row_findings:
+                continue
             findings.append({"requirement": req["id"], "kind": kind, "handle": req["handle"]})
         rows.append(
             {

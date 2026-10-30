@@ -71,6 +71,15 @@ def test_stale_numeric_override_does_not_replace_actual_saved_display(rt,ws):
     response=rt.verify_dimensions('display.dxf',[{'id':'hole','handle':handle,'value':6.4}])
     assert not response['accepted'] and response['rows'][0]['displayed']==6.4
     assert 'dimension_override_mismatch' in response['rows'][0]['findings']
+    assert response['findings'][0]['kind']=='dimension_override_mismatch'
+
+
+def test_a_wrong_display_and_override_have_one_primary_mismatch(rt,ws):
+    handle=example(ws,diameter=6.4,text='9.9')
+    response=rt.verify_dimensions('display.dxf',[{'id':'hole','handle':handle,'value':6.4}])
+    assert not response['accepted'] and response['rows'][0]['displayed']==9.9
+    assert response['rows'][0]['findings']==['dimension_mismatch','dimension_override_mismatch']
+    assert response['findings']==[{'requirement':'hole','kind':'dimension_mismatch','handle':handle}]
 
 
 @pytest.mark.parametrize('mode',['deviations','limits'])
