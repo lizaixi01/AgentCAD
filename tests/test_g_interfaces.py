@@ -2,6 +2,7 @@
 SDK stdio client spawning the real server process) and HTTP."""
 from __future__ import annotations
 
+import ast
 import json
 import os
 import subprocess
@@ -186,16 +187,15 @@ def test_interfaces_share_one_implementation():
     src = Path(__file__).parents[1] / "src" / "agentcad"
     import ast
     for adapter in ("cli.py", "mcp_server.py", "http_api.py"):
-        text = (src / adapter).read_text("utf-8")
-        modules = []
-        for node in ast.walk(ast.parse(text)):
-            if isinstance(node,ast.Import):
-                modules.extend(n.name for n in node.names)
-            elif isinstance(node,ast.ImportFrom):
-                modules.append(node.module or "")
-                if not node.module:
-                    modules.extend(n.name for n in node.names)
-        assert not any(part in {"ezdxf","ops","engine"} for module in modules for part in module.split("."))
+        # Check imports, not prose: "engineering drawing" is not a dependency on engine.py.
+        tree = ast.parse((src / adapter).read_text("utf-8"))
+        dependencies = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                dependencies.extend(alias.name for alias in node.names)
+            elif isinstance(node, ast.ImportFrom):
+                dependencies.extend(f"{node.module or ''}.{alias.name}" for alias in node.names)
+        assert not any({"ezdxf", "ops", "engine"} & set(name.split(".")) for name in dependencies)
 
 
 def test_operation_catalog_is_compact_by_default(tmp_path):

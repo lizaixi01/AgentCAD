@@ -121,6 +121,20 @@ def test_audit_detects_out_of_protocol_tools(tmp_path, foreign):
     assert len(pilot.audit_log(log)["unexpected_tools"]) == 1
 
 
+@pytest.mark.parametrize("body,expected", [
+    ("Error executing tool: max_size must be <= 2048", "MCP_TOOL_ERROR"),
+    (json.dumps({"ok": False, "error": {"code": "BAD_IMAGE_REGION", "message": "Outside image"}}),
+     "BAD_IMAGE_REGION"),
+])
+def test_audit_counts_mcp_failures_without_double_counting_runtime_errors(tmp_path, body, expected):
+    log = tmp_path / "trajectory.jsonl"
+    log.write_text(json.dumps({"type": "item.completed", "item": {
+        "type": "mcp_tool_call", "server": "agentcad", "tool": "inspect_image", "status": "failed",
+        "result": {"content": [{"type": "text", "text": body}]}}}) + "\n", "utf-8")
+    errors = pilot.audit_log(log)["tool_errors"]
+    assert len(errors) == 1 and errors[0]["code"] == expected
+
+
 @pytest.mark.parametrize("has_output", [False, True])
 def test_missing_submission_is_zero_but_scorer_crash_is_infrastructure_error(tmp_path, monkeypatch, has_output):
     item = {"id": "sample", "kind": "create"}
@@ -194,3 +208,25 @@ def test_score_reader_rejects_invalid_rewards(tmp_path, reward):
     pilot.write_json(tmp_path / "reward.json", {"reward": reward})
     with pytest.raises(ValueError):
         pilot.read_score(tmp_path)
+
+
+def test_regression_selection_uses_baseline_and_detects_input_or_config_changes(tmp_path):
+    task = tmp_path / "dataset" / "plate"
+    (task / "environment").mkdir(parents=True)
+    (task / "instruction.md").write_text("public instruction", "utf-8")
+    (task / "task.toml").write_text("metadata", "utf-8")
+    (task / "environment" / "input.png").write_bytes(b"original drawing")
+    item = {"id": "plate", "kind": "drawing", "instruction_sha256": pilot.digest(task / "instruction.md"),
+            "task_toml_sha256": pilot.digest(task / "task.toml"),
+            "public_input_sha256": {"input.png": pilot.digest(task / "environment" / "input.png")}}
+    baseline = tmp_path / "baseline.json"
+    pilot.write_json(baseline, {"benchmark": "gnucleus-ai/cad-bench@v3", "model": "test", "tasks": [item]})
+    selected, reference = pilot.repeat_selection(baseline, task.parent, ["plate"], {"model": "test"})
+    assert selected == [item] and reference["sha256"] == pilot.digest(baseline)
+    with pytest.raises(ValueError, match="differs from the baseline"):
+        pilot.repeat_selection(baseline, task.parent, ["plate"], {"model": "different"})
+    with pytest.raises(ValueError, match="outside the baseline"):
+        pilot.repeat_selection(baseline, task.parent, ["unseen"], {"model": "test"})
+    (task / "environment" / "input.png").write_bytes(b"changed drawing")
+    with pytest.raises(ValueError, match="drawing input changed"):
+        pilot.repeat_selection(baseline, task.parent, ["plate"], {"model": "test"})

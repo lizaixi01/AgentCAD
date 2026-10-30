@@ -1,0 +1,1408 @@
+{
+  "date": "2026-10-30",
+  "benchmark": "gnucleus-ai/cad-bench@v3",
+  "official_submission": false,
+  "purpose": "post-diagnostic development regression; two successive versions, all attempts retained",
+  "baseline_ledger": {
+    "path": "pilot-2026-10-30.json",
+    "sha256": "cb4ca86317f2be53dac25ee0ad1e5b0d23ca72db375a790b93f229eeead1cb6d"
+  },
+  "baseline_drawing_cases": [
+    {
+      "id": "freecad-6fd69bd0c4",
+      "evaluation": {
+        "reward": 0.291999,
+        "geometry_similarity": 0.17859264807784006,
+        "cad_spec_consistency": 0.8,
+        "combined": 0.29199916582841,
+        "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=0.179 [solid_count=1 (matched)] (surface_types=0.000, volume=0.000, surface_area=0.583, principal_moments=0.745, icp=0.012); surface_types_diff=29.496% (Far); volume_diff=1.498% (Far); surface_area_diff=2.614% (Close); bbox_diff=0.007% (OCCT OBB; gate passed); principal_moments_diff=1.799% (Close); icp[reference.FCStd vs answer.FCStd: reward=0.012 rmse=1.3523e+00 max_residual=4.1918e+00 mm]",
+        "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=0.800 (35/37 consistent, 0 inconsistent, 2 not_found; failure_budget=10)",
+        "status": "scored",
+        "score": 0.291999
+      },
+      "seconds": 611.45,
+      "public_input_sha256": {
+        "6fd69bd0c4.png": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071"
+      }
+    },
+    {
+      "id": "freecad-686f17ce17",
+      "evaluation": {
+        "reward": 0.525481,
+        "geometry_similarity": 0.3563745072135583,
+        "cad_spec_consistency": 1.0,
+        "combined": 0.5254809867308247,
+        "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=0.356 [solid_count=1 (matched)] (surface_types=0.055, volume=0.439, surface_area=1.000, principal_moments=1.000, icp=0.005); surface_types_diff=8.810% (Close); volume_diff=0.364% (Close); surface_area_diff=0.128% (Matched); bbox_diff=0.002% (OCCT OBB; gate passed); principal_moments_diff=0.379% (Matched); icp[reference.FCStd vs answer.FCStd: reward=0.005 rmse=1.2890e+00 max_residual=4.9925e+00 mm]",
+        "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=1.000 (12/12 consistent, 0 inconsistent, 0 not_found; failure_budget=10)",
+        "status": "scored",
+        "score": 0.525481
+      },
+      "seconds": 353.91,
+      "public_input_sha256": {
+        "686f17ce17.png": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116"
+      }
+    }
+  ],
+  "conditions": {
+    "freecad": "1.1.4",
+    "occt": "7.8.1",
+    "validator": "0.6.0",
+    "scorer": "v2",
+    "python": "3.11.16",
+    "attempts_per_task_per_version": 1,
+    "scripts_enabled": false,
+    "manual_repairs_of_agent_submissions": false,
+    "hidden_reference_given_to_fresh_agents": false,
+    "raw_trajectory_is_public_atif": false
+  },
+  "audit_note": "Audit is recomputed from saved trajectories to count plain-text MCP schema failures. Original run records remain unchanged.",
+  "controls": {
+    "path": "artifacts/drawing-diagnosis-2026-10-30/controls.json",
+    "sha256": "47aa8c7fafeab5b758cd5444f2a411d7a5e8e7b6324972365dc3091107d99458",
+    "manual_posthoc_only": true
+  },
+  "rounds": [
+    {
+      "label": "zoom",
+      "manifest": {
+        "benchmark": "gnucleus-ai/cad-bench@v3",
+        "expected_dataset_digest": "sha256:8a786725d3648a76282fc5868df06da3d5e00d603f283573a53430803465d78a",
+        "digest_verified": false,
+        "seed": 42,
+        "selection": "fixed subset of baseline manifest; no resampling",
+        "agentcad_commit": "6f8286025913b27e4241851e53d34feca4522bbb",
+        "codex_version": "codex-cli 0.163.0",
+        "model": "gpt-6.1-sol",
+        "effort": "xhigh",
+        "timeout_sec": 900,
+        "jobs": 2,
+        "official_submission": false,
+        "tasks": [
+          {
+            "id": "freecad-6fd69bd0c4",
+            "kind": "drawing",
+            "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+            "instruction_sha256": "c20356feec279d4e553f875c606f7454927557e65c17c2d8defd46a78263725d",
+            "task_toml_sha256": "3c869ee14ab5f256ea560d5df062d741bfd4809ba963bad2ee354266020802cb",
+            "public_input_sha256": {
+              "6fd69bd0c4.png": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071"
+            }
+          },
+          {
+            "id": "freecad-686f17ce17",
+            "kind": "drawing",
+            "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+            "instruction_sha256": "579ff895229de2227aedbe59227397cbcc4bffb37f73ae4d6171bb22cb443e39",
+            "task_toml_sha256": "9d4c42112dc3c948876d5228acfac2a96c75604e249bfb732410b9ce65f4e08a",
+            "public_input_sha256": {
+              "686f17ce17.png": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116"
+            }
+          }
+        ],
+        "harness_sha256": {
+          "pilot.py": "7b4a91dc379892f7a1fbfc38332a71e23085f0be561e60d82bd828ad29549e89",
+          "stage_server.py": "2f0ea500b8cc02dc8d494a434ed7586af5f8750899e4e06b6ed6b0c3ac7520aa"
+        },
+        "purpose": "post-diagnostic regression",
+        "baseline": {
+          "path": "D:\\Projects\\bench-data\\cadbench-v3-pilot-20261030\\manifest.json",
+          "sha256": "3126ba2d7b6c21b1024d0ab34af0025e41a05696fa9e477d57f40b1954eaa68a"
+        }
+      },
+      "manifest_sha256": "16b0466b80b1bac76c19c5a4c7b088c323aa736c9103116bc4a08518e2bfee75",
+      "raw_directory": "D:\\Projects\\bench-data\\cadbench-v3-drawing-retest-20261030",
+      "mean_reward": 0.334451,
+      "cases": [
+        {
+          "id": "freecad-6fd69bd0c4",
+          "kind": "drawing",
+          "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+          "instruction_sha256": "c20356feec279d4e553f875c606f7454927557e65c17c2d8defd46a78263725d",
+          "task_toml_sha256": "3c869ee14ab5f256ea560d5df062d741bfd4809ba963bad2ee354266020802cb",
+          "public_input_sha256": {
+            "6fd69bd0c4.png": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071"
+          },
+          "status": "done",
+          "seconds": 458.33,
+          "evaluation": {
+            "reward": 0.0,
+            "geometry_similarity": 0.0,
+            "cad_spec_consistency": 0.8,
+            "combined": 0.0,
+            "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: OCCT OBB maximum relative error 41.053% >= 10.000% threshold; gated geometry to 0.0",
+            "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=0.800 (35/37 consistent, 0 inconsistent, 2 not_found; failure_budget=10)",
+            "status": "scored",
+            "score": 0.0
+          },
+          "stage_audit_errors": [],
+          "audit": {
+            "tool_calls": 17,
+            "tools": [
+              "list_operations",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "list_operations",
+              "inspect_image",
+              "apply_operations",
+              "apply_operations",
+              "apply_operations",
+              "export_drawing",
+              "validate_drawing",
+              "inspect_entities",
+              "save_benchmark_stage"
+            ],
+            "tool_errors": [
+              {
+                "tool": "inspect_image",
+                "code": "MCP_TOOL_ERROR",
+                "message": "Error executing tool inspect_image: 1 validation error for inspect_imageArguments\nmax_size\n  Input should be less than or equal to 2048 [type=less_than_equal, input_value=2100, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/less_than_equal"
+              }
+            ],
+            "unexpected_tools": [],
+            "usage": {
+              "input_tokens": 660922,
+              "cached_input_tokens": 583936,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 9878,
+              "reasoning_output_tokens": 6752
+            }
+          },
+          "original_run_tool_errors": [],
+          "image_calls": [
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                550,
+                200,
+                993,
+                650
+              ],
+              "max_size": 1800
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                619,
+                119,
+                926,
+                190
+              ],
+              "max_size": 1600
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                655,
+                280,
+                925,
+                547
+              ],
+              "max_size": 2100
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                1057,
+                407,
+                1267,
+                562
+              ],
+              "max_size": 1300
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                655,
+                280,
+                925,
+                547
+              ],
+              "max_size": 2048
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                620,
+                123,
+                760,
+                187
+              ],
+              "max_size": 1800
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                625,
+                125,
+                921,
+                188
+              ],
+              "max_size": 2048
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                550,
+                276,
+                750,
+                548
+              ],
+              "max_size": 1800
+            }
+          ],
+          "shape_from_agent_validation": {
+            "valid": true,
+            "solids": 1,
+            "faces": 109,
+            "edges": 312,
+            "volume": 11226.770935,
+            "area": 10351.511334,
+            "bbox": [
+              [
+                -36.06,
+                -36.06,
+                -5.5
+              ],
+              [
+                36.06,
+                36.06,
+                4.0
+              ]
+            ],
+            "size": [
+              72.12,
+              72.12,
+              9.5
+            ],
+            "center_of_mass": [
+              -0.45768,
+              0.0,
+              1.390907
+            ],
+            "holes": [
+              {
+                "diameter": 2.0,
+                "count": 16
+              },
+              {
+                "diameter": 3.0,
+                "count": 4
+              },
+              {
+                "diameter": 3.2,
+                "count": 8
+              },
+              {
+                "diameter": 6.0,
+                "count": 8
+              }
+            ]
+          },
+          "posthoc_validation": {
+            "readable": true,
+            "passed": true,
+            "issues": [],
+            "requirements": [],
+            "warnings": [],
+            "shape": {
+              "valid": true,
+              "solids": 1,
+              "faces": 109,
+              "edges": 312,
+              "volume": 11226.770935,
+              "area": 10351.511334,
+              "bbox": [
+                [
+                  -36.06,
+                  -36.06,
+                  -5.5
+                ],
+                [
+                  36.06,
+                  36.06,
+                  4.0
+                ]
+              ],
+              "size": [
+                72.12,
+                72.12,
+                9.5
+              ],
+              "center_of_mass": [
+                -0.45768,
+                0.0,
+                1.390907
+              ],
+              "holes": [
+                {
+                  "diameter": 2.0,
+                  "count": 16
+                },
+                {
+                  "diameter": 3.0,
+                  "count": 4
+                },
+                {
+                  "diameter": 3.2,
+                  "count": 8
+                },
+                {
+                  "diameter": 6.0,
+                  "count": 8
+                }
+              ]
+            },
+            "features": 16,
+            "parameters": {
+              "PlateThickness": {
+                "value": 4.0
+              },
+              "RecessDepth": {
+                "value": 2.0
+              },
+              "BossDiameter": {
+                "value": 8.0
+              },
+              "MountHoleDiameter": {
+                "value": 3.0
+              },
+              "PerimeterHoleDiameter": {
+                "value": 3.2
+              },
+              "TallBossExtension": {
+                "value": 5.5
+              },
+              "ShortBossExtension": {
+                "value": 1.6
+              }
+            },
+            "file": "answer.FCStd",
+            "requirements_source": null
+          },
+          "native_object_types": {
+            "Spreadsheet::Sheet": 1,
+            "PartDesign::Body": 1,
+            "App::Origin": 1,
+            "App::Line": 3,
+            "App::Plane": 3,
+            "App::Point": 1,
+            "Sketcher::SketchObject": 8,
+            "PartDesign::Pad": 3,
+            "PartDesign::Pocket": 5
+          },
+          "native": {
+            "path": "artifacts/drawing-diagnosis-2026-10-30/zoom/freecad-6fd69bd0c4/answer.FCStd",
+            "sha256": "bc7369b608d89839c2ea406e8e7785a63e056cc150d5ad101ce15f2eb43d99df"
+          },
+          "preview": {
+            "path": "artifacts/drawing-diagnosis-2026-10-30/zoom/freecad-6fd69bd0c4/preview.png",
+            "sha256": "60f653d42f1059d14e56db7805c7cd39089b51eccb2cced70c6bd12aab677120"
+          },
+          "raw_files_sha256": {
+            "command.json": "b44f3216ba0baf31e2afae35b2cf460f5e8b7ee5ecad6056abbca13415b2b7e0",
+            "prompt.txt": "8ea8a7967ae4fc3b2dc597c89f995b19d6caad8c8644c19019027559ba2e072b",
+            "result.json": "bfddf2de2aa0b1dd290f947ba10609e0ce25e560ac204fe58bd3f6eebfe399d9",
+            "run.json": "9cf716dd577941b4365dcf28b6133be286a8312aeb875c33a5a944e140322ccf",
+            "stderr.log": "9ded9567b361480ac50db694cbcf9bcf0381b893537fa019e5446882abdb2e0a",
+            "trajectory.jsonl": "e4d365638eacbc58f8a6a07f1b2cb672b3932996cd8ca1fd227cc8e854392680"
+          },
+          "scorer_sha256": "c052386b999e6d2625fe1f966754c6ea1d8ab77589c457c704157559652370d4",
+          "reward_sha256": "34371e21b9bf455a3fd3a9dc9256560df17d8e3fed31077fdbf93fdd595b1953"
+        },
+        {
+          "id": "freecad-686f17ce17",
+          "kind": "drawing",
+          "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+          "instruction_sha256": "579ff895229de2227aedbe59227397cbcc4bffb37f73ae4d6171bb22cb443e39",
+          "task_toml_sha256": "9d4c42112dc3c948876d5228acfac2a96c75604e249bfb732410b9ce65f4e08a",
+          "public_input_sha256": {
+            "686f17ce17.png": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116"
+          },
+          "status": "done",
+          "seconds": 436.67,
+          "evaluation": {
+            "reward": 0.668902,
+            "geometry_similarity": 0.502518535959796,
+            "cad_spec_consistency": 1.0,
+            "combined": 0.668901612769511,
+            "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=0.503 [solid_count=1 (matched)] (surface_types=1.000, volume=1.000, surface_area=1.000, principal_moments=1.000, icp=0.005); surface_types_diff=0.333% (Matched); volume_diff=0.091% (Matched); surface_area_diff=0.010% (Matched); bbox_diff=0.092% (OCCT OBB; gate passed); principal_moments_diff=0.082% (Matched); icp[reference.FCStd vs answer.FCStd: reward=0.005 rmse=1.2966e+00 max_residual=5.0217e+00 mm]",
+            "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=1.000 (12/12 consistent, 0 inconsistent, 0 not_found; failure_budget=10)",
+            "status": "scored",
+            "score": 0.668902
+          },
+          "stage_audit_errors": [],
+          "audit": {
+            "tool_calls": 22,
+            "tools": [
+              "list_operations",
+              "inspect_image",
+              "list_operations",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "list_operations",
+              "inspect_image",
+              "inspect_image",
+              "list_operations",
+              "apply_operations",
+              "apply_operations",
+              "apply_operations",
+              "export_drawing",
+              "rollback",
+              "apply_operations",
+              "apply_operations",
+              "validate_drawing",
+              "read_drawing",
+              "inspect_entities",
+              "export_drawing",
+              "save_benchmark_stage"
+            ],
+            "tool_errors": [
+              {
+                "tool": "list_operations",
+                "code": "UNKNOWN_OPERATION",
+                "message": "Unknown operation(s) ['additive_pipe']"
+              },
+              {
+                "tool": "apply_operations",
+                "code": "UNKNOWN_UNIT",
+                "message": "set_parameters.InletTaper: unknown unit 'deg'"
+              }
+            ],
+            "unexpected_tools": [],
+            "usage": {
+              "input_tokens": 788965,
+              "cached_input_tokens": 738176,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 7645,
+              "reasoning_output_tokens": 4665
+            }
+          },
+          "original_run_tool_errors": [
+            {
+              "tool": "list_operations",
+              "code": "UNKNOWN_OPERATION",
+              "message": "Unknown operation(s) ['additive_pipe']"
+            },
+            {
+              "tool": "apply_operations",
+              "code": "UNKNOWN_UNIT",
+              "message": "set_parameters.InletTaper: unknown unit 'deg'"
+            }
+          ],
+          "image_calls": [
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                510,
+                110,
+                1107,
+                420
+              ],
+              "max_size": 1600
+            },
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                542,
+                520,
+                716,
+                685
+              ],
+              "max_size": 900
+            },
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                525,
+                124,
+                733,
+                321
+              ],
+              "max_size": 1300
+            },
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                890,
+                121,
+                1103,
+                371
+              ],
+              "max_size": 1250
+            },
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                659,
+                169,
+                730,
+                240
+              ],
+              "max_size": 1000
+            },
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                930,
+                150,
+                979,
+                205
+              ],
+              "max_size": 850
+            }
+          ],
+          "shape_from_agent_validation": {
+            "valid": true,
+            "solids": 1,
+            "faces": 14,
+            "edges": 29,
+            "volume": 33485.654836,
+            "area": 33785.089729,
+            "bbox": [
+              [
+                -8.65,
+                -81.35,
+                -45.0
+              ],
+              [
+                86.35,
+                8.65,
+                90.0
+              ]
+            ],
+            "size": [
+              95.0,
+              90.0,
+              135.0
+            ],
+            "center_of_mass": [
+              10.694026,
+              -42.168192,
+              26.618345
+            ],
+            "holes": [
+              {
+                "diameter": 13.3,
+                "count": 3
+              }
+            ]
+          },
+          "posthoc_validation": {
+            "readable": true,
+            "passed": true,
+            "issues": [],
+            "requirements": [],
+            "warnings": [],
+            "shape": {
+              "valid": true,
+              "solids": 1,
+              "faces": 14,
+              "edges": 29,
+              "volume": 33485.654836,
+              "area": 33785.089729,
+              "bbox": [
+                [
+                  -8.65,
+                  -81.35,
+                  -45.0
+                ],
+                [
+                  86.35,
+                  8.65,
+                  90.0
+                ]
+              ],
+              "size": [
+                95.0,
+                90.0,
+                135.0
+              ],
+              "center_of_mass": [
+                10.694026,
+                -42.168192,
+                26.618345
+              ],
+              "holes": [
+                {
+                  "diameter": 13.3,
+                  "count": 3
+                }
+              ]
+            },
+            "features": 10,
+            "parameters": {
+              "OutsideDiameter": {
+                "value": 17.3
+              },
+              "BoreDiameter": {
+                "value": 13.3
+              },
+              "BendRadius": {
+                "value": 36.35
+              },
+              "InletHeight": {
+                "value": 90.0
+              },
+              "OutletDrop": {
+                "value": 15.0
+              },
+              "OutletProjection": {
+                "value": 86.35
+              },
+              "EndLength": {
+                "value": 10.1
+              },
+              "InletTaper": {
+                "value": 3.26
+              },
+              "OutletTaper": {
+                "value": 3.24
+              }
+            },
+            "file": "answer.FCStd",
+            "requirements_source": null
+          },
+          "native_object_types": {
+            "Spreadsheet::Sheet": 1,
+            "PartDesign::Body": 1,
+            "App::Origin": 1,
+            "App::Line": 3,
+            "App::Plane": 3,
+            "App::Point": 1,
+            "Sketcher::SketchObject": 6,
+            "PartDesign::AdditivePipe": 2,
+            "PartDesign::Groove": 2
+          },
+          "native": {
+            "path": "artifacts/drawing-diagnosis-2026-10-30/zoom/freecad-686f17ce17/answer.FCStd",
+            "sha256": "951e1a5b1bdc956c99e032bd4b342c0d0c1e617d741a9a75f8f258c288fd0846"
+          },
+          "preview": {
+            "path": "artifacts/drawing-diagnosis-2026-10-30/zoom/freecad-686f17ce17/preview.png",
+            "sha256": "20d61df61467e0df05d8915e48519cac83d7c8cf327be6bbb7f9322c68fa2a33"
+          },
+          "raw_files_sha256": {
+            "command.json": "8f735a9c4bd7bef642ff8690d808f2864624892646d54207d4a7d83668f6dab3",
+            "prompt.txt": "37d313638c0cbb2c7f1313a631aa8fdbae8c33612cfd2693cccf51b79a053bb2",
+            "result.json": "94f79c890644d9d83561a767ed38e105081d21c9119babf75f7688d7cd36f5be",
+            "run.json": "02f00b7cb1d0462fde5e1be02d43c5728877f1e8efb44e7af5098786510d1213",
+            "stderr.log": "c66485f08da2f52185ed4047b8988bd4c4170b2ff61eebedc08d9ab9cda9a2ce",
+            "trajectory.jsonl": "aaf74756a2d6b5fbc57cbcb7b577d7a295b4436315f8bfdc987e31da4e3f4a01"
+          },
+          "scorer_sha256": "c052386b999e6d2625fe1f966754c6ea1d8ab77589c457c704157559652370d4",
+          "reward_sha256": "92718d996a6e600571754a85e7ed6ea8822bff3feb4dfe03afdbf8deffbbc366"
+        }
+      ]
+    },
+    {
+      "label": "upright",
+      "manifest": {
+        "benchmark": "gnucleus-ai/cad-bench@v3",
+        "expected_dataset_digest": "sha256:8a786725d3648a76282fc5868df06da3d5e00d603f283573a53430803465d78a",
+        "digest_verified": false,
+        "seed": 42,
+        "selection": "fixed subset of baseline manifest; no resampling",
+        "agentcad_commit": "ae244f778c52aa7b1893d41692e1e0ade085b04b",
+        "codex_version": "codex-cli 0.163.0",
+        "model": "gpt-6.1-sol",
+        "effort": "xhigh",
+        "timeout_sec": 900,
+        "jobs": 2,
+        "official_submission": false,
+        "tasks": [
+          {
+            "id": "freecad-6fd69bd0c4",
+            "kind": "drawing",
+            "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+            "instruction_sha256": "c20356feec279d4e553f875c606f7454927557e65c17c2d8defd46a78263725d",
+            "task_toml_sha256": "3c869ee14ab5f256ea560d5df062d741bfd4809ba963bad2ee354266020802cb",
+            "public_input_sha256": {
+              "6fd69bd0c4.png": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071"
+            }
+          },
+          {
+            "id": "freecad-686f17ce17",
+            "kind": "drawing",
+            "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+            "instruction_sha256": "579ff895229de2227aedbe59227397cbcc4bffb37f73ae4d6171bb22cb443e39",
+            "task_toml_sha256": "9d4c42112dc3c948876d5228acfac2a96c75604e249bfb732410b9ce65f4e08a",
+            "public_input_sha256": {
+              "686f17ce17.png": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116"
+            }
+          }
+        ],
+        "harness_sha256": {
+          "pilot.py": "82dc03b0ceec8eed7908b2306672c9600386daeeceb912036504f4a5b3192ca2",
+          "stage_server.py": "2f0ea500b8cc02dc8d494a434ed7586af5f8750899e4e06b6ed6b0c3ac7520aa"
+        },
+        "purpose": "post-diagnostic regression",
+        "baseline": {
+          "path": "D:\\Projects\\bench-data\\cadbench-v3-pilot-20261030\\manifest.json",
+          "sha256": "3126ba2d7b6c21b1024d0ab34af0025e41a05696fa9e477d57f40b1954eaa68a"
+        }
+      },
+      "manifest_sha256": "7f75e2eef930de4a956cf60dda728603ac6ec3df4a76e34a6be0f32372d94b1e",
+      "raw_directory": "D:\\Projects\\bench-data\\cadbench-v3-drawing-retest2-20261030",
+      "mean_reward": 0.5043305,
+      "cases": [
+        {
+          "id": "freecad-6fd69bd0c4",
+          "kind": "drawing",
+          "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+          "instruction_sha256": "c20356feec279d4e553f875c606f7454927557e65c17c2d8defd46a78263725d",
+          "task_toml_sha256": "3c869ee14ab5f256ea560d5df062d741bfd4809ba963bad2ee354266020802cb",
+          "public_input_sha256": {
+            "6fd69bd0c4.png": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071"
+          },
+          "status": "done",
+          "seconds": 355.09,
+          "evaluation": {
+            "reward": 0.341994,
+            "geometry_similarity": 0.2111068679222578,
+            "cad_spec_consistency": 0.9,
+            "combined": 0.3419944320663235,
+            "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=0.211 [solid_count=1 (matched)] (surface_types=0.630, volume=0.000, surface_area=0.631, principal_moments=0.000, icp=0.487); surface_types_diff=2.343% (Close); volume_diff=17.416% (Far); surface_area_diff=2.339% (Close); bbox_diff=0.007% (OCCT OBB; gate passed); principal_moments_diff=16.133% (Far); icp[reference.FCStd vs answer.FCStd: reward=0.487 rmse=2.2281e-01 max_residual=6.8241e-01 mm]",
+            "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=0.900 (36/37 consistent, 0 inconsistent, 1 not_found; failure_budget=10)",
+            "status": "scored",
+            "score": 0.341994
+          },
+          "stage_audit_errors": [],
+          "audit": {
+            "tool_calls": 22,
+            "tools": [
+              "list_operations",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "list_operations",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "apply_operations",
+              "apply_operations",
+              "export_drawing",
+              "inspect_entities",
+              "inspect_image",
+              "list_operations",
+              "inspect_entities",
+              "read_drawing",
+              "apply_operations",
+              "save_benchmark_stage"
+            ],
+            "tool_errors": [
+              {
+                "tool": "inspect_image",
+                "code": "MCP_TOOL_ERROR",
+                "message": "Error executing tool inspect_image: 1 validation error for inspect_imageArguments\nmax_size\n  Input should be less than or equal to 2048 [type=less_than_equal, input_value=2400, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/less_than_equal"
+              },
+              {
+                "tool": "list_operations",
+                "code": "UNKNOWN_OPERATION",
+                "message": "Unknown operation(s) ['measure']"
+              }
+            ],
+            "unexpected_tools": [],
+            "usage": {
+              "input_tokens": 904623,
+              "cached_input_tokens": 833024,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 10277,
+              "reasoning_output_tokens": 6830
+            }
+          },
+          "original_run_tool_errors": [
+            {
+              "tool": "inspect_image",
+              "code": "MCP_TOOL_ERROR",
+              "message": "Error executing tool inspect_image: 1 validation error for inspect_imageArguments\nmax_size\n  Input should be less than or equal to 2048 [type=less_than_equal, input_value=2400, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/less_than_equal"
+            },
+            {
+              "tool": "list_operations",
+              "code": "UNKNOWN_OPERATION",
+              "message": "Unknown operation(s) ['measure']"
+            }
+          ],
+          "image_calls": [
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                540,
+                195,
+                988,
+                650
+              ],
+              "max_size": 1500
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                615,
+                120,
+                925,
+                188
+              ],
+              "rotate": 90,
+              "max_size": 1400
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                630,
+                125,
+                925,
+                187
+              ],
+              "max_size": 1800
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                1055,
+                411,
+                1264,
+                562
+              ],
+              "max_size": 1600
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                550,
+                270,
+                675,
+                545
+              ],
+              "rotate": 90,
+              "max_size": 1400
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                700,
+                360,
+                888,
+                445
+              ],
+              "max_size": 1500
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                624,
+                126,
+                920,
+                186
+              ],
+              "max_size": 2400
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                624,
+                125,
+                920,
+                186
+              ],
+              "max_size": 2048
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                670,
+                129,
+                724,
+                185
+              ],
+              "rotate": 90,
+              "max_size": 1300
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                625,
+                238,
+                866,
+                465
+              ],
+              "max_size": 1600
+            },
+            {
+              "path": "6fd69bd0c4.png",
+              "region": [
+                623,
+                123,
+                691,
+                160
+              ],
+              "rotate": 90,
+              "max_size": 1600
+            }
+          ],
+          "shape_from_agent_validation": null,
+          "posthoc_validation": {
+            "readable": true,
+            "passed": true,
+            "issues": [],
+            "requirements": [],
+            "warnings": [],
+            "shape": {
+              "valid": true,
+              "solids": 1,
+              "faces": 109,
+              "edges": 312,
+              "volume": 9125.29887,
+              "area": 9810.200793,
+              "bbox": [
+                [
+                  -36.06,
+                  -36.06,
+                  -2.1
+                ],
+                [
+                  36.06,
+                  36.06,
+                  3.5
+                ]
+              ],
+              "size": [
+                72.12,
+                72.12,
+                5.6
+              ],
+              "center_of_mass": [
+                0.0,
+                0.0,
+                1.293956
+              ],
+              "holes": [
+                {
+                  "diameter": 2.0,
+                  "count": 16
+                },
+                {
+                  "diameter": 3.0,
+                  "count": 4
+                },
+                {
+                  "diameter": 3.2,
+                  "count": 8
+                },
+                {
+                  "diameter": 6.0,
+                  "count": 8
+                }
+              ]
+            },
+            "features": 14,
+            "parameters": {
+              "rimHeight": {
+                "value": 3.5,
+                "formula": "=floorThickness + recessDepth"
+              },
+              "recessDepth": {
+                "value": 2.0
+              },
+              "floorThickness": {
+                "value": 1.5
+              },
+              "totalHeight": {
+                "value": 5.6
+              },
+              "bossHeight": {
+                "value": 2.1,
+                "formula": "=totalHeight - rimHeight"
+              },
+              "bossDiameter": {
+                "value": 8.0
+              },
+              "smallDiameter": {
+                "value": 3.0
+              },
+              "mountDiameter": {
+                "value": 3.2
+              }
+            },
+            "file": "answer.FCStd",
+            "requirements_source": null
+          },
+          "native_object_types": {
+            "Spreadsheet::Sheet": 1,
+            "PartDesign::Body": 1,
+            "App::Origin": 1,
+            "App::Line": 3,
+            "App::Plane": 3,
+            "App::Point": 1,
+            "Sketcher::SketchObject": 7,
+            "PartDesign::Pad": 2,
+            "PartDesign::Pocket": 5
+          },
+          "native": {
+            "path": "artifacts/drawing-diagnosis-2026-10-30/upright/freecad-6fd69bd0c4/answer.FCStd",
+            "sha256": "8459b8a2e3cb8e2a8483d9fd4ff8432a87ed703a12e0a977055d433e8c64a558"
+          },
+          "preview": {
+            "path": "artifacts/drawing-diagnosis-2026-10-30/upright/freecad-6fd69bd0c4/preview.png",
+            "sha256": "4a1ddca95873bc6a5e1e26ba00a034e9464cba71924d5da7a93d2fe72bf3fa18"
+          },
+          "raw_files_sha256": {
+            "command.json": "b8469b38d79525252b333e8caf9c5707454e07ca8ba7dba0d9e476fb9bf933ba",
+            "prompt.txt": "8ea8a7967ae4fc3b2dc597c89f995b19d6caad8c8644c19019027559ba2e072b",
+            "result.json": "d0200e739cf8700f92c3b00da66b30bc693a78faf44e763e7b97fe152ada7093",
+            "run.json": "ac4ff35efa07487f68f9ead4288d5c7e22e87ba08c09c3d501c9f0b32bd97cc7",
+            "stderr.log": "84b487c7a26f6f857f8b65baf9b67239b2338ef09e6e543bfd5394a5c9e1f231",
+            "trajectory.jsonl": "c22592ee7de64b3ec53bbfa226fb1c29ef7e80944c6a37466649474c6fe9bd66"
+          },
+          "scorer_sha256": "c052386b999e6d2625fe1f966754c6ea1d8ab77589c457c704157559652370d4",
+          "reward_sha256": "ec476510d8f13bd69e75df7785c8464d82f40fe683fc9f02aeee5b411a1d6213",
+          "posthoc_spec_diagnostic": {
+            "summary": {
+              "total_params": 37,
+              "consistent": 36,
+              "inconsistent": 0,
+              "not_found": 1,
+              "unexpected_features": 18,
+              "consistency_rate": 0.973,
+              "measurable_rate": 0.973
+            },
+            "inconsistent": [],
+            "not_found": [
+              {
+                "param": "interior_mounting_holes",
+                "spec_value": 3.0,
+                "measured_value": null,
+                "unit": "mm",
+                "feature": "final_geometry:diameter",
+                "rel_diff": null,
+                "reason": "Missing corresponding final-geometry witness; legacy values cannot replace it"
+              }
+            ],
+            "source_sha256": "fcc246459e82e506f9186234e080c8c0ad9ea1f08e71b91639e22530498d8378"
+          }
+        },
+        {
+          "id": "freecad-686f17ce17",
+          "kind": "drawing",
+          "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+          "instruction_sha256": "579ff895229de2227aedbe59227397cbcc4bffb37f73ae4d6171bb22cb443e39",
+          "task_toml_sha256": "9d4c42112dc3c948876d5228acfac2a96c75604e249bfb732410b9ce65f4e08a",
+          "public_input_sha256": {
+            "686f17ce17.png": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116"
+          },
+          "status": "done",
+          "seconds": 364.0,
+          "evaluation": {
+            "reward": 0.666667,
+            "geometry_similarity": 0.5,
+            "cad_spec_consistency": 1.0,
+            "combined": 0.6666666666666666,
+            "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=0.500 [solid_count=1 (matched)] (surface_types=1.000, volume=1.000, surface_area=1.000, principal_moments=1.000, icp=0.000); surface_types_diff=0.333% (Matched); volume_diff=0.091% (Matched); surface_area_diff=0.010% (Matched); bbox_diff=0.044% (OCCT OBB; gate passed); principal_moments_diff=0.082% (Matched); icp[reference.FCStd vs answer.FCStd: reward=0.000 rmse=2.5247e+01 max_residual=4.0738e+01 mm]",
+            "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=1.000 (12/12 consistent, 0 inconsistent, 0 not_found; failure_budget=10)",
+            "status": "scored",
+            "score": 0.666667
+          },
+          "stage_audit_errors": [],
+          "audit": {
+            "tool_calls": 21,
+            "tools": [
+              "list_operations",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "inspect_image",
+              "list_operations",
+              "list_operations",
+              "apply_operations",
+              "apply_operations",
+              "apply_operations",
+              "inspect_image",
+              "inspect_image",
+              "export_drawing",
+              "apply_operations",
+              "validate_drawing",
+              "read_drawing",
+              "inspect_entities",
+              "export_drawing",
+              "validate_drawing",
+              "save_benchmark_stage"
+            ],
+            "tool_errors": [
+              {
+                "tool": "list_operations",
+                "code": "UNKNOWN_OPERATION",
+                "message": "Unknown operation(s) ['add_body', 'constrain_sketch']"
+              },
+              {
+                "tool": "apply_operations",
+                "code": "UNKNOWN_UNIT",
+                "message": "set_parameters.UprightTaper: unknown unit 'deg'"
+              }
+            ],
+            "unexpected_tools": [],
+            "usage": {
+              "input_tokens": 806094,
+              "cached_input_tokens": 745216,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 6701,
+              "reasoning_output_tokens": 3814
+            }
+          },
+          "original_run_tool_errors": [
+            {
+              "tool": "list_operations",
+              "code": "UNKNOWN_OPERATION",
+              "message": "Unknown operation(s) ['add_body', 'constrain_sketch']"
+            },
+            {
+              "tool": "apply_operations",
+              "code": "UNKNOWN_UNIT",
+              "message": "set_parameters.UprightTaper: unknown unit 'deg'"
+            }
+          ],
+          "image_calls": [
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                520,
+                115,
+                740,
+                370
+              ],
+              "max_size": 1400
+            },
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                885,
+                125,
+                1105,
+                410
+              ],
+              "rotate": 90,
+              "max_size": 1400
+            },
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                885,
+                125,
+                1100,
+                405
+              ],
+              "max_size": 1400
+            },
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                525,
+                520,
+                710,
+                690
+              ],
+              "max_size": 1200
+            },
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                520,
+                135,
+                615,
+                325
+              ],
+              "rotate": 90,
+              "max_size": 1200
+            },
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                635,
+                172,
+                730,
+                240
+              ],
+              "max_size": 1600
+            },
+            {
+              "path": "686f17ce17.png",
+              "region": [
+                928,
+                145,
+                975,
+                205
+              ],
+              "rotate": 90,
+              "max_size": 1300
+            }
+          ],
+          "shape_from_agent_validation": {
+            "valid": true,
+            "solids": 1,
+            "faces": 14,
+            "edges": 27,
+            "volume": 33485.654836,
+            "area": 33785.089729,
+            "bbox": [
+              [
+                -8.65,
+                -8.65,
+                -45.0
+              ],
+              [
+                86.35,
+                81.35,
+                90.0
+              ]
+            ],
+            "size": [
+              95.0,
+              90.0,
+              135.0
+            ],
+            "center_of_mass": [
+              10.694026,
+              42.168192,
+              26.618345
+            ],
+            "holes": [
+              {
+                "diameter": 13.3,
+                "count": 3
+              }
+            ]
+          },
+          "posthoc_validation": {
+            "readable": true,
+            "passed": true,
+            "issues": [],
+            "requirements": [],
+            "warnings": [],
+            "shape": {
+              "valid": true,
+              "solids": 1,
+              "faces": 14,
+              "edges": 27,
+              "volume": 33485.654836,
+              "area": 33785.089729,
+              "bbox": [
+                [
+                  -8.65,
+                  -8.65,
+                  -45.0
+                ],
+                [
+                  86.35,
+                  81.35,
+                  90.0
+                ]
+              ],
+              "size": [
+                95.0,
+                90.0,
+                135.0
+              ],
+              "center_of_mass": [
+                10.694026,
+                42.168192,
+                26.618345
+              ],
+              "holes": [
+                {
+                  "diameter": 13.3,
+                  "count": 3
+                }
+              ]
+            },
+            "features": 10,
+            "parameters": {
+              "OuterDiameter": {
+                "value": 17.3
+              },
+              "InnerDiameter": {
+                "value": 13.3
+              },
+              "BendRadius": {
+                "value": 36.35
+              },
+              "UprightHeight": {
+                "value": 90.0
+              },
+              "OutletReach": {
+                "value": 86.35
+              },
+              "BendLevelDrop": {
+                "value": 51.35
+              },
+              "EndOffset": {
+                "value": 15.0
+              },
+              "TaperLength": {
+                "value": 10.1
+              },
+              "UprightTaperDegrees": {
+                "value": 3.26
+              },
+              "OutletTaperDegrees": {
+                "value": 3.24
+              }
+            },
+            "file": "answer.FCStd",
+            "requirements_source": null
+          },
+          "native_object_types": {
+            "Spreadsheet::Sheet": 1,
+            "PartDesign::Body": 1,
+            "App::Origin": 1,
+            "App::Line": 3,
+            "App::Plane": 3,
+            "App::Point": 1,
+            "Sketcher::SketchObject": 6,
+            "PartDesign::AdditivePipe": 2,
+            "PartDesign::Groove": 2
+          },
+          "native": {
+            "path": "artifacts/drawing-diagnosis-2026-10-30/upright/freecad-686f17ce17/answer.FCStd",
+            "sha256": "6d2b7b369d7f0c7cdadc248ce2d9321246d6e4f3db31011eaad1ff02cbedc78f"
+          },
+          "preview": {
+            "path": "artifacts/drawing-diagnosis-2026-10-30/upright/freecad-686f17ce17/preview.png",
+            "sha256": "c81a8048b8142e6366f7d17aa714f3aba24cb918c08a4e4cc1745f2b6e4996e8"
+          },
+          "raw_files_sha256": {
+            "command.json": "54283c2332dac34bec82e6230399b5b0d37343accfa18483f4778f7410c98f96",
+            "prompt.txt": "37d313638c0cbb2c7f1313a631aa8fdbae8c33612cfd2693cccf51b79a053bb2",
+            "result.json": "43a3372a2f6f1b397be896dfd219fcc6e237f523db0d501878713232d855dc41",
+            "run.json": "b587b095fa7d4e7b25204d1aa3f53dafecbb17f65b501c7cb31913639716d7ae",
+            "stderr.log": "c41c3128aeb392fe20fd8601b859545abd46f4409ffe8ec5b69b23d0edfdbdf3",
+            "trajectory.jsonl": "ece93ea748e5f4d83e937f746357dfb554755caecd2738975a94cd6d58b99ece"
+          },
+          "scorer_sha256": "c052386b999e6d2625fe1f966754c6ea1d8ab77589c457c704157559652370d4",
+          "reward_sha256": "b766c4cdc06c98ef88501ea49ef4e890cd223a49a2f8b959dcd585e42ee8682a",
+          "posthoc_spec_diagnostic": {
+            "summary": {
+              "total_params": 12,
+              "consistent": 12,
+              "inconsistent": 0,
+              "not_found": 0,
+              "unexpected_features": 15,
+              "consistency_rate": 1.0,
+              "measurable_rate": 1.0
+            },
+            "inconsistent": [],
+            "not_found": [],
+            "source_sha256": "18bd5adf9d170b6cd2b574b136ea7a9d6dab3f81a8f415d8933c97b884bc24bf"
+          }
+        }
+      ]
+    }
+  ]
+}
