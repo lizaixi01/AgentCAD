@@ -72,7 +72,8 @@ Basics
   reference's silhouette, so overall size is not compared, only shape and proportions. compare.score (per view:
   views[].score) is the mean of outline (silhouette IoU) and edges (lines and shading steps inside the part). The
   image is a diff per view: grey where both have material, light red / light blue where only the reference / only
-  ours has; red edges only in the reference (a feature yours lacks or misplaces), blue only in yours.
+  ours has; red edges only in the reference (a feature yours lacks or misplaces), blue only in yours. views[].cut
+  names sides where the reference runs out of its picture: nothing beyond them is compared.
 
 Live viewer: results that change a file carry viewer_url, a page on this computer where the user watches the
 work step by step and can save or share it. Give the user that link once, the first time you change something."""

@@ -389,6 +389,21 @@ def test_a_part_cut_off_inside_a_gutter_is_aligned():
     assert "cut" not in r and r["outline"] > 0.95
 
 
+def test_curves_and_tight_framing_are_not_cuts():
+    """Reviewed: with the first rule, a disc 4 px from the border counted as cut (its tip column is long enough), and
+    so did a square plate 5 px from every border, after which a plate half again as long matched it at 1.0. A cut
+    must be straight, within BenchCAD's gutter of the border, and not on all four sides."""
+    im = Image.new("RGB", (256, 256), (255, 255, 255))
+    ImageDraw.Draw(im).ellipse([4, 28, 204, 228], fill=(120, 130, 140))  # r = 100, 4 px from the left border
+    assert compare.cut_sides(compare.silhouette(np.asarray(im))[0]) == {}
+    square = [(0, 0), (49, 0), (49, 49), (0, 49)]
+    for margin in (5, 3):  # 5 px in: a part's own side; 3 px on all four sides: framed tightly
+        plate = draw(square, (256, 256), (255 - 2 * margin) / 49, (margin, margin), (120, 130, 140))
+        longer = render_of([(0, 0), (75, 0), (75, 50), (0, 50)])
+        r = compare.compare_views([(np.asarray(plate), None)], ["v"], [longer])[0][0]
+        assert "cut" not in r and r["outline"] < 0.8
+
+
 def ribbed(lines, size=(256, 256), scale=3.0, offset=(30, 40)):
     """An L shape with its outline and the given inner lines drawn in red, as a renderer that draws edges would."""
     im = draw(L_SHAPE, size, scale, offset, (110, 190, 185))
@@ -429,6 +444,13 @@ def test_edges_see_inside_the_outline():
     ref_one = [(np.asarray(ribbed(inner[:1])), None)]
     assert compare.compare_views(ref_one, ["v"], [ours(inner[:1], seam)])[0][0]["edges"] == \
         compare.compare_views(ref_one, ["v"], [ours(inner[:1])])[0][0]["edges"]
+    # a seam is our only line inside the outline (a cylinder seen from the side) and the reference draws it
+    lone = [(np.asarray(ribbed(inner[1:])), None)]
+    v = compare.compare_views(lone, ["v"], [ours([], seam)])[0][0]
+    assert v["edges"] > 0.9 and v["score"] > 0.9
+    # no line inside either outline: nothing to compare inside, so the score is the outline's
+    v = compare.compare_views([(np.asarray(ribbed([])), None)], ["v"], [ours([])])[0][0]
+    assert v["edges"] is None and v["score"] == v["outline"] > 0.95
 
 
 def test_reference_grid_layout(tmp_path):

@@ -12,21 +12,23 @@ for one view, two columns for up to four views (three beyond), one cell for a si
 3. alignment: our silhouette is scaled (one factor, so the aspect ratio is kept) and moved onto the reference
    silhouette's bounding box, then scale and position are refined to the best overlap. Framing differences (zoom,
    offset, margins) therefore do not count, and neither does the overall size: only shape and proportions do. A
-   reference silhouette that ends on a straight line near its cell border runs out of the picture (often a few
-   pixels inside a white gutter): that side does not set the scale or position, and our silhouette is cut at the
-   same line.
-4. outline = silhouette IoU = |reference AND ours| / |reference OR ours|, after the same opening on both.
+   reference silhouette that ends on a straight line within a few pixels of its cell border runs out of the picture
+   (BenchCAD clips parts inside a 4 px white gutter; see cut_sides): that side does not set the scale or position,
+   and our silhouette is cut at the same line.
+4. outline = silhouette IoU = |reference AND ours| / |reference OR ours|, after the same opening on both. Ours
+   includes what the alignment puts outside the cell, except beyond a cut line: the search cannot win by pushing a
+   wrong part out of the picture.
 5. edges: what lies inside the outline. Edge pixels differ in colour from a neighbour by more than EDGE_STEP: drawn
    lines and steps in the shading, found the same way in the reference and in our render, away from each
    silhouette's border (step 4 scores that). edges = F1 of the two sets, a pixel counting as matched when the other
    image has one within about 1/128 of the cell. Holes, pockets, steps, ribs and chamfers change it even where
    they leave the outline alone. Cylinder and cone seams, which some renderers draw and ours does not, can match a
    reference line but cost nothing where there is none.
-6. score = (outline + edges) / 2.
+6. score = (outline + edges) / 2; the outline alone where neither image has an edge inside it (edges is None).
 
 Checked offline against BenchCAD's voxel IoU (examples/benchcad, 1,098 graded parts of 100 tasks): of two parts
-for the same task whose grades differ by 0.1 or more, it ranks 90.5 % the grader's way (silhouette IoU with the
-bounding-box alignment it replaces: 83.7 %), and the true part scores 0.977 against its own picture on average
+for the same task whose grades differ by 0.1 or more, it ranks 90.3 % the grader's way (silhouette IoU with the
+bounding-box alignment it replaces: 83.7 %), and the true part scores 0.974 against its own picture on average
 (before: 0.949). It still cannot see what no view shows: hollow insides, wall thickness behind a face.
 
 The output image is laid out like the reference, one cell per view: grey where both have material, light red where
@@ -54,8 +56,10 @@ from ..errors import input_error
 IMAGE_SUFFIXES = (".png", ".jpg", ".jpeg", ".bmp", ".webp")
 BG_THRESHOLD = 28  # max channel difference from the background colour that still counts as background
 EDGE_STEP = 30     # max channel difference to a neighbour that makes an edge pixel
-CUT_NEAR = 0.03    # a silhouette side this close to the cell border (fraction of the cell) ...
-CUT_RUN = 0.05     # ... with this much of the silhouette's extent on its last row or column is cut by the frame
+CUT_NEAR = 0.016   # a silhouette side this close to the cell border (BenchCAD: a 4 px gutter in a 262 px cell) ...
+CUT_RUN = 0.05     # ... with this much of the silhouette's extent on its last row or column ...
+CUT_DEPTH = 0.01   # ... and at least CUT_STRAIGHT of the width it has this far (fraction of the cell) inside ...
+CUT_STRAIGHT = 0.6  # ... is cut by the frame
 SEARCH_MAX = 256   # the alignment search works on cells scaled down to this many pixels
 FILL_BOTH, FILL_REF, FILL_OURS = (222, 222, 222), (246, 186, 186), (186, 204, 246)
 LINE_BOTH, LINE_REF, LINE_OURS = (95, 95, 95), (215, 25, 25), (35, 85, 225)
@@ -203,11 +207,11 @@ def _bbox(mask: np.ndarray) -> tuple[int, int, int, int] | None:
     return int(xs.min()), int(ys.min()), int(xs.max()) + 1, int(ys.max()) + 1
 
 
-
-
 def cut_sides(ref: np.ndarray) -> dict[str, int]:
     """{side: line} for each side where the reference silhouette ends on a straight line near the cell border: the
-    part runs out of the picture there. A silhouette that only touches the border (a curve) is not cut."""
+    part runs out of the picture there. The silhouette must cross that line about as wide as it is a few pixels in
+    (a curve that reaches the border is narrower at its tip), and a silhouette that reaches all four sides is taken
+    as framed tightly rather than cut: nothing would be left to set its scale."""
     th, tw = ref.shape
     bb = _bbox(ref)
     if bb is None:
@@ -215,43 +219,51 @@ def cut_sides(ref: np.ndarray) -> dict[str, int]:
     x0, y0, x1, y1 = bb
     near_x, near_y = max(2.0, CUT_NEAR * tw), max(2.0, CUT_NEAR * th)
     run_x, run_y = max(4.0, CUT_RUN * (x1 - x0)), max(4.0, CUT_RUN * (y1 - y0))
-    sides = {"left": (x0 <= near_x and ref[:, x0].sum() >= run_y, x0),
-             "right": (tw - x1 <= near_x and ref[:, x1 - 1].sum() >= run_y, x1),
-             "top": (y0 <= near_y and ref[y0].sum() >= run_x, y0),
-             "bottom": (th - y1 <= near_y and ref[y1 - 1].sum() >= run_x, y1)}
-    return {side: line for side, (cut, line) in sides.items() if cut}
+    k = max(2, round(CUT_DEPTH * max(th, tw)))
+
+    def straight(on: np.ndarray, inside: np.ndarray, run: float) -> bool:
+        return on.sum() >= run and on.sum() >= CUT_STRAIGHT * inside.sum()
+    sides = {"left": (x0 <= near_x and straight(ref[:, x0], ref[:, min(x0 + k, x1 - 1)], run_y), x0),
+             "right": (tw - x1 <= near_x and straight(ref[:, x1 - 1], ref[:, max(x1 - 1 - k, x0)], run_y), x1),
+             "top": (y0 <= near_y and straight(ref[y0], ref[min(y0 + k, y1 - 1)], run_x), y0),
+             "bottom": (th - y1 <= near_y and straight(ref[y1 - 1], ref[max(y1 - 1 - k, y0)], run_x), y1)}
+    cuts = {side: line for side, (cut, line) in sides.items() if cut}
+    return {} if len(cuts) == 4 else cuts
 
 
-def _clip(mask: np.ndarray, cuts: dict[str, int]) -> np.ndarray:
-    """The mask without what lies beyond the cut lines."""
-    out = mask.copy()
-    if "left" in cuts:
-        out[:, :cuts["left"]] = False
-    if "right" in cuts:
-        out[:, cuts["right"]:] = False
-    if "top" in cuts:
-        out[:cuts["top"]] = False
-    if "bottom" in cuts:
-        out[cuts["bottom"]:] = False
-    return out
-
-
-def _place(a: np.ndarray, shape: tuple[int, int], s: float, cx: float, cy: float) -> np.ndarray:
-    """``a`` (an image, or a mask) scaled by s and centred on (cx, cy) of a canvas of ``shape``: white, or False."""
+def _place(a: np.ndarray, shape: tuple[int, int], s: float, cx: float, cy: float, cuts: dict[str, int] | None = None,
+           thin: bool = False):
+    """``a`` (an image, or a mask) scaled by s and centred on (cx, cy) of a canvas of ``shape``: white, or False.
+    A mask is cut at the ``cuts`` lines and comes with the number of its pixels that fell outside the canvas on
+    other sides: material of ours where the reference has none, which the IoU counts. A ``thin`` mask (lines) keeps
+    every pixel a line touches, so scaling down does not erase it."""
     th, tw = shape
     oh, ow = a.shape[:2]
     w, h = max(1, round(ow * s)), max(1, round(oh * s))
     x0, y0 = round(cx - w / 2), round(cy - h / 2)
+    ax0, ay0, ax1, ay1 = max(x0, 0), max(y0, 0), min(x0 + w, tw), min(y0 + h, th)
+    sub = (slice(ay0 - y0, ay1 - y0), slice(ax0 - x0, ax1 - x0))
     if a.ndim == 3:
         out = np.full((th, tw, 3), 255, np.uint8)
         a = np.asarray(Image.fromarray(a).resize((w, h), Image.LANCZOS))
-    else:
-        out = np.zeros((th, tw), bool)
-        a = np.asarray(Image.fromarray(a.astype(np.uint8) * 255, "L").resize((w, h), Image.BILINEAR)) >= 128
-    ax0, ay0, ax1, ay1 = max(x0, 0), max(y0, 0), min(x0 + w, tw), min(y0 + h, th)
+        if ax0 < ax1 and ay0 < ay1:
+            out[ay0:ay1, ax0:ax1] = a[sub]
+        return out
+    out = np.zeros((th, tw), bool)
+    a = np.asarray(Image.fromarray(a.astype(np.uint8) * 255, "L").resize((w, h), Image.BILINEAR))
+    a = a > 0 if thin else a >= 128
+    cuts = cuts or {}  # beyond a cut line nothing is compared, on the canvas or off it
+    if "left" in cuts:
+        a[:, :max(0, min(w, cuts["left"] - x0))] = False
+    if "right" in cuts:
+        a[:, max(0, min(w, cuts["right"] - x0)):] = False
+    if "top" in cuts:
+        a[:max(0, min(h, cuts["top"] - y0))] = False
+    if "bottom" in cuts:
+        a[max(0, min(h, cuts["bottom"] - y0)):] = False
     if ax0 < ax1 and ay0 < ay1:
-        out[ay0:ay1, ax0:ax1] = a[ay0 - y0:ay1 - y0, ax0 - x0:ax1 - x0]
-    return out
+        out[ay0:ay1, ax0:ax1] = a[sub]
+    return out, int(a.sum()) - int(out.sum())
 
 
 def _refine(crop: np.ndarray, ref: np.ndarray, cuts: dict[str, int], s: float, cx: float,
@@ -267,7 +279,7 @@ def _refine(crop: np.ndarray, ref: np.ndarray, cuts: dict[str, int], s: float, c
     pos = (s * k, cx * k, cy * k)
 
     def overlap(p):
-        return iou(ref, _clip(_place(crop, ref.shape, *p), cuts)) or 0.0
+        return iou(ref, *_place(crop, ref.shape, *p, cuts=cuts)) or 0.0
 
     best, budget = overlap(pos), 300  # evaluations, at most: a bound on time whatever the shapes
     ds, dp = 0.08, 0.04 * max(ref.shape)
@@ -283,15 +295,16 @@ def _refine(crop: np.ndarray, ref: np.ndarray, cuts: dict[str, int], s: float, c
     return pos[0] / k, pos[1] / k, pos[2] / k
 
 
-def align(img: np.ndarray, mask: np.ndarray, ref: np.ndarray,
-          extra: tuple[np.ndarray | None, ...] = ()) -> tuple[np.ndarray, np.ndarray, list, dict[str, Any]]:
+def align(img: np.ndarray, mask: np.ndarray, ref: np.ndarray, extra: tuple[np.ndarray | None, ...] = ()
+          ) -> tuple[np.ndarray, np.ndarray, list, dict[str, Any], int]:
     """Our render and silhouette placed on a canvas the size of the reference cell (see the module docstring), the
-    ``extra`` masks placed the same way, and {"cut": [sides]} when the reference runs out of its picture."""
+    ``extra`` masks (lines) placed the same way, {"cut": [sides]} when the reference runs out of its picture, and
+    how many pixels of our silhouette fell outside the cell where the reference is not cut."""
     th, tw = ref.shape
     rb, ob = _bbox(ref), _bbox(mask)
     if rb is None or ob is None:
         return (np.full((th, tw, 3), 255, np.uint8), np.zeros((th, tw), bool),
-                [None if e is None else np.zeros((th, tw), bool) for e in extra], {})
+                [None if e is None else np.zeros((th, tw), bool) for e in extra], {}, 0)
     cuts = cut_sides(ref)
     rx0, ry0, rx1, ry1 = rb
     ox0, oy0, ox1, oy1 = ob
@@ -317,15 +330,16 @@ def align(img: np.ndarray, mask: np.ndarray, ref: np.ndarray,
 
     crop = (slice(oy0, oy1), slice(ox0, ox1))
     s, cx, cy = _refine(mask[crop], ref, cuts, s, centre(rx0, rx1, w, cut_l, cut_r), centre(ry0, ry1, h, cut_t, cut_b))
-    out = _clip(_place(mask[crop], ref.shape, s, cx, cy), cuts)
+    out, over = _place(mask[crop], ref.shape, s, cx, cy, cuts)
     canvas = _place(img[crop], ref.shape, s, cx, cy)
     canvas[~out] = 255  # nothing beyond our silhouette or a cut line is compared
-    placed = [None if e is None else _clip(_place(e[crop], ref.shape, s, cx, cy), cuts) for e in extra]
-    return canvas, out, placed, ({"cut": sorted(cuts)} if cuts else {})
+    placed = [None if e is None else _place(e[crop], ref.shape, s, cx, cy, cuts, thin=True)[0] for e in extra]
+    return canvas, out, placed, ({"cut": sorted(cuts)} if cuts else {}), over
 
 
-def iou(a: np.ndarray, b: np.ndarray) -> float | None:
-    union = int((a | b).sum())
+def iou(a: np.ndarray, b: np.ndarray, outside: int = 0) -> float | None:
+    """|a AND b| / |a OR b|; ``outside``: pixels of b beyond the canvas, part of the union."""
+    union = int((a | b).sum()) + outside
     return round(int((a & b).sum()) / union, 4) if union else None
 
 
@@ -345,19 +359,18 @@ def edge_pixels(rgb: np.ndarray) -> np.ndarray:
 
 
 def edge_score(ref_e: np.ndarray, our_e: np.ndarray, optional: np.ndarray | None,
-               r: int) -> tuple[float, np.ndarray, np.ndarray]:
+               r: int) -> tuple[float | None, np.ndarray, np.ndarray]:
     """(F1 of the two edge sets, the reference's edge pixels matched, ours matched): a pixel is matched when the other
     set has one within r pixels. ``optional`` edges of ours (seams) can match a reference pixel but are never
-    counted against us."""
+    counted against us. None when neither image has an edge: nothing inside the outline to compare."""
     ours_all = our_e if optional is None else our_e | optional
     ref_hit = ref_e & _morph(ours_all, r, "max")
     our_hit = our_e & _morph(ref_e, r, "max")
     n_ref, n_ours = int(ref_e.sum()), int(our_e.sum())
     if not n_ref and not n_ours:
-        return 1.0, ref_hit, our_hit  # nothing inside either outline: nothing that disagrees
-    if not n_ref or not n_ours:
-        return 0.0, ref_hit, our_hit
-    p, rc = our_hit.sum() / n_ours, ref_hit.sum() / n_ref
+        return None, ref_hit, our_hit
+    p = our_hit.sum() / n_ours if n_ours else 1.0  # no edge of ours is out of place
+    rc = ref_hit.sum() / n_ref if n_ref else 1.0   # no edge of the reference is missing
     return (float(2 * p * rc / (p + rc)) if p + rc else 0.0), ref_hit, our_hit
 
 
@@ -391,19 +404,20 @@ def compare_views(cells: list[tuple[np.ndarray, np.ndarray | None]], names: list
         # the outline edges are drawn half outside the solid's pixels; a reference's silhouette has them too
         mask = mask | (np.abs(img.astype(np.int16) - 255).max(axis=2) > BG_THRESHOLD)
         # our render at the cell's size first, so both silhouettes are cleaned at the same resolution
-        placed, ours, (seams,), info = align(img, mask, ref, (seams,))
+        placed, ours, (seams,), info, outside = align(img, mask, ref, (seams,))
         ours = opening(fill_holes(ours) if mode == "lines" else ours, r)
-        outline = iou(ref, ours)
+        outline = iou(ref, ours, outside)
         # edges inside each silhouette, away from its border (the outline is scored above)
         ref_e = edge_pixels(rgb) & _morph(ref, 2 * r, "min")
         our_e = edge_pixels(placed) & _morph(ours, 2 * r, "min")
         if seams is not None:
             seams = _morph(seams, 1, "max") & _morph(ours, 2 * r, "min")
         edges, ref_hit, our_hit = edge_score(ref_e, our_e, seams, r)
-        entry: dict[str, Any] = {"view": name, "score": None, "outline": outline, "edges": round(edges, 3)}
+        entry: dict[str, Any] = {"view": name, "score": None, "outline": outline,
+                                 "edges": None if edges is None else round(edges, 3)}
         if outline is not None:
             entry["outline"] = round(outline, 3)
-            entry["score"] = round((outline + edges) / 2, 3)
+            entry["score"] = round(outline if edges is None else (outline + edges) / 2, 3)
         entry.update(info)
         if not ref.any():
             entry["note"] = "no silhouette found in this reference cell"
