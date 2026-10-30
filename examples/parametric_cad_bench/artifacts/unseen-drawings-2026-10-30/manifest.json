@@ -1,0 +1,66 @@
+{
+  "benchmark": "gnucleus-ai/cad-bench@v3",
+  "expected_dataset_digest": "sha256:8a786725d3648a76282fc5868df06da3d5e00d603f283573a53430803465d78a",
+  "seed": 42,
+  "model": "gpt-6.1-sol",
+  "effort": "xhigh",
+  "timeout_sec": 900,
+  "jobs": 2,
+  "digest_verified": false,
+  "official_submission": false,
+  "purpose": "new drawing holdout after dimension-reading optimization; one attempt per task",
+  "selection": "seeded sample of previously unrun drawing tasks, frozen before viewing",
+  "agentcad_commit": "211aaf17622cc9dda9fbd69ad982a8161ff91951",
+  "codex_version": "codex-cli 0.163.0",
+  "tasks": [
+    {
+      "id": "freecad-4f4363246f",
+      "kind": "drawing",
+      "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+      "instruction_sha256": "0c6a700bac0d32d4c69e48a0547166d4e5906e3b2559fa38f30236981c3bdcd3",
+      "task_toml_sha256": "4152f653a98931c955e5577b0e151c9c3122b1fd8b09c38a70a1ab85a95fd26e",
+      "public_input_sha256": {
+        "4f4363246f.png": "0dbd0ecf4167909d84e2232468e0280e314d89168d4195c5652a32a6730be142"
+      }
+    },
+    {
+      "id": "freecad-1338adbf8b",
+      "kind": "drawing",
+      "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+      "instruction_sha256": "fdc60f28cabb65fe44f28abd3a08445f0105114a6839387be98c78df3f2654e8",
+      "task_toml_sha256": "f3bbb2e4c22b63214619ebd8776f6204147033e3287358041b68a13d106dc70f",
+      "public_input_sha256": {
+        "1338adbf8b.png": "7bae28036f84aed1d72ae02922cf111b8c383f2d12b51db2318a8c0904f9ebf1"
+      }
+    },
+    {
+      "id": "freecad-7dfcc14b48",
+      "kind": "drawing",
+      "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+      "instruction_sha256": "b022b88bfd9c1464a469d650d75ce9457ebba1631df5ff98ccd9c935535bc45a",
+      "task_toml_sha256": "8aded11c0adf9d7597d71fe3f425a62522b1a9a3204a54d39ad85588fa927b87",
+      "public_input_sha256": {
+        "7dfcc14b48.png": "c96d6080fb97849374b2c6465f3b34250c9b985b3d31270e1341ca7f24f5c587"
+      }
+    },
+    {
+      "id": "freecad-6b54209a13",
+      "kind": "drawing",
+      "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+      "instruction_sha256": "07dabf075370446de868f0e45eec9c8b3b1c6f6a4ecd39a305c7e4bfacb2a2e7",
+      "task_toml_sha256": "ba15d1f21e99d888407d74eddf7648136ce9ca2859780c465b3afc776fa72cc0",
+      "public_input_sha256": {
+        "6b54209a13.png": "69a47a61dfd5afcc1881c66c4a2d1e5a2a30d6b9ae6d2365181b2e2c89dffc9d"
+      }
+    }
+  ],
+  "baseline": {
+    "path": "D:\\Projects\\bench-data\\cadbench-v3-witness-retest-20261030\\manifest.json",
+    "sha256": "5166d1bd5538119fdede203ecf5300505ea07a1c767dc2ba65ff7fd78389cf0d"
+  },
+  "harness_sha256": {
+    "pilot.py": "9aab6247c16fd36aac41c93af98b26ebfaf33cfe06bb06c815e66e92ab9b46a6",
+    "stage_server.py": "2f0ea500b8cc02dc8d494a434ed7586af5f8750899e4e06b6ed6b0c3ac7520aa"
+  },
+  "selection_sha256": "c7fdafa828e523b9742e005fd3f38174896eac782ce6209b10003b68be84bcf9"
+}

@@ -2,3 +2,4 @@
 dimension-anchors-2026-10-30.json -text whitespace=trailing-space,space-before-tab,cr-at-eol
 dimension-witnesses-2026-10-30.json -text whitespace=trailing-space,space-before-tab,cr-at-eol
 sparse-raster-replay-2026-10-30.json -text whitespace=trailing-space,space-before-tab,cr-at-eol
+unseen-drawings-2026-10-30.json -text whitespace=trailing-space,space-before-tab,cr-at-eol
