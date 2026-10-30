@@ -136,6 +136,26 @@ apply_operations("part.FCStd", [{"op": "fillet", "edges": {"type": "line", "dire
 需求：`bbox {size}`、`volume`/`area {value, rel_tolerance}`、`hole {diameter, count}`（按内圆柱面识别、同轴合并）、
 `hole_count`、`solid_count`、`parameter {name, value}`、`center_of_mass`、`feature_count {feature_type, count|min}`。零件参数按零件单位报告和比较，几何（体积、尺寸、包围盒）一律按 mm。
 
+### 局部厚度与表面间距
+
+`inspect_entities(part.FCStd, filter={"kind":"faces"})` 读取实际几何面；默认返回的是特征历史。
+对三维零件误用二维的 `type/layer` 筛选会明确报 `BAD_FILTER`，不会静默返回另一种对象。
+
+`measure_entities(part.FCStd, target={"kind":"planar_levels","axis":"z"})` 按 Z 坐标列出最终
+实体的平面、法向、面积和相邻间隔。axis 也可以是 x/y 或方向向量。工具只报告测量值，
+不自动断言哪个面是底板、凹槽底或凸台端面；这些角色仍需按图纸的两条尺寸界线判断。
+
+用 `target={"kind":"face_distance","from":"Face1","to":"Face7"}` 测量两平行面所在平面的
+垂直距离（mm），并返回选中的面及法向。也可使用面选择器；一个选择器选中多个面时，
+必须全部共面，例如一组等高凸台的端面。不同层、非平面或不平行的面会明确报错，不取
+平均值。它测的是平面间距，不包含两个有限面在水平方向上错开的距离。默认测最终 Body；
+target 的可选 `feature` 仅用于检查指定中间特征，返回的 `of` 明确标示测量对象。
+
+独立验收可使用 `{"type":"face_distance","from":...,"to":...,"value":2,"tolerance":0.01}`。
+该要求直接量最终实体，不读取同名参数；即使总体包围盒、名义参数都正确，错误的凸台
+外伸或底厚仍可被发现。改模型后应重新检查面，或用几何选择器避免沿用失效的 Face 编号。
+CLI 同样支持 `agentcad --root <目录> measure part.FCStd --target '<JSON>'`。
+
 ## 导出
 
 `export_drawing` 对零件支持 `step`（BenchCAD 等按 STEP 评分）、`iges`、`brep`、`stl`、`obj` 和 `png`（预览图，见下）。
@@ -149,6 +169,8 @@ Body 不是恰好一个有效实体（或有特征出错）时拒绝导出（`NO
 多视图拼图每格 256（2×2 拼图为 512×512，和常见参考图同量级；图片在之后每一轮都占上下文，越大越贵）。
 
 - **视图方向**：`views` 的每一项是视图名或向量 `[x, y, z]`，表示**从零件指向相机的方向**（相机位置），相机看向零件中心。
+  返回的 `camera_frames` 同时给出每幅图的 `camera_direction`、`screen_right` 和 `screen_up`，
+  便于按同一套坐标逐一对应工程图中的特征。应先确认工程图的投影排布，不能单独镜像某一幅图使它吻合。
   视图名：`front` = `[0,-1,0]`（从 −Y 看，+X 向右、+Z 向上），`back` = `[0,1,0]`，`right` = `[1,0,0]`（+Y 向右），
   `left` = `[-1,0,0]`，`top` = `[0,0,1]`（+X 向右、+Y 向上），`bottom` = `[0,0,-1]`，`iso` = `[1,-1,1]`，
   `iso_back` = `[-1,1,1]`，`iso_bottom` = `[1,-1,-1]`。屏幕向上取 +Z（看向 ±Z 时取 +Y）。

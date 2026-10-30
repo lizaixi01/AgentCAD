@@ -29,7 +29,7 @@ GROUPS = {"create": "v3-bench-create", "edit": "v3-bench-create-edit", "drawing"
 EXPECTED_DIGEST = "sha256:8a786725d3648a76282fc5868df06da3d5e00d603f283573a53430803465d78a"
 TOOLS = ["list_operations", "create_drawing", "read_drawing", "inspect_entities", "apply_operations",
          "validate_drawing", "export_drawing", "rollback", "history", "get_diff", "list_checkpoints",
-         "save_benchmark_stage", "inspect_image"]
+         "save_benchmark_stage", "inspect_image", "measure_entities"]
 
 
 def digest(path: Path) -> str:
@@ -108,6 +108,7 @@ def stage_inputs(task: Path, workspace: Path, item: dict) -> list[Path]:
 def command(workspace: Path, item: dict, args: argparse.Namespace, images: list[Path]) -> list[str]:
     server_env = {"AGENTCAD_ROOT": workspace.as_posix(), "AGENTCAD_FREECAD": args.freecad.as_posix(),
                   "AGENTCAD_ALLOW_SCRIPTS": "0", "AGENTCAD_VIEWER": "0", "AGENTCAD_LIVE_SYNC": "0",
+                  "AGENTCAD_TOOL_PROFILE": "full",
                   "CADBENCH_KIND": item["kind"], "PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1"}
     env_toml = ",".join(f"{key}={json.dumps(value)}" for key, value in server_env.items())
     cmd = ["codex", "exec", "--ignore-user-config", "--ignore-rules", "--ephemeral", "--skip-git-repo-check",

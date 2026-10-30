@@ -464,7 +464,7 @@ def select_faces(shape, sel, name="faces"):
         return sorted(out, key=lambda n: int(n[4:]))
     if isinstance(sel, str):
         if re.fullmatch(r"Face\d+", sel):
-            if int(sel[4:]) > len(shape.Faces):
+            if not 1 <= int(sel[4:]) <= len(shape.Faces):
                 raise OpError("SELECTOR_EMPTY", f"{name}: {sel} does not exist ({len(shape.Faces)} faces)")
             return [sel]
         named = {"top": {"normal": "+z", "extreme": "max"}, "bottom": {"normal": "-z", "extreme": "max"},
@@ -515,6 +515,61 @@ def select_faces(shape, sel, name="faces"):
         raise OpError("SELECTOR_EMPTY", f"{name}: no face matches {json.dumps(sel)}", category="geometry",
                       hint="List candidate faces with inspect_entities(filter={\"kind\": \"faces\"}) on the part")
     return [f"Face{i + 1}" for i, _ in hits]
+
+
+# --- measurements on final geometry ---------------------------------------------------------------------------
+
+def _plane_group(shape, selector, name):
+    names = select_faces(shape, selector, name)
+    faces = [shape.getElement(n) for n in names]
+    if any(_surface_kind(f) != "plane" for f in faces):
+        raise OpError("NOT_PLANAR", f"{name} must select planar faces", category="geometry")
+    normal = _face_normal(faces[0])
+    position = faces[0].CenterOfMass.dot(normal)
+    if any(abs(abs(_face_normal(f).dot(normal)) - 1) > 1e-7
+           or abs(f.CenterOfMass.dot(normal) - position) > 1e-6 for f in faces[1:]):
+        raise OpError("AMBIGUOUS_PLANES", f"{name} selects faces on different planes",
+                      category="geometry", hint="Select the two measured surfaces separately; inspect kind='faces' first",
+                      details={"faces": names})
+    return names, faces[0].CenterOfMass, normal
+
+
+def face_distance(shape, first, second):
+    names_a, point_a, normal_a = _plane_group(shape, first, "from")
+    names_b, point_b, normal_b = _plane_group(shape, second, "to")
+    if abs(abs(normal_a.dot(normal_b)) - 1) > 1e-7:
+        raise OpError("NOT_PARALLEL", "face_distance requires parallel planes", category="geometry")
+    signed = (point_b - point_a).dot(normal_a)
+    return {"kind": "face_distance", "distance": abs(signed), "signed_distance": signed,
+            "from": {"faces": names_a, "point": v3(point_a), "normal": v3(normal_a)},
+            "to": {"faces": names_b, "point": v3(point_b), "normal": v3(normal_b)},
+            "method": "perpendicular distance between supporting planes; not lateral edge separation"}
+
+
+def planar_levels(shape, axis):
+    direction = _dir(axis, "axis")
+    if not all(math.isfinite(c) for c in (direction.x, direction.y, direction.z)):
+        raise OpError("BAD_VALUE", "axis must be finite")
+    levels = []
+    for i, face in enumerate(shape.Faces):
+        if _surface_kind(face) != "plane":
+            continue
+        normal = _face_normal(face)
+        if abs(abs(normal.dot(direction)) - 1) > 1e-7:
+            continue
+        pos = face.CenterOfMass.dot(direction)
+        level = next((x for x in levels if abs(x["position"] - pos) < 1e-6), None)
+        if level is None:
+            level = {"position": pos, "faces": [], "area": 0.0}
+            levels.append(level)
+        level["faces"].append({"name": f"Face{i+1}", "normal": v3(normal), "area": r6(face.Area)})
+        level["area"] += face.Area
+    levels.sort(key=lambda x: x["position"])
+    gaps = [{"from": r6(a["position"]), "to": r6(b["position"]), "distance": r6(b["position"]-a["position"])}
+            for a, b in zip(levels, levels[1:])]
+    return {"kind": "planar_levels", "axis": v3(direction),
+            "levels": [{**x, "position": r6(x["position"]), "area": r6(x["area"])} for x in levels],
+            "gaps": gaps, "note": "Levels are measured geometry, not assigned feature roles; match each face to the drawing."}
 
 
 # --- sketches --------------------------------------------------------------------------------------------------
@@ -1628,6 +1683,7 @@ def _non_partdesign(body):
 
 
 REQ_KEYS = {
+    "face_distance": {"from", "to", "value", "tolerance"},
     "bbox": {"size", "min", "max", "tolerance", "any_orientation"}, "volume": {"value", "tolerance", "rel_tolerance"},
     "area": {"value", "tolerance", "rel_tolerance"}, "hole": {"diameter", "count", "tolerance"},
     "hole_count": {"count"}, "solid_count": {"count"}, "parameter": {"name", "value", "tolerance"},
@@ -1636,6 +1692,7 @@ REQ_KEYS = {
 
 
 REQ_NEEDS = {"bbox": [("size", "min", "max")], "volume": [("value",)], "area": [("value",)],
+             "face_distance": [("from",), ("to",), ("value",)],
              "hole": [("diameter",)], "hole_count": [("count",)], "solid_count": [("count",)],
              "parameter": [("name",)], "center_of_mass": [("value",)], "feature_count": [("count", "min")]}
 
@@ -1666,8 +1723,24 @@ def check_requirements(doc, reqs):
             out.update(passed=False, message="no solid to measure")
             res.append(out)
             continue
-        tol = float(r.get("tolerance", 1e-3))
-        if t == "bbox":
+        tol = r.get("tolerance", 1e-3) if t == "face_distance" else float(r.get("tolerance", 1e-3))
+        if t == "face_distance":
+            try:
+                if isinstance(r["value"], bool) or isinstance(tol, bool):
+                    raise OpError("BAD_VALUE", "face_distance value and tolerance must be numbers, not booleans")
+                tol = float(tol)
+                want = float(r["value"])
+                if not math.isfinite(want) or want < 0 or not math.isfinite(tol) or tol < 0:
+                    raise OpError("BAD_VALUE", "face_distance value and tolerance must be finite and nonnegative")
+                measured = face_distance(b.Shape, r["from"], r["to"])
+                actual = measured["distance"]
+                out.update(expected=want, actual=r6(actual), deviation=r6(actual-want),
+                           measured=measured, passed=abs(actual-want) <= tol)
+            except OpError as exc:
+                out.update(passed=False, error=exc.to_dict())
+            except (TypeError, ValueError) as exc:
+                out.update(passed=False, message=f"Invalid face_distance requirement: {exc}")
+        elif t == "bbox":
             ok = True
             if r.get("size") is not None:
                 want = [float(x) for x in r["size"]]
@@ -2012,6 +2085,27 @@ def action_topology(job):
     return {"of": obj.Name, "kind": kind, "items": items}
 
 
+def action_measure(job):
+    target = job.get("target")
+    if not isinstance(target, dict):
+        raise OpError("BAD_MEASUREMENT", "3D target must be an object: {kind: planar_levels|face_distance, ...}")
+    kind = target.get("kind")
+    keys = {"planar_levels": {"axis"}, "face_distance": {"from", "to"}}
+    if not isinstance(kind, str) or kind not in keys or set(target) - keys[kind] - {"kind", "feature"}:
+        raise OpError("BAD_MEASUREMENT", "Expected planar_levels(axis) or face_distance(from, to), with optional feature")
+    if kind == "face_distance" and not {"from", "to"} <= target.keys():
+        raise OpError("BAD_MEASUREMENT", "face_distance needs from and to face selectors")
+    doc = App.openDocument(job["input"])
+    doc.recompute()
+    ctx = Ctx(doc)
+    obj = ctx.obj(target["feature"], "feature") if target.get("feature") else ctx.body(None, create=False)
+    if not hasattr(obj, "Shape") or obj.Shape.isNull():
+        raise OpError("NO_SOLID", "Selected object has no geometry", category="geometry")
+    measured = (planar_levels(obj.Shape, target.get("axis", "z")) if kind == "planar_levels"
+                else face_distance(obj.Shape, target["from"], target["to"]))
+    return {"of": obj.Name, "measurements": [measured]}
+
+
 def action_export(job):
     doc = App.openDocument(job["input"])
     doc.recompute()
@@ -2273,6 +2367,11 @@ def action_render(job):
     if fit not in ("view", "uniform"):
         raise OpError("BAD_VALUE", "fit must be 'view' or 'uniform'")
     names = [nm for nm, _ in views]
+    frames = []
+    for name, direction in views:
+        right, up, forward = _camera(direction)
+        frames.append({"view": name, "camera_direction": forward.tolist(),
+                       "screen_right": right.tolist(), "screen_up": up.tolist()})
     if job.get("raw"):  # export with a reference image: per-view renders and silhouettes, composed by AgentCAD
         arrays = {}
         for i, (_, d) in enumerate(views):
@@ -2282,7 +2381,7 @@ def action_render(job):
             arrays[f"mask{i}"] = m.reshape(size, 2, size, 2).mean(axis=(1, 3)) >= 0.5
         with open(job["raw"], "wb") as f:
             np.savez_compressed(f, **arrays)
-        return {"views": names, "cell_size": size, "shape": shape_summary(body.Shape)}
+        return {"views": names, "camera_frames": frames, "cell_size": size, "shape": shape_summary(body.Shape)}
     imgs = [_downsample(render_view(body.Shape, d, size, fit), 2) for _, d in views]
     if len(imgs) > 1:  # several views: one sheet, two or three per row, each cell labelled
         cols = 2 if len(imgs) <= 4 else 3
@@ -2300,7 +2399,8 @@ def action_render(job):
     else:
         _save_png(imgs[0], job["output"])
         grid = [1, 1]
-    return {"views": names, "grid": grid, "cell_size": size, "fit": fit, "shape": shape_summary(body.Shape)}
+    return {"views": names, "camera_frames": frames, "grid": grid, "cell_size": size, "fit": fit,
+            "shape": shape_summary(body.Shape)}
 
 
 def action_mesh(job):
@@ -2325,6 +2425,7 @@ def action_mesh(job):
 
 
 ACTIONS = {"apply": action_apply, "summary": action_summary, "validate": action_validate,
+           "measure": action_measure,
            "read_shape": action_read_shape, "render": action_render, "mesh": action_mesh,
            "topology": action_topology, "export": action_export, "script_solid": action_script_solid}
 

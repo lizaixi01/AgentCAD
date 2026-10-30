@@ -334,6 +334,12 @@ def inspect(rt: "Runtime", path: str, filter: dict | None, limit: int, offset: i
     store.load()
     f = dict(filter or {})
     kind = f.get("kind", "features")
+    allowed = {"kind", "feature"} if kind == "features" else {"kind", "feature", "selector"}
+    unknown = set(f) - allowed
+    if unknown:
+        raise input_error("BAD_FILTER", f"Unknown filter keys {sorted(unknown)} for a part",
+                          hint="Use {kind: faces|edges|features, feature?: <ref>, selector?: {...}}. "
+                               "The type/layer filters are for DXF; selector applies to faces/edges only.")
     if kind == "features":
         s = _run(rt, {"action": "summary", "detail": True}, inputs={"input": p})["summary"]
         items = [x for b in s["bodies"] for x in b["features"]]
@@ -341,15 +347,18 @@ def inspect(rt: "Runtime", path: str, filter: dict | None, limit: int, offset: i
             want = str(f["feature"]).removeprefix("tag:")
             items = [x for x in items if want in (x["name"], x.get("tag"))]
     else:
-        unknown = set(f) - {"kind", "feature", "selector"}
-        if unknown:
-            raise input_error("BAD_FILTER", f"Unknown filter keys {sorted(unknown)} for a part",
-                              hint="{kind: features|faces|edges, feature: <ref> (default the Body), selector: {...}}")
         items = _run(rt, {"action": "topology", "filter": f}, inputs={"input": p})["items"]
     limit = max(1, min(int(limit), 5000))
     page = items[offset:offset + limit]
     return {"drawing": rt._rel(p), "kind": kind, "total": len(items), "offset": offset, "returned": len(page),
             "entities": page, "next_offset": offset + limit if offset + limit < len(items) else None}
+
+
+def measure(rt: "Runtime", path: str, target: dict) -> dict[str, Any]:
+    p, store = store_for(rt, path)
+    store.load()
+    result = _run(rt, {"action": "measure", "target": target}, inputs={"input": p})
+    return {"drawing": rt._rel(p), "units": "mm", **result}
 
 
 def validate(rt: "Runtime", path: str, requirements: list[dict] | None, detail: bool) -> dict[str, Any]:
@@ -399,7 +408,7 @@ def export(rt: "Runtime", path: str, output: str, format: str, overwrite: bool, 
         tmp.unlink(missing_ok=True)
     store.journal({"tool": "export_drawing", "kind": "part", "ok": True, "output": rt._rel(out), "format": fmt})
     return {"drawing": rt._rel(p), "output": rt._rel(out), "format": fmt, "bytes": out.stat().st_size,
-            "shape": res["shape"], **{k: res[k] for k in ("readback", "views", "grid", "cell_size", "fit") if k in res}}
+            "shape": res["shape"], **{k: res[k] for k in ("readback", "views", "camera_frames", "grid", "cell_size", "fit") if k in res}}
 
 
 def _export_compare(rt: "Runtime", p: Path, store: DrawingStore, out: Path, views: list | None,
@@ -444,7 +453,8 @@ def _export_compare(rt: "Runtime", p: Path, store: DrawingStore, out: Path, view
     store.journal({"tool": "export_drawing", "kind": "part", "ok": True, "output": rt._rel(out), "format": "png",
                    "reference": rt._rel(ref), "mean_iou": summary["mean_iou"]})
     return {"drawing": rt._rel(p), "output": rt._rel(out), "format": "png", "bytes": out.stat().st_size,
-            "shape": res["shape"], "views": names, "grid": grid, "cell_size": cell, "compare": summary}
+            "shape": res["shape"], "views": names, "camera_frames": res["camera_frames"],
+            "grid": grid, "cell_size": cell, "compare": summary}
 
 
 def diff(rt: "Runtime", path: str, against: str) -> dict[str, Any]:

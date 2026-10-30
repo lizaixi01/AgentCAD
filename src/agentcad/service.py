@@ -1345,7 +1345,16 @@ class Runtime:
 
     @tool
     def measure_entities(self, path: str, target: Any) -> dict[str, Any]:
-        """Exact line, arc, circle, bulged-polyline and hatch measurements by handle or selector."""
+        """Exact DXF entity measurements by handle/selector; or final 3D solid measurements in mm.
+
+        FCStd target={kind:"planar_levels", axis:"z"} lists plane positions, normals and gaps.
+        target={kind:"face_distance", from:"Face1", to:"Face2"} measures parallel plane spacing.
+        from/to also accept face selectors; multiple faces must be coplanar. Default is the final
+        Body; optional feature names an intermediate feature for diagnosis. Inspect actual faces
+        with inspect_entities(filter={kind:"faces"}); never infer a measured gap from parameters.
+        """
+        if part.is_part(path):
+            return part.measure(self, path, target)
         from .measure import measure_entity
         p, store = self._drawing(path)
         doc = store.load()
