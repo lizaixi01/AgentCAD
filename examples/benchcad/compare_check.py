@@ -38,9 +38,10 @@ SIZE = 262  # a 524 px composite has 262 px cells (4 px gutters round 256 px vie
 
 def render_one(step: str, out: str) -> None:
     """Render a part's four views. Opposite cameras ([-1,-1,-1] and [1,1,1], [1,-1,1] and [-1,1,-1]) see mirror
-    images of one silhouette: when their areas differ by more than 2 %, the render is broken (reviewed: 5 of 1,397
-    parts in a batch of 8 parallel renders, whole when rendered again), so the part is read and rendered again, three
-    times at most. A part that never agrees is not cached."""
+    images of one silhouette, and whole renders give them the same area to the pixel. When the areas differ by more
+    than a few pixels the render is broken (reviewed: 7 of 1,398 parts in a batch of 8 parallel renders, all in their
+    first view, whole when rendered again), so the part is read and rendered again, three times at most. A part that
+    never agrees is not cached."""
     import importlib.util
 
     import numpy as np
@@ -58,7 +59,7 @@ def render_one(step: str, out: str) -> None:
             arrays[f"mask{i}"] = mask.astype(float).reshape(SIZE, 2, SIZE, 2).mean(axis=(1, 3)) >= 0.5
             arrays[f"seam{i}"] = seams.reshape(SIZE, 2, SIZE, 2).any(axis=(1, 3))
         areas = [int(arrays[f"mask{i}"].sum()) for i in range(4)]
-        if all(max(areas[a], areas[b]) <= 1.02 * min(areas[a], areas[b]) for a, b in ((0, 1), (2, 3))):
+        if all(abs(areas[a] - areas[b]) <= max(4, 0.001 * min(areas[a], areas[b])) for a, b in ((0, 1), (2, 3))):
             break
     else:
         raise SystemExit(f"opposite views never agreed: silhouette areas {areas}")

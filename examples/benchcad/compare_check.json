@@ -11759,10 +11759,10 @@
    "label": "codex-mcp-opt-medium",
    "id": "bolt_000201_s20260505",
    "graded": 0.9593534078307601,
-   "old": 0.9859,
-   "score": 0.979,
-   "outline": 0.9832,
-   "edges": 0.9743
+   "old": 0.986,
+   "score": 0.98,
+   "outline": 0.9835,
+   "edges": 0.9765
   },
   {
    "label": "codex-mcp-opt-medium",

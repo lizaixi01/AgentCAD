@@ -233,7 +233,8 @@ off. #31 changes what `export_drawing(..., reference=...)` scores and returns:
 `compare_check.py` replays the old and the new comparison on the graded submissions in `runs/`, and on each task's
 reference part against its own picture. It covers 1,298 of the 1,300 graded parts, including both runs below;
 two took more than ten minutes to render and are left out. A render whose opposite views (mirror images of one
-silhouette) differ in area is made again: six were broken in a batch of eight parallel renders.
+silhouette) differ in area by more than a few pixels is made again: seven were broken in a batch of eight parallel
+renders.
 
 | | Old score | New score |
 |---|---|---|
