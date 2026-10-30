@@ -396,3 +396,10 @@ Pro 本轮比旧同尺96少3分，来自首次渲染 DIMDEC=0 的6.4尺寸实际
 的指数放宽，也不能套用普通小数绝对下限。有关DXF透明度字段见
 [Autodesk实体属性说明](https://help.autodesk.com/cloudhelp/2020/ENU/AutoCAD-DXF/files/GUID-3610039E-27D1-4E23-B6D3-7E60B22BB5BD.htm)。
 新的最终分数须以修复版本的独立原件复放及完整证据重新确认。
+
+f1eb298复审仍发现同一合同的两个边界：校验虽按父DIMENSION解析，ezdxf通用
+Frontend却只给INSERT继承上下文，实际SVG仍可能把layer0透明度套到数字上。
+共享DrawingFrontend现在同时用于SVG、PDF与查看器，对DIMENSION子图形传递父属性；
+测试直接检查三种输出的文字路径/颜色，不能仅检查手工构造的RenderContext。
+科学格式的物理零值没有非零十进制量级，除显式DIMRND外不应凭空给0.01显示误差。
+f1eb298的31/31仍保留，但其原生全回归为发现新边界后主动中止，不能当作通过。

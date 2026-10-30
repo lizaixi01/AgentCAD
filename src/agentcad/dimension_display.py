@@ -185,7 +185,7 @@ def read_display(dim) -> dict:
             scaled = None if measured is None else measured * float(override.get("dimlfac") or 1.0)
             if scaled is None or not math.isfinite(scaled):
                 return result
-            exponent = math.floor(math.log10(abs(scaled))) if scaled else 0
-            result["resolution"] = max(rounding, 10.0 ** (exponent - digits))
+            quantum = 10.0 ** (math.floor(math.log10(abs(scaled))) - digits) if scaled else 0.0
+            result["resolution"] = max(rounding, quantum)
         result.update(value=value, status="read")
     return result

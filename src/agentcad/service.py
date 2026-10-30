@@ -1072,7 +1072,8 @@ class Runtime:
                                      "LWPOLYLINE exported as POLYLINE; tags/metadata are not guaranteed"]
         elif fmt == "svg":
             try:
-                from ezdxf.addons.drawing import Frontend, RenderContext, layout, svg
+                from ezdxf.addons.drawing import RenderContext, layout, svg
+                from .drawing_frontend import DrawingFrontend
             except ImportError as exc:
                 raise AgentCADError("DEPENDENCY_MISSING", f"SVG preview needs an optional package: {exc}",
                                     category="dependency",
@@ -1080,7 +1081,7 @@ class Runtime:
             from ezdxf.addons.drawing.config import BackgroundPolicy, Configuration
             backend = svg.SVGBackend()
             cfg = Configuration(background_policy=BackgroundPolicy.WHITE)
-            Frontend(RenderContext(doc), backend, config=cfg).draw_layout(doc.modelspace())
+            DrawingFrontend(RenderContext(doc), backend, config=cfg).draw_layout(doc.modelspace())
             page = layout.Page(0, 0, layout.Units.mm, margins=layout.Margins.all(5))
             out.write_text(backend.get_string(page), "utf-8")
             extra = {}
