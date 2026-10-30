@@ -439,6 +439,8 @@ def _export_compare(rt: "Runtime", p: Path, store: DrawingStore, out: Path, view
                "views": results}
     if mode != "filled":
         summary["reference_mode"] = mode
+    if scores and all(r["edges"] is None for r in results):
+        summary["note"] = "no edges inside the reference's outlines to compare: scored on outlines only"
     store.journal({"tool": "export_drawing", "kind": "part", "ok": True, "output": rt._rel(out), "format": "png",
                    "reference": rt._rel(ref), "score": summary["score"]})
     # no shape summary and no legend: the diff is what this call is for, and every later turn pays for its result

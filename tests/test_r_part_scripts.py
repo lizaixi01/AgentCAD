@@ -453,6 +453,25 @@ def test_edges_see_inside_the_outline():
     assert v["edges"] is None and v["score"] == v["outline"] > 0.95
 
 
+def test_a_flat_silhouette_reference_is_scored_on_outlines():
+    """Reviewed: a reference with nothing drawn inside its outlines (one colour, or a transparent background) gave a
+    correct part edges 0 and half its score, all of its own edges counting as extra. Such a sheet says nothing about
+    the inside, so every view scores its outline; one detailed view is enough to compare edges everywhere."""
+    lines = [((20, 3), (20, 17))]
+    ours = (np.asarray(ribbed(lines, scale=2.5, offset=(50, 60))),
+            np.asarray(draw(L_SHAPE, (256, 256), 2.5, (50, 60), (0, 0, 0))).max(axis=2) < 128)
+    flat = np.asarray(draw(L_SHAPE, (256, 256), 3.0, (30, 40), (90, 90, 90)))
+    rgba = Image.new("RGBA", (256, 256), (0, 0, 0, 0))
+    ImageDraw.Draw(rgba).polygon([(30 + x * 3, 40 + y * 3) for x, y in L_SHAPE], fill=(250, 250, 250, 255))
+    for cell in ((flat, None), (np.asarray(rgba.convert("RGB")), np.asarray(rgba)[:, :, 3])):
+        (v,), (diff,), _ = compare.compare_views([cell], ["v"], [ours])
+        assert v["edges"] is None and v["score"] == v["outline"] > 0.95
+        assert not np.all(diff == compare.LINE_OURS, axis=2).any()  # no edge of ours painted as extra
+    # a sheet with one detailed view compares edges in its flat views too
+    res = compare.compare_views([(flat, None), (np.asarray(ribbed(lines)), None)], ["a", "b"], [ours, ours])[0]
+    assert res[0]["edges"] is not None and res[0]["edges"] < 0.5 and res[1]["edges"] > 0.9
+
+
 def test_reference_grid_layout(tmp_path):
     assert [compare.grid_of(n) for n in (1, 2, 3, 4, 5, 9)] == [(1, 1), (1, 2), (2, 2), (2, 2), (2, 3), (3, 3)]
     sheet = Image.new("RGB", (200, 100), (255, 255, 255))

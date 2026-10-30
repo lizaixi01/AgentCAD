@@ -24,7 +24,8 @@ for one view, two columns for up to four views (three beyond), one cell for a si
    image has one within about 1/128 of the cell. Holes, pockets, steps, ribs and chamfers change it even where
    they leave the outline alone. Cylinder and cone seams, which some renderers draw and ours does not, can match a
    reference line but cost nothing where there is none.
-6. score = (outline + edges) / 2; the outline alone where neither image has an edge inside it (edges is None).
+6. score = (outline + edges) / 2; the outline alone where neither image has an edge inside it, or where the
+   reference has none in any view (a flat silhouette or a bare outline): edges is None there.
 
 Checked offline against BenchCAD's voxel IoU (examples/benchcad, 1,098 graded parts of 100 tasks): of two parts
 for the same task whose grades differ by 0.1 or more, it ranks 90.3 % the grader's way (silhouette IoU with the
@@ -394,8 +395,10 @@ def diff_image(ref: np.ndarray, ours: np.ndarray, ref_e: np.ndarray | None = Non
 def compare_views(cells: list[tuple[np.ndarray, np.ndarray | None]], names: list[str],
                   renders: list[tuple]) -> tuple[list[dict[str, Any]], list[np.ndarray], str]:
     """Per-view results and diff images. ``cells`` from load_reference; ``renders`` (image, silhouette[, seams]) of
-    each view, seams being the pixels of the seam lines our render leaves out (or None)."""
-    results, diffs, modes = [], [], set()
+    each view, seams being the pixels of the seam lines our render leaves out (or None). A reference that shows no
+    edge inside any of its outlines (a flat silhouette, a bare outline) says nothing about the inside: then no view
+    has an edge score, and each scores its outline."""
+    views, modes = [], set()
     for name, (rgb, alpha), (img, mask, *rest) in zip(names, cells, renders):
         seams = rest[0] if rest else None
         ref, mode = silhouette(rgb, alpha)
@@ -406,13 +409,16 @@ def compare_views(cells: list[tuple[np.ndarray, np.ndarray | None]], names: list
         # our render at the cell's size first, so both silhouettes are cleaned at the same resolution
         placed, ours, (seams,), info, outside = align(img, mask, ref, (seams,))
         ours = opening(fill_holes(ours) if mode == "lines" else ours, r)
-        outline = iou(ref, ours, outside)
-        # edges inside each silhouette, away from its border (the outline is scored above)
+        # edges inside each silhouette, away from its border (the outline is scored on its own)
         ref_e = edge_pixels(rgb) & _morph(ref, 2 * r, "min")
         our_e = edge_pixels(placed) & _morph(ours, 2 * r, "min")
         if seams is not None:
             seams = _morph(seams, 1, "max") & _morph(ours, 2 * r, "min")
-        edges, ref_hit, our_hit = edge_score(ref_e, our_e, seams, r)
+        views.append((name, ref, ours, iou(ref, ours, outside), ref_e, our_e, seams, r, info))
+    detailed = any(v[4].any() for v in views)
+    results, diffs = [], []
+    for name, ref, ours, outline, ref_e, our_e, seams, r, info in views:
+        edges, ref_hit, our_hit = edge_score(ref_e, our_e, seams, r) if detailed else (None, None, None)
         entry: dict[str, Any] = {"view": name, "score": None, "outline": outline,
                                  "edges": None if edges is None else round(edges, 3)}
         if outline is not None:
@@ -422,7 +428,7 @@ def compare_views(cells: list[tuple[np.ndarray, np.ndarray | None]], names: list
         if not ref.any():
             entry["note"] = "no silhouette found in this reference cell"
         results.append(entry)
-        diffs.append(diff_image(ref, ours, ref_e, our_e, ref_hit, our_hit))
+        diffs.append(diff_image(ref, ours, ref_e, our_e, ref_hit, our_hit) if detailed else diff_image(ref, ours))
     return results, diffs, "lines" if modes == {"lines"} else "filled" if modes == {"filled"} else "mixed"
 
 
