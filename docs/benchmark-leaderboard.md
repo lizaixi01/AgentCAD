@@ -1,5 +1,10 @@
 # README benchmark 榜单的来源与边界
 
+> 历史快照说明：以下保留最初发布 v8 图表时的测量与 `44aa822` 源码审查结论。
+> 后续产品修复、`b4c0466` 的 31/31 复跑，以及对双方采用冻结细则的
+> **AgentCAD 98 / Pro 96** 本地源码评估，另见[新评审记录](source-capability-review.md)。
+> 新结果不改写以下历史分数，也不表示上游已收录 AgentCAD。
+
 核对日期：2026-10-30。上游最新提交仍为
 [`58a05dd`](https://github.com/U-C4N/Autocad-MCP/tree/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks)。
 README 展示的是 **v8 固定任务执行榜**。AgentCAD 与 Pro 均为 31/31、100 分，

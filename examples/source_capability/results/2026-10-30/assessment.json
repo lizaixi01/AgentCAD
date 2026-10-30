@@ -1,0 +1,2103 @@
+{
+  "schema": "local-independent-source-capability-review/v1",
+  "status": "complete",
+  "reviewed_at": "2026-10-30",
+  "assessor": {
+    "name": "independent AI reviewer",
+    "task_id": "source_rubric_review",
+    "requested_and_published_by": "AgentCAD",
+    "relationship": "A separate AI review agent from the product implementation agent, in an AgentCAD-requested evaluation. This is not external third-party certification.",
+    "actions": "Read pinned source and recorded results; independently ran headless counterexamples/targeted tests and inspected drawing images. Did not launch AutoCAD, FreeCAD or Claude and did not modify product source."
+  },
+  "method": {
+    "type": "local source-capability assessment",
+    "rubric_url": "https://github.com/lizaixi01/AgentCAD/blob/25abc96b9e39abe4e52464d3f8f00eba589759e5/docs/source-capability-rubric.md",
+    "upstream_weights_url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/source_review.json",
+    "score_range": "20 integer items, each 0..5; category weights 25/20/15/15/15/10",
+    "anchors_frozen_before_final_scoring": true,
+    "shared_scope": "The same useful declared capabilities, implementation evidence and cumulative anchors apply to both fixed sources. No points for tool/test counts; no requirement for every industry feature or formal certification; optional features absent from the shared evaluated contract do not automatically lose points.",
+    "serious_defect_rule": "A demonstrated serious false-success, destructive-write or permission defect caps its responsible item at 2 until fixed and retested. The same primary defect is not mechanically deducted in multiple items.",
+    "evidence_rule": "Skips are not passes. Historical runs count only after tracing the relevant product-code boundary. Evidence of an earlier release is not silently relabeled as an exact-current result.",
+    "v8_rule": "31/31 is a separate execution result and is not converted into 100 source-review points.",
+    "frozen_rubric_sha256": "be562004ba7f25c0d131cdf690c9dc4844cd0df9dc3ede467ae2308420d1d52e",
+    "meaning_of_score": "A sum of bounded ordinal evidence judgments under this rubric. 98/100 is not a claim of 98% of all AutoCAD functionality, universal correctness or manufacturing certification."
+  },
+  "evidence_path_base": "output/source-capability/",
+  "publication_boundary": {
+    "scope": "Two pinned products under this local rubric only.",
+    "upstream_approved": false,
+    "external_certification": false,
+    "official_leaderboard_position": null,
+    "warning": "Do not combine these local scores with historical upstream self-review rows to claim an official #1 or a precise cross-review score improvement."
+  },
+  "historical_upstream_review": {
+    "repository": "U-C4N/Autocad-MCP",
+    "reviewed_version": "1.6.0 (release)",
+    "reviewed_at": "2026-09-24",
+    "score": 93,
+    "max_score": 100,
+    "type": "upstream self-review; different historical version and scoring detail",
+    "category_scores": [
+      24,
+      19,
+      14,
+      14,
+      14,
+      8
+    ],
+    "source_url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/source_review.json",
+    "comparability": "Preserved separately. It is not the local re-evaluation below."
+  },
+  "products": [
+    {
+      "name": "AgentCAD",
+      "repository": "lizaixi01/AgentCAD",
+      "product_sha": "b4c04669238e771a0888114f1af3260d7c371834",
+      "source_url": "https://github.com/lizaixi01/AgentCAD/tree/b4c04669238e771a0888114f1af3260d7c371834",
+      "status": "local_review_complete",
+      "total_score": 98,
+      "max_score": 100,
+      "categories": [
+        {
+          "id": "F",
+          "name": "Functional CAD coverage",
+          "weight": 25,
+          "score": 25,
+          "item_ids": [
+            "F1",
+            "F2",
+            "F3",
+            "F4",
+            "F5"
+          ]
+        },
+        {
+          "id": "C",
+          "name": "Correctness and delivery",
+          "weight": 20,
+          "score": 20,
+          "item_ids": [
+            "C1",
+            "C2",
+            "C3",
+            "C4"
+          ]
+        },
+        {
+          "id": "B",
+          "name": "Backends and platforms",
+          "weight": 15,
+          "score": 15,
+          "item_ids": [
+            "B1",
+            "B2",
+            "B3"
+          ]
+        },
+        {
+          "id": "E",
+          "name": "Engineering production",
+          "weight": 15,
+          "score": 13,
+          "item_ids": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        {
+          "id": "T",
+          "name": "Tests and maintenance",
+          "weight": 15,
+          "score": 15,
+          "item_ids": [
+            "T1",
+            "T2",
+            "T3"
+          ]
+        },
+        {
+          "id": "S",
+          "name": "Security and operations",
+          "weight": 10,
+          "score": 10,
+          "item_ids": [
+            "S1",
+            "S2"
+          ]
+        }
+      ],
+      "items": [
+        {
+          "id": "F1",
+          "name": "Geometry and measurement",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Saved geometry is measured independently: analytic arc/bulge lengths and areas, nested HATCH island/style semantics, primitives, offsets and selection predicates have positive and negative cases beyond v8. Native conversion and readback supplement the headless geometry tests.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Credit is for supported 2D geometry and explicit unsupported results, not universal ACIS/REGION equivalence.",
+          "source": [
+            {
+              "path": "src/agentcad/geom.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/geom.py"
+            },
+            {
+              "path": "src/agentcad/measure.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/measure.py"
+            },
+            {
+              "path": "tests/test_t_workflow_guards.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_t_workflow_guards.py"
+            },
+            {
+              "path": "tests/test_i_common_ops.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_i_common_ops.py"
+            },
+            {
+              "path": "tests/test_autocad_findings.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_autocad_findings.py"
+            }
+          ],
+          "evidence_paths": [
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "F2",
+          "name": "Editing and identity",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Transforms, arrays, trims/joins/corners, requirement edits, tagged identity and revision-sensitive previews have saved-file assertions. Stale revision, external change and failed edits preserve the documented file state.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "No claim that every arbitrary imported object has editable parametric semantics.",
+          "source": [
+            {
+              "path": "src/agentcad/ops/edit.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/ops/edit.py"
+            },
+            {
+              "path": "src/agentcad/engine.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/engine.py"
+            },
+            {
+              "path": "tests/test_b_revision.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_b_revision.py"
+            },
+            {
+              "path": "tests/test_h_operations.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_h_operations.py"
+            },
+            {
+              "path": "tests/test_t_workflow_guards.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_t_workflow_guards.py"
+            }
+          ],
+          "evidence_paths": [
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "F3",
+          "name": "Annotations, styles and numerical tolerances",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Real linear/radius/diameter DIMENSION entities carry numeric deviations/limits/fits. Precision-loss, nonfinite inputs and fake nominal values are refused. An independent 35 mm diameter case was changed from -0.012/+0.025 to -0.017/+0.043: reopening showed a new rendered block and updated actual MTEXT, with measurement 35 retained. Native roundtrip and inspected glyph layout provide display evidence.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "One AgentCAD dimension style is not a complete ISO/ANSI style library. GD&T symbols are drawing primitives, without native TOLERANCE or general GD&T legality certification.",
+          "source": [
+            {
+              "path": "src/agentcad/tolerances.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/tolerances.py"
+            },
+            {
+              "path": "src/agentcad/ops/annotate.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/ops/annotate.py"
+            },
+            {
+              "path": "tests/test_y_tolerances.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_y_tolerances.py"
+            },
+            {
+              "path": "tests/test_autocad_findings.py",
+              "line": 148,
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_autocad_findings.py#L148"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/rendered-edit-b4c0466/report.json",
+            "reviewer-rubric/recheck-b4c0466.xml",
+            "showcase-b4c0466/report.json",
+            "reviewer-rubric/agent-visual-review-b4c0466.json",
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "F4",
+          "name": "Organization and exchange",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Layers, blocks/attributes, paper/model layouts, viewports and pages, DXF/DWG and printable/table outputs have reopened postconditions. The A3 witness retains 420 x 297 mm page/viewport parameters and paper-space text through real AutoCAD; activation and display were checked.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "DXF block preservation does not promise dynamic-block parametric behavior. PDF/SVG inspection is structurally bounded; full semantic parity is only asserted for supported DXF content.",
+          "source": [
+            {
+              "path": "src/agentcad/ops/structure.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/ops/structure.py"
+            },
+            {
+              "path": "src/agentcad/ops/sheet.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/ops/sheet.py"
+            },
+            {
+              "path": "src/agentcad/delivery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/delivery.py"
+            },
+            {
+              "path": "tests/test_layouts_and_scripts.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_layouts_and_scripts.py"
+            },
+            {
+              "path": "tests/test_k_pdf.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_k_pdf.py"
+            }
+          ],
+          "evidence_paths": [
+            "showcase-b4c0466/report.json",
+            "reviewer-rubric/agent-visual-review-b4c0466.json",
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "F5",
+          "name": "Domain workflows and foreign understanding",
+          "score": 5,
+          "max_score": 5,
+          "basis": "P&ID graph, mechanical part views/BOM, architectural rooms/openings and foreign plant takeoff have public workflow entry points, saved readback and structurally different native examples. Foreign interpretation retains open items and confidence rather than fabricating missing lengths or tags.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "These are bounded drawing workflows and provisional estimates, not a universal plant vocabulary, Plant 3D project reader, or engineering-design approval.",
+          "source": [
+            {
+              "path": "src/agentcad/engineering/pid.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/engineering/pid.py"
+            },
+            {
+              "path": "src/agentcad/engineering/mechanical.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/engineering/mechanical.py"
+            },
+            {
+              "path": "src/agentcad/engineering/architecture.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/engineering/architecture.py"
+            },
+            {
+              "path": "src/agentcad/engineering/plant.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/engineering/plant.py"
+            },
+            {
+              "path": "tests/test_u_engineering.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_u_engineering.py"
+            }
+          ],
+          "evidence_paths": [
+            "showcase-b4c0466/report.json",
+            "reviewer-rubric/repro_foreign_network-b4c0466.json",
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "C1",
+          "name": "Transactions and recovery",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Failed batches, dry-run/preview, conflicts, checkpoints/undo and recovery are checked against saved document and workspace state. Process/interface tests and real-writer exclusion exercise outcomes beyond in-process happy paths.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Trusted opt-in scripts retain the operator's privileges; transaction behavior is not isolation from hostile code.",
+          "source": [
+            {
+              "path": "src/agentcad/engine.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/engine.py"
+            },
+            {
+              "path": "src/agentcad/store.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/store.py"
+            },
+            {
+              "path": "src/agentcad/locking.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/locking.py"
+            },
+            {
+              "path": "tests/test_f_repro_recovery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_f_repro_recovery.py"
+            },
+            {
+              "path": "tests/test_z_locking.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_z_locking.py"
+            }
+          ],
+          "evidence_paths": [
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "C2",
+          "name": "Intent versus actual geometry",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Saved specifications are restored and checked against measured entities; tampered dimensions and omitted changes fail. All stored DIMENSION entities, including block definitions, are scanned for tolerance precision and invalid metadata. The earlier block precision bypass was fixed and the responsible tests re-run.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Unsupported or ambiguous geometric binding remains a refusal/unknown result. This does not prove every possible imported entity's intent.",
+          "source": [
+            {
+              "path": "src/agentcad/validate/checks.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/validate/checks.py"
+            },
+            {
+              "path": "src/agentcad/constraints.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/constraints.py"
+            },
+            {
+              "path": "tests/test_e_tamper.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_e_tamper.py"
+            },
+            {
+              "path": "tests/test_y_tolerances.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_y_tolerances.py"
+            },
+            {
+              "path": "tests/test_w_delivery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_w_delivery.py"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/recheck-b4c0466.xml",
+            "showcase-b4c0466/report.json",
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "C3",
+          "name": "Delivery gates and readback",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Delivery checks a locked source revision/hash, reloads saved specifications and independently reopens outputs. DXF comparison covers model/paper layouts, block definitions, attributes and styles; altered or missing content, invalid tables and corrupt files fail their format-specific checks.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "PDF/SVG are parsed for structure/page/content and XLSX for container/cell integrity; they are not described as full geometric equivalence. DXF parity cannot prove properties outside the supported semantic snapshot.",
+          "source": [
+            {
+              "path": "src/agentcad/delivery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/delivery.py"
+            },
+            {
+              "path": "src/agentcad/quality.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/quality.py"
+            },
+            {
+              "path": "tests/test_w_delivery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_w_delivery.py"
+            },
+            {
+              "path": "tests/test_native_delivery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_native_delivery.py"
+            }
+          ],
+          "evidence_paths": [
+            "showcase-b4c0466/report.json",
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "C4",
+          "name": "Foreign, abnormal and incomplete inputs",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Malformed drawings, unknown units/operations, unsupported features, source mutation and incomplete metadata have explicit behavioral refusals or open items. The independent load-without-equipment-tag input now returns null tag/length plus ELECTRICAL_TAG_MISSING rather than raising min(empty).",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Incomplete drawing interpretation is not treated as a verified complete engineering takeoff. Refusal is credited without requiring corrupt-file recovery.",
+          "source": [
+            {
+              "path": "src/agentcad/engineering/plant.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/engineering/plant.py"
+            },
+            {
+              "path": "src/agentcad/guards.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/guards.py"
+            },
+            {
+              "path": "tests/test_d_errors.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_d_errors.py"
+            },
+            {
+              "path": "tests/test_u_engineering.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_u_engineering.py"
+            },
+            {
+              "path": "tests/test_w_delivery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_w_delivery.py"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/repro_foreign_network-b4c0466.json",
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "B1",
+          "name": "Backend contracts and discovery",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Discovery, missing-dependency errors and capability boundaries support a complementary architecture: DXF owns ordinary editing, AutoCAD supplies native exchange/AUDIT, and FreeCAD supplies native 3D subprocess work. Backends have consistent success/refusal postconditions rather than stub successes.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "A separate COM implementation of every DXF operation is not required by the rubric. FreeCAD's distinctive parametric 3D is described, not assigned extra category weight.",
+          "source": [
+            {
+              "path": "src/agentcad/discovery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/discovery.py"
+            },
+            {
+              "path": "src/agentcad/backends/autocad.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/backends/autocad.py"
+            },
+            {
+              "path": "src/agentcad/backends/freecad.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/backends/freecad.py"
+            },
+            {
+              "path": "tests/test_d_errors.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_d_errors.py"
+            },
+            {
+              "path": "tests/test_n_parts.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_n_parts.py"
+            }
+          ],
+          "evidence_paths": [
+            "windows-native-b4c0466.xml",
+            "windows-native-b4c0466.environment.json",
+            "reviewer-rubric/final-run-validation-b4c0466.json"
+          ]
+        },
+        {
+          "id": "B2",
+          "name": "Actual native interoperability",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Real AutoCAD save/read/AUDIT covers mechanical, architecture, P&ID and tolerances with zero recorded audit errors. A separate A3 paper-space witness verifies page size, viewport geometry/scale/center and text after native re-open and activation.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "AutoCAD DXFOUT initially persisted the inactive custom viewport with id/status 0/0. Actual CTAB and REGENALL activation produced 2/2 without hand-editing DXF. The displayed PDF was generated headlessly from that native witness, not by AutoCAD's PDF plot engine. This workflow needs the recorded activation step.",
+          "source": [
+            {
+              "path": "src/agentcad/backends/autocad.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/backends/autocad.py"
+            },
+            {
+              "path": "tests/test_native_delivery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_native_delivery.py"
+            },
+            {
+              "path": "examples/source_capability/showcase.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/examples/source_capability/showcase.py"
+            }
+          ],
+          "evidence_paths": [
+            "showcase-b4c0466/report.json",
+            "showcase-b4c0466/native-activation/929306c511b0/activated.dxf",
+            "showcase-b4c0466/mechanical-native.pdf",
+            "reviewer-rubric/agent-visual-review-b4c0466.json",
+            "windows-native-b4c0466.xml",
+            "windows-native-b4c0466.environment.json",
+            "reviewer-rubric/final-run-validation-b4c0466.json"
+          ]
+        },
+        {
+          "id": "B3",
+          "name": "Platforms and Python versions",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Completed fixed-source CI covers Windows 3.11, Linux 3.10/3.12 and macOS 3.12. The separate local Windows run enables installed AutoCAD and FreeCAD; skipped CI native cases are distinguished from real native execution.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Native AutoCAD support is Windows-specific. A headless CI pass does not establish CAD installation or native behavior on Linux/macOS.",
+          "source": [
+            {
+              "path": ".github/workflows/verify.yml",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/.github/workflows/verify.yml"
+            },
+            {
+              "path": "tests/conftest.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/conftest.py"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/agent-b4c-ci-jobs.json",
+            "windows-native-b4c0466.xml",
+            "windows-native-b4c0466.environment.json",
+            "reviewer-rubric/final-run-validation-b4c0466.json"
+          ]
+        },
+        {
+          "id": "E1",
+          "name": "Standard data and provenance",
+          "score": 4,
+          "max_score": 5,
+          "basis": "Fits H7/h6/g6 are bounded to 10 < nominal <= 500 mm with checked SKF source locators and independent numeric boundaries. Stored fastener/bearing/hole rows have an audit distinguishing normative editions, nominal/max dimensions and supplier/shop recommendations; unknown sizes are refused.",
+          "deduction": {
+            "points": 1,
+            "reason": "The offered M14 counterbore still returns a legacy 24 mm diameter with no verified normative row. It is accurately marked unverified_counterbore, but disclosure does not complete standard-backed data validation. This withholds the final point; no false certification or fabricated source is alleged."
+          },
+          "scope_and_limits": "No requirement for every CAD standard or current-edition certification is imposed. Supplier recommendations and simplified drawing conventions are not promoted to standards conformity. Pro's additional unsupported feature tables are not penalized merely for being extra.",
+          "source": [
+            {
+              "path": "src/agentcad/stdlib.py",
+              "line": 132,
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/stdlib.py#L132"
+            },
+            {
+              "path": "src/agentcad/tolerances.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/tolerances.py"
+            },
+            {
+              "path": "docs/standard-tables.md",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/docs/standard-tables.md"
+            },
+            {
+              "path": "docs/fit-tables.md",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/docs/fit-tables.md"
+            },
+            {
+              "path": "tests/test_standard_sources.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_standard_sources.py"
+            },
+            {
+              "path": "src/agentcad/fits.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/fits.py"
+            }
+          ],
+          "evidence_paths": [
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "E2",
+          "name": "Readable engineering drawing production",
+          "score": 4,
+          "max_score": 5,
+          "basis": "Saved part-model views/sections, chain lengths, frame, BOM and linked balloons are present; native readback and independent visual inspection confirm readable, unclipped A3 results. Architecture, P&ID and tolerance examples provide different drawing structures.",
+          "deduction": {
+            "points": 1,
+            "reason": "The mechanical sample's declared model includes OD 60, bore 25, PCD 52 and six 6.6 holes, but its visible dimension scheme does not specify these critical diameters/hole pattern. The useful template still requires the user to finish manufacturing annotation, so the final production point is not earned."
+          },
+          "scope_and_limits": "This is a bounded production template, not an automatically complete manufacturing drawing. The deduction concerns known specified geometry in the supplied workflow, not arbitrary industry drafting conventions.",
+          "source": [
+            {
+              "path": "src/agentcad/engineering/mechanical.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/engineering/mechanical.py"
+            },
+            {
+              "path": "examples/source_capability/showcase.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/examples/source_capability/showcase.py"
+            },
+            {
+              "path": "tests/test_u_engineering.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_u_engineering.py"
+            }
+          ],
+          "evidence_paths": [
+            "showcase-b4c0466/report.json",
+            "showcase-b4c0466/mechanical-native.png",
+            "reviewer-rubric/agent-visual-review-b4c0466.json"
+          ]
+        },
+        {
+          "id": "E3",
+          "name": "Domain readback and error feedback",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Room areas, P&ID connections, BOM/balloon consistency and foreign quantities are read back from actual drawing content; deletion/movement/disconnection drives failures or uncertainty. Independent ARC/chord and missing-tag counterexamples now behave correctly, and arc sweep/endpoint/label controls establish the fix.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Takeoff lengths are labeled estimates; missing/inferred data remain open items. The former ARC false connectivity is resolved at this SHA and is not double-counted against other categories.",
+          "source": [
+            {
+              "path": "src/agentcad/engineering/plant.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/engineering/plant.py"
+            },
+            {
+              "path": "src/agentcad/quality.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/quality.py"
+            },
+            {
+              "path": "tests/test_u_engineering.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_u_engineering.py"
+            },
+            {
+              "path": "tests/test_native_delivery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_native_delivery.py"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/repro_foreign_network-25abc96.json",
+            "reviewer-rubric/repro_foreign_network-b4c0466.json",
+            "reviewer-rubric/recheck-b4c0466.xml",
+            "showcase-b4c0466/report.json",
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "T1",
+          "name": "Behavioral regression evidence",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Completed tests check unit geometry, public CLI/MCP/HTTP boundaries, child-process locks/cancellation, native exchange and adversarial delivery/tampering. Independent targeted reproduction and visual verification supplement author-supplied full-run records.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Test count is reported only as execution inventory. It is not a score multiplier and skips are not counted as passes.",
+          "source": [
+            {
+              "path": "tests/test_g_interfaces.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_g_interfaces.py"
+            },
+            {
+              "path": "tests/test_w_delivery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_w_delivery.py"
+            },
+            {
+              "path": "tests/test_x_http_security.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_x_http_security.py"
+            },
+            {
+              "path": "tests/test_z_locking.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_z_locking.py"
+            },
+            {
+              "path": "tests/test_native_delivery.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_native_delivery.py"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/agent-b4c-ci-jobs.json",
+            "reviewer-rubric/recheck-b4c0466.xml",
+            "windows-native-b4c0466.xml",
+            "windows-native-b4c0466.environment.json",
+            "reviewer-rubric/final-run-validation-b4c0466.json"
+          ]
+        },
+        {
+          "id": "T2",
+          "name": "Reproducibility and provenance",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Dependency lock, fixed product/evaluator SHAs, environment and imported-module boundaries, source/harness hashes, raw cases/logs and generated documentation checks make the evaluated workflows reproducible. Historical failed attempts are retained separately.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "The v8 adapter is a local independent adaptation over the official MCP SDK, not an upstream certification. File-byte hashes can differ from Git blobs due to CRLF; canonical source equality was checked separately.",
+          "source": [
+            {
+              "path": "uv.lock",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/uv.lock"
+            },
+            {
+              "path": "examples/autocad_benchmark/run.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/examples/autocad_benchmark/run.py"
+            },
+            {
+              "path": "examples/source_capability/showcase.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/examples/source_capability/showcase.py"
+            },
+            {
+              "path": "examples/source_capability/compare.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/examples/source_capability/compare.py"
+            },
+            {
+              "path": "tests/test_s_upstream_benchmark.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_s_upstream_benchmark.py"
+            }
+          ],
+          "evidence_paths": [
+            "v8-b4c0466/report.json",
+            "showcase-b4c0466/report.json",
+            "performance-b4c0466/report.json",
+            "reviewer-rubric/rendered-edit-b4c0466/report.json",
+            "windows-native-b4c0466.environment.json",
+            "reviewer-rubric/final-run-validation-b4c0466.json",
+            "reviewer-rubric/source-boundary-b4c0466.json"
+          ]
+        },
+        {
+          "id": "T3",
+          "name": "Continuous verification and version comparison",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Completed four-lane CI and the benchmark failure gate are paired with exact-candidate same-interpreter/dependency version comparison. Twenty-four observations (five timed repeats plus one excluded warmup per version/size) pass independent saved geometry/count/units/audit checks.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "The version comparison is AgentCAD main a713426 versus b4c0466 using 2000/10000 2D lines and direct Runtime, not Pro, native CAD, MCP or model latency. Total medians are 2.7772 -> 2.5965 s and 45.6565 -> 45.3140 s; no large or universal speed advantage is established.",
+          "source": [
+            {
+              "path": ".github/workflows/verify.yml",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/.github/workflows/verify.yml"
+            },
+            {
+              "path": "examples/source_capability/compare.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/examples/source_capability/compare.py"
+            },
+            {
+              "path": "examples/autocad_benchmark/run.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/examples/autocad_benchmark/run.py"
+            },
+            {
+              "path": "tests/test_s_upstream_benchmark.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_s_upstream_benchmark.py"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/agent-b4c-ci-jobs.json",
+            "performance-b4c0466/report.json",
+            "v8-b4c0466/report.json",
+            "windows-native-b4c0466.xml",
+            "windows-native-b4c0466.environment.json",
+            "reviewer-rubric/final-run-validation-b4c0466.json"
+          ]
+        },
+        {
+          "id": "S1",
+          "name": "Safe defaults and actual protocol boundaries",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Default workspace/path, read-only and operation scopes are enforced; raw CAD/script execution is opt-in. Real HTTP requests verify authentication, origin/host, input/framing and no-write postconditions, including abrupt Windows reset recovery.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Explicitly enabled scripts are trusted operator code with the operator's privileges; they are not represented as a hostile-code sandbox.",
+          "source": [
+            {
+              "path": "src/agentcad/http_api.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/http_api.py"
+            },
+            {
+              "path": "src/agentcad/guards.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/guards.py"
+            },
+            {
+              "path": "tests/test_security.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_security.py"
+            },
+            {
+              "path": "tests/test_x_http_security.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_x_http_security.py"
+            },
+            {
+              "path": "tests/test_g_interfaces.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_g_interfaces.py"
+            },
+            {
+              "path": "src/agentcad/policy.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/policy.py"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/agent-b4c-ci-jobs.json",
+            "windows-native-b4c0466.xml"
+          ]
+        },
+        {
+          "id": "S2",
+          "name": "Concurrency and long-running recovery",
+          "score": 5,
+          "max_score": 5,
+          "basis": "OS file locks survive old timestamps and cannot be stolen from a live writer; killed-child release is checked. Cancellation retains serialization while work is active, native/subprocess timeouts have bounded outcomes and observable artifacts, and checkpoint recovery preserves state.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Not every running thread can be forcibly killed. Recovery and timeout boundaries are stated without claiming hostile-process containment.",
+          "source": [
+            {
+              "path": "src/agentcad/locking.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/locking.py"
+            },
+            {
+              "path": "src/agentcad/worker.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/src/agentcad/worker.py"
+            },
+            {
+              "path": "tests/test_z_locking.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_z_locking.py"
+            },
+            {
+              "path": "tests/test_p_busy_files.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_p_busy_files.py"
+            },
+            {
+              "path": "tests/test_r_part_scripts.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_r_part_scripts.py"
+            },
+            {
+              "path": "tests/test_t_workflow_guards.py",
+              "url": "https://github.com/lizaixi01/AgentCAD/blob/b4c04669238e771a0888114f1af3260d7c371834/tests/test_t_workflow_guards.py"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/agent-b4c-ci-jobs.json",
+            "windows-native-b4c0466.xml"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "AutoCAD MCP Pro",
+      "repository": "U-C4N/Autocad-MCP",
+      "product_sha": "58a05ddfc34a9832c626e82cd88ecdce8e16a62a",
+      "source_url": "https://github.com/U-C4N/Autocad-MCP/tree/58a05ddfc34a9832c626e82cd88ecdce8e16a62a",
+      "status": "local_review_complete",
+      "total_score": 96,
+      "max_score": 100,
+      "categories": [
+        {
+          "id": "F",
+          "name": "Functional CAD coverage",
+          "weight": 25,
+          "score": 24,
+          "item_ids": [
+            "F1",
+            "F2",
+            "F3",
+            "F4",
+            "F5"
+          ]
+        },
+        {
+          "id": "C",
+          "name": "Correctness and delivery",
+          "weight": 20,
+          "score": 20,
+          "item_ids": [
+            "C1",
+            "C2",
+            "C3",
+            "C4"
+          ]
+        },
+        {
+          "id": "B",
+          "name": "Backends and platforms",
+          "weight": 15,
+          "score": 15,
+          "item_ids": [
+            "B1",
+            "B2",
+            "B3"
+          ]
+        },
+        {
+          "id": "E",
+          "name": "Engineering production",
+          "weight": 15,
+          "score": 15,
+          "item_ids": [
+            "E1",
+            "E2",
+            "E3"
+          ]
+        },
+        {
+          "id": "T",
+          "name": "Tests and maintenance",
+          "weight": 15,
+          "score": 14,
+          "item_ids": [
+            "T1",
+            "T2",
+            "T3"
+          ]
+        },
+        {
+          "id": "S",
+          "name": "Security and operations",
+          "weight": 10,
+          "score": 8,
+          "item_ids": [
+            "S1",
+            "S2"
+          ]
+        }
+      ],
+      "items": [
+        {
+          "id": "F1",
+          "name": "Geometry/measurement",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Primitives, curved polylines and hatch islands are measured from read-back entities; actual AutoCAD verify smoke checks two loops and 6000-100*pi area.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "The 5 is bounded to supported 2D geometry; headless REGION/3D booleans remain explicitly unsupported.",
+          "source": [
+            {
+              "path": "tests/test_hatch_depth.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_hatch_depth.py"
+            },
+            {
+              "path": "tests/test_entity_measure.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_entity_measure.py"
+            },
+            {
+              "path": "tests/test_entity_creation.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_entity_creation.py"
+            },
+            {
+              "path": "benchmarks/results/live/verify.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/verify.json"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "F2",
+          "name": "Editing",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Transforms/corners/arrays and preview guards have saved-file and boundary tests. Actual operator edits move revision and invalidate an old preview.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "No deduction for unavailable industry features outside this editing contract.",
+          "source": [
+            {
+              "path": "tests/test_entity_edit.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_entity_edit.py"
+            },
+            {
+              "path": "tests/test_entity_corner_ops.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_entity_corner_ops.py"
+            },
+            {
+              "path": "tests/test_change_preview.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_change_preview.py"
+            },
+            {
+              "path": "benchmarks/results/live/operator_edits.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/operator_edits.json"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "F3",
+          "name": "Annotation/styles",
+          "score": 4,
+          "max_score": 5,
+          "basis": "Real dimensions, numeric fits/tolerances, styles and live read-back exist; style value validation precedes writes.",
+          "deduction": {
+            "points": 1,
+            "reason": "Withhold 1: headless dimstyle_modify leaves the existing DIMENSION rendered block unchanged and returns rerender_required. The displayed post-edit result remains incomplete until an additional redraw; transparency is not completion."
+          },
+          "scope_and_limits": "See the deduction for the supported workflow and the point not earned.",
+          "source": [
+            {
+              "path": "backends/ezdxf_backend.py",
+              "line": 8821,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/backends/ezdxf_backend.py#L8821"
+            },
+            {
+              "path": "tests/test_dimension_tolerances.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_dimension_tolerances.py"
+            },
+            {
+              "path": "tests/test_styles.py",
+              "line": 107,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_styles.py#L107"
+            },
+            {
+              "path": "benchmarks/results/live/settings.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/settings.json"
+            },
+            {
+              "path": "README.md",
+              "line": 440,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/README.md#L440"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "F4",
+          "name": "Organization/exchange",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Blocks/attributes, layouts/page setups, native TABLE, DWG/DXF and exported page dimensions have headless regression and actual COM workflow evidence.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Portable layer-state XRECORD is not AutoCAD Layer States Manager integration; it is accurately scoped.",
+          "source": [
+            {
+              "path": "tests/test_block_insert_attributes.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_block_insert_attributes.py"
+            },
+            {
+              "path": "tests/test_page_setup.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_page_setup.py"
+            },
+            {
+              "path": "tests/test_batch_plot.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_batch_plot.py"
+            },
+            {
+              "path": "benchmarks/results/live/settings.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/settings.json"
+            },
+            {
+              "path": "benchmarks/results/live/mech.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/mech.json"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "F5",
+          "name": "Domains",
+          "score": 5,
+          "max_score": 5,
+          "basis": "P&ID, mechanical views/BOM, architectural rooms/openings and foreign understanding/takeoff each have actual native smoke results and broader synthetic behavioral cases.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Takeoff is explicitly a provisional estimate; no universal foreign-office vocabulary or obstacle-avoiding router is credited.",
+          "source": [
+            {
+              "path": "benchmarks/results/live/pid.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/pid.json"
+            },
+            {
+              "path": "benchmarks/results/live/mech.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/mech.json"
+            },
+            {
+              "path": "benchmarks/results/live/arch.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/arch.json"
+            },
+            {
+              "path": "benchmarks/results/live/understand.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/understand.json"
+            },
+            {
+              "path": "tests/test_understand_network.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_understand_network.py"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "C1",
+          "name": "Transactions",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Batch rollback, checkpoint closure, previews and document identity have adversarial tests; live switch/refusal and untouched documents were checked.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "In-memory operation IDs do not survive restart; no durable replay-id claim is credited. Existing checkpoint/transaction contract has independent postconditions.",
+          "source": [
+            {
+              "path": "tests/test_batch_checkpoint_close.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_batch_checkpoint_close.py"
+            },
+            {
+              "path": "tests/test_cancel_rollbacks.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_cancel_rollbacks.py"
+            },
+            {
+              "path": "tests/test_change_preview.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_change_preview.py"
+            },
+            {
+              "path": "benchmarks/results/live/document.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/document.json"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "C2",
+          "name": "Intent/geometry",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Requirements bind to actual features and separately report dimension mismatches. Saved artifact tampering, ambiguous rebind and source mismatch are checked.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "A spline/tilted plane or ambiguous binding is unsupported/unknown, never a pass.",
+          "source": [
+            {
+              "path": "tests/test_verification_artifact.py",
+              "line": 440,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_verification_artifact.py#L440"
+            },
+            {
+              "path": "tests/test_verification_measure.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_verification_measure.py"
+            },
+            {
+              "path": "engineering/verification/artifact.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/engineering/verification/artifact.py"
+            },
+            {
+              "path": "benchmarks/results/live/verify.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/verify.json"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "C3",
+          "name": "Delivery",
+          "score": 5,
+          "max_score": 5,
+          "basis": "All-space and block-definition parity, source identification, manifest hashes and requirements on reopened delivery are checked, including real AutoCAD DXF export and read-only DWG verification.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Parity compares two exports and cannot see content both exports lose; measured requirements and explicit scope qualify the claim. No all-format semantic-equivalence claim is credited.",
+          "source": [
+            {
+              "path": "engineering/delivery.py",
+              "line": 233,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/engineering/delivery.py#L233"
+            },
+            {
+              "path": "engineering/delivery.py",
+              "line": 288,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/engineering/delivery.py#L288"
+            },
+            {
+              "path": "engineering/delivery.py",
+              "line": 323,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/engineering/delivery.py#L323"
+            },
+            {
+              "path": "tests/test_delivery_parity.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_delivery_parity.py"
+            },
+            {
+              "path": "benchmarks/results/live/verify.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/verify.json"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "C4",
+          "name": "Foreign/abnormal inputs",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Corruption, incomplete QA scans, unsupported capabilities, lost source binding and external operator edits refuse or report incomplete rather than silently succeed.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Damaged DXF recovery is absent, but the declared behavior is refusal while preserving the open document, which is valid.",
+          "source": [
+            {
+              "path": "tests/test_qa_scan.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_qa_scan.py"
+            },
+            {
+              "path": "tests/test_capability_refusal.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_capability_refusal.py"
+            },
+            {
+              "path": "tests/test_verification_artifact.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_verification_artifact.py"
+            },
+            {
+              "path": "benchmarks/results/live/operator_edits.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/operator_edits.json"
+            },
+            {
+              "path": "benchmarks/results/published/autocad-mcp-pro.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/published/autocad-mcp-pro.json"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "B1",
+          "name": "Backend contract",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Typed capability refusal, capability maps/contract parity, discovery, missing dependencies and both native/headless paths are evidenced.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "No credit for untested BricsCAD/ZWCAD/GstarCAD ProgIDs; these are outside the verified AutoCAD contract.",
+          "source": [
+            {
+              "path": "backends/capability.py",
+              "line": 75,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/backends/capability.py#L75"
+            },
+            {
+              "path": "tests/test_capability_contract.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_capability_contract.py"
+            },
+            {
+              "path": "tests/test_capability_refusal.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_capability_refusal.py"
+            },
+            {
+              "path": "benchmarks/results/live/settings.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/settings.json"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "B2",
+          "name": "Native interoperability",
+          "score": 5,
+          "max_score": 5,
+          "basis": "AutoCAD 2026 live reports cover dimensions, hatch, native TABLE/sections, P&ID metadata, rooms, page dimensions, DWG and saved-artifact tampering.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Live source 13499fe is valid at 58a05dd: only docs/results/test-extra-skips changed after that source; product boundary unchanged.",
+          "source": [
+            {
+              "path": "benchmarks/results/live/verify.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/verify.json"
+            },
+            {
+              "path": "benchmarks/results/live/settings.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/settings.json"
+            },
+            {
+              "path": "benchmarks/results/live/mech.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/mech.json"
+            },
+            {
+              "path": "benchmarks/results/live/pid.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/pid.json"
+            },
+            {
+              "path": "benchmarks/results/live/arch.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/arch.json"
+            },
+            {
+              "path": "benchmarks/results/live/understand.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/understand.json"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/pro-compare-live.json"
+          ]
+        },
+        {
+          "id": "B3",
+          "name": "Platforms",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Completed locked CI and release tests run Windows 3.11 and Linux 3.11/3.12; actual AutoCAD live run uses Windows/Python 3.13.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": ".NET/AutoCAD on non-Windows is not inferred from headless CI.",
+          "source": [
+            {
+              "path": "benchmarks/results/live/verify.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/verify.json"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/pro-ci-jobs.json",
+            "reviewer-rubric/pro-release-jobs.json"
+          ]
+        },
+        {
+          "id": "E1",
+          "name": "Standard data",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Published source editions/table locators, supported ranges, non-interpolation, independently formula-checked fit tables and explicit empty-data refusals exist.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established for the supported common standards-data contract. Empty additional feature tables are not themselves a deduction."
+          },
+          "scope_and_limits": "Supported fasteners/bearings and numerical fits have bounded sourced tables, out-of-range refusal and independent formula/boundary tests. Additional DIN 471/472, DIN 509, DIN 332 and ISO 3601-2 feature tables are explicitly empty/refused: no working capability is credited for them, but the same optional feature coverage is not required of AgentCAD. Published table provenance is evidence, not product certification.",
+          "source": [
+            {
+              "path": "engineering/mech/standards/coverage.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/engineering/mech/standards/coverage.py"
+            },
+            {
+              "path": "engineering/mech/standards/fasteners.py",
+              "line": 3,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/engineering/mech/standards/fasteners.py#L3"
+            },
+            {
+              "path": "engineering/fits.py",
+              "line": 1,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/engineering/fits.py#L1"
+            },
+            {
+              "path": "tests/test_standards_coverage_manifest.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_standards_coverage_manifest.py"
+            },
+            {
+              "path": "README.md",
+              "line": 387,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/README.md#L387"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "E2",
+          "name": "Drawing production",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Part model, sections, chain dimensions, frame/titleblock/BOM and linked balloons have saved/workflow checks and inspected published mechanical/architectural renderings; actual native mech smoke confirms sections and TABLE.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Visual inspection confirms usable arrangement for supplied cases, not every arbitrary model or automatic drafting compliance.",
+          "source": [
+            {
+              "path": "docs/assets/mech-showcase.png",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/docs/assets/mech-showcase.png"
+            },
+            {
+              "path": "docs/assets/arch-showcase.png",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/docs/assets/arch-showcase.png"
+            },
+            {
+              "path": "scripts/render_readme_mech.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/scripts/render_readme_mech.py"
+            },
+            {
+              "path": "tests/test_mech_sections.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_mech_sections.py"
+            },
+            {
+              "path": "benchmarks/results/live/mech.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/mech.json"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "E3",
+          "name": "Domain loop",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Room area, P&ID topology, BOM/balloon linkage and takeoff truth are read from drawing geometry; criticism enters gates. Extra independent arc/chord counterexample remains two components.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Foreign interpretation stays confidence-scoped; no installed cable/pipe length is claimed.",
+          "source": [
+            {
+              "path": "tests/test_arch_rooms.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_arch_rooms.py"
+            },
+            {
+              "path": "tests/test_pid_critique.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_pid_critique.py"
+            },
+            {
+              "path": "tests/test_sheet_bom.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_sheet_bom.py"
+            },
+            {
+              "path": "tests/test_understand_network.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_understand_network.py"
+            },
+            {
+              "path": "benchmarks/results/live/understand.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/understand.json"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/repro_pro_arc_network-58a05dd.json"
+          ]
+        },
+        {
+          "id": "T1",
+          "name": "Behavioral regressions",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Published completed fixed-source runs support interface, geometry, integration, native and adversarial tests; behavior assertions rather than count support this score.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "The absolute test count is not used as a multiplier or score input.",
+          "source": [
+            {
+              "path": "tests/test_cancel_safety.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_cancel_safety.py"
+            },
+            {
+              "path": "tests/test_verification_artifact.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_verification_artifact.py"
+            },
+            {
+              "path": "benchmarks/results/live/verify.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/verify.json"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/pro-ci-jobs.json",
+            "reviewer-rubric/pro-release-jobs.json"
+          ]
+        },
+        {
+          "id": "T2",
+          "name": "Reproducibility",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Locked dependency graph, fixed evaluator/product references, version/dirty-state/environment in live harness, repeatable generators and document-number gate exist.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Private plant drawings are not treated as publicly reproducible fixtures; public synthetic and native smoke workflows supply reproducibility.",
+          "source": [
+            {
+              "path": "uv.lock",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/uv.lock"
+            },
+            {
+              "path": "benchmarks/results/live/verify.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/verify.json"
+            },
+            {
+              "path": ".github/workflows/release.yml",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/.github/workflows/release.yml"
+            },
+            {
+              "path": "scripts/check_doc_numbers.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/scripts/check_doc_numbers.py"
+            },
+            {
+              "path": "tests/test_release_consistency.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_release_consistency.py"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "T3",
+          "name": "Continuous verification",
+          "score": 4,
+          "max_score": 5,
+          "basis": "Completed fixed-SHA CI/release correctness A/B gate and published same-machine version performance comparison exist.",
+          "deduction": {
+            "points": 1,
+            "reason": "Withhold 1: published 1.7 performance head is efd33d0, 17 commits before 58a05dd, with changes in ezdxf/QA/delivery/verification paths. No exact-final-boundary same-machine perf rerun was located. Floating-deps failure is only a version-provenance assertion and is not counted as a behavior regression."
+          },
+          "scope_and_limits": "See the deduction for the supported workflow and the point not earned.",
+          "source": [
+            {
+              "path": ".github/workflows/release.yml",
+              "line": 63,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/.github/workflows/release.yml#L63"
+            },
+            {
+              "path": "benchmarks/results/published/perf-v1.6.0-vs-v1.7.0.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/published/perf-v1.6.0-vs-v1.7.0.json"
+            }
+          ],
+          "evidence_paths": [
+            "reviewer-rubric/pro-runs.json",
+            "reviewer-rubric/pro-release-jobs.json",
+            "reviewer-rubric/pro-compare-perf.json"
+          ]
+        },
+        {
+          "id": "S1",
+          "name": "Defaults/security",
+          "score": 3,
+          "max_score": 5,
+          "basis": "Configured path checks, command/LISP denylist, remote-bind guard and token wiring have ordinary/adversarial tests.",
+          "deduction": {
+            "points": 2,
+            "reason": "Withhold 2: default allowed_paths is empty and raw command/LISP availability relies on a denylist, so default operation/path scope is incomplete. HTTP tests found are auth construction/bind wiring, not saved real-request refusal/no-write postconditions. No demonstrated exploit is asserted."
+          },
+          "scope_and_limits": "See the deduction for the supported workflow and the point not earned.",
+          "source": [
+            {
+              "path": "config.py",
+              "line": 55,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/config.py#L55"
+            },
+            {
+              "path": "security.py",
+              "line": 64,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/security.py#L64"
+            },
+            {
+              "path": "server.py",
+              "line": 13311,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/server.py#L13311"
+            },
+            {
+              "path": "tests/test_security.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_security.py"
+            },
+            {
+              "path": "tests/test_http_auth.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_http_auth.py"
+            },
+            {
+              "path": "README.md",
+              "line": 409,
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/README.md#L409"
+            }
+          ],
+          "evidence_paths": []
+        },
+        {
+          "id": "S2",
+          "name": "Long tasks",
+          "score": 5,
+          "max_score": 5,
+          "basis": "Leases survive cancellation; bounded outcomes, quarantine and detached read behavior are tested beyond v8; real native document identity/switch/re-attachment is verified.",
+          "deduction": {
+            "points": 0,
+            "reason": "No unresolved point-limiting gap was established within the stated, verified contract."
+          },
+          "scope_and_limits": "Threads cannot be killed; quarantine/unknown-commit and shutdown boundaries are explicit. This is recovery behavior, not a hostile-code sandbox.",
+          "source": [
+            {
+              "path": "backends/quarantine.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/backends/quarantine.py"
+            },
+            {
+              "path": "tests/test_cancel_safety.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_cancel_safety.py"
+            },
+            {
+              "path": "tests/test_cancel_safety_com.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_cancel_safety_com.py"
+            },
+            {
+              "path": "tests/test_lease_followups.py",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/tests/test_lease_followups.py"
+            },
+            {
+              "path": "benchmarks/results/live/document.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/live/document.json"
+            },
+            {
+              "path": "benchmarks/results/published/autocad-mcp-pro.json",
+              "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/results/published/autocad-mcp-pro.json"
+            }
+          ],
+          "evidence_paths": []
+        }
+      ]
+    }
+  ],
+  "consistency_notes": [
+    "The provisional Pro E1 deduction for extra empty feature tables was removed at final common-scope review. A product is not penalized merely for exposing additional honest refusals that the other product does not offer. The previous provisional file is retained for audit.",
+    "AgentCAD E1 loses one point for an offered, emitted counterbore value whose standard reference remains unverified. AgentCAD E2 loses one point for missing critical annotations of already-specified model geometry in the actual production template.",
+    "The previously demonstrated AgentCAD ARC false connectivity and block-dimension precision bypass were fixed and rechecked at b4c0466. The temporary C2/E3 caps no longer apply.",
+    "Pro native source 13499fe888120ed929cc0c3b0afe303b1de83a74 remains applicable: its two subsequent commits to the fixed source only changed docs/results/tests, not the relevant product boundary.",
+    "Pro's published performance head efd33d0da26c7e44ac43413c0d2a1f7a36e8fba8 predates 17 subsequent commits affecting relevant source. It is credited as a version-comparison mechanism, not an exact-final performance rerun.",
+    "The Pro floating-dependency failure is a recorded ezdxf-version provenance assertion, not a demonstrated geometry regression."
+  ],
+  "completed_at": "2026-10-30",
+  "evidence_summary": {
+    "agentcad": {
+      "product_sha": "b4c04669238e771a0888114f1af3260d7c371834",
+      "v8": {
+        "matrix": "v8",
+        "attempted": 31,
+        "passed": 31,
+        "unsupported": 0,
+        "not_run": 0,
+        "environment_blocked": 0,
+        "product_dirty": false,
+        "source_files": 67,
+        "evidence_path": "v8-b4c0466/report.json",
+        "boundary": "Local independent adapter; not an upstream-certified leaderboard submission. Partial gates score 0."
+      },
+      "windows_native": {
+        "collected": 693,
+        "passed": 685,
+        "failures_or_errors": 0,
+        "skipped": 8,
+        "elapsed_seconds": 544.92,
+        "skip_reason": "All 8 skips require CadQuery, which was not installed; those cases earn no execution credit.",
+        "backend_evidence": {
+          "autocad_version": "26.0.60.0.0",
+          "autocad": "AutoCAD 2027 accoreconsole",
+          "freecad": "1.1.4 configured via AGENTCAD_FREECAD; relevant tests did not skip",
+          "cadquery": "not installed; eight skipped tests not credited"
+        },
+        "evidence_path": "windows-native-b4c0466.xml",
+        "environment_evidence_path": "windows-native-b4c0466.environment.json",
+        "junit_sha256": "64d893298d32004625a6dfbc1063563fc4f6799747f0c3b1667a482148fa84c0",
+        "independent_check": "reviewer-rubric/final-run-validation-b4c0466.json"
+      },
+      "ci": {
+        "run_url": "https://github.com/lizaixi01/AgentCAD/actions/runs/41049567713",
+        "product_head_sha": "b4c04669238e771a0888114f1af3260d7c371834",
+        "conclusion": "success",
+        "lanes": [
+          {
+            "evidence_path": "reviewer-standards/ci-run-41049567713/evidence-macos-latest-py3.12/pytest.xml",
+            "lane": "evidence-macos-latest-py3.12",
+            "collected": 693,
+            "passed": 549,
+            "skipped": 144,
+            "failures_or_errors": 0,
+            "same_test_ids_as_native": true
+          },
+          {
+            "evidence_path": "reviewer-standards/ci-run-41049567713/evidence-ubuntu-latest-py3.10/pytest.xml",
+            "lane": "evidence-ubuntu-latest-py3.10",
+            "collected": 693,
+            "passed": 528,
+            "skipped": 165,
+            "failures_or_errors": 0,
+            "same_test_ids_as_native": true
+          },
+          {
+            "evidence_path": "reviewer-standards/ci-run-41049567713/evidence-ubuntu-latest-py3.12/pytest.xml",
+            "lane": "evidence-ubuntu-latest-py3.12",
+            "collected": 693,
+            "passed": 549,
+            "skipped": 144,
+            "failures_or_errors": 0,
+            "same_test_ids_as_native": true
+          },
+          {
+            "evidence_path": "reviewer-standards/ci-run-41049567713/evidence-windows-latest-py3.11/pytest.xml",
+            "lane": "evidence-windows-latest-py3.11",
+            "collected": 693,
+            "passed": 600,
+            "skipped": 93,
+            "failures_or_errors": 0,
+            "same_test_ids_as_native": true
+          }
+        ],
+        "job_metadata_path": "reviewer-rubric/agent-b4c-ci-jobs.json",
+        "run_metadata_path": "ci-run-41049567713.json"
+      },
+      "native_showcase": {
+        "source_commit": "b4c04669238e771a0888114f1af3260d7c371834",
+        "native": true,
+        "calls": 29,
+        "checks": {
+          "native_A3_page_viewport_1to1": "passed",
+          "mechanical": "passed",
+          "architecture": "passed",
+          "pid": "passed",
+          "tolerance": "passed"
+        },
+        "evidence_path": "showcase-b4c0466/report.json",
+        "independent_visual_review": "reviewer-rubric/agent-visual-review-b4c0466.json",
+        "pdf_boundary": "The inspected mechanical PDF is headless PDF output from a DXF that was saved, reopened and activated by real AutoCAD. It is not a native AutoCAD PDF plot."
+      },
+      "version_performance": {
+        "correctness_passed": true,
+        "observations": 24,
+        "warmups": 1,
+        "repetitions": 5,
+        "baseline": "a713426e1e2f271dd2db068cd165b7d020604700",
+        "candidate": "b4c04669238e771a0888114f1af3260d7c371834",
+        "summary": [
+          {
+            "count": 2000,
+            "metric": "create_s",
+            "median": {
+              "baseline": 1.3685919000017748,
+              "candidate": 1.314248899998347
+            },
+            "candidate_over_baseline": 0.9602927651381268
+          },
+          {
+            "count": 2000,
+            "metric": "export_reopen_check_s",
+            "median": {
+              "baseline": 1.3928291000011086,
+              "candidate": 1.2834301000002597
+            },
+            "candidate_over_baseline": 0.9214555468429244
+          },
+          {
+            "count": 2000,
+            "metric": "total_s",
+            "median": {
+              "baseline": 2.777214900001127,
+              "candidate": 2.596524499997031
+            },
+            "candidate_over_baseline": 0.9349382721502674
+          },
+          {
+            "count": 10000,
+            "metric": "create_s",
+            "median": {
+              "baseline": 22.597901699999056,
+              "candidate": 22.128745400001208
+            },
+            "candidate_over_baseline": 0.9792389441185211
+          },
+          {
+            "count": 10000,
+            "metric": "export_reopen_check_s",
+            "median": {
+              "baseline": 22.9953480999975,
+              "candidate": 22.98569679999855
+            },
+            "candidate_over_baseline": 0.9995802933725125
+          },
+          {
+            "count": 10000,
+            "metric": "total_s",
+            "median": {
+              "baseline": 45.65650520000054,
+              "candidate": 45.31395110000085
+            },
+            "candidate_over_baseline": 0.9924971458393691
+          }
+        ],
+        "scope": "Direct Runtime, 2D lines only; includes saved validation and DXF roundtrip; no native CAD, MCP or model latency",
+        "evidence_path": "performance-b4c0466/report.json",
+        "meaning": "A same-machine version check with saved-output correctness assertions, not a cross-product timing race or a large-speedup claim."
+      },
+      "independent_headless_checks": {
+        "targeted_tests_passed": 59,
+        "skipped": 0,
+        "failed": 0,
+        "junit_path": "reviewer-rubric/recheck-b4c0466.xml",
+        "arc_and_missing_tag_counterexamples": "reviewer-rubric/repro_foreign_network-b4c0466.json",
+        "actual_rendered_dimension_edit": "reviewer-rubric/rendered-edit-b4c0466/report.json",
+        "reproduction_scripts": [
+          "reviewer-rubric/repro_foreign_network.py",
+          "reviewer-rubric/verify_rendered_edit.py"
+        ]
+      },
+      "source_binding": {
+        "files": 67,
+        "raw_hashes_match_v8_showcase_and_native_environment": true,
+        "canonical_git_blob_comparison": true,
+        "evidence_path": "reviewer-rubric/source-boundary-b4c0466.json"
+      },
+      "combined_verification_summary": "verification-summary.json"
+    },
+    "pro": {
+      "product_sha": "58a05ddfc34a9832c626e82cd88ecdce8e16a62a",
+      "fixed_ci_run_url": "https://github.com/U-C4N/Autocad-MCP/actions/runs/40307188701",
+      "release_run_url": "https://github.com/U-C4N/Autocad-MCP/actions/runs/40308291799",
+      "benchmark_run_url": "https://github.com/U-C4N/Autocad-MCP/actions/runs/40312179908",
+      "native_source_sha": "13499fe888120ed929cc0c3b0afe303b1de83a74",
+      "native_boundary_check": "reviewer-rubric/pro-compare-live.json",
+      "native_source_applicability": "The two subsequent commits to the pinned product changed documentation, results and test-extra skips, with no relevant product-source change.",
+      "native_environment": "Published upstream AutoCAD 2026 / Windows / Python 3.13.15 records; not a new native run by this reviewer.",
+      "performance_head_sha": "efd33d0da26c7e44ac43413c0d2a1f7a36e8fba8",
+      "performance_boundary_check": "reviewer-rubric/pro-compare-perf.json",
+      "independent_headless_counterexample": "reviewer-rubric/repro_pro_arc_network-58a05dd.json",
+      "floating_dependencies": {
+        "run_url": "https://github.com/U-C4N/Autocad-MCP/actions/runs/40325975963",
+        "status": "failed",
+        "reason": "Published-report ezdxf 1.4.4 provenance assertion versus floating installation 1.4.5.",
+        "interpretation": "Not counted as a demonstrated geometry/behavior regression.",
+        "evidence_path": "reviewer-rubric/pro-floating-failure.txt"
+      },
+      "independent_reproduction_script": "reviewer-rubric/repro_pro_arc_network.py"
+    }
+  },
+  "review_limitations": [
+    "The product implementation and most native run records were produced by their respective projects. This reviewer inspected source, output records, images and provenance, and independently ran the stated headless checks; it did not independently execute either native CAD application.",
+    "This is a source-and-evidence assessment of fixed revisions, not a controlled shared-host native or model/agent comparison.",
+    "A higher total under these local anchors supports only this two-product local assessment. It does not establish an upstream-approved or worldwide leaderboard position.",
+    "Both products retain explicitly bounded engineering, drawing and security behavior. Items at 5 mean the required evidence level was met within that useful contract, not that every CAD feature is implemented or every future input is correct."
+  ],
+  "evidence_index": [
+    {
+      "path": "ci-run-41049567713.json",
+      "bytes": 331,
+      "sha256": "5c1fc49d6b76815b4baa9334eff0f38dab6ce52825b8cfe447326abe3fcc9d41"
+    },
+    {
+      "path": "performance-b4c0466.log",
+      "bytes": 1048,
+      "sha256": "ed9d7d7bdb9d2f546bc3b27b9ad3d56272d86e4d192b9dde7908dd2faf85aa15"
+    },
+    {
+      "path": "performance-b4c0466/report.json",
+      "bytes": 27498,
+      "sha256": "a2f32fda1217d868997a08bdd28b88de96031f70b3890f3038c826fc6d88a7e7"
+    },
+    {
+      "path": "reviewer-rubric/FINAL-REVIEW.md",
+      "bytes": 2784,
+      "sha256": "aef29b26c362847a8ec99d35de570049e86739e9d1a4b385ae27e6da386aa063"
+    },
+    {
+      "path": "reviewer-rubric/REVIEW-STATUS.md",
+      "bytes": 8481,
+      "sha256": "bdd2c723b69ac23687ca508a8b8573526764f66504148ef3864a0638103392ad"
+    },
+    {
+      "path": "reviewer-rubric/agent-b4c-ci-jobs.json",
+      "bytes": 6775,
+      "sha256": "d9443160fd68822f1e831085357a6f4401522e0805818e2db9f28494dd03bdf2"
+    },
+    {
+      "path": "reviewer-rubric/agent-reproduction-environment.json",
+      "bytes": 503,
+      "sha256": "c0c403449d1d79f30af1dc37694cf741a6314d968ebbc58dc70a11f57e98dda8"
+    },
+    {
+      "path": "reviewer-rubric/agent-visual-review-b4c0466.json",
+      "bytes": 1981,
+      "sha256": "1b53f65fa5e0072efb197757e78bd9f9f6b946cedf8d392e4fc9dcbb052d8668"
+    },
+    {
+      "path": "reviewer-rubric/assessment.pending.json",
+      "bytes": 84718,
+      "sha256": "6878a642c8395a70719aae957eaefcd4459753c9bea566ecd53102ec9b24cd25"
+    },
+    {
+      "path": "reviewer-rubric/final-run-validation-b4c0466.json",
+      "bytes": 4409,
+      "sha256": "d4829634e7115be1b99c9741ea0371d58778c3286f8566290efbf5c2224b153b"
+    },
+    {
+      "path": "reviewer-rubric/pro-ci-jobs.json",
+      "bytes": 11043,
+      "sha256": "79a6b1599752bc0cd912b04e4d74a5ce2fd20db4631ae91163de3a368649667d"
+    },
+    {
+      "path": "reviewer-rubric/pro-compare-live.json",
+      "bytes": 42328,
+      "sha256": "44b9911b7ae5b51ae3e80d26db0ee39386d88536fe274f67f3b8d26cec2318f4"
+    },
+    {
+      "path": "reviewer-rubric/pro-compare-perf.json",
+      "bytes": 18628,
+      "sha256": "15fe1e5909ea0cd507b6527e88225f30af290870d3c9b113706e24c66cc4f8d5"
+    },
+    {
+      "path": "reviewer-rubric/pro-floating-failure.txt",
+      "bytes": 1019,
+      "sha256": "369ca1a84b0e0b7bbe1647ca0696559202b1ee1012a57b22d9ebed9748ffe43b"
+    },
+    {
+      "path": "reviewer-rubric/pro-floating-jobs.json",
+      "bytes": 2526,
+      "sha256": "cb39cdf70de8d80b98dbadde6d6ae95f0fdd09b7b7ba4e3a4dbcbb54ab63b48b"
+    },
+    {
+      "path": "reviewer-rubric/pro-provisional-rows.json",
+      "bytes": 13391,
+      "sha256": "a8400ab53f5c03d10708b48dd3fd1cc9f452005cfbe478df1c609a75047ddfaa"
+    },
+    {
+      "path": "reviewer-rubric/pro-release-jobs.json",
+      "bytes": 10246,
+      "sha256": "5bbd7ecf817925a389df9e4a2796f5a8588773195f7012eddd3fe21bf8cbe56a"
+    },
+    {
+      "path": "reviewer-rubric/pro-reproduction-environment.json",
+      "bytes": 529,
+      "sha256": "a1d81f247d5ac411252a4eb5921d5eb5dba2ecbf5ea5d6f635d697fa91a1e155"
+    },
+    {
+      "path": "reviewer-rubric/pro-runs.json",
+      "bytes": 1024,
+      "sha256": "d2777b28742b6a6391ffb32cf3c01a0854725be01ac27ce3e07e69905caac755"
+    },
+    {
+      "path": "reviewer-rubric/recheck-b4c0466.xml",
+      "bytes": 8051,
+      "sha256": "f02f3aef73e99a3bebc5ef5c95f2498bf3852ae14eb0fddf9e3510f8b8f89d30"
+    },
+    {
+      "path": "reviewer-rubric/record_environment.py",
+      "bytes": 594,
+      "sha256": "6f4858a4230699ca8521ed0df3c62a33bfb502b769e4b1e78b83ee21fb6c5f4f"
+    },
+    {
+      "path": "reviewer-rubric/rendered-edit-b4c0466/report.json",
+      "bytes": 753,
+      "sha256": "35bad6af8181ef2df52fa572ae9f1c1890bdbdb10c262df5a00c329d7ace1542"
+    },
+    {
+      "path": "reviewer-rubric/repro_foreign_network-25abc96.json",
+      "bytes": 1433,
+      "sha256": "a0d1dea4ef31ced48e4324e00bd6cd53e81210aede1533ed0e4932420d3c514b"
+    },
+    {
+      "path": "reviewer-rubric/repro_foreign_network-b4c0466.json",
+      "bytes": 2452,
+      "sha256": "864ce40cd3c30f5de68f8158f6b1073759350a075ffef360f63633efcc9a8229"
+    },
+    {
+      "path": "reviewer-rubric/repro_foreign_network.py",
+      "bytes": 1592,
+      "sha256": "7038c441d84eec43869e02718dd9824f19e43e5627152bb74e7b5fdceaad4671"
+    },
+    {
+      "path": "reviewer-rubric/repro_pro_arc_network-58a05dd.json",
+      "bytes": 3323,
+      "sha256": "117dc88c791c688299baf132fe8f828d2f72e06334963dd8d837c257156499c4"
+    },
+    {
+      "path": "reviewer-rubric/repro_pro_arc_network.py",
+      "bytes": 940,
+      "sha256": "ec5b134e7679a11ac1ec0c7a4ebc569c95cbf658b48a10f0460c6028ed3c50bc"
+    },
+    {
+      "path": "reviewer-rubric/source-boundary-b4c0466.json",
+      "bytes": 18035,
+      "sha256": "bfb6b1cb75d3aae86b3160ded16870b3fa3ef4789b1326cf8102bac6d1ba6053"
+    },
+    {
+      "path": "reviewer-rubric/verify_rendered_edit.py",
+      "bytes": 2132,
+      "sha256": "7d4389c904318e5a6cada68aca91dff0ac6098fa36b2d9469e115840e2373a13"
+    },
+    {
+      "path": "reviewer-standards/ci-run-41049567713/evidence-macos-latest-py3.12/pytest.xml",
+      "bytes": 114935,
+      "sha256": "362e4ea051e9c8c09644ce0da34fd04f98c5fa0f3316e9796cc394b840fc59c2"
+    },
+    {
+      "path": "reviewer-standards/ci-run-41049567713/evidence-ubuntu-latest-py3.10/pytest.xml",
+      "bytes": 119643,
+      "sha256": "e061f7dccd2747e4aab2ef2ba032bcc82ea5c677c3c725ad560c7b1b9c5507ba"
+    },
+    {
+      "path": "reviewer-standards/ci-run-41049567713/evidence-ubuntu-latest-py3.12/pytest.xml",
+      "bytes": 114733,
+      "sha256": "64bb8f1be014442e05f6f18c2be1f5e00b3ae6948ce49dfbf68f7a3fff1753c3"
+    },
+    {
+      "path": "reviewer-standards/ci-run-41049567713/evidence-windows-latest-py3.11/pytest.xml",
+      "bytes": 102853,
+      "sha256": "27ea15bbf49ad111b0d96dcc36abd1ae8b85d18d9c097f3f918d2428a5fe99c0"
+    },
+    {
+      "path": "showcase-b4c0466.log",
+      "bytes": 52,
+      "sha256": "98cf9a3d627aa5672546e6bf9a348f0be666f365dbe05f0d3f12d4b5187e4329"
+    },
+    {
+      "path": "showcase-b4c0466/mechanical-native.pdf",
+      "bytes": 54400,
+      "sha256": "3b69ba4fb0e628aabfaae5965bc9735224f68a6735486d4f0f9519f6e8edbbbb"
+    },
+    {
+      "path": "showcase-b4c0466/mechanical-native.png",
+      "bytes": 73967,
+      "sha256": "10e81a96913a21704020529075923cd2a9f23f0462c4c0c1db6866b744758b9b"
+    },
+    {
+      "path": "showcase-b4c0466/native-activation/929306c511b0/activated.dxf",
+      "bytes": 158806,
+      "sha256": "ad8abbdbae306b1fa6e5bc3ec6928797f3bd5a6a07b3c539d7f3ed5fc4572680"
+    },
+    {
+      "path": "showcase-b4c0466/report.json",
+      "bytes": 127157,
+      "sha256": "b4c9550d6bf0b4d41cf7f033c70561117c8b4d3322f7c77da8cea8ff077ee7ad"
+    },
+    {
+      "path": "v8-b4c0466.log",
+      "bytes": 2234,
+      "sha256": "321286a363c72a67c9b5903dfa38c53eaf0b53d97876acb9e3c3ffa104887429"
+    },
+    {
+      "path": "v8-b4c0466/report.json",
+      "bytes": 104086,
+      "sha256": "1d801920066123cf02989bd836a82c51a5cc8ccd06a8ebe79654f6f31ccb1ab1"
+    },
+    {
+      "path": "verification-summary.json",
+      "bytes": 105192,
+      "sha256": "ed7b0dc1f52446825f2b8e3dda749b2e77733ee79c7ccccb3f41474dd553f699"
+    },
+    {
+      "path": "windows-native-b4c0466.environment.json",
+      "bytes": 15804,
+      "sha256": "723f5c131f35a70858c3140f24289f1edc4ac697cb5dfc610b8cfe01291fbaad"
+    },
+    {
+      "path": "windows-native-b4c0466.log",
+      "bytes": 854,
+      "sha256": "1c6bbccf58cf20e191c87ad2695aa2e2fd241e63d624b6c5af5486c2478500e4"
+    },
+    {
+      "path": "windows-native-b4c0466.xml",
+      "bytes": 86641,
+      "sha256": "64d893298d32004625a6dfbc1063563fc4f6799747f0c3b1667a482148fa84c0"
+    }
+  ],
+  "audit_history": {
+    "provisional_pro_rows": "reviewer-rubric/pro-provisional-rows.json",
+    "pending_joint_assessment": "reviewer-rubric/assessment.pending.json",
+    "review_log": "reviewer-rubric/REVIEW-STATUS.md",
+    "readable_final": "reviewer-rubric/FINAL-REVIEW.md",
+    "note": "Drafts and failed original counterexamples are retained. Only assessment.json is the final scorecard."
+  }
+}

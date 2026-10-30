@@ -51,6 +51,26 @@ AgentCAD gives the agent a CAD runtime instead of a blank Python file:
 - **Real drawings, not just new ones.** Paper-space layouts, title blocks with attributes, DWG import/export and AutoCAD AUDIT through an optional headless AutoCAD backend.
 - **Safe by default.** Workspace sandbox, read-only mode, operation allow-lists. Scripts (ezdxf for drawings; CadQuery or FreeCAD Part code for 3D parts) run as transactions and are off unless you turn them on.
 
+## Source-capability comparison
+
+**AgentCAD 98/100 · AutoCAD MCP Pro 96/100**, under the same frozen local rubric, reviewed on 2026-10-30. This uses the six categories and weights from Pro's source-capability chart, with 20 published scoring items applied to both pinned products. A separate AI reviewer assessed the source, counterexamples, saved outputs and test evidence; AgentCAD requested and publishes this review.
+
+| Source capability | Weight | AgentCAD `b4c0466` | MCP Pro `58a05dd` |
+|---|---:|---:|---:|
+| Functional coverage | 25 | 25 | 24 |
+| Correctness and delivery | 20 | 20 | 20 |
+| Backends and platforms | 15 | 15 | 15 |
+| Engineering production | 15 | 13 | 15 |
+| Tests and maintenance | 15 | 15 | 14 |
+| Security and operations | 10 | 10 | 8 |
+| **Total** | **100** | **98** | **96** |
+
+Pro's original **93/100** is its **v1.6.0 self-review from 2026-09-24**, using less detailed scoring anchors. It remains a separate historical result. The comparison above establishes a two-point lead under our published local method; it is **not an official upstream ranking or external certification**.
+
+The work repaired strict delivery checks, native tolerances, curved-pipe connectivity, HTTP defaults and process locks, and added sourced dimensional data, locked dependencies and cross-platform CI. Final verification: **685 passed / 8 skipped** locally with AutoCAD and FreeCAD enabled; four completed CI lanes; **31/31** again on the original v8 matrix. Skips are not passes. AgentCAD still loses two points: unverified M14 counterbore data and incomplete automatic manufacturing annotation in the mechanical template.
+
+[Scores, deductions and scope](docs/source-capability-review.md) · [Frozen rubric](docs/source-capability-rubric.md) · [Item-by-item assessment](examples/source_capability/results/2026-10-30/assessment.json) · [Reproduce / retained evidence](examples/source_capability/README.md)
+
 ## AutoCAD MCP benchmark
 
 **100/100 on U-C4N's v8 runtime matrix: 31/31 tasks passed, tied with AutoCAD MCP Pro.** Checked on 2026-10-30: AgentCAD `39fa4b5` and Pro `58a05dd`, using matrix v8 / evaluator v8.1. AgentCAD's run uses the upstream runner and its public MCP interface; the reference was also rerun on this machine.
@@ -64,7 +84,7 @@ AgentCAD gives the agent a CAD runtime instead of a blank Python file:
 
 This is a fixed-task capability benchmark, without an LLM. It is not a speed or same-model success-rate ranking. AgentCAD's estimated discovery schema is **56.3% smaller** (220 vs. 503 tokens); both pass the 2,000-token ceiling, so this earns no extra score.
 
-Pro's **93/100** chart is a separate, upstream-authored **source-review self-assessment** of version 1.6.0. This chart uses the 31-task execution matrix instead. The [scoring explanation, source-review snapshot and current gaps](docs/benchmark-leaderboard.md) keep those two measures separate.
+Pro's **93/100** chart is a separate, upstream-authored **source-review self-assessment** of version 1.6.0. This chart uses the 31-task execution matrix instead. The [historical scoring explanation](docs/benchmark-leaderboard.md) and [new source-capability review](docs/source-capability-review.md) keep the measures and product versions separate.
 
 [Results and pinned sources](docs/assets/mcp-benchmark/data.json) · [31-task report](examples/autocad_benchmark/results/2026-10-30-v8/upstream/agentcad.json) · [Reproduce and inspect the evidence](examples/autocad_benchmark/README.md) · [Upstream submission](https://github.com/U-C4N/Autocad-MCP/pull/15) (pending review)
 
@@ -167,7 +187,7 @@ The fixed [U-C4N v8 execution matrix](docs/comparison-upstream-benchmark-v8.md) 
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
 | 3D parts | Parametric FreeCAD parts (`.FCStd`) through the same tools: sketches, pad, pocket, revolve, holes, fillets, chamfers, shells, patterns, lofts, sweeps, helices, driven by named parameters. Edge and face selections survive edits. STEP/STL export and shaded PNG previews. Needs FreeCAD 1.1 (optional) — see [docs/part-3d.md](docs/part-3d.md) |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | Latest recorded regression: 439 passed, 81 skipped (520 collected). Includes 27 golden cases checked against recorded AutoCAD 2027 behaviour; optional AutoCAD/FreeCAD runs are not implied by the headless result. [Evidence and scope](docs/benchmark-leaderboard.md#图表复现) |
+| Tests | Latest recorded regression at `b4c0466`: 685 passed, 8 skipped (693 collected), with AutoCAD 2027 and FreeCAD 1.1.4 enabled. Eight CadQuery-dependent tests skipped. Windows/Linux/macOS CI results and their optional-backend skips are [reported separately](docs/source-capability-review.md#verification) |
 
 Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial software.
 
