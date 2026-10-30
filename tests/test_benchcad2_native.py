@@ -191,11 +191,20 @@ def test_model_logs_identify_external_tools_and_failed_programs(tmp_path):
     assert stats["unexpected_tools"] == ["command_execution"]
 
 
-def setup_scoring(tmp_path, submitted):
+def setup_scoring(tmp_path, submitted, monkeypatch=None):
     protocol = {"benchcad_sha": runner.BENCH_SHA, "mesh_guard": "0", "threads": runner.shared.THREAD_ENV}
-    tools.dump(tmp_path / "metadata.json", {"benchcad_sha": runner.BENCH_SHA, "scoring_protocol": protocol})
+    environment = {"executable": str(Path(sys.executable).resolve()), "python": "test",
+                   "packages": {"cadquery": {"version": "2.8.0", "manifests": {"RECORD": "abc"}}}}
+    digest = runner.environment_digest(environment)
+    tools.dump(tmp_path / "metadata.json", {"benchcad_sha": runner.BENCH_SHA, "scoring_protocol": protocol,
+                                           "scorer_environment": environment, "scorer_environment_sha256": digest,
+                                           "codex_version": "codex-cli 0.163.0"})
+    if monkeypatch:
+        monkeypatch.setattr(runner, "scorer_environment", lambda python: environment)
     for key in runner.CASE_IDS:
-        tools.dump(tmp_path / key / "oracle.json", {"score": 1, "scoring_protocol": protocol})
+        tools.dump(tmp_path / key / "oracle.json", {"score": 1, "scoring_protocol": protocol,
+                                                  "grading_environment_sha256": digest,
+                                                  "fresh_environment_check": True})
     logs = tmp_path / "task1_case1/attempt-1"
     tools.dump(logs.parent / "run.json", {"status": "completed", "attempt": 1, "submitted": submitted, "logs": str(logs)})
     if submitted:
@@ -207,14 +216,14 @@ def setup_scoring(tmp_path, submitted):
 
 
 def test_missing_answer_is_zero_and_does_not_invoke_the_evaluator(tmp_path, monkeypatch):
-    args, _ = setup_scoring(tmp_path, False)
+    args, _ = setup_scoring(tmp_path, False, monkeypatch)
     monkeypatch.setattr(runner.subprocess, "run", lambda *a, **k: pytest.fail("No submission must not be graded"))
     result = runner.score_one("task1_case1", args)
     assert result["score"] == 0 and result["status"] == "no_submission"
 
 
 def test_evaluator_failure_is_null_and_can_be_retried_offline(tmp_path, monkeypatch):
-    args, protocol = setup_scoring(tmp_path, True)
+    args, protocol = setup_scoring(tmp_path, True, monkeypatch)
     def timeout(*a, **k):
         raise subprocess.TimeoutExpired("scorer", 3600)
     monkeypatch.setattr(runner.subprocess, "run", timeout)
@@ -227,12 +236,15 @@ def test_evaluator_failure_is_null_and_can_be_retried_offline(tmp_path, monkeypa
 
 def test_mixed_scoring_protocols_cannot_produce_a_complete_aggregate(tmp_path):
     args, protocol = setup_scoring(tmp_path, False)
+    digest = runner.read(tmp_path / "metadata.json")["scorer_environment_sha256"]
     for key in runner.CASE_IDS:
         tools.dump(tmp_path / key / "run.json", {"attempt": 1})
-        tools.dump(tmp_path / key / "score.json", {"attempt": 1, "score": 1, "scoring_protocol": protocol})
+        tools.dump(tmp_path / key / "score.json", {"attempt": 1, "score": 1, "scoring_protocol": protocol,
+                                                 "grading_environment_sha256": digest})
     assert runner.summarize(tmp_path)["mean_of_task_means"] == 1
     changed = {**protocol, "mesh_guard": "1"}
-    tools.dump(tmp_path / "task1_case1/score.json", {"attempt": 1, "score": 1, "scoring_protocol": changed})
+    tools.dump(tmp_path / "task1_case1/score.json", {"attempt": 1, "score": 1, "scoring_protocol": changed,
+                                                  "grading_environment_sha256": digest})
     summary = runner.summarize(tmp_path)
     assert not summary["complete"] and summary["mean_of_task_means"] is None
 
@@ -240,9 +252,58 @@ def test_mixed_scoring_protocols_cannot_produce_a_complete_aggregate(tmp_path):
 @pytest.mark.parametrize("value", [float("nan"), float("inf"), -0.1, 1.1])
 def test_nonfinite_or_out_of_range_scores_never_form_an_aggregate(tmp_path, value):
     args, protocol = setup_scoring(tmp_path, False)
+    digest = runner.read(tmp_path / "metadata.json")["scorer_environment_sha256"]
     for key in runner.CASE_IDS:
         tools.dump(tmp_path / key / "run.json", {"attempt": 1})
-        tools.dump(tmp_path / key / "score.json", {"attempt": 1, "score": 1, "scoring_protocol": protocol})
-    (tmp_path / "task1_case1/score.json").write_text(json.dumps({"attempt": 1, "score": value, "scoring_protocol": protocol}))
+        tools.dump(tmp_path / key / "score.json", {"attempt": 1, "score": 1, "scoring_protocol": protocol,
+                                                 "grading_environment_sha256": digest})
+    (tmp_path / "task1_case1/score.json").write_text(json.dumps({"attempt": 1, "score": value, "scoring_protocol": protocol,
+                                                              "grading_environment_sha256": digest}))
     result = runner.summarize(tmp_path)
     assert not result["complete"] and result["mean_of_task_means"] is None
+
+
+def test_changed_scoring_interpreter_is_rejected(tmp_path, monkeypatch):
+    args, _ = setup_scoring(tmp_path, False, monkeypatch)
+    args.bench_python = tmp_path / "other-venv/python.exe"
+    with pytest.raises(ValueError, match="interpreter differs"):
+        runner.score_one("task1_case1", args)
+
+
+@pytest.mark.parametrize("change", ["version", "manifest"])
+def test_changed_scoring_dependencies_are_rejected_before_another_model_episode(tmp_path, monkeypatch, change):
+    args, _ = setup_scoring(tmp_path, False, monkeypatch)
+    metadata = runner.read(tmp_path / "metadata.json")
+    changed = json.loads(json.dumps(metadata["scorer_environment"]))
+    if change == "version":
+        changed["packages"]["cadquery"]["version"] = "2.9.0"
+    else:
+        changed["packages"]["cadquery"]["manifests"]["RECORD"] = "changed"
+    monkeypatch.setattr(runner, "scorer_environment", lambda python: changed)
+    monkeypatch.setattr(runner.subprocess, "check_output", lambda *a, **k: "codex-cli 0.163.0\n")
+    monkeypatch.setattr(runner, "stage", lambda *a: pytest.fail("Changed environment must not start another episode"))
+    with pytest.raises(ValueError, match="dependencies changed"):
+        runner.run_one("task2_case1", args)
+    assert not (tmp_path / "task2_case1/attempt-1/session.json").exists()
+
+
+def test_old_oracles_cannot_validate_a_new_grading_environment(tmp_path, monkeypatch):
+    args, _ = setup_scoring(tmp_path, False, monkeypatch)
+    oracle = tmp_path / "task1_case1/oracle.json"
+    value = runner.read(oracle)
+    value.pop("grading_environment_sha256")
+    value.pop("fresh_environment_check")
+    tools.dump(oracle, value)
+    with pytest.raises(ValueError, match="oracle was not checked"):
+        runner.score_one("task1_case1", args)
+
+
+def test_score_from_a_different_grading_environment_is_not_reused(tmp_path, monkeypatch):
+    args, protocol = setup_scoring(tmp_path, True, monkeypatch)
+    tools.dump(tmp_path / "task1_case1/score.json", {"attempt": 1, "score": 0.9,
+                                                  "scoring_protocol": protocol,
+                                                  "grading_environment_sha256": "wrong environment"})
+    monkeypatch.setattr(runner.subprocess, "run", lambda *a, **k: SimpleNamespace(returncode=0, stdout='{"score":0.7}', stderr=""))
+    result = runner.score_one("task1_case1", args)
+    assert result["score"] == 0.7
+    assert list((tmp_path / "task1_case1").glob("score-previous-*.json"))

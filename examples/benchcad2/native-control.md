@@ -5,7 +5,9 @@ ChatGPT login, the nine development cases, initial images, task briefs, evaluato
 3,600-second / 100-tool-call per-case limits and maximum two model episodes fixed.
 The reference is the original nine AgentCAD + Astra attempts at AgentCAD `2583516`,
 including the T6/case2 connection failure/no-submission zero. Its separate failed
-recovery does not replace that first attempt.
+recovery does not replace that first attempt. The original sealed answers are
+regraded with the same frozen interpreter as the native answers; historical scores
+are preserved alongside those matched-environment scores.
 
 The changed treatment is the complete tool workflow. `native_run.py` exposes one
 MCP transport tool, `execute_python(code, submit=False)`, to the same Codex client.
@@ -46,7 +48,7 @@ the Core leaderboard protocol.
 ## Analysis fixed before model requests
 
 Primary: mean of six task means, using each workflow's original first attempt on
-all nine cases. No submission is zero; evaluator failures are null and must be
+all nine cases, both graded in the frozen scoring environment. No submission is zero; evaluator failures are null and must be
 resolved offline before a complete aggregate. No best-attempt selection or hidden
 submission fallback. Internal Codex connection retries consume the wall budget.
 
@@ -71,7 +73,7 @@ docker --context desktop-linux build -t agentcad-benchcad-native:20261031 exampl
 
 $nativeOut = '<new absolute output directory>'
 $benchSource = '<canonical BenchCAD v2.1 checkout>'
-$benchPython = '<the original staging/scoring interpreter>'
+$benchPython = '<dedicated staging/scoring interpreter with the original pinned dependencies>'
 $agentcadAstra = '<the recorded AgentCAD + Astra output directory>'
 
 .venv\Scripts\python examples/benchcad2/native_run.py prepare --bench-source $benchSource --bench-python $benchPython --reference $agentcadAstra --out $nativeOut
@@ -80,9 +82,20 @@ $agentcadAstra = '<the recorded AgentCAD + Astra output directory>'
 ```
 
 Preparation checks the original metadata, all case hashes, staged input bytes,
-initial image order, task briefs, unchanged 1.0 oracle checks and aligned packages.
-It freezes the source commit, runner/helper hashes and immutable image ID before
-any model request. `run` refuses changed source/settings and never replaces a prior
-attempt. Scoring stays on the original host, pinned source, numerical threads and
+initial image order, task briefs and aligned packages. It reruns nine 1.0 oracle
+checks and grades every original first-attempt AgentCAD answer after verifying its
+published sealed-file hashes. A changed historical score is disclosed, never
+written over the original measurement.
+
+The source commit, runner/helper hashes, immutable image ID and scoring environment
+are frozen before any model request. The grader fingerprint covers its exact
+interpreter path, executable/base-executable hashes, Python/platform, distribution
+versions, METADATA/RECORD hashes and relevant environment settings. Staging/scoring
+use isolated UTF-8 interpreter mode; both the model and scoring entry points reject
+a changed grader. Every fresh oracle and score carries the same fingerprint, and
+mixed-environment results cannot produce a complete aggregate.
+
+`run` refuses changed source/settings and never replaces a prior attempt.
+Scoring stays on the original host, pinned source, numerical threads and
 `BENCHCAD_MESH_GUARD=0` protocol, outside model workbenches. Workbench input edits
 are allowed by native Python and recorded; initial staged hashes remain the control.

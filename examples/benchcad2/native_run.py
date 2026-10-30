@@ -29,6 +29,29 @@ BENCH_SHA = "70b7aaeb3a031851d058252e4ebe4ed30ca41f77"
 CASE_IDS = shared.CASE_IDS
 CONTROL_FIELDS = ("model", "effort", "benchcad_sha", "scoring_protocol", "codex_version",
                   "timeout_s", "tool_call_limit", "jobs")
+SCORER_PROBE = r'''
+import hashlib, importlib.metadata as m, json, os, pathlib, platform, sys
+def sha(path):
+    h=hashlib.sha256()
+    with path.open('rb') as f:
+        for block in iter(lambda:f.read(1048576), b''): h.update(block)
+    return h.hexdigest()
+exe=pathlib.Path(sys.executable).resolve()
+base=pathlib.Path(getattr(sys,'_base_executable',sys.executable)).resolve()
+packages={}
+for d in m.distributions():
+    manifests={str(p):sha(pathlib.Path(d.locate_file(p))) for p in (d.files or [])
+               if p.name in ('METADATA','RECORD') and p.parent.name.endswith('.dist-info')}
+    packages[d.metadata['Name'].lower()]={'version':d.version,'manifests':manifests}
+print(json.dumps({'executable':str(exe),'executable_sha256':sha(exe),
+    'base_executable':str(base),'base_executable_sha256':sha(base),
+    'prefix':str(pathlib.Path(sys.prefix).resolve()),'python':sys.version,
+    'isolated':sys.flags.isolated,'utf8_mode':sys.flags.utf8_mode,
+    'os':platform.system(),'machine':platform.machine(),'packages':packages,
+    'environment':{k:v for k,v in os.environ.items() if
+       (k.startswith('BENCHCAD_') or k in ('ECAD_PURE_PYTHON','OPENBLAS_NUM_THREADS','OMP_NUM_THREADS','MKL_NUM_THREADS','PYTHONHASHSEED','PYTHONPATH'))
+       and not any(s in k.upper() for s in ('KEY','TOKEN','SECRET','PASSWORD','CREDENTIAL','AUTH'))}},sort_keys=True))
+'''
 
 
 def read(path: Path):
@@ -45,6 +68,103 @@ def sha(path: Path) -> str:
 
 def source_sha(path: Path) -> str:
     return subprocess.check_output(["git", "-C", str(path), "rev-parse", "HEAD"], text=True).strip()
+
+
+def scorer_environment(python: Path) -> dict:
+    return json.loads(subprocess.check_output([str(python), "-I", "-X", "utf8", "-c", SCORER_PROBE],
+                                              text=True, encoding="utf-8", timeout=120,
+                                              env=shared.scorer_env()))
+
+
+def environment_digest(environment: dict) -> str:
+    return hashlib.sha256(json.dumps(environment, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+
+
+def verify_scorer(args, metadata: dict) -> str:
+    expected = metadata["scorer_environment"]
+    if Path(args.bench_python).resolve() != Path(expected["executable"]).resolve():
+        raise ValueError("Scoring interpreter differs from the frozen environment")
+    actual = scorer_environment(args.bench_python)
+    digest = environment_digest(actual)
+    if actual != expected or digest != metadata["scorer_environment_sha256"]:
+        raise ValueError("Scoring interpreter or dependencies changed after preflight")
+    return digest
+
+
+def grading_errors(root: Path, metadata: dict) -> list[str]:
+    errors = shared.protocol_errors(root, metadata["scoring_protocol"])
+    digest = metadata["scorer_environment_sha256"]
+    if environment_digest(metadata["scorer_environment"]) != digest:
+        errors.append("Frozen scoring-environment fingerprint is invalid")
+    for key in CASE_IDS:
+        path = root / key / "oracle.json"
+        oracle = read(path) if path.exists() else {}
+        if oracle.get("grading_environment_sha256") != digest or not oracle.get("fresh_environment_check"):
+            errors.append(f"{key}: oracle was not checked in this frozen grading environment")
+    return errors
+
+
+def reference_check(key: str, args, original: dict, protocol: dict, scoring: dict,
+                    expected_seal: dict) -> dict:
+    task, name = key.split("_")
+    case = args.bench_source / "examples" / task / "cases" / name
+    digest = verify_scorer(args, scoring)
+    fresh = evaluate(case, args, oracle=True, log_prefix=args.out / key / "oracle-fresh")
+    fresh.update(case=key, scoring_protocol=protocol, grading_environment_sha256=digest,
+                 fresh_environment_check=True)
+    dump(args.out / key / "oracle.json", fresh)
+    if fresh["score"] != 1.0:
+        raise ValueError(f"{key}: standard answer failed in the frozen scorer environment")
+    folder = args.out / "reference-rescore" / key
+    episode = original["episode"]
+    sealed_hashes = {}
+    if episode["submitted"]:
+        workspace = Path(episode["workspace"])
+        marker = read(workspace / "answer.json")
+        answer = (workspace / marker["path"]).resolve()
+        if answer.is_symlink() or not answer.is_relative_to((workspace / ".agentcad").resolve()):
+            raise ValueError("Reference answer escaped its sealed runtime state")
+        files = sorted(answer.rglob("*")) if answer.is_dir() else [answer]
+        if any(p.is_symlink() for p in files):
+            raise ValueError("Reference answer contains a link")
+        sealed_hashes = {p.relative_to(workspace).as_posix(): sha(p) for p in files if p.is_file()}
+        if sealed_hashes != expected_seal:
+            raise ValueError(f"{key}: sealed reference differs from its published hash archive")
+        verify_scorer(args, scoring)
+        result = evaluate(case, args, submission=answer, log_prefix=folder / "evaluation")
+        if any(sha(workspace / p) != h for p, h in sealed_hashes.items()):
+            raise ValueError("Reference artifact changed during grading")
+    else:
+        result = {"score": 0.0, "status": "no_submission"}
+    result.update(case=key, attempt=1, scoring_protocol=protocol,
+                  grading_environment_sha256=digest,
+                  historical_score=original["scoring"]["score"],
+                  delta_from_historical=result["score"] - original["scoring"]["score"],
+                  sealed_artifact_sha256=sealed_hashes)
+    dump(folder / "score.json", result)
+    print(json.dumps({"case": key, "fresh_oracle": fresh["score"],
+                      "reference_rescore": result["score"], "historical_score": result["historical_score"]}), flush=True)
+    return result
+
+
+def evaluate(case: Path, args, *, submission: Path | None = None, oracle: bool = False,
+             log_prefix: Path) -> dict:
+    command = [str(args.bench_python), "-I", "-X", "utf8", str(HERE / "run.py"), "_score",
+               "--bench-source", str(args.bench_source), "--case", str(case)]
+    command += ["--oracle"] if oracle else ["--submission", str(submission)]
+    log_prefix.parent.mkdir(parents=True, exist_ok=True)
+    dump(log_prefix.with_suffix(".command.json"), {"command": command})
+    process = subprocess.run(command, capture_output=True, text=True, encoding="utf-8",
+                             timeout=args.timeout, env=shared.scorer_env())
+    log_prefix.with_suffix(".stdout.log").write_text(process.stdout, encoding="utf-8")
+    log_prefix.with_suffix(".stderr.log").write_text(process.stderr, encoding="utf-8")
+    if process.returncode:
+        raise RuntimeError(process.stderr[-3000:] or process.stdout[-3000:])
+    result = json.loads(process.stdout)
+    value = result.get("score")
+    if not isinstance(value, (float, int)) or not math.isfinite(value) or not 0 <= value <= 1:
+        raise ValueError("Evaluator did not return a finite score in [0, 1]")
+    return result
 
 
 def canonical_source(args) -> None:
@@ -75,7 +195,7 @@ def stage_worker(args) -> None:
 def stage(args, key: str, workspace: Path) -> dict:
     task, case = key.split("_")
     case_dir = args.bench_source / "examples" / task / "cases" / case
-    process = subprocess.run([str(args.bench_python), str(HERE / "native_run.py"), "_stage",
+    process = subprocess.run([str(args.bench_python), "-I", "-X", "utf8", str(HERE / "native_run.py"), "_stage",
                               "--bench-source", str(args.bench_source), "--case", str(case_dir),
                               "--workspace", str(workspace)], capture_output=True, text=True,
                              encoding="utf-8", timeout=300, env=shared.scorer_env())
@@ -101,7 +221,8 @@ Native tools.py interface (import tools inside your program):
 
 Execution interface:
 - execute_python(code, submit=False) runs a fresh Python process in the directory.
-  Files persist between calls, memory does not. Use Python to inspect files and
+  It runs on Linux at /work; use workspace-relative paths, not the Codex host's
+  Windows paths. Files persist between calls, memory does not. Use Python to inspect files and
   supplied STEP geometry, crop images or construct geometry. This is the native
   Python workbench; AgentCAD is not installed or available in it.
 - Python 3.11.16, CadQuery 2.8.0 / OCP 7.9.3.1.1, numpy, scipy, PIL, matplotlib,
@@ -238,6 +359,7 @@ def run_one(key: str, args) -> dict:
         raise FileExistsError("A first attempt already exists; never replace it")
     if subprocess.check_output(["codex", "--version"], text=True).strip() != read(args.out / "metadata.json")["codex_version"]:
         raise ValueError("Codex changed before this episode started")
+    verify_scorer(args, read(args.out / "metadata.json"))
     logs = folder / "attempt-1"
     logs.mkdir(parents=True, exist_ok=False)
     workspace = args.out / "workspaces" / key / "attempt-1"
@@ -318,8 +440,10 @@ def run_one(key: str, args) -> dict:
 def score_one(key: str, args) -> dict:
     folder = args.out / key
     row = read(folder / "run.json")
-    protocol = read(args.out / "metadata.json")["scoring_protocol"]
-    errors = shared.protocol_errors(args.out, protocol)
+    metadata = read(args.out / "metadata.json")
+    digest = verify_scorer(args, metadata)
+    protocol = metadata["scoring_protocol"]
+    errors = grading_errors(args.out, metadata)
     if errors:
         raise ValueError("; ".join(errors))
     if row["status"] == "running":
@@ -327,8 +451,12 @@ def score_one(key: str, args) -> dict:
     if args.resume and (folder / "score.json").exists():
         previous = read(folder / "score.json")
         if (previous.get("score") is not None and previous.get("attempt") == row["attempt"]
-                and previous.get("scoring_protocol") == protocol):
+                and previous.get("scoring_protocol") == protocol
+                and previous.get("grading_environment_sha256") == digest):
             return previous
+        backup = folder / f"score-previous-{sha(folder / 'score.json')[:12]}.json"
+        if not backup.exists():
+            shutil.copy2(folder / "score.json", backup)
     if not row["submitted"]:
         result = {"case": key, "attempt": 1, "score": 0.0, "status": "no_submission",
                   "episode_status": row["status"], "scoring_protocol": protocol}
@@ -341,21 +469,11 @@ def score_one(key: str, args) -> dict:
         task, name = key.split("_")
         case = args.bench_source / "examples" / task / "cases" / name
         try:
-            process = subprocess.run([str(args.bench_python), str(HERE / "run.py"), "_score",
-                                      "--bench-source", str(args.bench_source), "--case", str(case),
-                                      "--submission", str(answer)], capture_output=True, text=True,
-                                     encoding="utf-8", timeout=args.timeout, env=shared.scorer_env())
-            (folder / "offline-score.stdout.log").write_text(process.stdout, encoding="utf-8")
-            (folder / "offline-score.stderr.log").write_text(process.stderr, encoding="utf-8")
-            if process.returncode:
-                raise RuntimeError(process.stderr[-3000:] or process.stdout[-3000:])
-            result = json.loads(process.stdout)
-            value = result.get("score")
-            if not isinstance(value, (float, int)) or not math.isfinite(value) or not 0 <= value <= 1:
-                raise ValueError("Evaluator did not return a finite score in [0, 1]")
+            result = evaluate(case, args, submission=answer, log_prefix=folder / "offline-score")
         except (subprocess.TimeoutExpired, RuntimeError, ValueError) as exc:
             result = {"case": key, "score": None, "status": "evaluator_error", "error": str(exc)}
         result.update(case=key, attempt=1, scoring_protocol=protocol)
+    result["grading_environment_sha256"] = digest
     dump(folder / "score.json", result)
     print(json.dumps({"case": key, "score": result["score"], "status": result.get("status")}), flush=True)
     return result
@@ -364,13 +482,14 @@ def score_one(key: str, args) -> dict:
 def summarize(root: Path) -> dict:
     metadata = read(root / "metadata.json")
     records, means = [], {}
-    errors = shared.protocol_errors(root, metadata["scoring_protocol"])
+    errors = grading_errors(root, metadata)
     for key in CASE_IDS:
         folder = root / key
         row = read(folder / "run.json") if (folder / "run.json").exists() else {}
         score = read(folder / "score.json") if (folder / "score.json").exists() else {}
         if score and (score.get("scoring_protocol") != metadata["scoring_protocol"]
-                      or score.get("attempt") != row.get("attempt")):
+                      or score.get("attempt") != row.get("attempt")
+                      or score.get("grading_environment_sha256") != metadata["scorer_environment_sha256"]):
             errors.append(f"{key}: score/run protocol mismatch")
         value = score.get("score")
         if value is not None and (not isinstance(value, (float, int))
@@ -413,6 +532,8 @@ def prepare(args) -> dict:
     protocol = shared.score_protocol(args.bench_source)
     if protocol != baseline["scoring_protocol"]:
         raise ValueError("Scoring protocol differs from the reference")
+    scoring = {"scorer_environment": scorer_environment(args.bench_python)}
+    scoring["scorer_environment_sha256"] = environment_digest(scoring["scorer_environment"])
     image = json.loads(subprocess.check_output(["docker", "--context", args.docker_context,
                                                 "image", "inspect", args.image], text=True))[0]
     image_id = image["Id"]
@@ -429,7 +550,8 @@ def prepare(args) -> dict:
     for package in ("cadquery", "cadquery-ocp", "numpy", "scipy", "pillow", "vtk", "matplotlib", "ezdxf"):
         if environment["packages"][package] != reference_environment["packages"][package]:
             raise ValueError(f"Native package differs from AgentCAD interpreter: {package}")
-    cases = []
+    cases, matched_reference = [], []
+    published = read(args.reference / "comparison-astra-sol-2026-10-30.json")
     for key in CASE_IDS:
         workspace = args.out / "preflight" / key
         meta = stage(args, key, workspace)
@@ -453,13 +575,21 @@ def prepare(args) -> dict:
                       "prompt_sha256": hashlib.sha256(text.encode()).hexdigest(),
                       "staged_inputs_identical": True, "official_brief_identical": True,
                       "initial_image_order_identical": True})
-        destination = args.out / key / "oracle.json"
+        destination = args.out / key / "oracle-reference.json"
         destination.parent.mkdir(parents=True, exist_ok=True)
         oracle = read(args.reference / key / "oracle.json")
         if oracle["score"] != 1.0 or oracle["scoring_protocol"] != protocol:
             raise ValueError("Reference oracle has not passed with this scoring protocol")
         shutil.copy2(args.reference / key / "oracle.json", destination)
         print(json.dumps({"case": key, "preflight": "pass", "input_files": len(files)}), flush=True)
+        bank = next(r for r in published["paired_cases"] if r["case"] == key)["astra_latest_sealed_submission_sha256"]
+        matched_reference.append(reference_check(key, args, reference, protocol, scoring, bank))
+    verify_scorer(args, scoring)
+    reference_tasks = {f"task{task}": sum(r["score"] for r in matched_reference if r["case"].startswith(f"task{task}_")) /
+                        sum(r["case"].startswith(f"task{task}_") for r in matched_reference) for task in range(1, 7)}
+    dump(args.out / "reference-rescored.json", {"records": matched_reference, "task_means": reference_tasks,
+                                               "mean_of_task_means": sum(reference_tasks.values()) / 6,
+                                               "grading_environment_sha256": scoring["scorer_environment_sha256"]})
     metadata = {"model": MODEL, "effort": EFFORT, "benchcad_sha": BENCH_SHA,
                 "scoring_protocol": protocol, "codex_version": cli, "timeout_s": args.timeout,
                 "tool_call_limit": args.calls, "jobs": args.jobs,
@@ -468,6 +598,8 @@ def prepare(args) -> dict:
                 "harness_repo_sha": source_sha(HERE.parents[1]), "native_tools_sha256": sha(HERE / "native_tools.py"),
                 "native_runner_sha256": sha(Path(__file__)), "shared_runner_sha256": sha(HERE / "run.py"),
                 "image_id": image_id, "docker_context": args.docker_context,
+                **scoring,
+                "reference_rescored_sha256": sha(args.out / "reference-rescored.json"),
                 "native_environment": environment, "reference_metadata": baseline,
                 "no_reference_files_staged": True, "cost": "not reported by Codex CLI"}
     for key in CONTROL_FIELDS:
@@ -476,6 +608,8 @@ def prepare(args) -> dict:
     dump(args.out / "metadata.json", metadata)
     frozen = {"reference_directory": str(args.reference), "reference_archive_sha256": sha(args.reference / "results-astra-first-attempts-2026-10-30.json"),
               "control_fields": list(CONTROL_FIELDS), "cases": cases, "image_id": image_id,
+              "grading_environment_sha256": scoring["scorer_environment_sha256"],
+              "reference_comparison": "Original sealed first-attempt AgentCAD answers rescored with the frozen native-control grader; historical results preserved",
               "primary": "Mean of six task means, nine original first attempts per workflow; no-submission zero",
               "secondary": "Mean of T1-T5 task means; T6 is model-only and the reference had an unresolved connection failure",
               "difference_direction": "AgentCAD minus native; positive values favor AgentCAD",
@@ -487,7 +621,7 @@ def prepare(args) -> dict:
                                     "Linux Docker runtime, official 2 GiB/one-CPU isolation; aligned Python/CadQuery versions",
                                     "native first-final-program failure ends the episode; no fallback"],
               "interpretation": "Controlled comparison of complete tool workflows, not a causal estimate for one CAD-kernel component or a Core leaderboard score",
-              "scoring_checks": "Nine unchanged 1.0 oracle checks reused outside model workspaces"}
+              "scoring_checks": "Nine fresh 1.0 oracle checks plus regrading of all original AgentCAD first-attempt submissions outside model workspaces"}
     dump(args.out / "protocol.json", frozen)
     return metadata
 
@@ -495,6 +629,12 @@ def prepare(args) -> dict:
 def validate_frozen(args) -> None:
     canonical_source(args)
     metadata = read(args.out / "metadata.json")
+    verify_scorer(args, metadata)
+    errors = grading_errors(args.out, metadata)
+    if errors:
+        raise ValueError("; ".join(errors))
+    if sha(args.out / "reference-rescored.json") != metadata["reference_rescored_sha256"]:
+        raise ValueError("Matched reference scores changed after preflight")
     for name, key in (("native_tools.py", "native_tools_sha256"), ("native_run.py", "native_runner_sha256"),
                       ("run.py", "shared_runner_sha256")):
         if sha(HERE / name) != metadata[key]:
@@ -539,6 +679,8 @@ def main() -> None:
             parser.error("prepare requires --bench-python and --reference")
         prepare(args)
         return
+    if args.bench_python is None:
+        args.bench_python = Path(read(args.out / "metadata.json")["scorer_environment"]["executable"])
     validate_frozen(args)
     if args.mode == "summary":
         result = summarize(args.out)
