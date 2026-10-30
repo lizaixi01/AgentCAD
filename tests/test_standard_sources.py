@@ -40,7 +40,7 @@ def test_all_bearing_envelopes_against_timken_table_1():
 
 def test_hole_references_and_explicit_recommendation_boundaries():
     sizes = ['M3','M4','M5','M6','M8','M10','M12','M14','M16','M20','M24']
-    # NBK/JIS B1001:1985 grades 1,2,3, matching stored clearance series.
+    # NBK clearance table / ISO 273 note (2015-06-18), three clearance series.
     assert [library.CLEARANCE[s] for s in sizes] == [
         (3.2,3.4,3.6),(4.3,4.5,4.8),(5.3,5.5,5.8),(6.4,6.6,7),
         (8.4,9,10),(10.5,11,12),(13,13.5,14.5),(15,15.5,16.5),

@@ -74,8 +74,8 @@ def provenance(item: str) -> dict[str, Any]:
         "hex_nut": "ISO 4032:2012, tables 1 and 2; nut height is maximum",
         "washer": "WASI DIN 125 A / similar ISO 7089 datasheet; revision not stated; checked 2026-10-30",
         "socket_head_cap_screw": "WASI DIN 912 / EN ISO 4762, BPL2005 catalogue",
-        "ball_bearing": "Timken E10857-GB, table 1, page 2; 2023 download",
-        "clearance": "NBK, JIS B 1001:1985 clearance table, published 2015-01-14; checked 2026-10-30",
+        "ball_bearing": "Timken E10857-GB, table 1, page 2; copyright 2023; checked 2026-10-30",
+        "clearance": "NBK clearance table / ISO 273 note, published 2015-06-18; checked 2026-10-30",
         "tapped": "EXACT GS52 (2020-10-01) M3-M12; Thurmer recommended core sizes M14-M24",
         "counterbore": "Ifanger 03/2006 DIN 974-1 diameter table except M14; depth recommendations separately sourced",
     }

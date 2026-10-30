@@ -89,6 +89,11 @@ accepted. `mode="limits"` prints limits. `modify(set={"tolerance": ...})` update
 rerenders; `null` clears it. Reopening `inspect_entities` returns the native values.
 Insufficient decimal precision and fixed numeric text overrides are rejected.
 Angular/ordinate tolerances are explicitly unsupported.
+Precision is rechecked when an existing dimension changes, and on saved dimensions
+throughout the entity database, including nested and unreferenced block definitions.
+That integrity check does not certify the physical placement/scaling of every block
+instance. New stacked tolerance text uses a 0.7 height factor, centred alignment and
+at least half a nominal text height of line clearance; numeric values stay native.
 
 `standard_library(item="iso_fit", size="25 H7/g6")` returns sourced hole/shaft
 limits and clearance in mm. The bounded table covers **H7, h6 and g6, 10 < nominal

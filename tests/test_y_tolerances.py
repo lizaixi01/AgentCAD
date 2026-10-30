@@ -94,6 +94,57 @@ def test_external_limit_precision_corruption_blocks_delivery(rt, ws, blank):
     assert rt.deliver_drawing(blank, "bad-limit", formats=["dxf"])["error"]["code"] == "DELIVERY_REJECTED"
 
 
+@pytest.mark.parametrize("placement", ["model_block", "nested_block", "paper_block", "unused_block"])
+def test_nested_and_unused_block_tolerances_are_checked(rt, ws, blank, placement):
+    assert rt.apply_operations(blank, [
+        {"op": "add_line", "start": [0, 0], "end": [1, 0]},
+        {"op": "add_linear_dim", "p1": [0, 0], "p2": [1, 0],
+         "tolerance": {"lower": -0.1, "upper": 0.1, "precision": 1, "mode": "limits"}}])["ok"]
+    doc = ezdxf.readfile(ws / blank)
+    block = doc.blocks.new("ASSEMBLY")
+    for entity in list(doc.modelspace()):
+        doc.modelspace().move_to_layout(entity, block)
+    dim = block.query("DIMENSION").first
+    name = block.name
+    if placement == "nested_block":
+        parent = doc.blocks.new("NESTED")
+        parent.add_blockref(name, (10, 0))
+        name = parent.name
+    if placement != "unused_block":
+        space = doc.layouts.new("Sheet") if placement == "paper_block" else doc.modelspace()
+        space.add_blockref(name, (0, 0))
+        space.add_blockref(name, (20, 0))  # no duplicated report per instance
+    doc.saveas(ws / blank)
+    assert rt.deliver_drawing(blank, "valid-block", formats=["dxf"])["ok"]
+    override = dim.override()
+    override["dimlfac"] = 1.234
+    override.render()
+    doc.saveas(ws / blank)
+    before = (ws / blank).read_bytes()
+    report = rt.validate_drawing(blank)["validation"]
+    assert sum(i["code"] == "TOLERANCE_PRECISION_LOSS" for i in report["issues"]) == 1
+    result = rt.deliver_drawing(blank, "bad-block", formats=["dxf"], min_score=0)
+    assert result["error"]["code"] == "DELIVERY_REJECTED", result
+    assert (ws / blank).read_bytes() == before
+
+
+@pytest.mark.parametrize("mode", ["deviations", "limits"])
+def test_stacked_tolerance_glyphs_clear_the_radial_dimension_line(rt, ws, blank, mode):
+    from ezdxf.addons.drawing import Frontend, RenderContext, recorder
+
+    assert rt.apply_operations(blank, [
+        {"op":"add_circle", "center":[0,0], "diameter":35},
+        {"op":"add_diameter_dim", "target":"$0", "angle":0, "text_height":2.5,
+         "tolerance":{"lower":0, "upper":.025, "precision":3, "mode":mode}}])["ok"]
+    doc = ezdxf.readfile(ws / blank)
+    dim = doc.modelspace().query("DIMENSION").first
+    text = list(doc.blocks[dim.dxf.geometry].query("MTEXT"))
+    recording = recorder.Recorder()
+    # Actual font outlines, not MTEXT's conservative multi-line bounding box.
+    Frontend(RenderContext(doc), recording).draw_entities(text)
+    assert recording.player().bbox().extmin.y > 0.1
+
+
 def test_sourced_fit_lookup_drives_saved_dimension(rt, blank):
     fit = rt.standard_library(item="iso_fit", size="25 H7/g6")
     assert fit["ok"] and fit["source_page"] == 74

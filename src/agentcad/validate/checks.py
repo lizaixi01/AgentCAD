@@ -10,7 +10,9 @@ from ezdxf.document import Drawing
 from ezdxf.math import Vec3
 
 from .. import geom as G
+from ..errors import AgentCADError
 from ..model import circle_wcs, get_tag
+from ..tolerances import check_dimension_tolerance
 from ..units import unit_from_insunits
 from .features import Features, measure_dimension
 
@@ -369,15 +371,20 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
     out.extend(annotation_issues(doc, layout))
     out.extend(printed_text_issues(doc))
 
+    # Tolerance declarations are document integrity, including nested/unreferenced
+    # blocks. Walk stored entities once, not virtual INSERT copies (which can be
+    # repeated, transformed or cyclic). This does not certify block placement.
+    for entity in doc.entitydb.values():
+        if entity.dxftype() != "DIMENSION":
+            continue
+        try:
+            check_dimension_tolerance(entity, unit_from_insunits(ins) or "mm")
+        except AgentCADError as exc:
+            out.append(issue(exc.code, "error", exc.message, [entity.dxf.handle]))
+
     # dimensions: stored text / measurement consistent with definition points
     blocks = BlockSnaps(doc, layout)
     for d in feats.dimensions:
-        from ..errors import AgentCADError
-        from ..tolerances import check_dimension_tolerance
-        try:
-            check_dimension_tolerance(doc.entitydb[d["id"]], unit_from_insunits(ins) or "mm")
-        except AgentCADError as exc:
-            out.append(issue(exc.code, "error", exc.message, [d["id"]]))
         if d["measurement"] is None:
             out.append(issue("DIMENSION_UNMEASURABLE", "warning", "Dimension type cannot be re-measured", [d["id"]]))
             continue

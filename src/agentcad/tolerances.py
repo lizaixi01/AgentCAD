@@ -15,7 +15,11 @@ def apply_tolerance(override, value, unit: str) -> None:
     lower, upper, precision, mode = _validated_values(override, value, unit)
     method = override.set_limits if mode == "limits" else override.set_tolerance
     # DXF DIMTM is subtracted; the public interface uses signed lower deviations.
-    method(upper=upper, lower=-lower, dec=precision, leading_zeros=True, trailing_zeros=True)
+    method(upper=upper, lower=-lower, dec=precision, hfactor=0.7, leading_zeros=True, trailing_zeros=True)
+    # Keep stacked deviations centred against the nominal and above the dimension
+    # line. A full-height, bottom-aligned stack can cross radial extension lines.
+    override["dimtolj"] = 1
+    override["dimgap"] = max(float(override.get("dimgap", 0)), float(override.get("dimtxt", 2.5)) / 2)
 
 
 def _validated_values(override, value, unit: str) -> tuple[float, float, int, str]:
@@ -41,6 +45,8 @@ def _validated_values(override, value, unit: str) -> tuple[float, float, int, st
         if nominal is None:
             raise input_error("INVALID_TOLERANCE", "Dimension has no measurable nominal value")
         nominal *= float(override.get("dimlfac", 1))
+        if not math.isfinite(nominal):
+            raise input_error("INVALID_TOLERANCE", "Dimension nominal and length factor must be finite")
         if any(abs(v - round(v, precision)) > 1e-10 for v in (nominal + lower, nominal + upper)):
             raise input_error("TOLERANCE_PRECISION_LOSS", "Increase precision so displayed limits retain nominal plus deviations")
     text = override.dimension.dxf.get("text", "")
@@ -51,10 +57,13 @@ def _validated_values(override, value, unit: str) -> tuple[float, float, int, st
 
 def check_dimension_tolerance(dimension, unit: str) -> None:
     """Read-only validation shared by redraw and saved-file delivery checks."""
-    values = tolerance_info(dimension)
-    if values is not None:
-        values.pop("units")
-        _validated_values(dimension.override(), values, unit)
+    try:
+        values = tolerance_info(dimension)
+        if values is not None:
+            values.pop("units")
+            _validated_values(dimension.override(), values, unit)
+    except (TypeError, ValueError, OverflowError) as exc:
+        raise input_error("INVALID_TOLERANCE", "Malformed stored tolerance values") from exc
 
 
 def tolerance_info(dimension) -> dict | None:
