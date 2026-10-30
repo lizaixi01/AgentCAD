@@ -10,6 +10,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import math
 import os
 import random
 import shutil
@@ -60,6 +61,8 @@ def select_tasks(dataset: Path, count: int, seed: int) -> list[dict]:
 def stage_inputs(task: Path, workspace: Path, item: dict) -> list[Path]:
     if digest(task / "instruction.md") != item["instruction_sha256"]:
         raise ValueError("Task instruction changed since selection")
+    if digest(task / "task.toml") != item["task_toml_sha256"]:
+        raise ValueError("Task metadata changed since selection")
     workspace.mkdir(parents=True, exist_ok=False)
     shutil.copyfile(task / "instruction.md", workspace / "instruction.md")
     images = []
@@ -110,7 +113,7 @@ def audit_log(log: Path) -> dict:
         kind = item.get("type")
         if kind == "mcp_tool_call":
             tools.append(item.get("tool"))
-            if item.get("server") != "agentcad":
+            if item.get("server") != "agentcad" or item.get("tool") not in TOOLS:
                 foreign.append(item)
             for block in (item.get("result") or {}).get("content", []):
                 if block.get("type") != "text":
@@ -127,6 +130,46 @@ def audit_log(log: Path) -> dict:
             foreign.append({"type": kind, "id": item.get("id")})
     return {"tool_calls": len(tools), "tools": tools, "tool_errors": errors,
             "unexpected_tools": foreign, "usage": usage}
+
+
+def stage_errors(workspace: Path, kind: str, outputs: dict) -> list[str]:
+    """Check that the scored files are the submitted snapshots, including the base."""
+    path = workspace / "stages.jsonl"
+    if not path.is_file():
+        return ["Missing stage log"]
+    try:
+        records = [json.loads(line) for line in path.read_text("utf-8").splitlines()]
+        expected = [("base", "answer_base.FCStd"), ("final", "answer_edit.FCStd")] if kind == "edit" else [
+            ("final", "answer.FCStd")]
+        if [(record["stage"], record["output"]) for record in records] != expected:
+            return ["Wrong stage sequence or filenames"]
+        errors = []
+        for record in records:
+            candidate = workspace / record["output"]
+            if candidate.is_symlink() or not candidate.is_file():
+                errors.append(f"Missing or symlinked stage: {candidate.name}")
+            elif digest(candidate) != record["sha256"] or outputs.get(candidate.name) != record["sha256"]:
+                errors.append(f"Stage changed after submission: {candidate.name}")
+        return errors
+    except (ValueError, KeyError, TypeError):
+        return ["Invalid stage log"]
+
+
+def read_score(output: Path) -> dict:
+    # Creation/edit sidecars say "score"; drawing sidecars say "reward".
+    # The single-key Harbor reward contract is authoritative for every category.
+    contract = json.loads((output / "reward.json").read_text("utf-8"))
+    if not isinstance(contract, dict):
+        raise ValueError("Invalid Harbor reward contract")
+    reward = contract.get("reward")
+    if set(contract) != {"reward"} or isinstance(reward, bool) or not isinstance(reward, (int, float)):
+        raise ValueError("Invalid Harbor reward contract")
+    if not math.isfinite(reward) or not 0 <= reward <= 1:
+        raise ValueError("Harbor reward must be finite and in [0, 1]")
+    details = json.loads((output / "reward_details.json").read_text("utf-8"))
+    if not isinstance(details, dict):
+        raise ValueError("Invalid reward diagnostics")
+    return {**details, "status": "scored", "score": reward}
 
 
 def run_one(item: dict, args: argparse.Namespace) -> dict:
@@ -186,8 +229,12 @@ def score_one(item: dict, args: argparse.Namespace) -> dict:
     row = json.loads((args.output / item["id"] / "run.json").read_text("utf-8"))
     expected = ["answer_base.FCStd", "answer_edit.FCStd"] if item["kind"] == "edit" else ["answer.FCStd"]
     missing = [name for name in expected if not (workspace / name).is_file()]
-    if missing or row["unexpected_tools"]:
+    if row["status"] != "done":
+        result = {"score": 0.0, "status": "agent_failed", "agent_status": row["status"]}
+    elif missing or row["unexpected_tools"]:
         result = {"score": 0.0, "status": "missing_output" if missing else "invalid_tools", "missing": missing}
+    elif errors := stage_errors(workspace, item["kind"], row["outputs"]):
+        result = {"score": 0.0, "status": "invalid_stages", "errors": errors}
     else:
         cmd = [str(args.scorer_python), str(task / "tests" / "run_scorer.py"),
                "--spec", str(task / "tests" / "grader" / "spec.json"),
@@ -207,8 +254,8 @@ def score_one(item: dict, args: argparse.Namespace) -> dict:
                                            timeout=600, shell=False)
                 if completed.returncode != 0:
                     raise RuntimeError(f"Scorer exited {completed.returncode}; see scorer.log")
-                result = {"status": "scored", **json.loads((output / "reward_details.json").read_text("utf-8"))}
-            except (subprocess.TimeoutExpired, RuntimeError) as exc:
+                result = read_score(output)
+            except (subprocess.TimeoutExpired, RuntimeError, OSError, ValueError) as exc:
                 result = {"status": "scorer_error", "score": None, "error": str(exc)}
     row["evaluation"] = result
     write_json(args.output / item["id"] / "result.json", row)
@@ -216,9 +263,22 @@ def score_one(item: dict, args: argparse.Namespace) -> dict:
     return row
 
 
+def summarize(manifest: dict, rows: list[dict], output: Path) -> None:
+    groups = {}
+    for kind in GROUPS:
+        scores = [row["evaluation"]["score"] for row in rows if row["kind"] == kind]
+        groups[kind] = {"tasks": len(scores), "mean": statistics.mean(scores) if scores and None not in scores else None}
+    scores = [row["evaluation"]["score"] for row in rows]
+    write_json(output / "summary.json", {
+        "manifest": manifest, "groups": groups, "results": rows,
+        "tasks": len(rows), "mean": statistics.mean(scores) if scores and None not in scores else None,
+        "infrastructure_errors": sum(score is None for score in scores),
+    })
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("action", choices=["prepare", "run", "score"])
+    parser.add_argument("action", choices=["prepare", "run", "score", "summarize"])
     parser.add_argument("--dataset", type=Path, required=True, help="Directory containing the 100 task directories")
     parser.add_argument("--output", type=Path, required=True, help="New run directory outside the agent workspace")
     parser.add_argument("--workspaces", type=Path, required=True)
@@ -234,17 +294,22 @@ def main() -> None:
     args = parser.parse_args()
     args.dataset, args.output, args.workspaces, args.freecad = [
         p.resolve() for p in (args.dataset, args.output, args.workspaces, args.freecad)]
-    if args.dataset.is_relative_to(args.workspaces) or args.output.is_relative_to(args.workspaces):
-        parser.error("Dataset and logs must stay outside the agent workspaces")
+    directories = [args.dataset, args.output, args.workspaces]
+    if any(left.is_relative_to(right) or right.is_relative_to(left)
+           for index, left in enumerate(directories) for right in directories[index + 1:]):
+        parser.error("Dataset, logs and workspaces must be separate, non-nested directories")
+    if min(args.timeout, args.jobs, args.per_group) < 1:
+        parser.error("Timeout, concurrency and per-group sample size must be positive")
     if args.action == "prepare":
-        args.output.mkdir(parents=True, exist_ok=False)
         items = select_tasks(args.dataset, args.per_group, args.seed)
+        args.output.mkdir(parents=True, exist_ok=False)
         manifest = {"benchmark": "gnucleus-ai/cad-bench@v3", "expected_dataset_digest": EXPECTED_DIGEST,
                     "digest_verified": False, "seed": args.seed, "selection": "stratified random, before any run",
                     "agentcad_commit": subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=REPO, text=True).strip(),
                     "codex_version": subprocess.check_output(["codex", "--version"], text=True).strip(),
                     "model": args.model, "effort": args.effort, "timeout_sec": args.timeout,
                     "jobs": args.jobs, "official_submission": False, "tasks": items}
+        manifest["harness_sha256"] = {path.name: digest(path) for path in [HERE / "pilot.py", HERE / "stage_server.py"]}
         write_json(args.output / "manifest.json", manifest)
         print(json.dumps(manifest, ensure_ascii=False, indent=2))
         return
@@ -253,21 +318,22 @@ def main() -> None:
                        "jobs": args.jobs}.items():
         if value != manifest[key]:
             parser.error(f"{key} differs from the frozen manifest")
+    if args.ids and set(args.ids) - {item["id"] for item in manifest["tasks"]}:
+        parser.error("--ids contains a task outside the frozen selection")
     items = [item for item in manifest["tasks"] if not args.ids or item["id"] in args.ids]
     if args.action == "run":
         with ThreadPoolExecutor(max_workers=args.jobs) as pool:
             futures = [pool.submit(run_one, item, args) for item in items]
             for future in as_completed(futures):
                 future.result()
-    else:
+    elif args.action == "score":
         if not args.scorer_python:
             parser.error("--scorer-python is required for scoring")
         rows = [score_one(item, args) for item in items]
-        groups = {}
-        for kind in GROUPS:
-            scores = [row["evaluation"]["score"] for row in rows if row["kind"] == kind]
-            groups[kind] = {"tasks": len(scores), "mean": statistics.mean(scores) if scores and None not in scores else None}
-        write_json(args.output / "summary.json", {"manifest": manifest, "groups": groups, "results": rows})
+        summarize(manifest, rows, args.output)
+    else:
+        rows = [json.loads((args.output / item["id"] / "result.json").read_text("utf-8")) for item in items]
+        summarize(manifest, rows, args.output)
 
 
 if __name__ == "__main__":

@@ -49,11 +49,13 @@ def test_staging_excludes_grader_solution_and_checks_instruction_hash(tmp_path):
     for name in ("environment", "tests/grader", "solution"):
         (task / name).mkdir(parents=True)
     (task / "instruction.md").write_text("Public instruction", "utf-8")
+    (task / "task.toml").write_text("Public metadata", "utf-8")
     (task / "environment" / "drawing.png").write_bytes(b"public image")
     (task / "tests/grader" / "reference.FCStd").write_bytes(b"hidden reference")
     (task / "solution" / "answer.py").write_text("hidden solution", "utf-8")
     (task / "environment" / "Dockerfile").write_text("not an input", "utf-8")
-    item = {"kind": "drawing", "instruction_sha256": pilot.digest(task / "instruction.md")}
+    item = {"kind": "drawing", "instruction_sha256": pilot.digest(task / "instruction.md"),
+            "task_toml_sha256": pilot.digest(task / "task.toml")}
     assert pilot.stage_inputs(task, workspace, item) == [workspace / "drawing.png"]
     assert {p.name for p in workspace.iterdir()} == {"instruction.md", "drawing.png"}
     (task / "instruction.md").write_text("Changed", "utf-8")
@@ -127,12 +129,68 @@ def test_missing_submission_is_zero_but_scorer_crash_is_infrastructure_error(tmp
                               scorer_python=tmp_path / "scorer-python")
     workspace = args.workspaces / "sample"
     workspace.mkdir(parents=True)
-    pilot.write_json(args.output / "sample" / "run.json", {"unexpected_tools": []})
     if has_output:
         (workspace / "answer.FCStd").write_bytes(b"candidate")
+        (workspace / "stages.jsonl").write_text(json.dumps({
+            "stage": "final", "output": "answer.FCStd", "sha256": pilot.digest(workspace / "answer.FCStd")
+        }) + "\n", "utf-8")
+    pilot.write_json(args.output / "sample" / "run.json", {
+        "status": "done", "unexpected_tools": [],
+        "outputs": {"answer.FCStd": pilot.digest(workspace / "answer.FCStd")} if has_output else {}})
     def crash(*args, **kwargs):
         return subprocess.CompletedProcess(args[0], 1)
     monkeypatch.setattr(pilot.subprocess, "run", crash)
     result = pilot.score_one(item, args)["evaluation"]
     assert result["status"] == ("scorer_error" if has_output else "missing_output")
     assert result["score"] == (None if has_output else 0)
+
+
+def test_stage_audit_detects_base_modified_after_freeze(tmp_path):
+    outputs = {}
+    records = []
+    for stage, name in [("base", "answer_base.FCStd"), ("final", "answer_edit.FCStd")]:
+        (tmp_path / name).write_bytes(stage.encode())
+        outputs[name] = pilot.digest(tmp_path / name)
+        records.append({"stage": stage, "output": name, "sha256": outputs[name]})
+    (tmp_path / "stages.jsonl").write_text("\n".join(json.dumps(record) for record in records), "utf-8")
+    assert pilot.stage_errors(tmp_path, "edit", outputs) == []
+    (tmp_path / "answer_base.FCStd").write_bytes(b"changed by a tool after saving")
+    assert pilot.stage_errors(tmp_path, "edit", outputs) == ["Stage changed after submission: answer_base.FCStd"]
+
+
+def test_timeout_with_saved_file_is_still_zero(tmp_path):
+    args = argparse.Namespace(dataset=tmp_path / "dataset", workspaces=tmp_path / "workspaces",
+                              output=tmp_path / "logs")
+    workspace = args.workspaces / "sample"
+    workspace.mkdir(parents=True)
+    (workspace / "answer.FCStd").write_bytes(b"saved before timeout")
+    pilot.write_json(args.output / "sample" / "run.json", {"status": "timeout", "unexpected_tools": []})
+    result = pilot.score_one({"id": "sample", "kind": "create"}, args)["evaluation"]
+    assert result == {"score": 0, "status": "agent_failed", "agent_status": "timeout"}
+
+
+def test_summary_combines_incremental_results_and_preserves_infrastructure_errors(tmp_path):
+    rows = [{"id": "first", "kind": "create", "evaluation": {"score": 1}},
+            {"id": "second", "kind": "create", "evaluation": {"score": 0}},
+            {"id": "third", "kind": "edit", "evaluation": {"score": None}}]
+    pilot.summarize({"tasks": []}, rows, tmp_path)
+    summary = json.loads((tmp_path / "summary.json").read_text("utf-8"))
+    assert summary["groups"]["create"] == {"tasks": 2, "mean": 0.5}
+    assert summary["tasks"] == 3 and summary["mean"] is None
+    assert summary["infrastructure_errors"] == 1
+
+
+@pytest.mark.parametrize("sidecar_key", ["score", "reward"])
+def test_score_reader_uses_harbor_contract_for_both_task_schemas(tmp_path, sidecar_key):
+    pilot.write_json(tmp_path / "reward.json", {"reward": 0.525481})
+    pilot.write_json(tmp_path / "reward_details.json", {sidecar_key: 0.5254809867, "combined": 0.5254809867})
+    result = pilot.read_score(tmp_path)
+    assert result["score"] == 0.525481
+    assert result["combined"] == 0.5254809867
+
+
+@pytest.mark.parametrize("reward", [True, None, float("nan"), 1.1])
+def test_score_reader_rejects_invalid_rewards(tmp_path, reward):
+    pilot.write_json(tmp_path / "reward.json", {"reward": reward})
+    with pytest.raises(ValueError):
+        pilot.read_score(tmp_path)

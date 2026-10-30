@@ -4,6 +4,12 @@ This adapter exercises AgentCAD's native FreeCAD operations on a fixed sample
 from [Parametric CAD Bench V3](https://cadbench.ai/benchmark). It is a local
 integration experiment, **not an official leaderboard submission**.
 
+The [2026-10-30 pilot report](pilot-2026-10-30.md) covers six fixed tasks:
+all six produced native editable parts, with mean task reward **55.43/100**.
+The [machine-readable results](pilot-2026-10-30.json) include hashes and the
+[generated CAD and previews](artifacts/2026-10-30/). No benchmark reference
+models, solutions or input drawings are redistributed here.
+
 V3 has 30 text-to-CAD creation tasks, 30 create-and-edit tasks and 40 tasks that
 reconstruct a part from an engineering drawing. The last category evaluates
 **3D reconstruction from a drawing**, rather than production of 2D drawings.
@@ -29,7 +35,8 @@ replaced by another call to the adapter.
 
 `score` runs after modeling, outside the agent workspaces, using the selected
 task's unmodified `tests/run_scorer.py` and `gnucleus-freecad-validator==0.6.0`.
-Missing submissions count as zero; a crashed scorer is an infrastructure error
+Missing submissions, failed/timed-out agents and changed stage files count as
+zero; a crashed scorer is an infrastructure error
 and is not silently converted to a CAD failure. Raw trajectories, stderr,
 native files, file hashes and score explanations remain in the external run
 directories.
@@ -64,7 +71,9 @@ $pilotArgs = @(
 
 Use a new output/workspace pair for every attempt. Existing task runs and score
 directories are not overwritten. `--ids` can run or score a subset of the frozen
-selection. A subset summary describes only that subset. Do not choose a new
+selection. A subset summary describes only that subset. After scoring different
+subsets, run `summarize` with the same arguments to combine all saved results
+without running the scorers again. Do not choose a new
 sample after seeing scores or present best-of-retry results as one attempt.
 
 ## Differences from a leaderboard run
