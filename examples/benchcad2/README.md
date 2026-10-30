@@ -17,6 +17,21 @@ compatibility edits did not participate in the recorded model episodes.
 Integrated verification at `02ba8c8`: 539 tests passed, including all 25 adapter
 tests; live AutoCAD tests were excluded to avoid the shared application profile.
 
+## Controlled Astra / Sol replay (2026-10-30)
+
+[Paired report (Chinese)](comparison-astra-sol-2026-10-30.md) ·
+[comparison and provenance](comparison-astra-sol-2026-10-30.json): same measured
+`2583516` snapshot, prompts, inputs and 3,600-second / 100-call per-case limits.
+The original nine first attempts score **GPT-6 Astra / max 56.79 vs Sol / max 53.45**
+(mean of six task means). Astra submitted 8/9: T6/case2 ended with connection/request
+errors and no answer, so the predefined no-submission rule assigns zero. One additional
+infrastructure recovery also failed and is reported separately, without replacing the
+first-attempt results or their budget. T1–T5 task means are 58.15 vs 44.26; T6 is
+model-only graph reasoning. These remain development-sample results, not Core rankings.
+
+[Sealed first nine](results-astra-first-attempts-2026-10-30.json) and
+[all-attempt archive](results-astra-2026-10-30.json) preserve the distinction.
+
 ## Protocol
 
 - Model explicitly pinned to `gpt-6.1-sol`, reasoning effort `max`, using the

@@ -144,14 +144,15 @@ def test_no_shell_or_arbitrary_execution_surface():
     # two launchers (ezdxf scripts, CadQuery scripts), each without a shell and with the time limit
     assert scripting.count("shell=False") == 2 and "shell=True" not in scripting
     assert scripting.count("timeout=timeout") == 2 and scripting.count("subprocess.run(") == 2
-    # install.py runs only the user's own 'claude mcp' CLI, from 'agentcad setup'. Modules that serve tools may
-    # import nothing from it but ensure_workspace.
+    # install.py runs only the user's own 'claude mcp' CLI and the file manager, from 'agentcad setup' (and its
+    # --gui wizard). Modules that serve tools may import nothing from it but ensure_workspace, nor the wizard.
     inst = (pkg / "install.py").read_text("utf-8")
     assert "shell=False" in inst and "shell=True" not in inst and "cmd_unsafe(" in inst
     for f in pkg.rglob("*.py"):
-        if f.name in ("cli.py", "install.py"):
+        if f.name in ("cli.py", "install.py", "setup_gui.py"):
             continue
         assert _install_imports(f.read_text("utf-8")) <= {"ensure_workspace"}, f
+        assert "setup_gui" not in f.read_text("utf-8"), f
     assert "check_script(code)" in (pkg / "service.py").read_text("utf-8")
     assert "scripting.check_script(code, lang)" in (pkg / "part" / "service.py").read_text("utf-8")
     assert Policy(root=Path.cwd()).allow_scripts in (False,) or __import__("os").environ.get("AGENTCAD_ALLOW_SCRIPTS")

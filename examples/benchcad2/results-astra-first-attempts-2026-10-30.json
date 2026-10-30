@@ -1,0 +1,732 @@
+{
+  "dataset": "BenchCAD 2 v2.1 nine public development samples",
+  "leaderboard_comparable": false,
+  "complete": true,
+  "selection": "The original nine first attempts only; failed transport/no-submission is zero; recovery is excluded",
+  "protocol": {
+    "model": "gpt-6-astra",
+    "effort": "max",
+    "benchcad_sha": "70b7aaeb3a031851d058252e4ebe4ed30ca41f77",
+    "scoring_protocol": {
+      "benchcad_sha": "70b7aaeb3a031851d058252e4ebe4ed30ca41f77",
+      "mesh_guard": "0",
+      "threads": {
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      }
+    },
+    "agentcad_sha": "25835161de291daa4035e81a7e8ba501e1474a63",
+    "codex_version": "codex-cli 0.163.0",
+    "tool_adapter_sha256": "4852f9d26ef7d40ce45cd850aa1ef1a345837878e3a57a77aa98ca22c7d1c4af",
+    "runner_sha256": "21c6b557492f9165dceb1094428f3a29c6d31a2faa149b7b33ae9b890f15c23a",
+    "timeout_s": 3600,
+    "tool_call_limit": 100,
+    "jobs": 2,
+    "official_round_or_token_budget": false,
+    "set": "nine development samples",
+    "no_reference_files_staged": true,
+    "cost": "not reported by Codex CLI"
+  },
+  "verification": {
+    "adapter_tests_passed": 24,
+    "native_build_and_step_export": "pass",
+    "canonical_manifest_files_checked": 144,
+    "staged_input_files_identical": 130,
+    "case_prompts_identical": 9,
+    "commands_identical_except_model_and_workspace_paths": 9,
+    "metadata_only_difference": {
+      "model": {
+        "Sol": "gpt-6.1-sol",
+        "Astra": "gpt-6-astra"
+      }
+    }
+  },
+  "case_count": 9,
+  "attempt_count": 9,
+  "submitted": 8,
+  "total_tool_calls": 337,
+  "total_tool_errors": 10,
+  "cumulative_episode_seconds": 16264.0,
+  "usage_cases_reported": 8,
+  "cli_reported_cumulative_usage": {
+    "input_tokens": 22763671,
+    "cached_input_tokens": 21911168,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 273401,
+    "reasoning_output_tokens": 217378
+  },
+  "token_usage_complete": false,
+  "task_means": {
+    "task1": {
+      "total": 1,
+      "mean": 0.7164093063491801
+    },
+    "task2": {
+      "total": 2,
+      "mean": 0.535074
+    },
+    "task3": {
+      "total": 2,
+      "mean": 0.5911091853053814
+    },
+    "task4": {
+      "total": 1,
+      "mean": 0.16218979503657144
+    },
+    "task5": {
+      "total": 1,
+      "mean": 0.9025947921892
+    },
+    "task6": {
+      "total": 2,
+      "mean": 0.5
+    }
+  },
+  "mean_of_task_means": 0.5678961798133888,
+  "records": [
+    {
+      "case": "task1_case1",
+      "episode": {
+        "case": "task1_case1",
+        "kind": "part",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "workspace": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\workspaces\\task1_case1\\attempt-1",
+        "logs": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task1_case1\\attempt-1",
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "exit_code": 0,
+        "seconds": 2226.8,
+        "submitted": true,
+        "tool_calls": 38,
+        "tool_errors": 1,
+        "tool_error_codes": {},
+        "tool_calls_started": 38,
+        "tool_calls_by_name": {
+          "read_workspace": 25,
+          "run_script": 5,
+          "export_drawing": 7,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 38,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 2301745,
+          "cached_input_tokens": 2202240,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 44488,
+          "reasoning_output_tokens": 37289
+        }
+      },
+      "scoring": {
+        "score": 0.7164093063491801,
+        "metric": "part_v1",
+        "orientation": "free",
+        "pose_mode": "iou24_aligned",
+        "frame": "own",
+        "weights": {
+          "iou_term": 0.8,
+          "topology": 0.2
+        },
+        "iou": 0.07612315361513473,
+        "iou24": 0.7556520828972159,
+        "iou_term": 0.7200185723082794,
+        "topology": 0.701972242512783,
+        "topology_reference": [
+          1,
+          30,
+          0
+        ],
+        "topology_candidate": [
+          1,
+          36,
+          0
+        ],
+        "topology_method": [
+          "brep",
+          "mesh-fallback"
+        ],
+        "coverage": 1.0
+      },
+      "submission_failure_count": 0,
+      "raw_record_paths": {
+        "run.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task1_case1\\attempt-1\\run.json",
+        "score.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task1_case1\\score.json",
+        "events.jsonl": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task1_case1\\attempt-1\\events.jsonl",
+        "stderr.log": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task1_case1\\attempt-1\\stderr.log",
+        "case_manifest": "D:\\Projects\\bench-src\\benchcad2-sol-max\\examples\\task1\\cases\\case1\\case.json"
+      },
+      "raw_sha256": {
+        "run.json": "192d5c7013fbc6946143a0a5e4c73ba4ad8e4774919cde21f6fc7f6bdfc74ff5",
+        "score.json": "40c485a9af6b5de820d86985f9906c8ca8ba18f434205663e6a56d099594ec61",
+        "events.jsonl": "0f538dc81d8f09291cc0608c6d6da7933f47e0c0a258129be17fd0c86b21850f",
+        "stderr.log": "93d75e3cfc4be4838276b517eab7dfc6383951045eb5f7c0f4ca8cb96969601a",
+        "case_manifest": "3d0db271684a834ff53d899e0b051102a51849ff66975aee250476db1f9dd085"
+      }
+    },
+    {
+      "case": "task2_case1",
+      "episode": {
+        "case": "task2_case1",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "workspace": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\workspaces\\task2_case1\\attempt-1",
+        "logs": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task2_case1\\attempt-1",
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "exit_code": 0,
+        "seconds": 1534.2,
+        "submitted": true,
+        "tool_calls": 43,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 43,
+        "tool_calls_by_name": {
+          "read_workspace": 17,
+          "inspect_step": 21,
+          "preview_assembly": 4,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 43,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 2716350,
+          "cached_input_tokens": 2563840,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 30131,
+          "reasoning_output_tokens": 24939
+        }
+      },
+      "scoring": {
+        "score": 0.387411,
+        "metric": "asm_v1",
+        "iou": 0.9965,
+        "iou_raw": 0.1255,
+        "avg_part": 1.0,
+        "asm_v1": 0.387411,
+        "hit": 0.9231,
+        "n_gt": 26,
+        "n_pred": 26
+      },
+      "submission_failure_count": 0,
+      "raw_record_paths": {
+        "run.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task2_case1\\attempt-1\\run.json",
+        "score.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task2_case1\\score.json",
+        "events.jsonl": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task2_case1\\attempt-1\\events.jsonl",
+        "stderr.log": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task2_case1\\attempt-1\\stderr.log",
+        "case_manifest": "D:\\Projects\\bench-src\\benchcad2-sol-max\\examples\\task2\\cases\\case1\\case.json"
+      },
+      "raw_sha256": {
+        "run.json": "bc334de59db4ca2acfef328a55c73b617391b3544b28e6c39c991e2f730960eb",
+        "score.json": "2075af29c9f4104e5ce3dd906a312b33b8fac141bfb091cb4d4f1a1e4a13aa11",
+        "events.jsonl": "70ad0dbb0291a66213310ca829d011ce94b9e1472f3bfd22713595a6c8162f27",
+        "stderr.log": "15508af78751a37f3a4373be0d2eba75d8e272f870cc95f8bc1a834aec3946f3",
+        "case_manifest": "6249e4d6184413fd0c392d03459da6a27c1538ce56e5e41f5acf49df661a94c3"
+      }
+    },
+    {
+      "case": "task2_case2",
+      "episode": {
+        "case": "task2_case2",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "workspace": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\workspaces\\task2_case2\\attempt-1",
+        "logs": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task2_case2\\attempt-1",
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "exit_code": 0,
+        "seconds": 2348.2,
+        "submitted": true,
+        "tool_calls": 48,
+        "tool_errors": 1,
+        "tool_error_codes": {},
+        "tool_calls_started": 48,
+        "tool_calls_by_name": {
+          "read_workspace": 22,
+          "inspect_step": 21,
+          "preview_assembly": 4,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 48,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 3150760,
+          "cached_input_tokens": 3032576,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 30757,
+          "reasoning_output_tokens": 20677
+        }
+      },
+      "scoring": {
+        "score": 0.682737,
+        "metric": "asm_v1",
+        "iou": 1.0,
+        "iou_raw": 0.033,
+        "avg_part": 1.0,
+        "asm_v1": 0.682737,
+        "hit": 0.9722,
+        "n_gt": 36,
+        "n_pred": 36
+      },
+      "submission_failure_count": 0,
+      "raw_record_paths": {
+        "run.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task2_case2\\attempt-1\\run.json",
+        "score.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task2_case2\\score.json",
+        "events.jsonl": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task2_case2\\attempt-1\\events.jsonl",
+        "stderr.log": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task2_case2\\attempt-1\\stderr.log",
+        "case_manifest": "D:\\Projects\\bench-src\\benchcad2-sol-max\\examples\\task2\\cases\\case2\\case.json"
+      },
+      "raw_sha256": {
+        "run.json": "bbbacc49c5034da1604a7fdf2a4bf34a4e8e2c053d7185a7ad93440bb4ab3a3a",
+        "score.json": "fef61769951cccefff03c9d90fbb800b35c678ea84dbdbe6fc23ffd177d3b051",
+        "events.jsonl": "f066607509ddb576e7bbcb2643dd165dd891fc3994547ede57f2b79a749d0645",
+        "stderr.log": "963d23d2a21cdabe74ccd5ec9999fff369505972839502d8b56f6e2d98324a21",
+        "case_manifest": "db775bff71aa3cb81de6d6d4ceb1f7f2a401308d0afe9b071b9a0201c4b28c5a"
+      }
+    },
+    {
+      "case": "task3_case1",
+      "episode": {
+        "case": "task3_case1",
+        "kind": "part",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "workspace": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\workspaces\\task3_case1\\attempt-1",
+        "logs": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task3_case1\\attempt-1",
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "exit_code": 0,
+        "seconds": 2119.2,
+        "submitted": true,
+        "tool_calls": 34,
+        "tool_errors": 5,
+        "tool_error_codes": {
+          "SCRIPT_FAILED": 4,
+          "SCRIPT_REJECTED": 1
+        },
+        "tool_calls_started": 34,
+        "tool_calls_by_name": {
+          "read_workspace": 8,
+          "run_script": 13,
+          "export_drawing": 12,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 34,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 2383002,
+          "cached_input_tokens": 2313088,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 42136,
+          "reasoning_output_tokens": 35283
+        }
+      },
+      "scoring": {
+        "score": 0.6414587422231595,
+        "metric": "part_v1",
+        "orientation": "pinned",
+        "pose_mode": "expert-fit",
+        "frame": "own",
+        "weights": {
+          "iou_term": 0.8,
+          "topology": 0.2
+        },
+        "iou": 0.8164386060937785,
+        "iou_pinned": 0.71305278208964,
+        "iou_term": 0.5518234277789492,
+        "topology": 1.0,
+        "topology_reference": [
+          1,
+          0,
+          0
+        ],
+        "topology_candidate": [
+          1,
+          0,
+          0
+        ],
+        "topology_method": [
+          "brep",
+          "brep"
+        ],
+        "coverage": 1.0
+      },
+      "submission_failure_count": 0,
+      "raw_record_paths": {
+        "run.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task3_case1\\attempt-1\\run.json",
+        "score.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task3_case1\\score.json",
+        "events.jsonl": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task3_case1\\attempt-1\\events.jsonl",
+        "stderr.log": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task3_case1\\attempt-1\\stderr.log",
+        "case_manifest": "D:\\Projects\\bench-src\\benchcad2-sol-max\\examples\\task3\\cases\\case1\\case.json"
+      },
+      "raw_sha256": {
+        "run.json": "27935fa472522b1b3e604e4598b69834d1cbd4d24e5c46050ba463ccd1774959",
+        "score.json": "039500581728a3cef3ab5d4e0c79c1c380f4d98c54963e5b3eaa99e71313d456",
+        "events.jsonl": "d5e6272678ea8dd20f00e46ece545cf17102078e0ca3cc8ba8da60addd2593b2",
+        "stderr.log": "358e98deaaf2d442e911e69073c3b727a729414aae24f6ac38fc831d4886f86e",
+        "case_manifest": "d0eee2598ba18b84b7feefab500cee24e0855eb27e046f454cf99a5d8cb64bdb"
+      }
+    },
+    {
+      "case": "task3_case2",
+      "episode": {
+        "case": "task3_case2",
+        "kind": "part",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "workspace": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\workspaces\\task3_case2\\attempt-1",
+        "logs": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task3_case2\\attempt-1",
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "exit_code": 0,
+        "seconds": 2597.6,
+        "submitted": true,
+        "tool_calls": 44,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "UNKNOWN_PARAM": 1
+        },
+        "tool_calls_started": 44,
+        "tool_calls_by_name": {
+          "read_workspace": 13,
+          "run_script": 15,
+          "export_drawing": 15,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 44,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 3422023,
+          "cached_input_tokens": 3345280,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 43591,
+          "reasoning_output_tokens": 35082
+        }
+      },
+      "scoring": {
+        "score": 0.5407596283876034,
+        "metric": "part_v1",
+        "orientation": "pinned",
+        "pose_mode": "expert-fit",
+        "frame": "own",
+        "weights": {
+          "iou_term": 0.8,
+          "topology": 0.2
+        },
+        "iou": 0.7860886336002684,
+        "iou_pinned": 0.7339721883269736,
+        "iou_term": 0.6134495354845042,
+        "topology": 0.25,
+        "topology_reference": [
+          1,
+          0,
+          0
+        ],
+        "topology_candidate": [
+          1,
+          1,
+          0
+        ],
+        "topology_method": [
+          "brep",
+          "brep"
+        ],
+        "coverage": 1.0
+      },
+      "submission_failure_count": 0,
+      "raw_record_paths": {
+        "run.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task3_case2\\attempt-1\\run.json",
+        "score.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task3_case2\\score.json",
+        "events.jsonl": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task3_case2\\attempt-1\\events.jsonl",
+        "stderr.log": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task3_case2\\attempt-1\\stderr.log",
+        "case_manifest": "D:\\Projects\\bench-src\\benchcad2-sol-max\\examples\\task3\\cases\\case2\\case.json"
+      },
+      "raw_sha256": {
+        "run.json": "92410bd1279bf236d4b6afc6d6154bf17c8d2ed391191397f1d80a3cd9ffba2a",
+        "score.json": "7fa82faeee5a422857301df33ff4cb6eab3573276852d8114d363aef187719d2",
+        "events.jsonl": "b5a8430dc1d409072e4fa633f4d4b3fd4135ab914b6dba9e9a98852c2dd990f8",
+        "stderr.log": "3349dff358dd0c6361235a7ebc2e3c9d19d35e64ed37ae11e662bd26b4c35553",
+        "case_manifest": "2869189dab3673b14aa1f07dd41985fe6f87ae45e529cce6afb2f26ef182bd8a"
+      }
+    },
+    {
+      "case": "task4_case1",
+      "episode": {
+        "case": "task4_case1",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "workspace": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\workspaces\\task4_case1\\attempt-1",
+        "logs": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task4_case1\\attempt-1",
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "exit_code": 0,
+        "seconds": 3048.8,
+        "submitted": true,
+        "tool_calls": 60,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "UNKNOWN_PARAM": 1
+        },
+        "tool_calls_started": 60,
+        "tool_calls_by_name": {
+          "read_workspace": 17,
+          "run_script": 17,
+          "export_drawing": 23,
+          "preview_assembly": 2,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 60,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 5203513,
+          "cached_input_tokens": 5036416,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 44422,
+          "reasoning_output_tokens": 33815
+        }
+      },
+      "scoring": {
+        "score": 0.16218979503657144,
+        "metric": "part_x_asm_v1",
+        "iou": 0.7499,
+        "iou_raw": 0.7499,
+        "avg_part": 0.4520894285714286,
+        "asm_v1": 0.358756,
+        "hit": 0.3333,
+        "n_gt": 9,
+        "n_pred": 9
+      },
+      "submission_failure_count": 0,
+      "raw_record_paths": {
+        "run.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task4_case1\\attempt-1\\run.json",
+        "score.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task4_case1\\score.json",
+        "events.jsonl": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task4_case1\\attempt-1\\events.jsonl",
+        "stderr.log": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task4_case1\\attempt-1\\stderr.log",
+        "case_manifest": "D:\\Projects\\bench-src\\benchcad2-sol-max\\examples\\task4\\cases\\case1\\case.json"
+      },
+      "raw_sha256": {
+        "run.json": "27e1d6e74b08487ba865307278b9fe4a4dc4f3d47a8e968ee0fd597b94439d65",
+        "score.json": "ea8c204f79200d03fe435580cba0303dbde6a0da10bd413ad52c472cfe31a7eb",
+        "events.jsonl": "db335250fac2b99dd81f100ee6b068f0d0247578a7cc9a29b22601fc048d2b80",
+        "stderr.log": "51cb7c339b86dca6047470a8dee1f543de3ca86cbf667539ed8e2e336d034c70",
+        "case_manifest": "24a3f4fa766bdf6e4847ad085f0b37a7c2c1de77105313ce1740e3917e64abd4"
+      }
+    },
+    {
+      "case": "task5_case1",
+      "episode": {
+        "case": "task5_case1",
+        "kind": "assembly",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "workspace": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\workspaces\\task5_case1\\attempt-1",
+        "logs": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task5_case1\\attempt-1",
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "exit_code": 0,
+        "seconds": 1705.8,
+        "submitted": true,
+        "tool_calls": 42,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "SCRIPT_REJECTED": 1
+        },
+        "tool_calls_started": 42,
+        "tool_calls_by_name": {
+          "read_workspace": 11,
+          "inspect_step": 16,
+          "run_script": 6,
+          "export_drawing": 5,
+          "preview_assembly": 3,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 42,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 3398217,
+          "cached_input_tokens": 3265536,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 33855,
+          "reasoning_output_tokens": 27446
+        }
+      },
+      "scoring": {
+        "score": 0.9025947921892,
+        "metric": "part_x_asm_v1",
+        "iou": 1.0,
+        "iou_raw": 0.0765,
+        "avg_part": 0.9977756,
+        "asm_v1": 0.904607,
+        "hit": 0.96,
+        "n_gt": 25,
+        "n_pred": 25
+      },
+      "submission_failure_count": 0,
+      "raw_record_paths": {
+        "run.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task5_case1\\attempt-1\\run.json",
+        "score.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task5_case1\\score.json",
+        "events.jsonl": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task5_case1\\attempt-1\\events.jsonl",
+        "stderr.log": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task5_case1\\attempt-1\\stderr.log",
+        "case_manifest": "D:\\Projects\\bench-src\\benchcad2-sol-max\\examples\\task5\\cases\\case1\\case.json"
+      },
+      "raw_sha256": {
+        "run.json": "35ac2e3ad672af731587504681db73ccdc91015cef263e2ada054d7e5b2d3ca6",
+        "score.json": "85f5f0670a917eb3a5a90a4cc45c8ca1e8afc9158925fbb2d239248254cc1cd0",
+        "events.jsonl": "5eac9546e9c6c583f30a5b038c86d82e420ea79e33fd945c23ce390af0bd992d",
+        "stderr.log": "0814e74e4b991f81a508d7db2ad0194d54393a0241886553f8b11d58ba63f250",
+        "case_manifest": "f59a45ddc4d9c256a15d72747b9446066f1a91711ba9004b0b6517a812a6094b"
+      }
+    },
+    {
+      "case": "task6_case1",
+      "episode": {
+        "case": "task6_case1",
+        "kind": "ecad",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "workspace": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\workspaces\\task6_case1\\attempt-1",
+        "logs": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task6_case1\\attempt-1",
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "exit_code": 0,
+        "seconds": 312.0,
+        "submitted": true,
+        "tool_calls": 11,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 11,
+        "tool_calls_by_name": {
+          "read_workspace": 10,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 11,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 188061,
+          "cached_input_tokens": 152192,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 4021,
+          "reasoning_output_tokens": 2847
+        }
+      },
+      "scoring": {
+        "score": 1.0,
+        "metric": "ecad_v2",
+        "status": "ok",
+        "correspondence_mode": "legacy",
+        "channels": {
+          "component": 1.0,
+          "terminal": 1.0,
+          "net": 1.0,
+          "short": 1.0,
+          "open": 1.0
+        },
+        "fatal_power_short": false,
+        "fatal_rail_faults": [],
+        "exact_search": true,
+        "lower_bound": false,
+        "components_gt": 6,
+        "components_pred": 6,
+        "components_matched": 6,
+        "incidences_gt": 12,
+        "incidences_pred": 12,
+        "incidences_matched": 12
+      },
+      "submission_failure_count": 0,
+      "raw_record_paths": {
+        "run.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task6_case1\\attempt-1\\run.json",
+        "score.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task6_case1\\score.json",
+        "events.jsonl": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task6_case1\\attempt-1\\events.jsonl",
+        "stderr.log": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task6_case1\\attempt-1\\stderr.log",
+        "case_manifest": "D:\\Projects\\bench-src\\benchcad2-sol-max\\examples\\task6\\cases\\case1\\case.json"
+      },
+      "raw_sha256": {
+        "run.json": "599eb225232e94e640d46b5823fa9c6597117a21f6a653545bff6e4cefe98462",
+        "score.json": "10ed01a6e0ac0144b30f5e915501103841473e73ad5819a5c44c15c029c9f8be",
+        "events.jsonl": "d5e96c51ee3f36f56dbea32b8108afc91ef354c879a439cf581742ba8ca850d5",
+        "stderr.log": "1ff54494e09692c1c72fe53ebe4ec5a63dbb2b2d8a19f72b4082421af74d61ec",
+        "case_manifest": "34d6fdfd904b290d83d9bed1c315371aaa19008a04e62e6b612929c6ca9ccf60"
+      }
+    },
+    {
+      "case": "task6_case2",
+      "episode": {
+        "case": "task6_case2",
+        "kind": "ecad",
+        "model": "gpt-6-astra",
+        "effort": "max",
+        "attempt": 1,
+        "status": "agent_error",
+        "workspace": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\workspaces\\task6_case2\\attempt-1",
+        "logs": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task6_case2\\attempt-1",
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "exit_code": 1,
+        "seconds": 371.4,
+        "submitted": false,
+        "tool_calls": 17,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 17,
+        "tool_calls_by_name": {
+          "read_workspace": 17
+        },
+        "submitted_after_calls": null,
+        "unexpected_tools": [],
+        "usage": null
+      },
+      "scoring": {
+        "score": 0.0,
+        "status": "no_submission"
+      },
+      "submission_failure_count": 0,
+      "raw_record_paths": {
+        "run.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task6_case2\\attempt-1\\run.json",
+        "score.json": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task6_case2\\attempt-1\\first-attempt-score.json",
+        "events.jsonl": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task6_case2\\attempt-1\\events.jsonl",
+        "stderr.log": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030\\task6_case2\\attempt-1\\stderr.log",
+        "case_manifest": "D:\\Projects\\bench-src\\benchcad2-sol-max\\examples\\task6\\cases\\case2\\case.json"
+      },
+      "raw_sha256": {
+        "run.json": "7c495f270f26fd6c420c252cb5e1caf2abbddd2061b258bdd02b92ccf34bd546",
+        "score.json": "267f089ddcb13a630216eff6025cd0a3de96f92d88e28dd3760b93e01eb93256",
+        "events.jsonl": "bf6fdaaf6553989486db9a55e4ea89c207511307a94e9588b9877640355a8440",
+        "stderr.log": "60792cb297635ea5c12f5a4d4e5802aa5d8d84a16fd225386b1149d22d747ae5",
+        "case_manifest": "fb4e475176cbdc173253725617b407a51a6cc61392216887c245029a533869f0"
+      }
+    }
+  ],
+  "raw_output_directory": "D:\\Projects\\AgentCAD-output\\benchcad2-astra-max-20261030",
+  "infrastructure_recovery_plan": {
+    "case": "task6_case2",
+    "initial_attempt": 1,
+    "reason": "TLS EOF followed by five websocket disconnect retries; HTTP fallback ended with Bad Request/turn.failed; exit 1, no submission, no tool errors",
+    "first_attempt_is_primary": true,
+    "primary": "Nine original first attempts, including this no-submission score of 0; no retry is substituted into primary",
+    "supplementary": "One explicit --retry-infra attempt using the unchanged 3600-second/100-call per-attempt protocol; report separately regardless of score",
+    "resources": "Report both original nine attempts and every attempt including recovery; failed-attempt token usage is unavailable",
+    "no_best_attempt_selection": true,
+    "frozen_before_recovery": true,
+    "first_score_sha256": "267f089ddcb13a630216eff6025cd0a3de96f92d88e28dd3760b93e01eb93256"
+  }
+}
