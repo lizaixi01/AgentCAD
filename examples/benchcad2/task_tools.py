@@ -10,6 +10,7 @@ import json
 import re
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 from agentcad.mcp_server import build_server
@@ -101,6 +102,10 @@ class TaskFiles:
 
     def submit(self, path: str = "", instances: list[dict] | None = None,
                graph: dict | None = None) -> dict:
+        marker_file = self.root / "answer.json"
+        if marker_file.exists():
+            return {"submitted": True, **json.loads(marker_file.read_text(encoding="utf-8")),
+                    "message": "The first final answer is sealed; the episode has ended."}
         if self.kind == "part":
             answer = self.path(path)
             if answer.suffix.lower() not in (".step", ".stp"):
@@ -128,8 +133,20 @@ class TaskFiles:
             encoded = json.dumps(graph, indent=2, allow_nan=False)
             answer = self.root / "pred_graph.json"
             answer.write_text(encoded, encoding="utf-8")
-        marker = {"path": answer.relative_to(self.root).as_posix(), "kind": self.kind}
-        (self.root / "answer.json").write_text(json.dumps(marker), encoding="utf-8")
+        # Runtime tools reject .agentcad/ paths. Seal the first explicit answer
+        # there, so later edits to a working STEP cannot change what is scored.
+        state = self.root / ".agentcad"
+        state.mkdir(exist_ok=True)
+        sealed = Path(tempfile.mkdtemp(prefix="benchcad2-submission-", dir=state)) / answer.name
+        if answer.is_dir():
+            shutil.copytree(answer, sealed)
+        else:
+            shutil.copy2(answer, sealed)
+        marker = {"path": sealed.relative_to(self.root).as_posix(), "kind": self.kind}
+        temporary = self.root / "answer.json.tmp"
+        temporary.write_text(json.dumps(marker), encoding="utf-8")
+        temporary.replace(marker_file)
+        self.policy.read_only = True
         return {"submitted": True, **marker, "message": "Final answer recorded. End the task now."}
 
 

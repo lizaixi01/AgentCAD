@@ -36,6 +36,16 @@ def score_protocol(source: Path) -> dict:
             "mesh_guard": scorer_env().get("BENCHCAD_MESH_GUARD", "1"), "threads": THREAD_ENV}
 
 
+def validate_case_files(case: Path) -> None:
+    manifest = json.loads((case / "case.json").read_text(encoding="utf-8"))
+    for record in manifest["input"] + manifest["gt"]:
+        p = (case / record["path"]).resolve()
+        if not p.is_relative_to(case.resolve()) or p.is_symlink():
+            raise ValueError(f"Invalid case path: {record['path']}")
+        if hashlib.sha256(p.read_bytes()).hexdigest() != record["sha256"]:
+            raise ValueError(f"Case hash mismatch: {p}. Check out BenchCAD with core.autocrlf=false")
+
+
 def dump(path: Path, value) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(path.suffix + ".tmp")
@@ -143,6 +153,7 @@ def stop_tree(proc: subprocess.Popen) -> None:
 def log_stats(path: Path) -> dict:
     calls, errors, unexpected, usage = 0, 0, [], None
     codes, by_name, started = {}, {}, set()
+    submitted_after_calls = None
     if not path.exists():
         return {"tool_calls": 0, "tool_errors": 0, "unexpected_tools": [], "usage": None}
     for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -170,6 +181,9 @@ def log_stats(path: Path) -> dict:
                     failed = True
                     code = (data.get("error") or {}).get("code", "unknown")
                     codes[code] = codes.get(code, 0) + 1
+                if (isinstance(data, dict) and data.get("submitted") is True
+                        and name == "submit_answer" and submitted_after_calls is None):
+                    submitted_after_calls = len(started)
             errors += int(failed)
             if item.get("server") != "agentcad":
                 unexpected.append(item.get("server"))
@@ -179,6 +193,7 @@ def log_stats(path: Path) -> dict:
             usage = event.get("usage")
     return {"tool_calls": calls, "tool_errors": errors, "tool_error_codes": codes,
             "tool_calls_started": len(started), "tool_calls_by_name": by_name,
+            "submitted_after_calls": submitted_after_calls,
             "unexpected_tools": unexpected, "usage": usage}
 
 
@@ -270,8 +285,8 @@ def run_one(case: Path, args) -> dict:
     marker = workspace / "answer.json"
     elapsed = time.monotonic() - t0
     submitted_at = marker.stat().st_mtime - wall_start if marker.is_file() else None
-    status, submitted = episode_outcome(status, proc.returncode, elapsed, submitted_at,
-                                        stats.get("tool_calls_started", stats["tool_calls"]),
+    used_calls = stats.get("submitted_after_calls") or stats.get("tool_calls_started", stats["tool_calls"])
+    status, submitted = episode_outcome(status, proc.returncode, elapsed, submitted_at, used_calls,
                                         args.timeout, args.calls)
     row.update(status=status, exit_code=proc.returncode, seconds=round(time.monotonic() - t0, 1),
                submitted=submitted, **stats)
@@ -325,26 +340,32 @@ def score_one(case: Path, args, *, oracle: bool = False) -> dict:
 
 
 def summarize(root: Path) -> dict:
-    by_task, records = {}, []
+    by_task, records, protocols = {}, [], {}
     for p in sorted(root.glob("task*_case*/score.json")):
         s = json.loads(p.read_text(encoding="utf-8"))
         run_path = p.parent / "run.json"
         r = json.loads(run_path.read_text(encoding="utf-8")) if run_path.exists() else {}
         if r.get("attempt") != s.get("attempt"):
             continue
+        protocol = s.get("scoring_protocol")
+        protocols[json.dumps(protocol, sort_keys=True)] = protocol
         records.append({"case": s["case"], "score": s.get("score"), "status": s.get("status"),
                         "seconds": r.get("seconds"), "tool_calls": r.get("tool_calls"),
                         "submitted": r.get("submitted"), "kind": r.get("kind"),
+                        "scoring_protocol": protocol,
                         "attempts": [json.loads(a.read_text(encoding="utf-8")) for a in
                                      sorted(p.parent.glob("attempt-*/run.json"))]})
         by_task.setdefault(s["case"].split("_")[0], []).append(s.get("score"))
     tasks = {task: {"scored": sum(v is not None for v in values), "total": len(values),
                     "mean": sum(v for v in values if v is not None) / sum(v is not None for v in values)
                     if any(v is not None for v in values) else None} for task, values in by_task.items()}
-    complete = len(tasks) == 6 and len(records) == 9 and all(t["scored"] == t["total"] for t in tasks.values())
+    consistent = len(protocols) == 1 and None not in protocols.values()
+    complete = (consistent and len(tasks) == 6 and len(records) == 9
+                and all(t["scored"] == t["total"] for t in tasks.values()))
     result = {"model": MODEL, "effort": EFFORT, "dataset": "BenchCAD 2 nine development samples",
               "harness": "AgentCAD custom Codex MCP harness; not leaderboard-comparable",
               "complete": complete, "tasks": tasks, "records": records,
+              "scoring_protocols": list(protocols.values()),
               "mean_of_task_means": sum(t["mean"] for t in tasks.values()) / 6 if complete else None}
     dump(root / "summary.json", result)
     return result
@@ -425,6 +446,8 @@ def main() -> None:
                 or f"{p.parents[2].name}_{p.parent.name}" in args.cases]
     if not selected or (args.cases and len(selected) != len(set(args.cases))):
         raise SystemExit("Requested case ids do not match the development samples")
+    for case in selected:
+        validate_case_files(case)
     args.out.mkdir(parents=True, exist_ok=True)
     if args.mode == "run":
         # A failed reference check is an evaluator failure, not a model score.

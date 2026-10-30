@@ -104,7 +104,26 @@ def test_input_only_assembly_copies_supplied_parts_and_records_placements(tmp_pa
     assert (tmp_path / "submission/parts/part_01.step").read_bytes() == step.read_bytes()
     rows = json.loads((tmp_path / "submission/assembly/instances.json").read_text())
     assert [r["instance_id"] for r in rows] == ["part_01_i1", "part_01_i2"]
-    assert json.loads((tmp_path / "answer.json").read_text())["path"] == "submission"
+    sealed = tmp_path / json.loads((tmp_path / "answer.json").read_text())["path"]
+    assert (sealed / "parts/part_01.step").read_bytes() == step.read_bytes()
+
+
+def test_first_answer_is_immutable_even_if_working_files_or_submit_change(tmp_path):
+    answer = tmp_path / "part.step"
+    answer.write_bytes(b"first solid")
+    files = tools.TaskFiles(tmp_path, "part")
+    first = files.submit(path="part.step")
+    sealed = tmp_path / first["path"]
+    answer.write_bytes(b"second solid")
+    assert files.submit(path="part.step")["path"] == first["path"]
+    assert sealed.read_bytes() == b"first solid"
+    with pytest.raises(Exception):
+        files.path(first["path"])
+    graph = tools.TaskFiles(tmp_path / "pcb", "ecad")
+    graph.root.mkdir()
+    first = graph.submit(graph={"components": [{"id": "first"}]})
+    graph.submit(graph={"components": [{"id": "second"}]})
+    assert json.loads((graph.root / first["path"]).read_text())["components"][0]["id"] == "first"
 
 
 def test_submission_requires_real_output_inside_workspace(tmp_path):
@@ -122,7 +141,8 @@ def test_summary_weights_tasks_equally_and_does_not_hide_evaluator_failure(tmp_p
         for c in range(1, count + 1):
             out = tmp_path / f"task{t}_case{c}"
             runner.dump(out / "run.json", {"attempt": 1, "seconds": 1., "submitted": True})
-            runner.dump(out / "score.json", {"case": out.name, "attempt": 1, "score": t / 10})
+            runner.dump(out / "score.json", {"case": out.name, "attempt": 1, "score": t / 10,
+                                              "scoring_protocol": {"revision": "same"}})
     summary = runner.summarize(tmp_path)
     assert summary["complete"]
     assert summary["mean_of_task_means"] == pytest.approx(.35)
@@ -132,6 +152,33 @@ def test_summary_weights_tasks_equally_and_does_not_hide_evaluator_failure(tmp_p
     assert not summary["complete"]
     assert summary["mean_of_task_means"] is None
     assert summary["tasks"]["task3"]["scored"] == 1
+
+
+def test_summary_refuses_mixed_scoring_revisions(tmp_path):
+    for t, count in enumerate([1, 2, 2, 1, 1, 2], 1):
+        for c in range(1, count + 1):
+            out = tmp_path / f"task{t}_case{c}"
+            runner.dump(out / "run.json", {"attempt": 1})
+            runner.dump(out / "score.json", {"case": out.name, "attempt": 1, "score": 1.,
+                                              "scoring_protocol": {"revision": "A" if t < 6 else "B"}})
+    summary = runner.summarize(tmp_path)
+    assert not summary["complete"]
+    assert summary["mean_of_task_means"] is None
+    assert len(summary["scoring_protocols"]) == 2
+
+
+def test_manifest_rejects_windows_line_ending_conversion(tmp_path):
+    import hashlib
+
+    (tmp_path / "input").mkdir()
+    p = tmp_path / "input/part.step"
+    p.write_bytes(b"canonical\n")
+    runner.dump(tmp_path / "case.json", {"input": [{"path": "input/part.step",
+        "sha256": hashlib.sha256(p.read_bytes()).hexdigest()}], "gt": []})
+    runner.validate_case_files(tmp_path)
+    p.write_bytes(b"canonical\r\n")
+    with pytest.raises(ValueError, match="hash mismatch"):
+        runner.validate_case_files(tmp_path)
 
 
 def test_failed_episode_is_zero_even_when_partial_geometry_exists(tmp_path, monkeypatch):

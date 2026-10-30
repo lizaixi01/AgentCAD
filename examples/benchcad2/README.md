@@ -18,6 +18,9 @@ performance. The user chose them because Core access was unavailable.
   tiles, high-resolution drawing masters, BOM item mapping, task brief selection,
   and initial image selection. `gt/`, `case.json` and scorers never enter the
   model's workspace or MCP process. No reference-renderer code is exposed.
+  All 144 input/reference files are checked against their manifest SHA-256 values.
+  On Windows use `core.autocrlf=false` for the BenchCAD checkout: otherwise Git
+  converts text STEP/JSON line endings and breaks the published file hashes.
 - Codex receives only the AgentCAD MCP server, with its normal CAD tools and the
   benchmark adapters below. User MCP configuration, plugins, shell, web search,
   user/project instruction files and multi-agent tools are disabled for the run.
@@ -36,7 +39,9 @@ performance. The user chose them because Core access was unavailable.
   AgentCAD CAD-engine performance alone.
 - Limit: 3,600 seconds and 100 MCP calls per case. An explicit
   `submit_answer` call is required; failed or interrupted episodes do not promote
-  an earlier STEP to an answer. These are not the official 60-round/500k-output-
+  an earlier STEP to an answer. The first final answer is copied into reserved
+  runtime state and sealed; later workspace edits/submissions cannot replace it.
+  These are not the official 60-round/500k-output-
   token limits. Codex manages its own reasoning context and compaction. Dollar
   cost and a mid-episode reasoning-token budget are unavailable from this CLI.
 - Standard-answer checks must score 1.0 for all nine cases before interpreting
@@ -53,6 +58,7 @@ performance. The user chose them because Core access was unavailable.
   to retry; all attempts remain in the summary.
   Scores of zero for absent answers are distinct from evaluator failures (`null`).
   Overall score is the mean of the six task means, only when all nine are scored.
+  Mixed scoring protocols/revisions never produce a complete aggregate.
 
 ## Reproduce
 
@@ -65,10 +71,12 @@ $env:AGENTCAD_FREECAD = '<your FreeCAD 1.1.4 folder>'
 $env:AGENTCAD_VIEWER = '0'
 $env:PYTHONIOENCODING = 'utf-8'
 $env:BENCHCAD_MESH_GUARD = '0'  # Windows; see the protocol above
+$benchSource = '<BenchCAD v2.1 checkout with canonical file bytes>'
+$benchPython = '<BenchCAD environment python.exe>'
 
-.venv\Scripts\python examples/benchcad2/run.py oracle --out '<output directory>'
-.venv\Scripts\python examples/benchcad2/run.py run --out '<output directory>' --resume
-.venv\Scripts\python examples/benchcad2/run.py score --out '<output directory>' --resume
+.venv\Scripts\python examples/benchcad2/run.py oracle --bench-source $benchSource --bench-python $benchPython --out '<output directory>'
+.venv\Scripts\python examples/benchcad2/run.py run --bench-source $benchSource --bench-python $benchPython --out '<output directory>' --resume
+.venv\Scripts\python examples/benchcad2/run.py score --bench-source $benchSource --bench-python $benchPython --out '<output directory>' --resume
 ```
 
 `--cases task3_case2` selects one case. `--jobs` defaults to two model episodes or
