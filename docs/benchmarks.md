@@ -50,6 +50,34 @@ The fixed [U-C4N v8 execution matrix](comparison-upstream-benchmark-v8.md) now p
 
 ## Source-capability comparison
 
+**Latest follow-up, 2026-10-31: AgentCAD 100/100 · AutoCAD MCP Pro 93/100.**
+The same frozen rubric v1 applies to AgentCAD `6699109` and Pro `58a05dd`.
+M14 nominal-source verification and manufacturing annotations now have independent
+evidence. Further symmetric tests exposed a previously missed false success in
+both products; AgentCAD fixes it, while Pro's same pinned source loses three C2
+points. Its new local 93 and historical self-review 93 are separate assessments.
+
+| Category | Weight | AgentCAD | AutoCAD MCP Pro |
+|---|---:|---:|---:|
+| Functional CAD coverage | 25 | 25 | 24 |
+| Correctness and delivery | 20 | 20 | 17 |
+| Backends and platforms | 15 | 15 | 15 |
+| Engineering production | 15 | 15 | 15 |
+| Tests and maintenance | 15 | 15 | 14 |
+| Security and operations | 10 | 10 | 8 |
+| **Total** | **100** | **100** | **93** |
+
+Verification: **815 passed / 8 skipped** with native AutoCAD/FreeCAD,
+four completed CI lanes, original v8 **31/31**, seven inspected PDF outputs and
+24 correctness-checked version-performance observations. This is a local comparison
+of these two pinned products, not an official overall leaderboard or manufacturing
+certificate. [Review and limits](source-capability-manufacturing-review.md) ·
+[Reproduce / inspect the archive](../examples/source_capability/results/2026-10-31/README.md).
+
+<details>
+<summary>Historical assessment and chart, 2026-10-30: 98 / 96 (unchanged)</summary>
+
+
 **AgentCAD 98/100 · AutoCAD MCP Pro 96/100**, under the same frozen local rubric, reviewed on 2026-10-30. This uses the six categories and weights from Pro's source-capability chart, with 20 published scoring items applied to both pinned products. A separate AI reviewer assessed the source, counterexamples, saved outputs and test evidence; AgentCAD requested and publishes this review.
 
 | Source capability | Weight | AgentCAD `b4c0466` | MCP Pro `58a05dd` |
@@ -74,6 +102,8 @@ Pro's original **93/100** is its **v1.6.0 self-review from 2026-09-24**, using l
 The work repaired strict delivery checks, native tolerances, curved-pipe connectivity, HTTP defaults and process locks, and added sourced dimensional data, locked dependencies and cross-platform CI. Final verification: **685 passed / 8 skipped** locally with AutoCAD and FreeCAD enabled; four completed CI lanes; **31/31** again on the original v8 matrix. Skips are not passes. AgentCAD still loses two points: unverified M14 counterbore data and incomplete automatic manufacturing annotation in the mechanical template.
 
 [Scores, deductions and scope](source-capability-review.md) · [Frozen rubric](source-capability-rubric.md) · [Item-by-item assessment](../examples/source_capability/results/2026-10-30/assessment.json) · [Reproduce / retained evidence](../examples/source_capability/README.md)
+
+</details>
 
 ## BenchCAD 2 development samples
 

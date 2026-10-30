@@ -10,6 +10,11 @@ The [2026-10-30 result](results/2026-10-30/README.md) records AgentCAD **98** an
 Pro **96** under this method, including item deductions, pinned source references,
 complete regression/v8 records, native production examples and raw version timings.
 
+The [2026-10-31 follow-up](results/2026-10-31/README.md) records AgentCAD
+**100** / Pro **93**, with new manufacturing and symmetric display-verification
+evidence. Use its pinned product `6699109` and performance baseline `69c1425`;
+the older result and commands' example baseline remain historical references.
+
 ## Environment and regression evidence
 
 Check out the product commit named in a result, then install its dependency graph:
@@ -45,6 +50,8 @@ input is used. These are original synthetic examples beyond the v8 inputs:
 
 - A three-step sleeve and six-hole end cap, front/end/section views, five BOM rows,
   balloons, an A3 paper viewport at 1:1 and paper-space annotation.
+- A distinct fractional-length sleeve and eight-hole flange, two BOM rows,
+  supplied dimensions and hole placement, plus a separately sourced M14 detail.
 - Two rooms with a partition, doors, window, dimension chains and schedules;
   independent expected room areas are 26.9048 and 44.4808 m².
 - A pump, pneumatic control valve, panel instrument and vessel, with independently

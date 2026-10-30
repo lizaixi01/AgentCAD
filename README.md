@@ -93,7 +93,7 @@ Your agent can already write code. It still can't do CAD: asked to edit a drawin
 | [Our timed trials](docs/benchmarks.md#timed-trials-and-benchcad-vision2code) | Faster than writing code on most tasks; 1.7–1.9× faster than AutoCAD MCP Pro; undo across sessions 3/3 vs Pro's 0/3 | The same agent and model, through AgentCAD vs. writing ezdxf code or using AutoCAD MCP Pro |
 | [BenchCAD Vision2Code](docs/benchmarks.md#timed-trials-and-benchcad-vision2code), 100 tasks | Mean IoU: Claude Code 0.745 vs 0.682; Codex 0.876 vs 0.918 | Through AgentCAD vs. the same agent writing CadQuery itself; our run, not the BenchCAD leaderboard |
 | [U-C4N v8 runtime matrix](docs/benchmarks.md#autocad-mcp-benchmark) | 31/31 (100/100), tied with AutoCAD MCP Pro | 31 fixed tasks without an LLM, rerun locally; not an official listing |
-| [Source-capability review](docs/benchmarks.md#source-capability-comparison) | 98 vs 96 for AutoCAD MCP Pro | Both pinned sources on our frozen local rubric, scored by an AI reviewer we asked for; not certification or an upstream ranking |
+| [Source-capability review](docs/benchmarks.md#source-capability-comparison) | **100/100 vs 93/100 for AutoCAD MCP Pro** | Pinned sources `6699109` / `58a05dd`, same frozen local rubric and separate AI reviewer; [full evidence](docs/source-capability-manufacturing-review.md). Not an upstream ranking |
 | [BenchCAD 2](docs/benchmarks.md#benchcad-2-development-samples), 9 development samples | 53.45/100 with GPT-6.1 Sol; 56.79 with GPT-6 Astra | Two models in Codex, both through AgentCAD; no run without AgentCAD, and not the Core set or a leaderboard result |
 | [Parametric CAD Bench V3 pilot](docs/benchmarks.md#parametric-cad-bench-v3-pilot) | 55.43/100 on 6 tasks | Codex with GPT-6.1 Sol building native PartDesign parts, no comparison arm; not a leaderboard submission |
 
@@ -114,7 +114,7 @@ Your agent can already write code. It still can't do CAD: asked to edit a drawin
 | Live AutoCAD | `autocad_live` (Windows, COM) shows the agent's drawing in the user's running AutoCAD and pulls the user's edits back as a checkpointed, validated change. Raw command lines are off by default |
 | 3D parts | Parametric FreeCAD parts driven by named parameters; edge and face selections survive edits; STEP/STL export and shaded PNG previews. Needs FreeCAD 1.1 (optional): [docs/part-3d.md](docs/part-3d.md) |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | Latest recorded regression at `b4c0466`: 685 passed, 8 skipped (CadQuery-dependent), with AutoCAD 2027 and FreeCAD 1.1.4 enabled. [Windows/Linux/macOS CI results](docs/source-capability-review.md#verification) and their optional-backend skips are reported separately |
+| Tests | Pinned assessment regression at `6699109`: **815 passed, 8 skipped** (CadQuery-dependent), with AutoCAD 2027 and FreeCAD 1.1.4 enabled. [Windows/Linux/macOS CI and retained evidence](docs/source-capability-manufacturing-review.md#verification-and-production-evidence) report optional-backend skips separately |
 
 ## Where it stands
 

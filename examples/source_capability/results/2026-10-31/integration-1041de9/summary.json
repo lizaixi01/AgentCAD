@@ -1,0 +1,30 @@
+{
+  "scope": "Later main-line integration regression, separate from the pinned source-capability assessment",
+  "product_commit": "1041de966bf39d01513a86341c0ad501987cd5f7",
+  "score_commit": "66991092973496b148da45b1f847ddb1a8b4999d",
+  "counts": {
+    "collected": 831,
+    "passed": 823,
+    "skipped": 8,
+    "failed": 0,
+    "errors": 0
+  },
+  "source_unchanged": true,
+  "changes_since_score_commit": [
+    "src/agentcad/cli.py",
+    "src/agentcad/install.py",
+    "src/agentcad/setup_gui.py",
+    "src/agentcad/viewer.py",
+    "src/agentcad/viewer_static/friendly.js",
+    "src/agentcad/viewer_static/index.html",
+    "src/agentcad/viewer_static/logo.ico",
+    "src/agentcad/viewer_static/logo.png",
+    "src/agentcad/viewer_static/setup.html",
+    "tests/test_q_setup_gui.py"
+  ],
+  "configured_native_backends": [
+    "AutoCAD 2027",
+    "FreeCAD 1.1.4"
+  ],
+  "skips": "CadQuery-dependent tests; not counted as passes"
+}
