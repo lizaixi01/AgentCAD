@@ -1,5 +1,7 @@
 # Source-capability follow-up evidence — 2026-10-31
 
+**Repaired-source result:** see the [290ced3 reassessment](../2026-10-31-recheck/README.md). The older record below remains superseded.
+
 **Superseded assessment; retained for audit.** Publication review found transparent
 text and scientific-notation false successes at the scored source. The frozen
 rule caps C2 at 2 until repaired and retested; the original 100 below must not be

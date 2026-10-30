@@ -13,7 +13,15 @@ complete regression/v8 records, native production examples and raw version timin
 The [2026-10-31 follow-up](results/2026-10-31/README.md) retains a superseded
 100/93 assessment: final publication review found two additional false successes
 at `6699109`, so this is no longer the current score. Its measurements and
-performance baseline `69c1425` remain historical references; repair/recheck is pending.
+performance baseline `69c1425` remain historical references. The repaired result is linked below.
+
+The [repaired-source assessment](results/2026-10-31-recheck/README.md) records
+**AgentCAD 100/100 · AutoCAD MCP Pro 93/100** at `290ced3` / `58a05dd`. Original failing
+files and controls were independently replayed; full native regression is
+**885 passed / 8 skipped**, with completed four-platform CI,
+original v8 **31/31**, fresh production PDFs and same-environment timings.
+See the [repair report](../../docs/source-capability-recheck.md) for score limits
+and the two companion archives needed for explicitly inherited evidence.
 
 ## Environment and regression evidence
 
