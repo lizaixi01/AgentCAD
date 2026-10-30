@@ -14,7 +14,7 @@ Your coding agent creates, edits, checks and exports real engineering drawings a
 
 AgentCAD is an open-source program you install on your machine. It is not a GUI app and not a prompt or skill. It is the CAD engine your agent calls:
 
-- **An MCP server** (the main way to use it). Claude Code, Codex or any MCP client gets 25 CAD tools. You talk to your agent; the agent uses AgentCAD.
+- **An MCP server** (the main way to use it). Claude Code, Codex or any MCP client gets 34 CAD tools in the full profile, or 3 discovery tools with schemas fetched on demand. You talk to your agent; the agent uses AgentCAD.
 - **A CLI, a Python library and an HTTP API** with the same tools, for scripts and pipelines.
 
 Behind those tools:
@@ -43,13 +43,30 @@ Ask an agent to edit a drawing today and it writes a throwaway script against a 
 
 AgentCAD gives the agent a CAD runtime instead of a blank Python file:
 
-- **Operations, and scripts held to the same rules.** 62 typed 2D operations (draw, edit, annotate, layers, blocks, sheets and viewports, industry symbols) and 19 for 3D parts (sketch, pad, pocket, revolve, hole, fillet, pattern, loft, sweep…), each with a JSON schema. Batches are atomic: if one step fails, the file is untouched. A 3D part can also start from a CadQuery script, which runs as one transaction: validated, checkpointed and undoable like any operation.
+- **Operations, and scripts held to the same rules.** 71 typed 2D operations (draw, edit, annotate, layers, blocks, sheets and viewports, industry symbols) and 19 for 3D parts (sketch, pad, pocket, revolve, hole, fillet, pattern, loft, sweep…), each with a JSON schema. Batches are atomic: if one step fails, the file is untouched. A 3D part can also start from a CadQuery script, which runs as one transaction: validated, checkpointed and undoable like any operation.
 - **Every change is reversible.** Checkpoints before every edit, a diff of what changed, and a durable journal, so a new session can see and undo what an earlier one did.
 - **Checked by something other than the agent.** An independent validator re-reads the file from disk and reports problems as structured errors the agent can act on: geometry that doesn't close, dimensions that disagree with the part, text that will print too small, sheets it didn't check. For 3D parts: one valid solid, its size and volume, the holes it has, and features that failed to rebuild.
 - **The agent can see its work.** 3D parts export shaded PNG previews from any view direction, returned inline to the agent so it can compare them with what it was asked to build. Given a reference image, each view comes back aligned to it, with a match score and a diff. A live browser viewer shows you the same drawings and parts as they change.
 - **It can inspect the source drawing closely.** `inspect_image` magnifies a region of a PNG/JPEG/WebP drawing, including small dimension callouts and section hatching. It returns an inline image and source pixel coordinates without changing the input. Section depths and the side of each feature still need to be interpreted from the drawing.
 - **Real drawings, not just new ones.** Paper-space layouts, title blocks with attributes, DWG import/export and AutoCAD AUDIT through an optional headless AutoCAD backend.
 - **Safe by default.** Workspace sandbox, read-only mode, operation allow-lists. Scripts (ezdxf for drawings; CadQuery or FreeCAD Part code for 3D parts) run as transactions and are off unless you turn them on.
+
+## AutoCAD MCP benchmark
+
+**100/100 on U-C4N's v8 runtime matrix: 31/31 tasks passed, tied with AutoCAD MCP Pro.** Checked on 2026-10-30 against the same pinned evaluator. AgentCAD's run uses the upstream runner and its public MCP interface; the reference was also rerun on this machine.
+
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="docs/assets/mcp-benchmark/leaderboard-dark.svg">
+    <img src="docs/assets/mcp-benchmark/leaderboard-light.svg" alt="U-C4N v8 runtime comparison: AgentCAD and AutoCAD MCP Pro both score 100 out of 100, passing 31 of 31 tasks. Estimated discovery schema size: AgentCAD 220 tokens, Pro 503, a 56.3% reduction. Locally reproduced results, not an official upstream listing. Pro's source-review score of 93 is a separate assessment." width="860">
+  </picture>
+</p>
+
+This is a fixed-task capability benchmark, without an LLM. It is not a speed or same-model success-rate ranking. AgentCAD's estimated discovery schema is **56.3% smaller** (220 vs. 503 tokens); both pass the 2,000-token ceiling, so this earns no extra score.
+
+Pro's **93/100** chart is a separate, upstream-authored **source-review self-assessment** of version 1.6.0. This chart uses the 31-task execution matrix instead. The [scoring explanation, source-review snapshot and current gaps](docs/benchmark-leaderboard.md) keep those two measures separate.
+
+[Results and pinned sources](docs/assets/mcp-benchmark/data.json) · [31-task report](examples/autocad_benchmark/results/2026-10-30-v8/upstream/agentcad.json) · [Reproduce and inspect the evidence](examples/autocad_benchmark/README.md) · [Upstream submission](https://github.com/U-C4N/Autocad-MCP/pull/15) (pending review)
 
 ## Results
 
@@ -149,7 +166,7 @@ The fixed [U-C4N v8 execution matrix](docs/comparison-upstream-benchmark-v8.md) 
 | Validation | Independent re-read of the file: integrity, duplicates, dimension text vs. geometry, requirements you pass in, printed text height per viewport, coverage of sheets not checked |
 | 3D parts | Parametric FreeCAD parts (`.FCStd`) through the same tools: sketches, pad, pocket, revolve, holes, fillets, chamfers, shells, patterns, lofts, sweeps, helices, driven by named parameters. Edge and face selections survive edits. STEP/STL export and shaded PNG previews. Needs FreeCAD 1.1 (optional) — see [docs/part-3d.md](docs/part-3d.md) |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | 339 automated tests, including 27 cases checked against AutoCAD 2027 behaviour and 57 3D-part tests (51 of them build parts in FreeCAD 1.1) |
+| Tests | Latest recorded regression: 435 passed, 74 skipped (509 collected). Includes 27 golden cases checked against recorded AutoCAD 2027 behaviour; optional AutoCAD/FreeCAD runs are not implied by the headless result. [Evidence and scope](docs/comparison-upstream-benchmark-v8.md) |
 
 Runs on [ezdxf](https://ezdxf.mozman.de/) (MIT). The core needs no commercial software.
 

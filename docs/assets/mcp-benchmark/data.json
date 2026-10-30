@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "checked_at": "2026-10-30",
+  "upstream_sha": "58a05ddfc34a9832c626e82cd88ecdce8e16a62a",
+  "runtime": {
+    "matrix": "v8",
+    "task_count": 31,
+    "reports": [
+      {
+        "id": "agentcad",
+        "label": "AgentCAD",
+        "path": "examples/autocad_benchmark/results/2026-10-30-v8/upstream/agentcad.json",
+        "sha256_lf": "710686e3e9fde9d37b539d31830af71e6c186696ab3e7fc03796547e6251fae8",
+        "url": "https://github.com/lizaixi01/Autocad-MCP/blob/3c4d5981e60b67bc7f5b4c24c825ffcb29d2b788/benchmarks/results/published/agentcad.json",
+        "evidence": "Contributor run through the upstream runner"
+      },
+      {
+        "id": "autocad-mcp-pro",
+        "label": "AutoCAD MCP Pro",
+        "path": "examples/autocad_benchmark/results/2026-10-30-v8/reference.json",
+        "sha256_lf": "00de6b7979262eff1bd362e67a0218f9fb5f29c959abccaaa39c37aa13c1094d",
+        "url": "https://github.com/lizaixi01/AgentCAD/blob/a3b336a4535bc3cc2a2435f4ebdc76b90f70153c/examples/autocad_benchmark/results/2026-10-30-v8/reference.json",
+        "evidence": "Same-machine reference rerun"
+      }
+    ],
+    "boundary": "Local reproduced runtime results; AgentCAD has not been accepted into the upstream leaderboard."
+  },
+  "source_review": {
+    "url": "https://github.com/U-C4N/Autocad-MCP/blob/58a05ddfc34a9832c626e82cd88ecdce8e16a62a/benchmarks/source_review.json",
+    "sha256_lf": "93d790f6895af489ed264b1ecca9130a404defaf1a87304e6bebbb551e9c91dc",
+    "reviewed_at": "2026-09-24",
+    "competitors_reviewed_at": "2026-07-23",
+    "rubric": [
+      {
+        "category": "Functional CAD coverage",
+        "weight": 25
+      },
+      {
+        "category": "Correctness and delivery",
+        "weight": 20
+      },
+      {
+        "category": "Backends and platforms",
+        "weight": 15
+      },
+      {
+        "category": "Engineering production",
+        "weight": 15
+      },
+      {
+        "category": "Tests and maintenance",
+        "weight": 15
+      },
+      {
+        "category": "Security and operations",
+        "weight": 10
+      }
+    ],
+    "projects": [
+      {
+        "repository": "U-C4N/Autocad-MCP",
+        "url": "https://github.com/U-C4N/Autocad-MCP",
+        "reviewed_version": "1.6.0 (release)",
+        "score": 93,
+        "evidence_grade": "A"
+      },
+      {
+        "repository": "varavista/autocad-mcp",
+        "url": "https://github.com/varavista/autocad-mcp",
+        "reviewed_version": "2026-07-16 snapshot",
+        "score": 84,
+        "evidence_grade": "A"
+      },
+      {
+        "repository": "beiming183-cloud/AutoCAD-MCP",
+        "url": "https://github.com/beiming183-cloud/AutoCAD-MCP",
+        "reviewed_version": "2026-07-16 snapshot",
+        "score": 83,
+        "evidence_grade": "A"
+      },
+      {
+        "repository": "AnCode666/multiCAD-mcp",
+        "url": "https://github.com/AnCode666/multiCAD-mcp",
+        "reviewed_version": "2026-07-16 snapshot",
+        "score": 73,
+        "evidence_grade": "A"
+      },
+      {
+        "repository": "puran-water/autocad-mcp",
+        "url": "https://github.com/puran-water/autocad-mcp",
+        "reviewed_version": "2026-07-16 snapshot",
+        "score": 70,
+        "evidence_grade": "A"
+      },
+      {
+        "repository": "NCO-1986/AutoCAD_mcp",
+        "url": "https://github.com/NCO-1986/AutoCAD_mcp",
+        "reviewed_version": "2026-07-16 snapshot",
+        "score": 68,
+        "evidence_grade": "B"
+      },
+      {
+        "repository": "LokmenoWer/best-cad-mcp",
+        "url": "https://github.com/LokmenoWer/best-cad-mcp",
+        "reviewed_version": "v1.5.0 (2026-07-23 snapshot)",
+        "score": 74,
+        "evidence_grade": "B"
+      },
+      {
+        "repository": "daobataotie/CAD-MCP",
+        "url": "https://github.com/daobataotie/CAD-MCP",
+        "reviewed_version": "2026-07-23 snapshot",
+        "score": 35,
+        "evidence_grade": "B"
+      },
+      {
+        "repository": "zh19980811/Easy-MCP-AutoCad",
+        "url": "https://github.com/zh19980811/Easy-MCP-AutoCad",
+        "reviewed_version": "2026-07-23 snapshot",
+        "score": 30,
+        "evidence_grade": "C"
+      }
+    ],
+    "agentcad_score": null,
+    "boundary": "Upstream authored source assessments, not runtime measurements. We have not assigned AgentCAD a comparable source score."
+  }
+}
