@@ -118,6 +118,11 @@ def test_camera_metadata_preserves_front_side_and_top_correspondence(ws):
     assert frames["left"]["screen_up"] == [0, 0, 1]
     assert frames["top"]["screen_right"] == [1, 0, 0]
     assert frames["top"]["screen_up"] == [0, 1, 0]
+    compared = runtime.export_drawing("plate.FCStd", "comparison.png", "png", views=["front", "left", "top"],
+                                      image_size=128, reference="views.png")
+    assert compared["ok"], compared
+    assert compared["camera_frames"] == result["camera_frames"]
+    assert "shape" not in compared  # reference comparisons retain the compact upstream result
 
 
 def test_cli_and_mcp_measure_real_saved_geometry(ws):
