@@ -6,6 +6,12 @@ BenchCAD's provider harness, the gated 100-case Core set, or a leaderboard resul
 The development samples check integration and are too small to estimate general
 performance. The user chose them because Core access was unavailable.
 
+[2026-10-30 report (Chinese)](report-2026-10-30.md) ·
+[metrics and provenance](results-2026-10-30.json): **9/9 explicit submissions,
+53.45/100 mean of the six task means**. The measured AgentCAD snapshot is
+`2583516`; check out that commit in an isolated worktree to reproduce the
+historical run. Later main-branch features belong to a new experiment.
+
 ## Protocol
 
 - Model explicitly pinned to `gpt-6.1-sol`, reasoning effort `max`, using the

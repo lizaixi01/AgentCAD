@@ -1,0 +1,1459 @@
+{
+  "dataset": "BenchCAD 2 v2.1 nine development samples",
+  "leaderboard_comparable": false,
+  "complete": true,
+  "raw_output_directory": "D:\\Projects\\AgentCAD-output\\benchcad2-sol-max-20261030-final",
+  "protocol": {
+    "model": "gpt-6.1-sol",
+    "effort": "max",
+    "benchcad_sha": "70b7aaeb3a031851d058252e4ebe4ed30ca41f77",
+    "scoring_protocol": {
+      "benchcad_sha": "70b7aaeb3a031851d058252e4ebe4ed30ca41f77",
+      "mesh_guard": "0",
+      "threads": {
+        "OPENBLAS_NUM_THREADS": "1",
+        "OMP_NUM_THREADS": "1",
+        "MKL_NUM_THREADS": "1"
+      }
+    },
+    "agentcad_sha": "25835161de291daa4035e81a7e8ba501e1474a63",
+    "codex_version": "codex-cli 0.163.0",
+    "tool_adapter_sha256": "4852f9d26ef7d40ce45cd850aa1ef1a345837878e3a57a77aa98ca22c7d1c4af",
+    "runner_sha256": "21c6b557492f9165dceb1094428f3a29c6d31a2faa149b7b33ae9b890f15c23a",
+    "timeout_s": 3600,
+    "tool_call_limit": 100,
+    "jobs": 2,
+    "official_round_or_token_budget": false,
+    "set": "nine development samples",
+    "no_reference_files_staged": true,
+    "cost": "not reported by Codex CLI"
+  },
+  "verification": {
+    "dataset": "BenchCAD 2 v2.1 nine development samples",
+    "canonical_source": "D:/Projects/bench-src/benchcad2-sol-max",
+    "manifest_files_checked": 144,
+    "manifest_hash_mismatches": 0,
+    "broader_tests": {
+      "passed": 486,
+      "excluded": "tests/test_autocad_live.py",
+      "seconds": 576.98
+    },
+    "adapter_tests": {
+      "passed": 24,
+      "seconds": 7.84
+    },
+    "initial_trial": {
+      "path": "D:/Projects/AgentCAD-output/benchcad2-sol-max-20261030",
+      "included_in_final_nine_case_results": false,
+      "reason": "Aborted integration trial after CAD imports and previews failed under host memory pressure; no score assigned"
+    },
+    "standard_answers": {
+      "all_scores": 1.0,
+      "passed": 9,
+      "benchcad_sha": "70b7aaeb3a031851d058252e4ebe4ed30ca41f77",
+      "total": 9,
+      "mesh_guard": "0",
+      "reused_from": "D:\\Projects\\AgentCAD-output\\benchcad2-sol-max-20261030-dev9",
+      "reuse_reason": "Scorer source, metric, canonical case files and scoring protocol unchanged; adapter-only preview fix."
+    },
+    "implementation_review": {
+      "url": "https://github.com/lizaixi01/AgentCAD/pull/34#issuecomment-6517248476",
+      "head": "2583516",
+      "verdict": "pass"
+    },
+    "second_integration_trial": {
+      "path": "D:\\Projects\\AgentCAD-output\\benchcad2-sol-max-20261030-dev9",
+      "included_in_final_results": false,
+      "reason": "Manually stopped before either active case submitted: assembly preview adapter rejected exact rigid JSON matrices. Excluded integration batch, no performance scores assigned."
+    },
+    "real_assembly_preview": {
+      "unchanged_matrices": true,
+      "instances": 26,
+      "image": "preview-integration-check.png",
+      "passed": true
+    }
+  },
+  "task_means": {
+    "task1": {
+      "scored": 1,
+      "total": 1,
+      "mean": 0.7822058471725757
+    },
+    "task2": {
+      "scored": 2,
+      "total": 2,
+      "mean": 0.11787299999999999
+    },
+    "task3": {
+      "scored": 2,
+      "total": 2,
+      "mean": 0.5845815968155457
+    },
+    "task4": {
+      "scored": 1,
+      "total": 1,
+      "mean": 0.13686760685357144
+    },
+    "task5": {
+      "scored": 1,
+      "total": 1,
+      "mean": 0.5916263967908001
+    },
+    "task6": {
+      "scored": 2,
+      "total": 2,
+      "mean": 0.994003
+    }
+  },
+  "mean_of_task_means": 0.534526241272082,
+  "submitted": 9,
+  "case_count": 9,
+  "total_tool_calls": 439,
+  "total_tool_errors": 17,
+  "cumulative_episode_seconds": 19679.2,
+  "usage_cases_reported": 9,
+  "cli_reported_cumulative_usage": {
+    "input_tokens": 39483138,
+    "cached_input_tokens": 38447488,
+    "cache_write_input_tokens": 0,
+    "output_tokens": 453002,
+    "reasoning_output_tokens": 371689
+  },
+  "records": [
+    {
+      "case": "task1_case1",
+      "episode": {
+        "case": "task1_case1",
+        "kind": "part",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2381.4,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 44,
+        "tool_errors": 2,
+        "tool_error_codes": {
+          "SCRIPT_FAILED": 2
+        },
+        "tool_calls_started": 44,
+        "tool_calls_by_name": {
+          "read_workspace": 22,
+          "run_script": 11,
+          "export_drawing": 10,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 44,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 3296824,
+          "cached_input_tokens": 3196928,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 54935,
+          "reasoning_output_tokens": 47500
+        }
+      },
+      "scoring": {
+        "score": 0.7822058471725757,
+        "metric": "part_v1",
+        "orientation": "free",
+        "pose_mode": "iou24_aligned",
+        "frame": "own",
+        "weights": {
+          "iou_term": 0.8,
+          "topology": 0.2
+        },
+        "iou": 0.06373948607145613,
+        "iou24": 0.7624059029589327,
+        "iou_term": 0.7277573089657197,
+        "topology": 1.0,
+        "coverage": 1.0
+      },
+      "standard_answer_score": 1.0,
+      "submission_failure_count": 0,
+      "zeroed_part_types": [],
+      "tool_failure_messages": [
+        {
+          "tool": "run_script",
+          "code": "SCRIPT_FAILED",
+          "category": "input",
+          "message": "The script raised Standard_ConstructionError: Bnd_Box is void"
+        },
+        {
+          "tool": "run_script",
+          "code": "SCRIPT_FAILED",
+          "category": "input",
+          "message": "The script raised Standard_ConstructionError: Bnd_Box is void"
+        }
+      ],
+      "event_item_types": {
+        "agent_message": 8,
+        "mcp_tool_call": 44
+      },
+      "incomplete_event_lines": 0,
+      "model_stream_retry_events": 1,
+      "model_catalog_refresh_timeouts": 28,
+      "attempts": [
+        {
+          "case": "task1_case1",
+          "kind": "part",
+          "model": "gpt-6.1-sol",
+          "effort": "max",
+          "attempt": 1,
+          "status": "completed",
+          "exit_code": 0,
+          "seconds": 2381.4,
+          "submitted": true,
+          "timeout_s": 3600,
+          "tool_call_limit": 100,
+          "tool_calls": 44,
+          "tool_errors": 2,
+          "tool_error_codes": {
+            "SCRIPT_FAILED": 2
+          },
+          "tool_calls_started": 44,
+          "tool_calls_by_name": {
+            "read_workspace": 22,
+            "run_script": 11,
+            "export_drawing": 10,
+            "submit_answer": 1
+          },
+          "submitted_after_calls": 44,
+          "unexpected_tools": [],
+          "usage": {
+            "input_tokens": 3296824,
+            "cached_input_tokens": 3196928,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 54935,
+            "reasoning_output_tokens": 47500
+          }
+        }
+      ],
+      "raw_sha256": {
+        "run.json": "8455de15dfbe456ffd086b83f2aa281d7f87c25ed4808475a0a5547459f30cff",
+        "score.json": "e7966b45eedee9577aa8cf3884bef8b7479aacd1460f02e04631fcd7966127e4",
+        "events.jsonl": "1821b161c6732470e3970955d8bdac6801943e5f869d7947a8bca10d90df5c8e",
+        "stderr.log": "749bc65f999069b351a95f098428c3dc0ccd77fca87dc059f85c720ffc719409",
+        "case_manifest": "3d0db271684a834ff53d899e0b051102a51849ff66975aee250476db1f9dd085"
+      }
+    },
+    {
+      "case": "task2_case1",
+      "episode": {
+        "case": "task2_case1",
+        "kind": "assembly",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2777.8,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 48,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 48,
+        "tool_calls_by_name": {
+          "read_workspace": 16,
+          "inspect_step": 23,
+          "preview_assembly": 8,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 48,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 4528618,
+          "cached_input_tokens": 4370304,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 47725,
+          "reasoning_output_tokens": 41489
+        }
+      },
+      "scoring": {
+        "score": 0.206806,
+        "metric": "asm_v1",
+        "iou": 0.9687,
+        "iou_raw": 0.1249,
+        "avg_part": 1.0,
+        "asm_v1": 0.206806,
+        "hit": 0.8077,
+        "n_gt": 26,
+        "n_pred": 26
+      },
+      "standard_answer_score": 1.0,
+      "submission_failure_count": 0,
+      "zeroed_part_types": [],
+      "tool_failure_messages": [],
+      "event_item_types": {
+        "agent_message": 9,
+        "mcp_tool_call": 48
+      },
+      "incomplete_event_lines": 0,
+      "model_stream_retry_events": 3,
+      "model_catalog_refresh_timeouts": 27,
+      "attempts": [
+        {
+          "case": "task2_case1",
+          "kind": "assembly",
+          "model": "gpt-6.1-sol",
+          "effort": "max",
+          "attempt": 1,
+          "status": "completed",
+          "exit_code": 0,
+          "seconds": 2777.8,
+          "submitted": true,
+          "timeout_s": 3600,
+          "tool_call_limit": 100,
+          "tool_calls": 48,
+          "tool_errors": 0,
+          "tool_error_codes": {},
+          "tool_calls_started": 48,
+          "tool_calls_by_name": {
+            "read_workspace": 16,
+            "inspect_step": 23,
+            "preview_assembly": 8,
+            "submit_answer": 1
+          },
+          "submitted_after_calls": 48,
+          "unexpected_tools": [],
+          "usage": {
+            "input_tokens": 4528618,
+            "cached_input_tokens": 4370304,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 47725,
+            "reasoning_output_tokens": 41489
+          }
+        }
+      ],
+      "raw_sha256": {
+        "run.json": "d8c47c30f0b2993c799dab1212b4157e9d53b3980b9fd48f41cf9a29eb13463e",
+        "score.json": "e0bbfe04ba4c4a41fd1f9e81eefc43f74f94c90747e38296503b2025958a3101",
+        "events.jsonl": "243a0ab2b008049fdbd4ec662678d3a775f58b745f1f1c6ef52b2dcc3ca210cc",
+        "stderr.log": "4171f6a37ddc3e9c2fd23253d28c74af3f10f28c1f34b610bc04bda5e65f0024",
+        "case_manifest": "6249e4d6184413fd0c392d03459da6a27c1538ce56e5e41f5acf49df661a94c3"
+      },
+      "average_part_scope": "all",
+      "averaged_part_scores": [
+        {
+          "part_id": "part_01",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_02",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_03",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_04",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_05",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_06",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_07",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_08",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_09",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_10",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_11",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_12",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_13",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_14",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_15",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_16",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_17",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_18",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_19",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_20",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_21",
+          "n_instances": 1,
+          "mean": 1.0
+        }
+      ]
+    },
+    {
+      "case": "task2_case2",
+      "episode": {
+        "case": "task2_case2",
+        "kind": "assembly",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2442.7,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 56,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 56,
+        "tool_calls_by_name": {
+          "read_workspace": 30,
+          "inspect_step": 21,
+          "preview_assembly": 4,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 56,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 5827189,
+          "cached_input_tokens": 5649920,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 53979,
+          "reasoning_output_tokens": 44778
+        }
+      },
+      "scoring": {
+        "score": 0.02894,
+        "metric": "asm_v1",
+        "iou": 0.4421,
+        "iou_raw": 0.1213,
+        "avg_part": 1.0,
+        "asm_v1": 0.02894,
+        "hit": 0.3333,
+        "n_gt": 36,
+        "n_pred": 36
+      },
+      "standard_answer_score": 1.0,
+      "submission_failure_count": 0,
+      "zeroed_part_types": [],
+      "tool_failure_messages": [],
+      "event_item_types": {
+        "agent_message": 9,
+        "mcp_tool_call": 56
+      },
+      "incomplete_event_lines": 0,
+      "model_stream_retry_events": 0,
+      "model_catalog_refresh_timeouts": 2,
+      "attempts": [
+        {
+          "case": "task2_case2",
+          "kind": "assembly",
+          "model": "gpt-6.1-sol",
+          "effort": "max",
+          "attempt": 1,
+          "status": "completed",
+          "exit_code": 0,
+          "seconds": 2442.7,
+          "submitted": true,
+          "timeout_s": 3600,
+          "tool_call_limit": 100,
+          "tool_calls": 56,
+          "tool_errors": 0,
+          "tool_error_codes": {},
+          "tool_calls_started": 56,
+          "tool_calls_by_name": {
+            "read_workspace": 30,
+            "inspect_step": 21,
+            "preview_assembly": 4,
+            "submit_answer": 1
+          },
+          "submitted_after_calls": 56,
+          "unexpected_tools": [],
+          "usage": {
+            "input_tokens": 5827189,
+            "cached_input_tokens": 5649920,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 53979,
+            "reasoning_output_tokens": 44778
+          }
+        }
+      ],
+      "raw_sha256": {
+        "run.json": "4f87f9e913c5228e39c1cc821902a4fac797b970dfe5d041d6b3af1aca27b5a4",
+        "score.json": "4cdadfb250ed62a9f440d8dbbf3aef720a942ae143e968d704a8fa66f40d0dbb",
+        "events.jsonl": "1eef25ea440c23fd3a406306449ec0e4dc575931394ce98ebe6fc6bab0d8aebd",
+        "stderr.log": "b4b9ba0637493ddc1065176585fcf3a7f643c5b704c9c0dc289e4468f76c9cf7",
+        "case_manifest": "db775bff71aa3cb81de6d6d4ceb1f7f2a401308d0afe9b071b9a0201c4b28c5a"
+      },
+      "average_part_scope": "all",
+      "averaged_part_scores": [
+        {
+          "part_id": "part_01",
+          "n_instances": 6,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_02",
+          "n_instances": 6,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_03",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_04",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_05",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_06",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_07",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_08",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_09",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_10",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_11",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_12",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_13",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_14",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_15",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_16",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_17",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_18",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_19",
+          "n_instances": 1,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_20",
+          "n_instances": 1,
+          "mean": 1.0
+        }
+      ]
+    },
+    {
+      "case": "task3_case1",
+      "episode": {
+        "case": "task3_case1",
+        "kind": "part",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2934.8,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 69,
+        "tool_errors": 12,
+        "tool_error_codes": {
+          "UNKNOWN_PARAM": 1,
+          "SCRIPT_CRASHED": 2,
+          "SCRIPT_TIMEOUT": 2,
+          "FEATURE_FAILED": 2,
+          "EXPORT_MISMATCH": 5
+        },
+        "tool_calls_started": 69,
+        "tool_calls_by_name": {
+          "read_workspace": 25,
+          "run_script": 21,
+          "export_drawing": 19,
+          "list_operations": 1,
+          "apply_operations": 2,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 69,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 8027643,
+          "cached_input_tokens": 7910400,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 68290,
+          "reasoning_output_tokens": 54985
+        }
+      },
+      "scoring": {
+        "score": 0.6968195186345928,
+        "metric": "part_v1",
+        "orientation": "pinned",
+        "pose_mode": "expert-fit",
+        "frame": "own",
+        "weights": {
+          "iou_term": 0.8,
+          "topology": 0.2
+        },
+        "iou": 0.824943719045475,
+        "iou_pinned": 0.7573590381426202,
+        "iou_term": 0.621024398293241,
+        "topology": 1.0,
+        "coverage": 1.0
+      },
+      "standard_answer_score": 1.0,
+      "submission_failure_count": 0,
+      "zeroed_part_types": [],
+      "tool_failure_messages": [
+        {
+          "tool": "export_drawing",
+          "code": "UNKNOWN_PARAM",
+          "category": "input",
+          "message": "fit does not apply with a reference: each view is aligned to it"
+        },
+        {
+          "tool": "run_script",
+          "code": "SCRIPT_CRASHED",
+          "category": "internal",
+          "message": "The script process ended without a result",
+          "returncode": 3221225477
+        },
+        {
+          "tool": "run_script",
+          "code": "SCRIPT_CRASHED",
+          "category": "internal",
+          "message": "The script process ended without a result",
+          "returncode": 3221225477
+        },
+        {
+          "tool": "run_script",
+          "code": "SCRIPT_TIMEOUT",
+          "category": "input",
+          "message": "The script ran longer than 60 s and was stopped"
+        },
+        {
+          "tool": "run_script",
+          "code": "SCRIPT_TIMEOUT",
+          "category": "input",
+          "message": "The script ran longer than 60 s and was stopped"
+        },
+        {
+          "tool": "apply_operations",
+          "code": "FEATURE_FAILED",
+          "category": "geometry",
+          "message": "Fillet: BRep_API: command not done"
+        },
+        {
+          "tool": "export_drawing",
+          "code": "EXPORT_MISMATCH",
+          "category": "geometry",
+          "message": "The written STEP reads back differently from the part"
+        },
+        {
+          "tool": "export_drawing",
+          "code": "EXPORT_MISMATCH",
+          "category": "geometry",
+          "message": "The written STEP reads back differently from the part"
+        },
+        {
+          "tool": "export_drawing",
+          "code": "EXPORT_MISMATCH",
+          "category": "geometry",
+          "message": "The written STEP reads back differently from the part"
+        },
+        {
+          "tool": "export_drawing",
+          "code": "EXPORT_MISMATCH",
+          "category": "geometry",
+          "message": "The written STEP reads back differently from the part"
+        },
+        {
+          "tool": "export_drawing",
+          "code": "EXPORT_MISMATCH",
+          "category": "geometry",
+          "message": "The written STEP reads back differently from the part"
+        },
+        {
+          "tool": "apply_operations",
+          "code": "FEATURE_FAILED",
+          "category": "geometry",
+          "message": "Fillet: Access violation"
+        }
+      ],
+      "event_item_types": {
+        "agent_message": 15,
+        "mcp_tool_call": 69
+      },
+      "incomplete_event_lines": 0,
+      "model_stream_retry_events": 0,
+      "model_catalog_refresh_timeouts": 4,
+      "attempts": [
+        {
+          "case": "task3_case1",
+          "kind": "part",
+          "model": "gpt-6.1-sol",
+          "effort": "max",
+          "attempt": 1,
+          "status": "completed",
+          "exit_code": 0,
+          "seconds": 2934.8,
+          "submitted": true,
+          "timeout_s": 3600,
+          "tool_call_limit": 100,
+          "tool_calls": 69,
+          "tool_errors": 12,
+          "tool_error_codes": {
+            "UNKNOWN_PARAM": 1,
+            "SCRIPT_CRASHED": 2,
+            "SCRIPT_TIMEOUT": 2,
+            "FEATURE_FAILED": 2,
+            "EXPORT_MISMATCH": 5
+          },
+          "tool_calls_started": 69,
+          "tool_calls_by_name": {
+            "read_workspace": 25,
+            "run_script": 21,
+            "export_drawing": 19,
+            "list_operations": 1,
+            "apply_operations": 2,
+            "submit_answer": 1
+          },
+          "submitted_after_calls": 69,
+          "unexpected_tools": [],
+          "usage": {
+            "input_tokens": 8027643,
+            "cached_input_tokens": 7910400,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 68290,
+            "reasoning_output_tokens": 54985
+          }
+        }
+      ],
+      "raw_sha256": {
+        "run.json": "77913e5bce49f2993ddb286e39c7c4b4665eabc8143024c4c017ab8334bb0165",
+        "score.json": "1440ff1f1df78b57571d85dea895396e4aeaffc4cbeb16d7fc3505ee7ae18b59",
+        "events.jsonl": "6556f12fb2e24345cdf3a772fe7564149ceee1e7971e0c8308ad8b2944f46acf",
+        "stderr.log": "a0affd763378768b5329c26ce57a876c2b0a86d76d211b7f58de122197bb0d6a",
+        "case_manifest": "d0eee2598ba18b84b7feefab500cee24e0855eb27e046f454cf99a5d8cb64bdb"
+      }
+    },
+    {
+      "case": "task3_case2",
+      "episode": {
+        "case": "task3_case2",
+        "kind": "part",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 3056.5,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 55,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 55,
+        "tool_calls_by_name": {
+          "read_workspace": 14,
+          "run_script": 20,
+          "export_drawing": 20,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 55,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 4684206,
+          "cached_input_tokens": 4581504,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 62856,
+          "reasoning_output_tokens": 53097
+        }
+      },
+      "scoring": {
+        "score": 0.47234367499649854,
+        "metric": "part_v1",
+        "orientation": "pinned",
+        "pose_mode": "expert-fit",
+        "frame": "own",
+        "weights": {
+          "iou_term": 0.8,
+          "topology": 0.2
+        },
+        "iou": 0.7335989150703509,
+        "iou_pinned": 0.699012700752861,
+        "iou_term": 0.5626518159678454,
+        "topology": 0.1111111111111111,
+        "coverage": 1.0
+      },
+      "standard_answer_score": 1.0,
+      "submission_failure_count": 0,
+      "zeroed_part_types": [],
+      "tool_failure_messages": [],
+      "event_item_types": {
+        "agent_message": 10,
+        "mcp_tool_call": 55
+      },
+      "incomplete_event_lines": 0,
+      "model_stream_retry_events": 1,
+      "model_catalog_refresh_timeouts": 1,
+      "attempts": [
+        {
+          "case": "task3_case2",
+          "kind": "part",
+          "model": "gpt-6.1-sol",
+          "effort": "max",
+          "attempt": 1,
+          "status": "completed",
+          "exit_code": 0,
+          "seconds": 3056.5,
+          "submitted": true,
+          "timeout_s": 3600,
+          "tool_call_limit": 100,
+          "tool_calls": 55,
+          "tool_errors": 0,
+          "tool_error_codes": {},
+          "tool_calls_started": 55,
+          "tool_calls_by_name": {
+            "read_workspace": 14,
+            "run_script": 20,
+            "export_drawing": 20,
+            "submit_answer": 1
+          },
+          "submitted_after_calls": 55,
+          "unexpected_tools": [],
+          "usage": {
+            "input_tokens": 4684206,
+            "cached_input_tokens": 4581504,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 62856,
+            "reasoning_output_tokens": 53097
+          }
+        }
+      ],
+      "raw_sha256": {
+        "run.json": "711c176598f2736abdc6e42437dd54246997f51da48040a533575ac1f9402903",
+        "score.json": "883d0d5ee50a8418b3db1a78498736e1d8b3523e8390661d8f612f0187787c68",
+        "events.jsonl": "ae7c17b016478a80673c679a7900942a9046707f7ecd01b66433b50ded54467a",
+        "stderr.log": "abc816d8f01475201e3b98d98305d3faa6f2f7b4e3c63923533c55930c36de13",
+        "case_manifest": "2869189dab3673b14aa1f07dd41985fe6f87ae45e529cce6afb2f26ef182bd8a"
+      }
+    },
+    {
+      "case": "task4_case1",
+      "episode": {
+        "case": "task4_case1",
+        "kind": "assembly",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 1981.7,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 63,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "SCRIPT_FAILED": 1
+        },
+        "tool_calls_started": 63,
+        "tool_calls_by_name": {
+          "read_workspace": 20,
+          "run_script": 16,
+          "export_drawing": 23,
+          "preview_assembly": 2,
+          "inspect_step": 1,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 63,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 6588495,
+          "cached_input_tokens": 6453632,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 61107,
+          "reasoning_output_tokens": 46609
+        }
+      },
+      "scoring": {
+        "score": 0.13686760685357144,
+        "metric": "part_x_asm_v1",
+        "iou": 0.7472,
+        "iou_raw": 0.7472,
+        "avg_part": 0.42674442857142864,
+        "asm_v1": 0.320725,
+        "hit": 0.3333,
+        "n_gt": 9,
+        "n_pred": 9
+      },
+      "standard_answer_score": 1.0,
+      "submission_failure_count": 0,
+      "zeroed_part_types": [],
+      "tool_failure_messages": [
+        {
+          "tool": "run_script",
+          "code": "SCRIPT_FAILED",
+          "category": "input",
+          "message": "The script raised ValueError: Workplane object must have at least one solid on the stack to union!"
+        }
+      ],
+      "event_item_types": {
+        "agent_message": 11,
+        "mcp_tool_call": 63
+      },
+      "incomplete_event_lines": 0,
+      "model_stream_retry_events": 0,
+      "model_catalog_refresh_timeouts": 1,
+      "attempts": [
+        {
+          "case": "task4_case1",
+          "kind": "assembly",
+          "model": "gpt-6.1-sol",
+          "effort": "max",
+          "attempt": 1,
+          "status": "completed",
+          "exit_code": 0,
+          "seconds": 1981.7,
+          "submitted": true,
+          "timeout_s": 3600,
+          "tool_call_limit": 100,
+          "tool_calls": 63,
+          "tool_errors": 1,
+          "tool_error_codes": {
+            "SCRIPT_FAILED": 1
+          },
+          "tool_calls_started": 63,
+          "tool_calls_by_name": {
+            "read_workspace": 20,
+            "run_script": 16,
+            "export_drawing": 23,
+            "preview_assembly": 2,
+            "inspect_step": 1,
+            "submit_answer": 1
+          },
+          "submitted_after_calls": 63,
+          "unexpected_tools": [],
+          "usage": {
+            "input_tokens": 6588495,
+            "cached_input_tokens": 6453632,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 61107,
+            "reasoning_output_tokens": 46609
+          }
+        }
+      ],
+      "raw_sha256": {
+        "run.json": "354726f25e9c7b3ed09b4a8939a9f91f84dbfead9f93d7e1f52895a8006e2b3c",
+        "score.json": "64155c1b463e51e7b93dc703c414a9b3ce2fa3470cf24eaae33139a51a55998f",
+        "events.jsonl": "95d0d328558bc518d21893e7f17f5f17c71893041267e3f247881e6f9522085b",
+        "stderr.log": "89405157fb12b261e96a962ba7d06543cbdfcc70f9d8094059e7155175f2e56d",
+        "case_manifest": "24a3f4fa766bdf6e4847ad085f0b37a7c2c1de77105313ce1740e3917e64abd4"
+      },
+      "average_part_scope": "all",
+      "averaged_part_scores": [
+        {
+          "part_id": "body",
+          "n_instances": 1,
+          "mean": 0.692344
+        },
+        {
+          "part_id": "cover",
+          "n_instances": 1,
+          "mean": 0.269122
+        },
+        {
+          "part_id": "scroll_plate",
+          "n_instances": 1,
+          "mean": 0.55605
+        },
+        {
+          "part_id": "jaw_1",
+          "n_instances": 1,
+          "mean": 0.85768
+        },
+        {
+          "part_id": "jaw_2",
+          "n_instances": 1,
+          "mean": 0.2
+        },
+        {
+          "part_id": "jaw_3",
+          "n_instances": 1,
+          "mean": 0.2
+        },
+        {
+          "part_id": "pinion",
+          "n_instances": 3,
+          "mean": 0.212015
+        }
+      ]
+    },
+    {
+      "case": "task5_case1",
+      "episode": {
+        "case": "task5_case1",
+        "kind": "assembly",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 1763.1,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 53,
+        "tool_errors": 1,
+        "tool_error_codes": {
+          "SCRIPT_REJECTED": 1
+        },
+        "tool_calls_started": 53,
+        "tool_calls_by_name": {
+          "read_workspace": 14,
+          "inspect_step": 16,
+          "run_script": 8,
+          "export_drawing": 7,
+          "preview_assembly": 7,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 53,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 4123608,
+          "cached_input_tokens": 3983360,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 40173,
+          "reasoning_output_tokens": 32705
+        }
+      },
+      "scoring": {
+        "score": 0.5916263967908001,
+        "metric": "part_x_asm_v1",
+        "iou": 0.9945,
+        "iou_raw": 0.0767,
+        "avg_part": 0.9979226000000001,
+        "asm_v1": 0.592858,
+        "hit": 0.92,
+        "n_gt": 25,
+        "n_pred": 25
+      },
+      "standard_answer_score": 1.0,
+      "submission_failure_count": 0,
+      "zeroed_part_types": [],
+      "tool_failure_messages": [
+        {
+          "tool": "run_script",
+          "code": "SCRIPT_REJECTED",
+          "category": "input",
+          "message": "Line 4: global/nonlocal statements are not allowed"
+        }
+      ],
+      "event_item_types": {
+        "agent_message": 9,
+        "mcp_tool_call": 53
+      },
+      "incomplete_event_lines": 0,
+      "model_stream_retry_events": 1,
+      "model_catalog_refresh_timeouts": 2,
+      "attempts": [
+        {
+          "case": "task5_case1",
+          "kind": "assembly",
+          "model": "gpt-6.1-sol",
+          "effort": "max",
+          "attempt": 1,
+          "status": "completed",
+          "exit_code": 0,
+          "seconds": 1763.1,
+          "submitted": true,
+          "timeout_s": 3600,
+          "tool_call_limit": 100,
+          "tool_calls": 53,
+          "tool_errors": 1,
+          "tool_error_codes": {
+            "SCRIPT_REJECTED": 1
+          },
+          "tool_calls_started": 53,
+          "tool_calls_by_name": {
+            "read_workspace": 14,
+            "inspect_step": 16,
+            "run_script": 8,
+            "export_drawing": 7,
+            "preview_assembly": 7,
+            "submit_answer": 1
+          },
+          "submitted_after_calls": 53,
+          "unexpected_tools": [],
+          "usage": {
+            "input_tokens": 4123608,
+            "cached_input_tokens": 3983360,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 40173,
+            "reasoning_output_tokens": 32705
+          }
+        }
+      ],
+      "raw_sha256": {
+        "run.json": "a412622e4af75a5475a3ab44cf5d6a7b0da25000eddfd720cc9cff7cf3146843",
+        "score.json": "034ef475cbe01972a1215c0e707aee71f1f06ea2e8287bcac46d9354f8cb5c99",
+        "events.jsonl": "2d9720a6f520ad566f43d7b62eeb42a53d75dcebcd35c937d0e9b16ea446e2f8",
+        "stderr.log": "ba0abcf3198cefe5b28ca7e77df1f47687b92c02229880491a5786bf32b4fe40",
+        "case_manifest": "f59a45ddc4d9c256a15d72747b9446066f1a91711ba9004b0b6517a812a6094b"
+      },
+      "average_part_scope": "modelled",
+      "averaged_part_scores": [
+        {
+          "part_id": "part_03",
+          "n_instances": 2,
+          "mean": 1.0
+        },
+        {
+          "part_id": "part_14",
+          "n_instances": 1,
+          "mean": 0.997402
+        },
+        {
+          "part_id": "part_16",
+          "n_instances": 1,
+          "mean": 0.996109
+        },
+        {
+          "part_id": "part_19",
+          "n_instances": 1,
+          "mean": 0.998465
+        },
+        {
+          "part_id": "part_21",
+          "n_instances": 1,
+          "mean": 0.997637
+        }
+      ]
+    },
+    {
+      "case": "task6_case1",
+      "episode": {
+        "case": "task6_case1",
+        "kind": "ecad",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 220.3,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 14,
+        "tool_errors": 0,
+        "tool_error_codes": {},
+        "tool_calls_started": 14,
+        "tool_calls_by_name": {
+          "read_workspace": 13,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 14,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 227792,
+          "cached_input_tokens": 194944,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 6157,
+          "reasoning_output_tokens": 4692
+        }
+      },
+      "scoring": {
+        "score": 1.0,
+        "metric": "ecad_v2",
+        "status": "ok",
+        "correspondence_mode": "legacy",
+        "channels": {
+          "component": 1.0,
+          "terminal": 1.0,
+          "net": 1.0,
+          "short": 1.0,
+          "open": 1.0
+        },
+        "fatal_power_short": false,
+        "fatal_rail_faults": [],
+        "exact_search": true,
+        "lower_bound": false,
+        "components_gt": 6,
+        "components_pred": 6,
+        "components_matched": 6,
+        "incidences_gt": 12,
+        "incidences_pred": 12,
+        "incidences_matched": 12
+      },
+      "standard_answer_score": 1.0,
+      "submission_failure_count": 0,
+      "zeroed_part_types": [],
+      "tool_failure_messages": [],
+      "event_item_types": {
+        "agent_message": 4,
+        "mcp_tool_call": 14
+      },
+      "incomplete_event_lines": 0,
+      "model_stream_retry_events": 0,
+      "model_catalog_refresh_timeouts": 0,
+      "attempts": [
+        {
+          "case": "task6_case1",
+          "kind": "ecad",
+          "model": "gpt-6.1-sol",
+          "effort": "max",
+          "attempt": 1,
+          "status": "completed",
+          "exit_code": 0,
+          "seconds": 220.3,
+          "submitted": true,
+          "timeout_s": 3600,
+          "tool_call_limit": 100,
+          "tool_calls": 14,
+          "tool_errors": 0,
+          "tool_error_codes": {},
+          "tool_calls_started": 14,
+          "tool_calls_by_name": {
+            "read_workspace": 13,
+            "submit_answer": 1
+          },
+          "submitted_after_calls": 14,
+          "unexpected_tools": [],
+          "usage": {
+            "input_tokens": 227792,
+            "cached_input_tokens": 194944,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 6157,
+            "reasoning_output_tokens": 4692
+          }
+        }
+      ],
+      "raw_sha256": {
+        "run.json": "0dcb274535c9f3d0290461d99c4c31dd8075808bf588faaeed55ff2d40589b0e",
+        "score.json": "bda4f949d6ec9ecfe4fa64182b46114b898f05d87dbabaefd44212928c5583e9",
+        "events.jsonl": "716ca3a2758dc959ddff4ebeeec6e58db1a82e8bb18bbe7e78ea2b384b1142e1",
+        "stderr.log": "76a29e96df1e8000d7bb1512a7be738ac600cc8fd292cd30b02f2b28c4150c8e",
+        "case_manifest": "34d6fdfd904b290d83d9bed1c315371aaa19008a04e62e6b612929c6ca9ccf60"
+      }
+    },
+    {
+      "case": "task6_case2",
+      "episode": {
+        "case": "task6_case2",
+        "kind": "ecad",
+        "model": "gpt-6.1-sol",
+        "effort": "max",
+        "attempt": 1,
+        "status": "completed",
+        "exit_code": 0,
+        "seconds": 2120.9,
+        "submitted": true,
+        "timeout_s": 3600,
+        "tool_call_limit": 100,
+        "tool_calls": 37,
+        "tool_errors": 1,
+        "tool_error_codes": {},
+        "tool_calls_started": 37,
+        "tool_calls_by_name": {
+          "read_workspace": 36,
+          "submit_answer": 1
+        },
+        "submitted_after_calls": 37,
+        "unexpected_tools": [],
+        "usage": {
+          "input_tokens": 2178763,
+          "cached_input_tokens": 2106496,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 57780,
+          "reasoning_output_tokens": 45834
+        }
+      },
+      "scoring": {
+        "score": 0.988006,
+        "metric": "ecad_v2",
+        "status": "ok",
+        "correspondence_mode": "legacy",
+        "channels": {
+          "component": 1.0,
+          "terminal": 0.99375,
+          "net": 0.99422,
+          "short": 1.0,
+          "open": 1.0
+        },
+        "fatal_power_short": false,
+        "fatal_rail_faults": [],
+        "exact_search": true,
+        "lower_bound": false,
+        "components_gt": 40,
+        "components_pred": 40,
+        "components_matched": 40,
+        "incidences_gt": 173,
+        "incidences_pred": 172,
+        "incidences_matched": 172
+      },
+      "standard_answer_score": 1.0,
+      "submission_failure_count": 0,
+      "zeroed_part_types": [],
+      "tool_failure_messages": [
+        {
+          "tool": "read_workspace",
+          "code": "MCP_TOOL_ERROR",
+          "category": "mcp",
+          "message": "Error executing tool read_workspace: A file path is required"
+        }
+      ],
+      "event_item_types": {
+        "agent_message": 7,
+        "mcp_tool_call": 37
+      },
+      "incomplete_event_lines": 0,
+      "model_stream_retry_events": 1,
+      "model_catalog_refresh_timeouts": 2,
+      "attempts": [
+        {
+          "case": "task6_case2",
+          "kind": "ecad",
+          "model": "gpt-6.1-sol",
+          "effort": "max",
+          "attempt": 1,
+          "status": "completed",
+          "exit_code": 0,
+          "seconds": 2120.9,
+          "submitted": true,
+          "timeout_s": 3600,
+          "tool_call_limit": 100,
+          "tool_calls": 37,
+          "tool_errors": 1,
+          "tool_error_codes": {},
+          "tool_calls_started": 37,
+          "tool_calls_by_name": {
+            "read_workspace": 36,
+            "submit_answer": 1
+          },
+          "submitted_after_calls": 37,
+          "unexpected_tools": [],
+          "usage": {
+            "input_tokens": 2178763,
+            "cached_input_tokens": 2106496,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 57780,
+            "reasoning_output_tokens": 45834
+          }
+        }
+      ],
+      "raw_sha256": {
+        "run.json": "e82b20a53cd4de153f4234157d89a0feb9cb49d8d75874ff6ee03953c1921ded",
+        "score.json": "3f361b6eb5c6779ccfa0dc28a32d6cd2ab678246ae5f7286424f98fbd60ba4e7",
+        "events.jsonl": "32a03834f7b2202d9d5d5ffa161b7d14a660d211eb70e9d730749ed82730dfe9",
+        "stderr.log": "d3ecbbc0be288b335351834f1def25252a1f1a673ac8cf44fa6a91621b2a9718",
+        "case_manifest": "fb4e475176cbdc173253725617b407a51a6cc61392216887c245029a533869f0"
+      }
+    }
+  ]
+}
