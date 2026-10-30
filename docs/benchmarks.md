@@ -50,6 +50,11 @@ The fixed [U-C4N v8 execution matrix](comparison-upstream-benchmark-v8.md) now p
 
 ## Source-capability comparison
 
+**Follow-up under recheck:** the final publication review found transparent-text
+and scientific-notation false successes. The `6699109` 100/93 assessment below is
+retained as a superseded review, not a valid current score; C2 is capped at 2 until
+repair and retest. [Correction notice](source-capability-manufacturing-review.md).
+
 **Latest follow-up, 2026-10-31: AgentCAD 100/100 · AutoCAD MCP Pro 93/100.**
 The same frozen rubric v1 applies to AgentCAD `6699109` and Pro `58a05dd`.
 M14 nominal-source verification and manufacturing annotations now have independent

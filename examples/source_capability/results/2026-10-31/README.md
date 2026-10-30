@@ -1,5 +1,11 @@
 # Source-capability follow-up evidence — 2026-10-31
 
+**Superseded assessment; retained for audit.** Publication review found transparent
+text and scientific-notation false successes at the scored source. The frozen
+rule caps C2 at 2 until repaired and retested; the original 100 below must not be
+used as the current score. [Findings](https://github.com/lizaixi01/AgentCAD/pull/44#issuecomment-6531147172).
+Assessment JSON, evidence ZIP and measurements keep their original bytes.
+
 **AgentCAD 100 / AutoCAD MCP Pro 93**, under the unchanged
 [local rubric v1](../../../../docs/source-capability-rubric.md). This is an independent
 AI review requested and published by AgentCAD, not official upstream ranking or

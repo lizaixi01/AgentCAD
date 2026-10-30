@@ -11,6 +11,7 @@ from typing import Any
 
 from ezdxf.tools.text import plain_mtext
 
+from ..appearance import is_visible
 from ..errors import input_error
 from ..model import measure_dimension
 from .records import get, operations
@@ -26,22 +27,15 @@ def _rendered(doc, dimension) -> list[str] | None:
     if block is None:
         return None
     texts = [e for e in block if e.dxftype() in {"TEXT", "MTEXT"}]
-    if not texts or any(not _visible(doc, e) or e.dxf.get(
+    if not texts or any(not is_visible(doc, e, parent=dimension) or e.dxf.get(
             "height" if e.dxftype() == "TEXT" else "char_height", 0) <= 0 for e in texts):
         return None
     return sorted(_plain(e.dxf.text if e.dxftype() == "TEXT" else e.text) for e in texts)
 
 
-def _visible(doc, entity) -> bool:
-    if entity is None or not entity.is_alive or not doc.layers.has_entry(entity.dxf.layer):
-        return False
-    layer = doc.layers.get(entity.dxf.layer)
-    return bool(not entity.dxf.get("invisible", 0) and not layer.is_off()
-                and not layer.is_frozen() and layer.dxf.get("plot", 1))
-
-
 def _model_visible(doc, entity) -> bool:
-    return (_visible(doc, entity) and entity.dxf.owner == doc.modelspace().block_record_handle
+    return (is_visible(doc, entity, container=entity is not None and entity.dxftype() == "DIMENSION")
+            and entity.dxf.owner == doc.modelspace().block_record_handle
             and not entity.dxf.get("paperspace", 0))
 
 

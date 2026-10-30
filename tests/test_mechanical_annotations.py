@@ -31,6 +31,34 @@ def generated(rt, blank):
     return ok(Runtime(rt.policy).read_engineering(blank,'mechanical'))
 
 
+@pytest.mark.parametrize('kind', ['dimension_text','pattern_note','pattern_leader','source_geometry'])
+@pytest.mark.parametrize('transparency', [0.0,0.5,1.0])
+@pytest.mark.parametrize('by_layer', [False,True])
+def test_manufacturing_required_entities_cannot_be_fully_transparent(rt, blank, ws, kind, transparency, by_layer):
+    report=generated(rt,blank);doc=ezdxf.readfile(ws/blank)
+    rows=[a for p in report['manufacturing'] for a in p['annotations']]
+    dim=doc.entitydb[next(a['handle'] for a in rows if a['kind']=='length.0')]
+    if kind=='dimension_text':target=doc.blocks[dim.dxf.geometry].query('MTEXT').first
+    elif kind=='source_geometry':target=doc.entitydb[report['parts'][0]['handle']]
+    else:
+        note=next(a for a in rows if a['kind']=='pattern_orientation.0')
+        if kind=='pattern_note':target=doc.entitydb[note['handle']]
+        else:
+            body=doc.entitydb[report['parts'][1]['handle']]
+            record=get(body,'mech')['manufacturing']
+            target=doc.entitydb[next(a['leader'] for a in record['annotations'] if a['kind']=='pattern_orientation.0')]
+    if by_layer:
+        layer=doc.layers.new('required_opacity');layer.transparency=transparency
+        target.dxf.layer=layer.dxf.name;target.dxf.discard('transparency')
+    else:target.transparency=transparency
+    doc.saveas(ws/blank);before=(ws/blank).read_bytes()
+    checked=ok(rt.read_engineering(blank,'mechanical'))
+    assert all(p['passed'] for p in checked['manufacturing']) is (transparency<1),checked
+    delivery=rt.deliver_drawing(blank,'transparent',formats=['dxf','svg'])
+    assert delivery['ok'] is (transparency<1),delivery
+    assert (ws/blank).read_bytes()==before
+
+
 def test_complete_supplied_dimensions_survive_saved_readback_and_delivery(rt, blank, ws):
     report=generated(rt,blank)
     assert report['critique']==[]

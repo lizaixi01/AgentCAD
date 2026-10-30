@@ -1,5 +1,6 @@
 import ezdxf
 import pytest
+from ezdxf.colors import TRANSPARENCY_BYBLOCK
 from ezdxf.tools.text import MTextEditor
 
 
@@ -12,6 +13,66 @@ def example(ws, precision=1, text=None, diameter=6.4):
     dim.render()
     doc.saveas(ws/'display.dxf')
     return dim.dimension.dxf.handle
+
+
+@pytest.mark.parametrize('mode', ['text', 'layer', 'parent_layer', 'parent_block'])
+@pytest.mark.parametrize('transparency', [0.0, 0.5, 1.0])
+def test_saved_effective_transparency_controls_dimension_visibility(rt, ws, mode, transparency):
+    from ezdxf.addons.drawing.properties import RenderContext
+    handle=example(ws)
+    doc=ezdxf.readfile(ws/'display.dxf');dim=doc.entitydb[handle]
+    text=doc.blocks[dim.dxf.geometry].query('MTEXT').first
+    if mode=='text':text.transparency=transparency
+    elif mode=='parent_block':
+        dim.transparency=transparency;text.dxf.transparency=TRANSPARENCY_BYBLOCK
+    else:
+        layer=doc.layers.new('text_opacity');layer.transparency=transparency
+        text.dxf.discard('transparency')
+        if mode=='parent_layer':dim.dxf.layer=layer.dxf.name;text.dxf.layer='0'
+        else:text.dxf.layer=layer.dxf.name
+    context=RenderContext(doc);context.push_state(context.resolve_all(dim))
+    assert context.resolve_all(text).color.endswith('00') is (transparency==1.0)
+    doc.saveas(ws/'display.dxf');before=(ws/'display.dxf').read_bytes()
+    verified=rt.verify_dimensions('display.dxf',[{'id':'bore','handle':handle,'value':6.4}])
+    assert verified['accepted'] is (transparency<1),verified
+    checked=rt.validate_drawing('display.dxf',detail=True)['validation']
+    assert checked['passed'] is (transparency<1),checked
+    delivered=rt.deliver_drawing('display.dxf','opacity',formats=['dxf','svg'])
+    assert delivered['ok'] is (transparency<1),delivered
+    assert (ws/'display.dxf').read_bytes()==before
+
+
+@pytest.mark.parametrize('source', ['layer', 'parent'])
+def test_explicit_opaque_text_overrides_transparent_layer_or_parent(rt, ws, source):
+    handle=example(ws);doc=ezdxf.readfile(ws/'display.dxf');dim=doc.entitydb[handle]
+    text=doc.blocks[dim.dxf.geometry].query('MTEXT').first
+    if source=='parent':dim.transparency=1
+    else:
+        layer=doc.layers.new('transparent');layer.transparency=1;text.dxf.layer=layer.dxf.name
+    text.transparency=0
+    doc.saveas(ws/'display.dxf')
+    assert rt.verify_dimensions('display.dxf',[{'id':'bore','handle':handle,'value':6.4}])['accepted']
+
+
+@pytest.mark.parametrize('diameter,text,rounding,passed', [
+    (.0065,'6.50E-03',0,True),(.0065,'9.90E-03',0,False),(.0065,'0.00E+00',0,False),
+    (.00065,'6.50E-04',0,True),(.00065,'0.00E+00',0,False),(.00065,'9.90E-04',0,False),
+    (6500,'6.50E+03',0,True),(6500,'9.90E+03',0,False),(.0065,'7.00E-03',.001,True),
+    (.0065,'1.00E+03',0,False),
+])
+def test_scientific_precision_has_no_absolute_decimal_floor(rt, ws, diameter, text, rounding, passed):
+    from agentcad.dimension_display import read_display
+    handle=example(ws,precision=2,diameter=diameter)
+    doc=ezdxf.readfile(ws/'display.dxf');dim=doc.entitydb[handle]
+    override=dim.override();override.update({'dimlunit':1,'dimdec':2,'dimrnd':rounding});override.commit()
+    doc.blocks[dim.dxf.geometry].query('MTEXT').first.text='%%c'+text
+    doc.saveas(ws/'display.dxf');before=(ws/'display.dxf').read_bytes()
+    if diameter==.0065 and not rounding:assert read_display(dim)['resolution']==pytest.approx(.00001)
+    checked=rt.validate_drawing('display.dxf',detail=True)['validation']
+    assert checked['passed'] is passed,checked
+    delivered=rt.deliver_drawing('display.dxf','scientific',formats=['dxf'])
+    assert delivered['ok'] is passed,delivered
+    assert (ws/'display.dxf').read_bytes()==before
 
 
 @pytest.mark.parametrize('precision,accepted,displayed',[(0,False,6),(1,True,6.4)])

@@ -1,5 +1,13 @@
 # Source-capability manufacturing follow-up, 2026-10-31
 
+**Superseded during publication review.** The final review reproduced two further
+false successes at `6699109`: fully transparent dimension text was certified as
+visible, and scientific notation below one used an excessively wide display
+tolerance. Under the frozen rubric C2 is capped at 2 until fixed and retested;
+the stored 100 below is no longer a valid current conclusion. The original
+assessment and archive remain unchanged. A repaired-version reassessment is pending.
+See the [independent findings](https://github.com/lizaixi01/AgentCAD/pull/44#issuecomment-6531147172).
+
 **AgentCAD 100/100; AutoCAD MCP Pro 93/100**, assessed by a separate AI reviewer
 under the unchanged [local rubric v1](source-capability-rubric.md). AgentCAD requested
 and publishes this assessment. It is a comparison of two pinned sources, not an

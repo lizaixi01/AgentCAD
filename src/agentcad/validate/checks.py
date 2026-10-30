@@ -402,7 +402,7 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
                                  [d["id"]], expected=shown, actual_text=txt))
         display = d["display_evidence"]
         if display["value"] is None:
-            out.append(issue("DIMENSION_DISPLAY_UNVERIFIED", "warning",
+            out.append(issue("DIMENSION_DISPLAY_UNVERIFIED", "error" if display["status"] == "hidden" else "warning",
                              "Saved graphics do not establish a visible primary dimension value", [d["id"]],
                              status=display["status"], texts=display["texts"]))
         elif abs(display["value"] - d["scaled_measurement"]) > max(tolerance, (display["resolution"] or 0) / 2 + 1e-9):

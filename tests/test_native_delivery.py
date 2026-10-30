@@ -149,3 +149,52 @@ def test_generic_precision_and_angular_sectors_match_native_regeneration(rt,ws):
         assert math.degrees(dim.dxf.actual_measurement)==pytest.approx(value)
         assert measure_dimension(dim)==pytest.approx(value)
         assert read_display(dim)['value']==pytest.approx(round(value,2))
+
+
+def test_partial_block_transparency_survives_native_and_hidden_text_is_rejected(rt,blank,ws):
+    from ezdxf.colors import TRANSPARENCY_BYBLOCK
+    spec={'parts':[{'name':'shaft','at':[135,195],'segments':[{'length':17,'d_outer':40}]}]}
+    ok(rt.apply_operations(blank,[{'op':'draw_mechanical_assembly','spec':spec}]))
+    report=ok(rt.read_engineering(blank,'mechanical'))
+    handle=next(a['handle'] for a in report['manufacturing'][0]['annotations'] if a['kind']=='length.0')
+    doc=ezdxf.readfile(ws/blank);dim=doc.entitydb[handle]
+    dim.transparency=.5
+    doc.blocks[dim.dxf.geometry].query('MTEXT').first.dxf.transparency=TRANSPARENCY_BYBLOCK
+    doc.saveas(ws/blank)
+    ok(rt.export_drawing(blank,'partial.dwg','dwg'))
+    ok(rt.import_drawing('partial.dwg','partial.dxf'))
+    assert ok(rt.read_engineering('partial.dxf','mechanical'))['critique']==[]
+    assert rt.verify_dimensions('partial.dxf',[{'id':'length','handle':handle,'value':17}])['accepted']
+    ok(rt.deliver_drawing('partial.dxf','partial',formats=['dxf','svg']))
+    doc=ezdxf.readfile(ws/'partial.dxf');dim=doc.entitydb[handle]
+    text=doc.blocks[dim.dxf.geometry].query('MTEXT').first;text.transparency=1
+    doc.saveas(ws/'hidden.dxf')
+    assert not rt.verify_dimensions('hidden.dxf',[{'id':'length','handle':handle,'value':17}])['accepted']
+    assert rt.read_engineering('hidden.dxf','mechanical')['critique']
+    assert rt.deliver_drawing('hidden.dxf','hidden',formats=['dxf','svg'])['error']['code']=='DELIVERY_REJECTED'
+
+
+def test_small_scientific_dimension_is_checked_after_native_regeneration(rt,ws):
+    from agentcad.backends.autocad import _run
+    from agentcad.dimension_display import read_display
+    doc=ezdxf.new('R2010',setup=True,units=4)
+    doc.modelspace().add_circle((0,0),.0065/2)
+    override=doc.modelspace().add_diameter_dim(center=(0,0),radius=.0065/2,angle=45,
+        dimstyle='EZDXF',override={'dimlunit':1,'dimdec':2,'dimrnd':0,'dimlfac':1,'dimzin':0})
+    override.render();dim=override.dimension;handle=dim.dxf.handle
+    dim.dxf.discard('geometry');dim.dxf.discard('actual_measurement')
+    doc.saveas(ws/'scientific-definitions.dxf')
+    job,_log=_run(ws/'native-jobs',{'in.dxf':ws/'scientific-definitions.dxf'},[
+        '(command "_.DXFIN" "__JOBDIR__/in.dxf")','(command "_.REGENALL")',
+        '(command "_.DXFOUT" "__JOBDIR__/out.dxf" "_V" "2018" "_Binary")'])
+    native=ezdxf.readfile(job/'out.dxf');dim=native.entitydb[handle]
+    display=read_display(dim)
+    assert display['value']==pytest.approx(.0065),display
+    assert display['resolution']==pytest.approx(.00001),display
+    native.saveas(ws/'scientific.dxf')
+    assert rt.validate_drawing('scientific.dxf',detail=True)['validation']['passed']
+    ok(rt.deliver_drawing('scientific.dxf','good-scientific',formats=['dxf']))
+    native.blocks[dim.dxf.geometry].query('MTEXT').first.text='%%c9.90E-03'
+    native.saveas(ws/'wrong-scientific.dxf')
+    assert not rt.validate_drawing('wrong-scientific.dxf',detail=True)['validation']['passed']
+    assert rt.deliver_drawing('wrong-scientific.dxf','bad-scientific',formats=['dxf'])['error']['code']=='DELIVERY_REJECTED'

@@ -10,6 +10,9 @@ import re
 
 from ezdxf.tools.text import MTextParser, TokenType, plain_mtext
 
+from .appearance import is_visible
+from .model import measure_dimension
+
 NUMBER = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?"
 NUMERIC_CHARACTERS = "0123456789.+-Ee/"
 
@@ -76,13 +79,6 @@ def _primary(raw: str, override) -> str | None:
     return text
 
 
-def _visible(doc, entity):
-    if entity.dxf.get("invisible", 0) or not doc.layers.has_entry(entity.dxf.layer):
-        return False
-    layer = doc.layers.get(entity.dxf.layer)
-    return not layer.is_off() and not layer.is_frozen() and bool(layer.dxf.get("plot", 1))
-
-
 def _number(text: str) -> float | None:
     """Primary decimal/scientific, architectural or fractional measurement."""
     text = re.sub(r"^(?:\d+\s*[xX×]\s*)?(?:Ø|⌀|R)?\s*", "", text)
@@ -106,7 +102,7 @@ def read_display(dim) -> dict:
     doc = dim.doc
     result = {"value": None, "texts": [], "resolution": None, "status": "unverifiable",
               "scope": "visible primary measurement; not a certification of all note/tolerance text"}
-    if doc is None or not _visible(doc, dim):
+    if doc is None or not is_visible(doc, dim, container=True):
         return {**result, "status": "hidden"}
     block = doc.blocks.get(dim.dxf.get("geometry", ""))
     if block is None:
@@ -116,7 +112,7 @@ def read_display(dim) -> dict:
     if not texts:
         return {**result, "status": "missing"}
     heights = [e.dxf.get("height" if e.dxftype() == "TEXT" else "char_height", 0) for e in texts]
-    if any(not _visible(doc, e) for e in texts) or any(not math.isfinite(h) or h <= 0 for h in heights):
+    if any(not is_visible(doc, e, parent=dim) for e in texts) or any(not math.isfinite(h) or h <= 0 for h in heights):
         return {**result, "status": "hidden"}
     # Multiple independent text entities do not establish which is the primary
     # measurement; never pick the one closest to the expected geometry.
@@ -182,7 +178,14 @@ def read_display(dim) -> dict:
     else:
         value = _number(text)
     if value is not None and math.isfinite(value):
-        if units == 1 and value and not angular:
-            result["resolution"] = max(result["resolution"], 10.0 ** (math.floor(math.log10(abs(value))) - digits))
+        if units == 1 and not angular:
+            # Scientific precision is relative to the geometry's magnitude, not
+            # an absolute decimal floor or an exponent in potentially false text.
+            measured = measure_dimension(dim)
+            scaled = None if measured is None else measured * float(override.get("dimlfac") or 1.0)
+            if scaled is None or not math.isfinite(scaled):
+                return result
+            exponent = math.floor(math.log10(abs(scaled))) if scaled else 0
+            result["resolution"] = max(rounding, 10.0 ** (exponent - digits))
         result.update(value=value, status="read")
     return result
