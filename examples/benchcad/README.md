@@ -224,27 +224,27 @@ off. #31 changes what `export_drawing(..., reference=...)` scores and returns:
   - The JSON drops the shape summary, legend and alignment text: about 920 characters per compare, instead of about
     1,580.
 - **The scale is stated.** AgentCAD's instructions say that a matching part usually scores 0.95 or more, that thin
-  flanges, springs and fine meshes can score lower, and that below 0.9 the place to look is where the diff shows red
-  or blue. The rerun used an earlier wording, "about 0.95 or more", which was too absolute: 12 of the 100 reference
+  flanges, springs and hollow parts can score lower, and that below 0.9 the place to look is where the diff shows red
+  or blue. The rerun used an earlier wording, "about 0.95 or more", which was too absolute: 11 of the 100 reference
   parts score below 0.95 against their own picture.
 
 ### Offline check
 
 `compare_check.py` replays the old and the new comparison on the graded submissions in `runs/`, and on each task's
-reference part against its own picture. It covers 1,297 of the 1,300 graded parts, including both runs below;
-three took more than ten minutes to render and are left out.
+reference part against its own picture. It covers 1,298 of the 1,300 graded parts, including both runs below;
+two took more than ten minutes to render and are left out. A render whose opposite views (mirror images of one
+silhouette) differ in area is made again: six were broken in a batch of eight parallel renders.
 
 | | Old score | New score |
 |---|---|---|
-| Two parts of one task, graded ≥ 0.1 apart: ranked the grader's way | 83.2% | **89.6%** |
-| Correlation with the graded IoU (Pearson r) | 0.49 | 0.66 |
-| Parts scoring ≥ 0.9 that are graded below 0.7 | 166 of 936 | 71 of 735 |
-| Reference part against its own picture: mean, 10th percentile | 0.942, 0.821 | 0.967, 0.941 |
+| Two parts of one task, graded ≥ 0.1 apart: ranked the grader's way | 83.3% | **89.7%** |
+| Correlation with the graded IoU (Pearson r) | 0.48 | 0.66 |
+| Parts scoring ≥ 0.9 that are graded below 0.7 | 166 of 937 | 71 of 735 |
+| Reference part against its own picture: mean, 10th percentile | 0.945, 0.835 | 0.970, 0.943 |
 
-- The ranking gain is 6.4 points: +2.8 to +10.4 with a 95% bootstrap interval over tasks, from 3,968 pairs.
+- The ranking gain is 6.4 points: +2.8 to +10.4 with a 95% bootstrap interval over tasks, from 3,978 pairs.
 - The score still cannot see what no view shows: hollow insides (Gridfinity bins, duct elbows, hollow tubes).
-- On very thin flanges, such as an I-beam's, even the true part's edges match poorly. The same goes for springs
-  and fine meshes.
+- On very thin flanges, such as an I-beam's, even the true part's edges match poorly. The same goes for springs.
 
 ### Rerun
 

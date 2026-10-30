@@ -71,7 +71,7 @@ Basics
   views in the reference's order and grid (2 columns up to 4 views). Each view is scaled and centred onto the
   reference's silhouette, so overall size is not compared, only shape and proportions. compare.score (per view:
   views[].score) is the mean of outline (silhouette IoU) and edges (lines and shading steps inside the part). A part
-  that matches usually scores 0.95 or more (thin flanges, springs and fine meshes can score lower); below 0.9, look
+  that matches usually scores 0.95 or more (thin flanges, springs and hollow parts can score lower); below 0.9, look
   where the diff shows red or blue. The
   image is a diff per view: grey where both have material, light red / light blue where only the reference / only
   ours has; red edges only in the reference (a feature yours lacks or misplaces), blue only in yours. views[].cut

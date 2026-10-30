@@ -37,6 +37,10 @@ SIZE = 262  # a 524 px composite has 262 px cells (4 px gutters round 256 px vie
 # --- render: runs under FreeCAD's interpreter ------------------------------------------------------------------
 
 def render_one(step: str, out: str) -> None:
+    """Render a part's four views. Opposite cameras ([-1,-1,-1] and [1,1,1], [1,-1,1] and [-1,1,-1]) see mirror
+    images of one silhouette: when their areas differ by more than 2 %, the render is broken (reviewed: 5 of 1,397
+    parts in a batch of 8 parallel renders, whole when rendered again), so the part is read and rendered again, three
+    times at most. A part that never agrees is not cached."""
     import importlib.util
 
     import numpy as np
@@ -44,14 +48,20 @@ def render_one(step: str, out: str) -> None:
     fcr = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(fcr)
     import Part
-    sh = Part.read(step)
-    arrays = {}
-    for i, v in enumerate(VIEWS):  # as action_render does for a comparison
-        _, d = fcr._view(v, "v")
-        img, mask, seams = fcr.render_view(sh, d, SIZE, "view", with_mask=True)
-        arrays[f"img{i}"] = np.clip(fcr._downsample(img, 2), 0, 255).astype("uint8")
-        arrays[f"mask{i}"] = mask.astype(float).reshape(SIZE, 2, SIZE, 2).mean(axis=(1, 3)) >= 0.5
-        arrays[f"seam{i}"] = seams.reshape(SIZE, 2, SIZE, 2).any(axis=(1, 3))
+    for _ in range(3):
+        sh = Part.read(step)  # a fresh shape: no triangulation left from the last attempt
+        arrays = {}
+        for i, v in enumerate(VIEWS):  # as action_render does for a comparison
+            _, d = fcr._view(v, "v")
+            img, mask, seams = fcr.render_view(sh, d, SIZE, "view", with_mask=True)
+            arrays[f"img{i}"] = np.clip(fcr._downsample(img, 2), 0, 255).astype("uint8")
+            arrays[f"mask{i}"] = mask.astype(float).reshape(SIZE, 2, SIZE, 2).mean(axis=(1, 3)) >= 0.5
+            arrays[f"seam{i}"] = seams.reshape(SIZE, 2, SIZE, 2).any(axis=(1, 3))
+        areas = [int(arrays[f"mask{i}"].sum()) for i in range(4)]
+        if all(max(areas[a], areas[b]) <= 1.02 * min(areas[a], areas[b]) for a, b in ((0, 1), (2, 3))):
+            break
+    else:
+        raise SystemExit(f"opposite views never agreed: silhouette areas {areas}")
     tmp = Path(out).with_suffix(".tmp.npz")
     np.savez_compressed(tmp, **arrays)
     tmp.replace(out)

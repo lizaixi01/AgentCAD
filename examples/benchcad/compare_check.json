@@ -1,48 +1,48 @@
 {
  "old": "945e6c6",
  "metrics": {
-  "parts": 1297,
+  "parts": 1298,
   "tasks": 100,
   "reference_parts": 100,
   "old": {
-   "same_task_pairs_ranked": 0.8317,
-   "pairs": 3968,
-   "pearson": 0.486,
-   "score_ge_0_9": 936,
+   "same_task_pairs_ranked": 0.8328,
+   "pairs": 3978,
+   "pearson": 0.483,
+   "score_ge_0_9": 937,
    "score_ge_0_9_graded_lt_0_7": 166,
-   "reference_part_mean": 0.9424,
-   "reference_part_p10": 0.8214
+   "reference_part_mean": 0.9447,
+   "reference_part_p10": 0.8354
   },
   "score": {
-   "same_task_pairs_ranked": 0.8958,
-   "pairs": 3968,
-   "pearson": 0.656,
+   "same_task_pairs_ranked": 0.8968,
+   "pairs": 3978,
+   "pearson": 0.655,
    "score_ge_0_9": 735,
    "score_ge_0_9_graded_lt_0_7": 71,
-   "reference_part_mean": 0.9673,
-   "reference_part_p10": 0.9408
+   "reference_part_mean": 0.9696,
+   "reference_part_p10": 0.9426
   },
   "outline": {
-   "same_task_pairs_ranked": 0.858,
-   "pairs": 3968,
-   "pearson": 0.554,
-   "score_ge_0_9": 1093,
+   "same_task_pairs_ranked": 0.8591,
+   "pairs": 3978,
+   "pearson": 0.555,
+   "score_ge_0_9": 1094,
    "score_ge_0_9_graded_lt_0_7": 233,
-   "reference_part_mean": 0.9701,
-   "reference_part_p10": 0.9469
+   "reference_part_mean": 0.9725,
+   "reference_part_p10": 0.949
   },
   "edges": {
-   "same_task_pairs_ranked": 0.8779,
-   "pairs": 3968,
-   "pearson": 0.623,
+   "same_task_pairs_ranked": 0.8785,
+   "pairs": 3978,
+   "pearson": 0.622,
    "score_ge_0_9": 618,
    "score_ge_0_9_graded_lt_0_7": 47,
-   "reference_part_mean": 0.9644,
-   "reference_part_p10": 0.9131
+   "reference_part_mean": 0.9667,
+   "reference_part_p10": 0.9216
   },
   "ranked_difference_ci95": [
-   0.0284,
-   0.1038
+   0.0283,
+   0.104
   ]
  },
  "parts": [
@@ -896,10 +896,10 @@
    "label": "gt",
    "id": "vented_panel_007999_s20260505",
    "graded": 1.0,
-   "old": 0.7439,
-   "score": 0.7615,
-   "outline": 0.7542,
-   "edges": 0.7692
+   "old": 0.9768,
+   "score": 0.9942,
+   "outline": 0.9892,
+   "edges": 1.0
   },
   {
    "label": "gt",
@@ -2138,19 +2138,19 @@
    "label": "claude-code-medium",
    "id": "hex_key_organizer_000274_s20260506",
    "graded": 0.9879021171295024,
-   "old": 0.9089,
-   "score": 0.9105,
-   "outline": 0.914,
-   "edges": 0.9075
+   "old": 0.9734,
+   "score": 0.9832,
+   "outline": 0.9798,
+   "edges": 0.987
   },
   {
    "label": "claude-code-medium",
    "id": "hex_nut_006465_s20260505",
    "graded": 0.9318716237686686,
-   "old": 0.9397,
-   "score": 0.9418,
-   "outline": 0.9505,
-   "edges": 0.9325
+   "old": 0.9774,
+   "score": 0.994,
+   "outline": 0.989,
+   "edges": 0.9988
   },
   {
    "label": "claude-code-medium",
@@ -2210,10 +2210,10 @@
    "label": "claude-code-medium",
    "id": "i_beam_007774_s20260505",
    "graded": 0.1836734693877551,
-   "old": 0.7107,
-   "score": 0.7363,
-   "outline": 0.7293,
-   "edges": 0.7432
+   "old": 0.7926,
+   "score": 0.7755,
+   "outline": 0.804,
+   "edges": 0.7465
   },
   {
    "label": "claude-code-medium",
@@ -2250,6 +2250,15 @@
    "score": 0.7465,
    "outline": 0.7268,
    "edges": 0.766
+  },
+  {
+   "label": "claude-code-medium",
+   "id": "j_hook_002015_s20260506",
+   "graded": 0.5947041682503484,
+   "old": 0.6228,
+   "score": 0.7322,
+   "outline": 0.834,
+   "edges": 0.6302
   },
   {
    "label": "claude-code-medium",
@@ -2723,10 +2732,10 @@
    "label": "claude-code-medium",
    "id": "worm_screw_015368_s20260505",
    "graded": 0.7669043732279406,
-   "old": 0.8794,
-   "score": 0.7987,
-   "outline": 0.8935,
-   "edges": 0.7045
+   "old": 0.9064,
+   "score": 0.8387,
+   "outline": 0.9138,
+   "edges": 0.764
   },
   {
    "label": "claude-hybrid-medium",
@@ -3740,10 +3749,10 @@
    "label": "claude-hybrid3-medium",
    "id": "coil_spring_017377_s20260505",
    "graded": 0.1469701473523292,
-   "old": 0.5522,
-   "score": 0.5038,
-   "outline": 0.5755,
-   "edges": 0.432
+   "old": 0.7177,
+   "score": 0.6658,
+   "outline": 0.7563,
+   "edges": 0.5753
   },
   {
    "label": "claude-hybrid3-medium",
