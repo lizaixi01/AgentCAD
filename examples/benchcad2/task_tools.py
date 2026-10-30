@@ -11,6 +11,7 @@ import re
 import shutil
 import sys
 import tempfile
+import threading
 from pathlib import Path
 
 from agentcad.mcp_server import build_server
@@ -86,6 +87,7 @@ class TaskFiles:
     def __init__(self, root: Path, kind: str):
         self.policy = Policy(root=root, allow_scripts=True)
         self.root, self.kind = self.policy.root, kind
+        self._submission_lock = threading.Lock()
 
     def path(self, value: str, *, exists: bool = True) -> Path:
         # Policy.resolve(must_exist=True) intentionally requires a CAD FILE;
@@ -102,6 +104,10 @@ class TaskFiles:
 
     def submit(self, path: str = "", instances: list[dict] | None = None,
                graph: dict | None = None) -> dict:
+        with self._submission_lock:
+            return self._submit(path, instances, graph)
+
+    def _submit(self, path: str, instances: list[dict] | None, graph: dict | None) -> dict:
         marker_file = self.root / "answer.json"
         if marker_file.exists():
             return {"submitted": True, **json.loads(marker_file.read_text(encoding="utf-8")),

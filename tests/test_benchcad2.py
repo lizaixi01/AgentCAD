@@ -126,6 +126,41 @@ def test_first_answer_is_immutable_even_if_working_files_or_submit_change(tmp_pa
     assert json.loads((graph.root / first["path"]).read_text())["components"][0]["id"] == "first"
 
 
+def test_concurrent_submissions_keep_the_first_answer(tmp_path, monkeypatch):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+
+    (tmp_path / "first.step").write_bytes(b"first")
+    (tmp_path / "second.step").write_bytes(b"second")
+    files = tools.TaskFiles(tmp_path, "part")
+    copying, release, second_started = threading.Event(), threading.Event(), threading.Event()
+    copy2 = tools.shutil.copy2
+
+    def held_copy(src, dst):
+        if Path(src).name == "first.step":
+            copying.set()
+            assert release.wait(5)
+        return copy2(src, dst)
+
+    def second_submit():
+        second_started.set()
+        return files.submit("second.step")
+
+    monkeypatch.setattr(tools.shutil, "copy2", held_copy)
+    with ThreadPoolExecutor(2) as pool:
+        first = pool.submit(files.submit, "first.step")
+        assert copying.wait(5)
+        second = pool.submit(second_submit)
+        try:
+            assert second_started.wait(5)
+            assert not second.done()
+        finally:
+            release.set()
+        a, b = first.result(), second.result()
+    assert a["path"] == b["path"]
+    assert (tmp_path / a["path"]).read_bytes() == b"first"
+
+
 def test_submission_requires_real_output_inside_workspace(tmp_path):
     files = tools.TaskFiles(tmp_path, "part")
     with pytest.raises(Exception):
