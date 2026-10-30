@@ -164,3 +164,11 @@ For all four submissions, the archived native bytes match the immutable saved
 stages, the public images match the frozen baseline hashes, and read-only final
 validation leaves the native files unchanged. All four final previews were
 visually inspected. Earlier reports and artifacts remain unchanged.
+
+Main subsequently advanced to `bced013` with the independent BenchCAD 2 runner
+and tests. Integration preserves both appended memory entries; it changes none
+of this experiment's product code, harness, scores or submitted files. On the
+integrated branch, all affected image, dimension, CADBench pilot and new
+BenchCAD 2 checks pass: **82 passed, 2 optional CadQuery tests skipped** in
+16.07 seconds. The 529-test full-suite result above precedes this main update;
+it is not represented as a full run of the newly expanded suite.
