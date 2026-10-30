@@ -97,7 +97,9 @@ class Wizard:
                 self.state.update(phase="error", error={"code": "SETUP_FAILED", "message": str(exc)})
 
     def open_folder(self) -> dict[str, Any]:
-        """Open the workspace (only that folder) in the file manager."""
+        """Open the workspace (only that folder) in the file manager. A dry run never creates it."""
+        if self.opts["dry_run"] and not self.root.is_dir():
+            return {"ok": False, "error": {"code": "NO_FOLDER", "message": f"demo mode did not create {self.root}"}}
         try:
             install.open_folder(self.root)
             return {"ok": True}

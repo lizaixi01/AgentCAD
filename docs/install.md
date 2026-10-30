@@ -11,8 +11,9 @@ English or Chinese.
 
 1. Download the installer for your computer:
    - **Windows:** [AgentCAD-Setup.cmd](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup.cmd)
-   - **macOS / Linux:** [AgentCAD-Setup.command](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup.command)
-2. Double-click it.
+   - **macOS / Linux:** [AgentCAD-Setup-mac.zip](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup-mac.zip)
+2. Double-click it. On macOS, double-click the .zip first: it unpacks to `AgentCAD-Setup.command`, still runnable
+   (a plain download of that file would lose the permission to run).
    - Windows may say "Windows protected your PC". Click **More info**, then **Run anyway**.
    - macOS may say it cannot check the developer. Right-click the file, choose **Open**, then **Open** again.
 3. On the page: tap **Start**, keep the apps it ticked (the ones found on your computer) and tap **Install now**.

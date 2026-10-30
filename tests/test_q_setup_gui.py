@@ -121,6 +121,7 @@ def test_dry_run_writes_nothing(home):
         _call(w, "POST", "/api/start", {"clients": ["cursor"]})
         st = _wait(w)
         assert st["phase"] == "done" and st["result"]["clients"][0]["status"] == "would be added"
+        assert _call(w, "POST", "/api/open-folder", {})[1]["error"]["code"] == "NO_FOLDER"
         assert not (home / ".cursor").exists() and not (home / "AgentCAD").exists()
     finally:
         w.stop()

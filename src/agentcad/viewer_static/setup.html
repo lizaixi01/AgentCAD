@@ -363,7 +363,7 @@ function renderProgress() {
       <div class="actions">${ok ? "" : `<button class="btn primary" id="retry" type="button">${ICON.redo} ${esc(t("retry"))}</button>`}
         <button class="btn" id="folder" type="button">${ICON.folder} ${esc(t("openFolder"))}</button>
         <button class="btn" id="share" type="button">${ICON.share} ${esc(t("share"))}</button>
-        ${ok ? `<button class="btn primary" id="finish" type="button">${esc(t("finish"))}</button>` : ""}</div>
+        <button class="btn ${ok ? "primary" : ""}" id="finish" type="button">${esc(t("finish"))}</button></div>
       <details><summary>${esc(t("details"))}</summary><pre>${esc(JSON.stringify(res && res.clients ? res : state, null, 1))}</pre></details></div>`;
   card.querySelectorAll("[data-copy]").forEach(b => b.onclick = async () => {
     await copy(t(b.dataset.copy)); b.textContent = t("copied"); b.classList.add("copied");

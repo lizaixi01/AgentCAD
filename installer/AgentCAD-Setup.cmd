@@ -22,7 +22,9 @@ if not exist "%USERPROFILE%\.local\bin\uv.exe" goto failed
 set "PATH=%USERPROFILE%\.local\bin;%PATH%"
 :run
 echo    正在打开安装页面……  Opening the setup page...
-uvx --refresh-package agentcad-runtime --from https://github.com/lizaixi01/AgentCAD/archive/refs/heads/main.zip agentcad setup --gui >nul
+echo    如果浏览器没有自动打开，请把下面 setup 后面的链接复制到浏览器里。
+echo    If no browser opens, copy the link after "setup" below into your browser.
+uvx --refresh-package agentcad-runtime --from https://github.com/lizaixi01/AgentCAD/archive/refs/heads/main.zip agentcad setup --gui
 if errorlevel 1 goto failed
 exit /b 0
 :failed
