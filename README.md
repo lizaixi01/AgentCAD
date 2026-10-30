@@ -115,6 +115,10 @@ Samples are small (2–3 runs per task, one run per BenchCAD task). The full rep
 
 ## Get started in two minutes
 
+**Not a programmer?** Download the installer ([Windows](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup.cmd) · [macOS / Linux](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup-mac.zip)) and double-click it. A setup page with a progress bar opens in your browser; no terminal needed. Details: [docs/install.md](docs/install.md).
+
+From a clone, for development:
+
 ```bash
 git clone https://github.com/lizaixi01/AgentCAD.git
 cd AgentCAD
