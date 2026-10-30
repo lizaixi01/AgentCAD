@@ -100,7 +100,7 @@ def test_raster_crossings_are_independent_of_guessed_external_arrow_endpoints(ws
     probe = evidence["checks"][0]["raster_probe"]
     assert probe["status"] == "candidates"
     assert [c["range_px"] for c in probe["crossings"]] == [[60, 60], [80, 80]]
-    assert "OUTSIDE arrows" in probe["note"]
+    assert "OUTSIDE arrows" in evidence["raster_probe_note"] and "note" not in probe
     # Crop offsets and preview rotation must not change independent source observations.
     box = [20, 10, 200, 130] if not horizontal else [10, 20, 130, 200]
     cropped = inspect(ws, readings, region=box, rotate=90)
@@ -118,6 +118,24 @@ def test_unreadable_and_overlong_raster_probes_do_not_certify_endpoints(ws):
     evidence = inspect(ws, [row])["dimension_evidence"]
     assert evidence["checks"][0]["raster_probe"]["status"] == "region_too_long"
     assert evidence["semantics_verified"] is False
+
+
+def test_ink_beside_the_dimension_line_is_not_a_crossing(ws):
+    image = Image.new("RGB", (200, 100), "white")
+    ImageDraw.Draw(image).line((20, 50, 120, 50), fill="black")  # 10 px off the dimension line at y=40
+    image.save(ws / "section.png")
+    row = {"id": "span", "view": "detail", "value": 10, "line": [[20, 40], [120, 40]],
+           "surfaces": [{"name": "a", "point": [20, 60]}, {"name": "b", "point": [120, 60]}]}
+    probe = inspect(ws, [row])["dimension_evidence"]["checks"][0]["raster_probe"]
+    assert probe["status"] == "no_crossings_detected" and probe["crossings"] == []
+
+
+def test_the_raster_note_is_stated_once_per_call(ws):
+    readings = section(ws / "section.png")
+    readings += [dict(copy.deepcopy(readings[0]), id=f"again{n}") for n in range(9)]
+    evidence = inspect(ws, readings)["dimension_evidence"]
+    assert len(evidence["checks"]) == 12
+    assert json.dumps(evidence).count("OUTSIDE arrows") == 1
 
 
 @pytest.mark.parametrize("transpose", [False, True])
@@ -193,10 +211,25 @@ def test_guide_and_evidence_keep_unmarked_source_and_original_coordinates(ws, ro
     assert result["dimension_evidence"]["groups"][0]["components"][0]["levels_mm"]["underside"] == 11
     guide = inspect(ws, [], max_size=321, rotate=rotation)
     assert guide["ok"] and guide["dimension_evidence"]["consistent"] is None
+    # The first reading's D1 marker sits where Pillow itself moves that source pixel.
+    probe = Image.new("L", (300, 160), 0)
+    probe.putpixel((20, 30), 255)
+    moved = probe.rotate(-rotation, expand=True).resize((width, height), Image.Resampling.BILINEAR)
+    px, py = max(((u, v) for u in range(width) for v in range(height)), key=moved.getpixel)
+    marked = result["panels"][1]
+    assert marked["size"] == panel["size"]
+
+    def marker_green(origin):
+        window = output.crop((origin[0]+px-6, origin[1]+py-6, origin[0]+px+7, origin[1]+py+7)).convert("RGB")
+        data = window.tobytes()
+        return sum(abs(r-0x14) + abs(g-0x6c) + abs(b-0x43) < 60 for r, g, b in zip(data[::3], data[1::3], data[2::3]))
+
+    assert marker_green(marked["origin"]) >= 10 and marker_green(panel["origin"]) == 0
 
 
 @pytest.mark.parametrize("change", ["duplicate", "outside", "nonfinite", "diagonal", "unknown", "bad_value",
-                                  "huge_value", "huge_coordinate"])
+                                  "huge_value", "huge_coordinate", "too_many", "bad_unit", "surface_field",
+                                  "same_surface", "short_line"])
 def test_invalid_anchor_inputs_fail_without_writing(ws, change):
     source = ws / "section.png"
     readings = section(source)
@@ -209,6 +242,11 @@ def test_invalid_anchor_inputs_fail_without_writing(ws, change):
     if change == "bad_value": readings[0]["value"] = True
     if change == "huge_value": readings[0]["value"] = 10**1000
     if change == "huge_coordinate": readings[0]["line"][0][0] = 10**1000
+    if change == "too_many": readings += [dict(copy.deepcopy(readings[0]), id=f"x{n}") for n in range(10)]
+    if change == "bad_unit": readings[0]["unit"] = "ft"
+    if change == "surface_field": readings[0]["surfaces"][0]["role"] = "datum"
+    if change == "same_surface": readings[0]["surfaces"][1]["name"] = readings[0]["surfaces"][0]["name"]
+    if change == "short_line": readings[0]["line"][1] = [20, 30.5]
     result = inspect(ws, readings)
     assert not result["ok"] and result["error"]["code"] == "BAD_DIMENSION_EVIDENCE", result
     assert source.read_bytes() == before and list(ws.iterdir()) == [source]
@@ -221,6 +259,12 @@ def test_cli_and_real_mcp_share_dimension_evidence(ws):
                               "section.png", "--dimensions", encoded, "--max-size", "600"],
                              capture_output=True, text=True, check=True)
     cli = json.loads(process.stdout)
+    readings_file = ws.parent / "readings.json"  # outside the read-only workspace
+    readings_file.write_text(encoded, "utf-8")
+    from_file = subprocess.run([sys.executable, "-m", "agentcad.cli", "--root", str(ws), "--read-only", "image",
+                                "section.png", "--dimensions-file", str(readings_file), "--max-size", "600"],
+                               capture_output=True, text=True, check=True)
+    assert json.loads(from_file.stdout)["dimension_evidence"] == cli["dimension_evidence"]
 
     async def call():
         from mcp import ClientSession, StdioServerParameters

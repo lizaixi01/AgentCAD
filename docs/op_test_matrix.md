@@ -63,7 +63,7 @@
 | `mirror` | edit | test_autocad_findings.py, test_h_operations.py |
 | `modify` | edit | test_h_operations.py, test_j_compact_results.py, test_layouts_and_scripts.py, test_y_tolerances.py |
 | `modify_layer` | layer | test_h_operations.py |
-| `move` | edit | test_d_errors.py, test_f_repro_recovery.py, test_h_operations.py, test_j_compact_results.py, test_t_workflow_guards.py |
+| `move` | edit | test_d_errors.py, test_f_repro_recovery.py, test_h_operations.py, test_j_compact_results.py, test_t_workflow_guards.py, test_y_tolerances.py |
 | `offset` | edit | test_autocad_findings.py, test_h_operations.py |
 | `purge` | edit | test_i_common_ops.py |
 | `remove_duplicates` | edit | test_t_workflow_guards.py |
