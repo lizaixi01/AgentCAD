@@ -76,6 +76,7 @@ def test_invalid_or_ambiguous_measurements_fail_explicitly(ws):
         ({"kind": "face_distance", "from": "left", "to": "bottom"}, "NOT_PARALLEL"),
         ({"kind": "face_distance", "from": {"type": "cylinder"}, "to": "bottom"}, "NOT_PLANAR"),
         ({"kind": "face_distance", "from": "Face0", "to": "bottom"}, "SELECTOR_EMPTY"),
+        ({"kind": "face_distance", "from": [], "to": "bottom"}, "SELECTOR_EMPTY"),
         ({"kind": "face_distance", "from": "top"}, "BAD_MEASUREMENT"),
         ({"kind": "planar_levels", "typo": 1}, "BAD_MEASUREMENT"),
     ]
@@ -85,6 +86,9 @@ def test_invalid_or_ambiguous_measurements_fail_explicitly(ws):
     report = runtime.validate_drawing("plate.FCStd", requirements=[
         {"type": "face_distance", "from": "left", "to": "top", "value": 2}], detail=True)["validation"]
     assert not report["passed"] and report["requirements"][0]["error"]["code"] == "NOT_PARALLEL"
+    report = runtime.validate_drawing("plate.FCStd", requirements=[
+        {"type": "face_distance", "from": [], "to": "top", "value": 2}], detail=True)["validation"]
+    assert not report["passed"] and report["requirements"][0]["error"]["code"] == "SELECTOR_EMPTY"
     report = runtime.validate_drawing("plate.FCStd", requirements=[
         {"type": "face_distance", "from": "top", "to": "bottom", "value": 8, "tolerance": "not a number"}
     ], detail=True)["validation"]

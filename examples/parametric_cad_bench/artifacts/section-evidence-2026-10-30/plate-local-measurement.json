@@ -1,0 +1,332 @@
+{
+  "posthoc_only": true,
+  "source_sha256": "8459b8a2e3cb8e2a8483d9fd4ff8432a87ed703a12e0a977055d433e8c64a558",
+  "levels": {
+    "ok": true,
+    "tool": "measure_entities",
+    "drawing": "answer.FCStd",
+    "units": "mm",
+    "of": "Body",
+    "measurements": [
+      {
+        "kind": "planar_levels",
+        "axis": [
+          0.0,
+          0.0,
+          1.0
+        ],
+        "levels": [
+          {
+            "position": -2.1,
+            "faces": [
+              {
+                "name": "Face101",
+                "normal": [
+                  0.0,
+                  0.0,
+                  -1.0
+                ],
+                "area": 43.196899
+              },
+              {
+                "name": "Face103",
+                "normal": [
+                  0.0,
+                  0.0,
+                  -1.0
+                ],
+                "area": 43.196899
+              },
+              {
+                "name": "Face104",
+                "normal": [
+                  0.0,
+                  0.0,
+                  -1.0
+                ],
+                "area": 43.196899
+              },
+              {
+                "name": "Face105",
+                "normal": [
+                  0.0,
+                  0.0,
+                  -1.0
+                ],
+                "area": 43.196899
+              }
+            ],
+            "area": 172.787596
+          },
+          {
+            "position": 0.0,
+            "faces": [
+              {
+                "name": "Face4",
+                "normal": [
+                  0.0,
+                  0.0,
+                  -1.0
+                ],
+                "area": 3529.072506
+              }
+            ],
+            "area": 3529.072506
+          },
+          {
+            "position": 1.5,
+            "faces": [
+              {
+                "name": "Face102",
+                "normal": [
+                  0.0,
+                  0.0,
+                  1.0
+                ],
+                "area": 2097.03272
+              }
+            ],
+            "area": 2097.03272
+          },
+          {
+            "position": 3.5,
+            "faces": [
+              {
+                "name": "Face5",
+                "normal": [
+                  0.0,
+                  0.0,
+                  1.0
+                ],
+                "area": 1604.827382
+              }
+            ],
+            "area": 1604.827382
+          }
+        ],
+        "gaps": [
+          {
+            "from": -2.1,
+            "to": 0.0,
+            "distance": 2.1
+          },
+          {
+            "from": 0.0,
+            "to": 1.5,
+            "distance": 1.5
+          },
+          {
+            "from": 1.5,
+            "to": 3.5,
+            "distance": 2.0
+          }
+        ],
+        "note": "Levels are measured geometry, not assigned feature roles; match each face to the drawing."
+      }
+    ],
+    "seconds": 0.74,
+    "metrics": {
+      "duration_ms": 751.43,
+      "input_bytes": 62,
+      "output_bytes": 1114
+    }
+  },
+  "gap": {
+    "ok": true,
+    "tool": "measure_entities",
+    "drawing": "answer.FCStd",
+    "units": "mm",
+    "of": "Body",
+    "measurements": [
+      {
+        "kind": "face_distance",
+        "distance": 2.1,
+        "signed_distance": 2.1,
+        "from": {
+          "faces": [
+            "Face4"
+          ],
+          "point": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "normal": [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        },
+        "to": {
+          "faces": [
+            "Face101",
+            "Face103",
+            "Face104",
+            "Face105"
+          ],
+          "point": [
+            -15.25,
+            -15.25,
+            -2.1
+          ],
+          "normal": [
+            0.0,
+            0.0,
+            -1.0
+          ]
+        },
+        "method": "perpendicular distance between supporting planes; not lateral edge separation"
+      }
+    ],
+    "seconds": 0.73,
+    "metrics": {
+      "duration_ms": 740.3,
+      "input_bytes": 99,
+      "output_bytes": 498
+    }
+  },
+  "validation": {
+    "ok": true,
+    "tool": "validate_drawing",
+    "drawing": "answer.FCStd",
+    "validation": {
+      "readable": true,
+      "passed": false,
+      "issues": [],
+      "requirements": [
+        {
+          "index": 0,
+          "type": "face_distance",
+          "expected": 1.5,
+          "actual": 2.1,
+          "deviation": 0.6,
+          "measured": {
+            "kind": "face_distance",
+            "distance": 2.1,
+            "signed_distance": 2.1,
+            "from": {
+              "faces": [
+                "Face4"
+              ],
+              "point": [
+                0.0,
+                0.0,
+                0.0
+              ],
+              "normal": [
+                0.0,
+                0.0,
+                -1.0
+              ]
+            },
+            "to": {
+              "faces": [
+                "Face101",
+                "Face103",
+                "Face104",
+                "Face105"
+              ],
+              "point": [
+                -15.25,
+                -15.25,
+                -2.1
+              ],
+              "normal": [
+                0.0,
+                0.0,
+                -1.0
+              ]
+            },
+            "method": "perpendicular distance between supporting planes; not lateral edge separation"
+          },
+          "passed": false
+        }
+      ],
+      "warnings": [],
+      "shape": {
+        "valid": true,
+        "solids": 1,
+        "faces": 109,
+        "edges": 312,
+        "volume": 9125.29887,
+        "area": 9810.200793,
+        "bbox": [
+          [
+            -36.06,
+            -36.06,
+            -2.1
+          ],
+          [
+            36.06,
+            36.06,
+            3.5
+          ]
+        ],
+        "size": [
+          72.12,
+          72.12,
+          5.6
+        ],
+        "center_of_mass": [
+          0.0,
+          0.0,
+          1.293956
+        ],
+        "holes": [
+          {
+            "diameter": 2.0,
+            "count": 16
+          },
+          {
+            "diameter": 3.0,
+            "count": 4
+          },
+          {
+            "diameter": 3.2,
+            "count": 8
+          },
+          {
+            "diameter": 6.0,
+            "count": 8
+          }
+        ]
+      },
+      "features": 14,
+      "parameters": {
+        "rimHeight": {
+          "value": 3.5,
+          "formula": "=floorThickness + recessDepth"
+        },
+        "recessDepth": {
+          "value": 2.0
+        },
+        "floorThickness": {
+          "value": 1.5
+        },
+        "totalHeight": {
+          "value": 5.6
+        },
+        "bossHeight": {
+          "value": 2.1,
+          "formula": "=totalHeight - rimHeight"
+        },
+        "bossDiameter": {
+          "value": 8.0
+        },
+        "smallDiameter": {
+          "value": 3.0
+        },
+        "mountDiameter": {
+          "value": 3.2
+        }
+      },
+      "file": "answer.FCStd",
+      "requirements_source": "explicit"
+    },
+    "metrics": {
+      "duration_ms": 1408.52,
+      "input_bytes": 145,
+      "output_bytes": 1448
+    }
+  }
+}

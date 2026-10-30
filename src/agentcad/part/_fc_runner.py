@@ -521,6 +521,8 @@ def select_faces(shape, sel, name="faces"):
 
 def _plane_group(shape, selector, name):
     names = select_faces(shape, selector, name)
+    if not names:
+        raise OpError("SELECTOR_EMPTY", f"{name} must select at least one planar face", category="geometry")
     faces = [shape.getElement(n) for n in names]
     if any(_surface_kind(f) != "plane" for f in faces):
         raise OpError("NOT_PLANAR", f"{name} must select planar faces", category="geometry")

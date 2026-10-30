@@ -1,0 +1,77 @@
+{
+  "posthoc_only": true,
+  "calls": [
+    {
+      "run": "cadbench-v3-drawing-retest-20261030",
+      "trajectory_sha256": "e4d365638eacbc58f8a6a07f1b2cb672b3932996cd8ca1fd227cc8e854392680",
+      "item_id": "item_18",
+      "arguments": {
+        "path": "part.FCStd",
+        "filter": {
+          "type": "face"
+        },
+        "detail": true,
+        "limit": 120
+      },
+      "returned": [
+        {
+          "kind": "features",
+          "count": null,
+          "names": [
+            "Sketch",
+            "Pad",
+            "Sketch001",
+            "Pocket",
+            "Sketch002",
+            "Pad001",
+            "Sketch003",
+            "Pad002",
+            "Sketch004",
+            "Pocket001",
+            "Sketch005",
+            "Pocket002",
+            "Sketch006",
+            "Pocket003",
+            "Sketch007",
+            "Pocket004"
+          ]
+        }
+      ]
+    },
+    {
+      "run": "cadbench-v3-drawing-retest2-20261030",
+      "trajectory_sha256": "c22592ee7de64b3ec53bbfa226fb1c29ef7e80944c6a37466649474c6fe9bd66",
+      "item_id": "item_21",
+      "arguments": {
+        "path": "part.FCStd",
+        "filter": {
+          "type": "face"
+        },
+        "detail": true,
+        "limit": 150
+      },
+      "returned": [
+        {
+          "kind": "features",
+          "count": null,
+          "names": [
+            "Sketch",
+            "Pad",
+            "Sketch001",
+            "Pad001",
+            "Sketch002",
+            "Pocket",
+            "Sketch003",
+            "Pocket001",
+            "Sketch004",
+            "Pocket002",
+            "Sketch005",
+            "Pocket003",
+            "Sketch006",
+            "Pocket004"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "posthoc_only": true,
+  "units": "mm",
+  "official_score": false,
+  "method": "Five points per B-rep edge, deduplicated; bidirectional point-to-surface distances. Not full Hausdorff.",
+  "alignment": "Axis correspondence from bend planes; two declared transforms, not exhaustive optimization.",
+  "candidate_sha256": "267a97063c574dc3d2581f2bd997dc9d481ddafa5a527ecfa5c731d3baf9a868",
+  "reference_sha256": "ff312c1c584c33ef35688f59e9a46807775e4fc01e72fd25600369d9a53c9a45",
+  "candidate_faces": 14,
+  "reference_faces": 16,
+  "transforms": [
+    {
+      "determinant": 1,
+      "matrix_row_major": [
+        0,
+        -1,
+        0,
+        -36.35,
+        0,
+        0,
+        1,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "candidate_points": 104,
+      "reference_points": 100,
+      "candidate_to_reference_max": 0.02837302937548005,
+      "reference_to_candidate_max": 8.644125458514252e-14,
+      "bidirectional_mean": 0.001938410528706805,
+      "volume_before": 33485.65483584377,
+      "volume_after": 33485.65483584377
+    },
+    {
+      "determinant": -1,
+      "matrix_row_major": [
+        0,
+        1,
+        0,
+        36.35,
+        0,
+        0,
+        1,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "candidate_points": 104,
+      "reference_points": 100,
+      "candidate_to_reference_max": 72.69917018022119,
+      "reference_to_candidate_max": 72.64272426586672,
+      "bidirectional_mean": 19.964461212835207,
+      "volume_before": 33485.65483584377,
+      "volume_after": 33485.65483584377
+    }
+  ]
+}
