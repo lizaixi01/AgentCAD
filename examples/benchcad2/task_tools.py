@@ -31,8 +31,8 @@ def rigid_instances(instances: list[dict]) -> list[dict]:
         t = np.asarray(rec.get("transform", rec.get("T")), dtype=float)
         if (t.shape != (4, 4) or not np.isfinite(t).all()
                 or not np.allclose(t[3], [0, 0, 0, 1], atol=1e-6, rtol=0)
-                or not np.allclose(t[:3, :3] @ t[:3, :3].T, np.eye(3), atol=1e-3, rtol=0)
-                or abs(np.linalg.det(t[:3, :3]) - 1) > 1e-3):
+                or not np.allclose(t[:3, :3] @ t[:3, :3].T, np.eye(3), atol=1e-6, rtol=0)
+                or abs(np.linalg.det(t[:3, :3]) - 1) > 1e-6):
             raise ValueError(f"{pid}: transform must be a finite proper rigid 4x4 matrix")
         counts[pid] = counts.get(pid, 0) + 1
         result.append({"part_id": pid, "instance_id": rec.get("instance_id", f"{pid}_i{counts[pid]}"),
@@ -87,7 +87,12 @@ class TaskFiles:
         self.root, self.kind = self.policy.root, kind
 
     def path(self, value: str, *, exists: bool = True) -> Path:
-        return self.policy.resolve(value, must_exist=exists)
+        # Policy.resolve(must_exist=True) intentionally requires a CAD FILE;
+        # this input browser also lists directories, after the same path checks.
+        p = self.policy.resolve(value)
+        if exists and not p.exists():
+            raise FileNotFoundError(value)
+        return p
 
     def part_path(self, pid: str) -> Path:
         # pid has already passed rigid_instances' validation.

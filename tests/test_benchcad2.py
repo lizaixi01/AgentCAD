@@ -44,6 +44,53 @@ def test_invalid_placement_rejected(matrix):
         tools.rigid_instances([{"part_id": "part_01", "transform": matrix}])
 
 
+def test_rounded_non_rotation_is_rejected_before_submission():
+    t = [[.7071, -.7071, 0, 0], [.7071, .7071, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+    with pytest.raises(ValueError):
+        tools.rigid_instances([{"part_id": "part_01", "transform": t}])
+
+
+def test_directory_browser_accepts_root_and_input_subdirectory(tmp_path):
+    (tmp_path / "parts").mkdir()
+    files = tools.TaskFiles(tmp_path, "part")
+    assert files.path(".") == tmp_path.resolve()
+    assert files.path("parts").is_dir()
+    with pytest.raises(FileNotFoundError):
+        files.path("absent")
+
+
+def test_tool_errors_inside_successful_mcp_envelope_are_counted(tmp_path):
+    log = tmp_path / "events.jsonl"
+    runner.dump(log, {})
+    event = {"type": "item.completed", "item": {
+        "type": "mcp_tool_call", "id": "tool-1", "server": "agentcad", "tool": "run_script", "status": "completed",
+        "result": {"content": [{"type": "text", "text": json.dumps({
+            "ok": False, "error": {"code": "SCRIPT_FAILED"}})}]}}}
+    log.write_text(json.dumps(event) + "\n", encoding="utf-8")
+    stats = runner.log_stats(log)
+    assert stats["tool_errors"] == 1
+    assert stats["tool_error_codes"] == {"SCRIPT_FAILED": 1}
+
+
+def test_over_budget_submission_cannot_bypass_the_monitor():
+    # Both submission and process exit can happen between the polling checks.
+    assert runner.episode_outcome("completed", 0, 5, 4, 101, 3600, 100) == ("tool_limit", False)
+    assert runner.episode_outcome("completed", 0, 5, 4, 100, 3600, 100) == ("completed", True)
+    assert runner.episode_outcome("completed", 0, 3602, 3601, 10, 3600, 100) == ("timeout", False)
+    # A final summary taking extra time does not invalidate an on-time submit.
+    assert runner.episode_outcome("timeout", 1, 3602, 3599, 10, 3600, 100) == ("completed", True)
+    assert runner.episode_outcome("timeout", 1, 3602, None, 10, 3600, 100) == ("timeout", False)
+
+
+def test_resume_does_not_grant_failed_model_episodes_fresh_budgets():
+    for status in ("completed", "timeout", "tool_limit"):
+        assert runner.resume_record({"status": status}, retry_infra=True)
+    assert runner.resume_record({"status": "agent_error"}, retry_infra=False)
+    assert not runner.resume_record({"status": "agent_error"}, retry_infra=True)
+    with pytest.raises(RuntimeError):
+        runner.resume_record({"status": "running"}, retry_infra=True)
+
+
 def test_input_only_assembly_copies_supplied_parts_and_records_placements(tmp_path):
     step = tmp_path / "step_files" / "part_01.step"
     step.parent.mkdir()
@@ -87,7 +134,7 @@ def test_summary_weights_tasks_equally_and_does_not_hide_evaluator_failure(tmp_p
     assert summary["tasks"]["task3"]["scored"] == 1
 
 
-def test_failed_episode_is_zero_even_when_partial_geometry_exists(tmp_path):
+def test_failed_episode_is_zero_even_when_partial_geometry_exists(tmp_path, monkeypatch):
     from argparse import Namespace
 
     case = tmp_path / "bank/task1/cases/case1"
@@ -96,6 +143,8 @@ def test_failed_episode_is_zero_even_when_partial_geometry_exists(tmp_path):
     workspace.mkdir()
     (workspace / "partial.step").write_bytes(b"partial")
     args = Namespace(out=tmp_path / "out", resume=False, bench_python=Path("unused"), bench_source=tmp_path)
+    # No external scorer is invoked for a failed episode.
+    monkeypatch.setattr(runner, "score_protocol", lambda source: {"test": True})
     runner.dump(args.out / "task1_case1/run.json", {
         "submitted": False, "status": "timeout", "attempt": 1, "workspace": str(workspace)})
     result = runner.score_one(case, args)

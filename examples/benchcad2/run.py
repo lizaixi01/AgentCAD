@@ -20,6 +20,20 @@ HERE = Path(__file__).resolve().parent
 REPO = HERE.parents[1]
 MODEL = "gpt-6.1-sol"
 EFFORT = "max"
+THREAD_ENV = {"OPENBLAS_NUM_THREADS": "1", "OMP_NUM_THREADS": "1", "MKL_NUM_THREADS": "1"}
+
+
+def scorer_env() -> dict[str, str]:
+    env = {**os.environ, **THREAD_ENV, "PYTHONIOENCODING": "utf-8"}
+    if os.name == "nt":
+        env.setdefault("BENCHCAD_MESH_GUARD", "0")
+    return env
+
+
+def score_protocol(source: Path) -> dict:
+    return {"benchcad_sha": subprocess.check_output(["git", "-C", str(source), "rev-parse", "HEAD"],
+                                                     text=True).strip(),
+            "mesh_guard": scorer_env().get("BENCHCAD_MESH_GUARD", "1"), "threads": THREAD_ENV}
 
 
 def dump(path: Path, value) -> None:
@@ -54,7 +68,7 @@ def staged_case(case: Path, workspace: Path, bench_source: Path) -> dict:
 
 def command(workspace: Path, kind: str, images: list[str], output: Path) -> list[str]:
     env = {"AGENTCAD_ROOT": workspace.as_posix(), "AGENTCAD_VIEWER": "0",
-           "AGENTCAD_ALLOW_SCRIPTS": "1", "PYTHONIOENCODING": "utf-8"}
+           "AGENTCAD_ALLOW_SCRIPTS": "1", "PYTHONIOENCODING": "utf-8", **THREAD_ENV}
     for key in ("AGENTCAD_FREECAD", "FREECAD_LIB"):
         if os.environ.get(key):
             env[key] = os.environ[key].replace("\\", "/")
@@ -82,7 +96,7 @@ def command(workspace: Path, kind: str, images: list[str], output: Path) -> list
 
 def prompt(meta: dict, timeout: int, calls: int) -> str:
     return f"""Solve this BenchCAD development case using AgentCAD's MCP tools.
-Time limit: {timeout} seconds. At most {calls} completed MCP calls. Finish by calling
+Time limit: {timeout} seconds. At most {calls} MCP calls. Finish by calling
 submit_answer. A case without submit_answer has no answer and scores zero.
 
 Official task brief (its Python/export interface is replaced below by MCP):
@@ -128,6 +142,7 @@ def stop_tree(proc: subprocess.Popen) -> None:
 
 def log_stats(path: Path) -> dict:
     calls, errors, unexpected, usage = 0, 0, [], None
+    codes, by_name, started = {}, {}, set()
     if not path.exists():
         return {"tool_calls": 0, "tool_errors": 0, "unexpected_tools": [], "usage": None}
     for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
@@ -136,17 +151,59 @@ def log_stats(path: Path) -> dict:
         except ValueError:
             continue
         item = event.get("item", {})
+        if item.get("type") == "mcp_tool_call":
+            started.add(item.get("id"))
         if event.get("type") == "item.completed" and item.get("type") == "mcp_tool_call":
             calls += 1
-            errors += int(item.get("status") == "failed" or item.get("error") is not None
-                          or (item.get("result") or {}).get("isError", False))
+            name = item.get("tool", "unknown")
+            by_name[name] = by_name.get(name, 0) + 1
+            result = item.get("result") or {}
+            failed = item.get("status") == "failed" or item.get("error") is not None or result.get("isError", False)
+            for content in result.get("content", []):
+                if content.get("type") != "text":
+                    continue
+                try:
+                    data = json.loads(content.get("text", ""))
+                except ValueError:
+                    continue
+                if isinstance(data, dict) and data.get("ok") is False:
+                    failed = True
+                    code = (data.get("error") or {}).get("code", "unknown")
+                    codes[code] = codes.get(code, 0) + 1
+            errors += int(failed)
             if item.get("server") != "agentcad":
                 unexpected.append(item.get("server"))
         elif event.get("type") == "item.completed" and item.get("type") in ("command_execution", "web_search"):
             unexpected.append(item["type"])
         if event.get("type") == "turn.completed":
             usage = event.get("usage")
-    return {"tool_calls": calls, "tool_errors": errors, "unexpected_tools": unexpected, "usage": usage}
+    return {"tool_calls": calls, "tool_errors": errors, "tool_error_codes": codes,
+            "tool_calls_started": len(started), "tool_calls_by_name": by_name,
+            "unexpected_tools": unexpected, "usage": usage}
+
+
+def episode_outcome(termination: str, exit_code: int, elapsed: float, submitted_at: float | None,
+                    calls_started: int, timeout: int, call_limit: int) -> tuple[str, bool]:
+    """Submission ends an episode, but never rescues an exceeded budget."""
+    if calls_started > call_limit:
+        return "tool_limit", False
+    if submitted_at is not None:
+        if submitted_at > timeout:
+            return "timeout", False
+        return "completed", True
+    if termination != "completed":
+        return termination, False
+    if elapsed > timeout:
+        return "timeout", False
+    return ("agent_error" if exit_code else "completed"), False
+
+
+def resume_record(previous: dict, retry_infra: bool) -> bool:
+    """Return whether to skip this episode. Budgets exhausted are final results."""
+    status = previous["status"]
+    if status == "running":
+        raise RuntimeError("An episode is still marked running; inspect it before resuming")
+    return not (retry_infra and status in ("agent_error", "infrastructure_error"))
 
 
 def run_one(case: Path, args) -> dict:
@@ -155,9 +212,7 @@ def run_one(case: Path, args) -> dict:
     record = out / "run.json"
     if args.resume and record.exists():
         previous = json.loads(record.read_text(encoding="utf-8"))
-        # Resume only completed model episodes. Failed workspaces are retained,
-        # and a fresh attempt gets its own directory rather than erasing evidence.
-        if previous["status"] == "completed":
+        if resume_record(previous, args.retry_infra):
             return previous
     out.mkdir(parents=True, exist_ok=True)
     attempt = 1
@@ -168,7 +223,7 @@ def run_one(case: Path, args) -> dict:
     workspace = args.out / "workspaces" / key / f"attempt-{attempt}"
     staged = subprocess.run([str(args.bench_python), str(HERE / "run.py"), "_stage", "--bench-source",
                              str(args.bench_source), "--case", str(case), "--workspace", str(workspace)],
-                            capture_output=True, text=True, encoding="utf-8", timeout=300)
+                            capture_output=True, text=True, encoding="utf-8", timeout=300, env=scorer_env())
     if staged.returncode:
         raise RuntimeError(f"{key}: staging failed: {staged.stderr[-4000:]}")
     meta = json.loads(staged.stdout)
@@ -180,9 +235,10 @@ def run_one(case: Path, args) -> dict:
            "attempt": attempt, "status": "running", "workspace": str(workspace),
            "logs": str(logs), "timeout_s": args.timeout, "tool_call_limit": args.calls}
     dump(record, row)
+    dump(logs / "run.json", row)
     print(json.dumps({"case": key, "status": "started", "attempt": attempt}), flush=True)
-    t0 = time.monotonic()
-    env = {**os.environ, "AGENTCAD_VIEWER": "0", "PYTHONIOENCODING": "utf-8"}
+    t0, wall_start = time.monotonic(), time.time()
+    env = {**os.environ, **THREAD_ENV, "AGENTCAD_VIEWER": "0", "PYTHONIOENCODING": "utf-8"}
     with (logs / "events.jsonl").open("wb") as stdout, (logs / "stderr.log").open("wb") as stderr:
         proc = subprocess.Popen(cmd, stdin=subprocess.PIPE, stdout=stdout, stderr=stderr,
                                 cwd=workspace, env=env, start_new_session=os.name != "nt")
@@ -192,6 +248,12 @@ def run_one(case: Path, args) -> dict:
         last_check = 0.
         while proc.poll() is None:
             elapsed = time.monotonic() - t0
+            marker = workspace / "answer.json"
+            # Give Codex a short grace period to finish its final message/usage
+            # after explicit submission, then end the episode ourselves.
+            if marker.exists() and time.time() - marker.stat().st_mtime > 30:
+                stop_tree(proc)
+                break
             if elapsed > args.timeout:
                 status = "timeout"
                 stop_tree(proc)
@@ -205,14 +267,16 @@ def run_one(case: Path, args) -> dict:
                     break
             time.sleep(.2)
     stats = log_stats(logs / "events.jsonl")
-    if status == "completed" and proc.returncode != 0:
-        status = "agent_error"
     marker = workspace / "answer.json"
-    # A failed/interrupted episode's files are not promoted to a submission.
-    submitted = status == "completed" and marker.is_file()
+    elapsed = time.monotonic() - t0
+    submitted_at = marker.stat().st_mtime - wall_start if marker.is_file() else None
+    status, submitted = episode_outcome(status, proc.returncode, elapsed, submitted_at,
+                                        stats.get("tool_calls_started", stats["tool_calls"]),
+                                        args.timeout, args.calls)
     row.update(status=status, exit_code=proc.returncode, seconds=round(time.monotonic() - t0, 1),
                submitted=submitted, **stats)
     dump(record, row)
+    dump(logs / "run.json", row)
     print(json.dumps(row), flush=True)
     return row
 
@@ -220,10 +284,12 @@ def run_one(case: Path, args) -> dict:
 def score_one(case: Path, args, *, oracle: bool = False) -> dict:
     key = f"{case.parents[1].name}_{case.name}"
     out = args.out / key
+    protocol = score_protocol(args.bench_source)
     if not oracle and (out / "score.json").exists() and args.resume:
         previous = json.loads((out / "score.json").read_text(encoding="utf-8"))
         run = json.loads((out / "run.json").read_text(encoding="utf-8"))
-        if previous.get("attempt") == run["attempt"] and previous.get("score") is not None:
+        if (previous.get("attempt") == run["attempt"] and previous.get("score") is not None
+                and previous.get("scoring_protocol") == protocol):
             return previous
     cmd = [str(args.bench_python), str(HERE / "run.py"), "_score", "--bench-source",
            str(args.bench_source), "--case", str(case)]
@@ -232,7 +298,8 @@ def score_one(case: Path, args, *, oracle: bool = False) -> dict:
     else:
         run = json.loads((out / "run.json").read_text(encoding="utf-8"))
         if not run["submitted"]:
-            row = {"case": key, "attempt": run["attempt"], "score": 0., "status": "no_submission"}
+            row = {"case": key, "attempt": run["attempt"], "score": 0., "status": "no_submission",
+                   "scoring_protocol": protocol}
             dump(out / "score.json", row)
             return row
         workspace = Path(run["workspace"])
@@ -242,7 +309,8 @@ def score_one(case: Path, args, *, oracle: bool = False) -> dict:
             raise ValueError("Submission marker escaped the workspace")
         cmd += ["--submission", str(submission)]
     try:
-        p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", timeout=args.score_timeout)
+        p = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           timeout=args.score_timeout, env=scorer_env())
         if p.returncode:
             raise RuntimeError(p.stderr[-5000:] or p.stdout[-5000:])
         row = {"case": key, **json.loads(p.stdout)}
@@ -250,6 +318,7 @@ def score_one(case: Path, args, *, oracle: bool = False) -> dict:
         row = {"case": key, "score": None, "status": "evaluator_error", "error": str(exc)}
     if not oracle:
         row["attempt"] = run["attempt"]
+    row["scoring_protocol"] = protocol
     dump(out / ("oracle.json" if oracle else "score.json"), row)
     print(json.dumps({k: row.get(k) for k in ("case", "score", "status", "error")}), flush=True)
     return row
@@ -265,7 +334,9 @@ def summarize(root: Path) -> dict:
             continue
         records.append({"case": s["case"], "score": s.get("score"), "status": s.get("status"),
                         "seconds": r.get("seconds"), "tool_calls": r.get("tool_calls"),
-                        "submitted": r.get("submitted"), "kind": r.get("kind")})
+                        "submitted": r.get("submitted"), "kind": r.get("kind"),
+                        "attempts": [json.loads(a.read_text(encoding="utf-8")) for a in
+                                     sorted(p.parent.glob("attempt-*/run.json"))]})
         by_task.setdefault(s["case"].split("_")[0], []).append(s.get("score"))
     tasks = {task: {"scored": sum(v is not None for v in values), "total": len(values),
                     "mean": sum(v for v in values if v is not None) / sum(v is not None for v in values)
@@ -326,13 +397,14 @@ def main() -> None:
     ap.add_argument("mode", choices=["run", "score", "oracle", "summary", "_stage", "_score"])
     ap.add_argument("--bench-source", type=Path, default=Path(r"D:\Projects\bench-src\benchcad-2-main"))
     ap.add_argument("--bench-python", type=Path)
-    ap.add_argument("--out", type=Path, default=Path(r"D:\Projects\AgentCAD-output\benchcad2-sol-max-20261030"))
+    ap.add_argument("--out", type=Path, default=Path(r"D:\Projects\AgentCAD-output\benchcad2-sol-max-20261030-dev9"))
     ap.add_argument("--cases", nargs="*", help="e.g. task3_case1 task6_case2")
-    ap.add_argument("--jobs", type=int, default=2)
+    ap.add_argument("--jobs", type=int, help="default: 2 model episodes, 1 offline scorer")
     ap.add_argument("--timeout", type=int, default=3600)
     ap.add_argument("--calls", type=int, default=100)
     ap.add_argument("--score-timeout", type=int, default=3600)
     ap.add_argument("--resume", action="store_true")
+    ap.add_argument("--retry-infra", action="store_true", help="explicitly retry infrastructure errors on resume")
     ap.add_argument("--case", type=Path)
     ap.add_argument("--workspace", type=Path)
     ap.add_argument("--submission", type=Path)
@@ -342,6 +414,7 @@ def main() -> None:
         internal(args)
         return
     args.out = args.out.resolve()
+    args.jobs = args.jobs or (2 if args.mode == "run" else 1)
     args.bench_source = args.bench_source.resolve()
     args.bench_python = args.bench_python or args.bench_source / ".venv/Scripts/python.exe"
     if args.mode == "summary":
@@ -354,6 +427,13 @@ def main() -> None:
         raise SystemExit("Requested case ids do not match the development samples")
     args.out.mkdir(parents=True, exist_ok=True)
     if args.mode == "run":
+        # A failed reference check is an evaluator failure, not a model score.
+        protocol = score_protocol(args.bench_source)
+        for case in [p.parent for p in cases]:
+            oracle = args.out / f"{case.parents[1].name}_{case.name}" / "oracle.json"
+            checked = json.loads(oracle.read_text(encoding="utf-8")) if oracle.exists() else {}
+            if checked.get("score") != 1.0 or checked.get("scoring_protocol") != protocol:
+                raise SystemExit("All nine standard answers must pass with the current scoring protocol first: run oracle")
         source_sha = subprocess.check_output(["git", "-C", str(args.bench_source), "rev-parse", "HEAD"], text=True).strip()
         metadata = {"model": MODEL, "effort": EFFORT, "benchcad_sha": source_sha,
                     "agentcad_sha": subprocess.check_output(["git", "-C", str(REPO), "rev-parse", "HEAD"], text=True).strip(),
@@ -370,11 +450,17 @@ def main() -> None:
                 raise SystemExit("Run metadata changed; choose another --out to preserve this experiment")
         else:
             dump(old, metadata)
+    results = []
     with ThreadPoolExecutor(max_workers=args.jobs) as pool:
         jobs = {pool.submit(run_one if args.mode == "run" else score_one, case, args,
                             **({"oracle": True} if args.mode == "oracle" else {})): case for case in selected}
         for future in as_completed(jobs):
-            future.result()
+            results.append(future.result())
+    if args.mode == "oracle":
+        passed = all(r.get("score") == 1.0 for r in results)
+        dump(args.out / "oracle_summary.json", {"passed": passed, "cases": results})
+        if not passed:
+            raise SystemExit("Standard-answer validation failed; do not interpret model scores")
     if args.mode == "score":
         print(json.dumps(summarize(args.out), indent=2))
 

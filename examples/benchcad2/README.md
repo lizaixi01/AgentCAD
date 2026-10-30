@@ -34,7 +34,7 @@ performance. The user chose them because Core access was unavailable.
   **T6 is model-only visual graph reasoning**, submitted through a JSON adapter;
   AgentCAD has no schematic engine. A six-task aggregate must not be described as
   AgentCAD CAD-engine performance alone.
-- Limit: 3,600 seconds and 100 completed MCP calls per case. An explicit
+- Limit: 3,600 seconds and 100 MCP calls per case. An explicit
   `submit_answer` call is required; failed or interrupted episodes do not promote
   an earlier STEP to an answer. These are not the official 60-round/500k-output-
   token limits. Codex manages its own reasoning context and compaction. Dollar
@@ -44,10 +44,13 @@ performance. The user chose them because Core access was unavailable.
   with `WinError 10038`, so scoring uses its documented
   `BENCHCAD_MESH_GUARD=0` in-process mode. The geometry metric is unchanged, but
   CPU-time isolation and the worker's BREP serialization round trip are absent;
-  the whole scoring process retains a wall-time limit. This is another reason
+  the whole scoring process retains a wall-time limit. BLAS/OpenMP threads are
+  pinned to one in all child processes to limit memory pressure. This is another reason
   these numbers are not a formal benchmark submission.
 - Scoring happens offline, after submission; no reference scores are returned to
-  the model. Resume retains every attempt and skips completed model episodes.
+  the model. Resume retains every attempt and skips completed, timed-out and
+  call-limited episodes. Infrastructure errors require an explicit `--retry-infra`
+  to retry; all attempts remain in the summary.
   Scores of zero for absent answers are distinct from evaluator failures (`null`).
   Overall score is the mean of the six task means, only when all nine are scored.
 
@@ -69,9 +72,12 @@ $env:BENCHCAD_MESH_GUARD = '0'  # Windows; see the protocol above
 ```
 
 `--cases task3_case2` selects one case. `--jobs` defaults to two model episodes or
-scoring processes. The first selected part case can be used as an integration
-check and retained in the nine-case run without rerunning it. `--resume` skips
-only completed episodes; failed attempts are retained in `attempt-N/` directories.
+one offline scorer; this host uses `--jobs 1` for both under memory pressure.
+All nine standard-answer checks must pass with the current scoring protocol before
+any model run. An initial integration trial was aborted after CAD imports/previews
+failed under memory pressure; its logs remain outside the final nine-case run,
+without a score. `--resume` never resets an exhausted time or tool-call budget.
+Failed attempts are retained in `attempt-N/` directories.
 Do not use this script on Core: it is deliberately restricted to `examples/`.
 
 The external output directory holds `metadata.json`, each case's `run.json`,
