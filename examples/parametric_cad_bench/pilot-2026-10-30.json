@@ -523,5 +523,22 @@
       },
       "official_scorer_sha256": "c052386b999e6d2625fe1f966754c6ea1d8ab77589c457c704157559652370d4"
     }
-  ]
+  ],
+  "verification": {
+    "non_autocad_suite_before_main_sync": {
+      "passed": 449,
+      "skipped": 6,
+      "skipped_reason": "Optional CadQuery dependency not installed",
+      "excluded": "tests/test_autocad_live.py"
+    },
+    "focused_suite_after_main_sync": {
+      "passed": 27,
+      "files": [
+        "tests/test_s_cadbench_pilot.py",
+        "tests/test_s_upstream_benchmark.py"
+      ]
+    },
+    "main_synced_commit": "4867199b1de60ea8c108f27c97a571bacf184db6",
+    "independent_review": "https://github.com/lizaixi01/AgentCAD/pull/35#issuecomment-6516348220"
+  }
 }
