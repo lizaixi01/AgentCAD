@@ -12,7 +12,8 @@ English or Chinese.
 1. Download the installer for your computer:
    - **Windows:** [AgentCAD-Setup.cmd](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup.cmd)
    - **macOS / Linux:** [AgentCAD-Setup-mac.zip](https://github.com/lizaixi01/AgentCAD/releases/latest/download/AgentCAD-Setup-mac.zip)
-2. Double-click it. On macOS, double-click the .zip first: it unpacks to `AgentCAD-Setup.command`, still runnable
+2. Double-click it. On Windows a small window with a progress bar downloads what is needed (about a minute the
+   first time), then the setup page opens in your browser. On macOS, double-click the .zip first: it unpacks to `AgentCAD-Setup.command`, still runnable
    (a plain download of that file would lose the permission to run).
    - Windows may say "Windows protected your PC". Click **More info**, then **Run anyway**.
    - macOS may say it cannot check the developer. Right-click the file, choose **Open**, then **Open** again.
@@ -20,8 +21,15 @@ English or Chinese.
    Each step gets a green tick as it finishes.
 4. The last page says what is left (restart your app) and gives example sentences to copy to your assistant.
    Tap **Finish**; the installer window closes by itself.
+5. From then on, double-click the **AgentCAD** icon setup put on your desktop: it opens your drawings in the live
+   viewer (see [viewer.md](viewer.md)). With no drawing yet, it shows sentences to copy to your assistant.
 
-The first run downloads uv and Python (about a minute). It does the same as `agentcad setup` below, so running it
+Already installed, or something stopped working? Run the installer again and tap **Already installed? Check it**.
+Every part gets a green tick or a sentence saying what to do, and **Fix it for me** reconnects the apps that need
+it. Without FreeCAD, the page has a button to its free download; 2D drawings work without it.
+
+The first run downloads uv and Python (about a minute). On macOS and Linux the installer shows its progress as text
+in a Terminal window instead of a progress window. It does the same as `agentcad setup` below, so running it
 again is safe. Under the hood: the installer runs `uvx --from <GitHub zip> agentcad setup --gui`, which serves the page
 on `127.0.0.1` only, behind a random token in its link.
 

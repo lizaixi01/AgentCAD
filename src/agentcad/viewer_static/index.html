@@ -125,10 +125,15 @@ main { display: flex; flex-direction: column; gap: 14px; padding: 16px 18px; min
 #stage svg { width: 100%; height: 100%; display: block; cursor: grab; touch-action: none; }
 #stage svg.drag { cursor: grabbing; }
 #png { position: absolute; inset: 0; margin: auto; max-width: 100%; max-height: 100%; }
-#empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 30px; color: #3b4452; background: var(--paper); z-index: 4; }
+#empty { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; padding: 30px; color: #3b4452; background: var(--paper); z-index: 4; overflow: auto; }
 #empty h3 { font-size: 24px; margin: 14px 0 6px; color: #111827; }
 #empty p { max-width: 460px; margin: 0 auto; font-size: 17px; }
 #empty img { width: 72px; height: 72px; }
+#tryList { max-width: 520px; margin: 18px auto 0; display: grid; gap: 8px; text-align: left; }
+#tryList b { font-size: 15px; color: #3b4452; }
+#tryList div { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; border: 2px dashed #d5dae2; border-radius: 12px; padding: 10px 12px; font-size: 15px; color: #111827; }
+#tryList button { min-height: 40px; padding: 6px 14px; border-radius: 10px; border: 1px solid #d5dae2; background: #fff; color: #111827; font-weight: 700; cursor: pointer; }
+#tryList button.copied { background: #15803d; border-color: #15803d; color: #fff; }
 #banner { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); background: #fff7e6; color: #92400e; border: 1px solid #f59e0b;
           padding: 6px 6px 6px 16px; border-radius: 24px; font-weight: 600; display: flex; gap: 10px; align-items: center; z-index: 3; white-space: nowrap; }
 #banner button { min-height: 36px; padding: 4px 14px; border-radius: 18px; border: 0; background: #b45309; color: #fff; font-weight: 700; cursor: pointer; }
@@ -271,7 +276,7 @@ summary { cursor: pointer; padding: 10px 14px; font-weight: 600; color: var(--mu
   <div id="view">
     <div id="stage"></div><div id="three"></div><img id="png" alt="" hidden>
     <div id="compare" hidden></div>
-    <div id="empty"><div><img src="/logo.svg" alt=""><h3 data-t="waitingTitle"></h3><p data-t="waitingBody"></p></div></div>
+    <div id="empty"><div><img src="/logo.svg" alt=""><h3 data-t="waitingTitle"></h3><p data-t="waitingBody"></p><div id="tryList"></div></div></div>
     <div id="banner" hidden><span data-t="earlier"></span><button id="nowBtn" data-t="backToNow"></button></div>
     <div id="legend" hidden><span><i style="background:#16a34a"></i><span data-t="legendAdded"></span></span><span><i style="background:#ea580c"></i><span data-t="legendModified"></span></span><span><i style="background:#b8bcc4"></i><span data-t="legendOther"></span></span></div>
     <div id="hint" hidden></div>
@@ -321,11 +326,32 @@ const ICON = {
   now: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="12" cy="12" r="3.5" fill="currentColor"/><circle cx="12" cy="12" r="8.5"/></svg>',
 };
 
+// ---- what to say first (shown while the folder has no drawing) ----------------------------------------
+function renderTry() {
+  const box = $("tryList");
+  box.textContent = "";
+  const head = document.createElement("b"); head.textContent = t("tryThis"); box.appendChild(head);
+  for (const k of ["try1", "try2", "try3"]) {
+    const row = document.createElement("div"), q = document.createElement("span"), b = document.createElement("button");
+    q.textContent = "“" + t(k) + "”"; b.type = "button"; b.textContent = t("copy");
+    b.onclick = async () => {
+      try { await navigator.clipboard.writeText(t(k)); } catch (e) {
+        const ta = document.createElement("textarea"); ta.value = t(k); document.body.appendChild(ta); ta.select();
+        try { document.execCommand("copy"); } catch (e2) {} ta.remove();
+      }
+      b.textContent = t("copied"); b.classList.add("copied");
+      setTimeout(() => { b.textContent = t("copy"); b.classList.remove("copied"); }, 1800);
+    };
+    row.append(q, b); box.appendChild(row);
+  }
+}
+
 // ---- language and theme ----------------------------------------------------------------------------
 function applyLang() {
   document.documentElement.lang = LANG === "zh" ? "zh-CN" : "en";
   document.title = t("title");
   document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = t(el.dataset.t); });
+  renderTry();
   $("langLbl").textContent = t("language");
   $("followLbl").title = t("followHint");
   setConn(S.live);

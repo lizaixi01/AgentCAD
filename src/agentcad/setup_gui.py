@@ -7,6 +7,7 @@ bar and plain sentences. It runs ``install.setup`` in a thread and the page poll
     GET  /api/info          workspace folder, apps (found on this computer or not), dry run
     POST /api/start         {"clients": [...]}: run setup for these apps
     GET  /api/state         {"phase": ready|running|done|error, "steps": [...], "result": ...}
+    GET  /api/doctor        the checks of ``agentcad doctor`` (is everything still working?)
     POST /api/open-folder   open the workspace folder in Explorer / Finder
     POST /api/quit          stop the wizard (the installer window then closes)
 
@@ -57,6 +58,11 @@ class Wizard:
         return {"workspace": str(self.root), "dry_run": self.opts["dry_run"], "platform": sys.platform,
                 "apps": [{"id": c, "label": install.LABELS[c], "found": found[c]} for c in install.CLIENTS]}
 
+    def doctor(self) -> dict[str, Any]:
+        r = install.doctor(self.root)
+        r.pop("self_cmd", None)  # its fixes name terminal commands; the page says them in words
+        return r
+
     def snapshot(self) -> dict[str, Any]:
         with self.lock:
             return json.loads(json.dumps(self.state, default=str))
@@ -68,7 +74,7 @@ class Wizard:
         with self.lock:
             if self.state["phase"] == "running":
                 return {"ok": False, "error": {"code": "BUSY", "message": "Setup is already running"}}
-            steps = ["workspace", "freecad", "autocad", *clients]
+            steps = ["workspace", "freecad", "autocad", *clients, "shortcut"]
             self.state = {"phase": "running", "result": None, "error": None,
                           "steps": [{"id": s, "state": "wait", "info": {}} for s in steps]}
         threading.Thread(target=self._run, args=(clients,), name="agentcad-setup", daemon=True).start()
@@ -82,7 +88,7 @@ class Wizard:
 
     def _run(self, clients: list[str]) -> None:
         try:
-            res = install.setup(clients, self.root, progress=self._progress, **self.opts)
+            res = install.setup(clients, self.root, progress=self._progress, shortcut=True, **self.opts)
             result = res.to_dict()
             result.pop("server", None)  # the command line and env: not for this page
             for c in result["clients"]:
@@ -173,6 +179,8 @@ def _handler(wiz: Wizard):
                 return self._send(200, (STATIC / name).read_bytes(), ctype)
             if path == "/api/info":
                 return self._json(wiz.info())
+            if path == "/api/doctor":
+                return self._json(wiz.doctor())
             if path == "/api/state":
                 return self._json(wiz.snapshot())
             self._json({"ok": False, "error": {"code": "NOT_FOUND"}}, 404)

@@ -174,6 +174,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--name", default="agentcad", help="Server name in the configs")
     s.add_argument("--dry-run", action="store_true", help="Show what would change; write nothing")
     s.add_argument("-y", "--yes", action="store_true", help="Do not ask; configure every app found")
+    s.add_argument("--shortcut", action="store_true", help="Also put an AgentCAD icon on the desktop that opens "
+                                                           "your drawings in the live viewer")
     s.add_argument("--gui", action="store_true", help="Run setup as a page in your web browser (big buttons, a "
                                                       "progress bar; what the double-click installers start)")
     s.add_argument("--no-browser", action="store_true", help="With --gui: print the link, do not open a browser")
@@ -195,6 +197,8 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--host", default="127.0.0.1"); s.add_argument("--port", type=int, default=8770)
     s.add_argument("--allow-remote", action="store_true",
                    help="Allow a non-loopback --host and any Host header (the page has no authentication)")
+    s.add_argument("--open", action="store_true", help="Open it in the browser; if a viewer of this root already "
+                                                       "runs, just open that one (the desktop icon)")
     return ap
 
 
@@ -226,7 +230,7 @@ def _setup_or_doctor(a: argparse.Namespace) -> tuple[dict[str, Any], int]:
     try:
         res = install.setup(list(dict.fromkeys(clients)), root, launcher=a.launcher, source=a.source,
                             freecad=a.freecad, dry_run=a.dry_run, read_only=a.read_only,
-                            allow_scripts=a.allow_scripts, name=a.name)
+                            allow_scripts=a.allow_scripts, name=a.name, shortcut=a.shortcut)
     except AgentCADError as exc:
         return {"ok": False, "error": exc.to_dict()}, EXIT.get(exc.category, 5)
     print(json.dumps(res.to_dict(), ensure_ascii=False, indent=1) if a.json else install.render_setup(res))
@@ -259,7 +263,9 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         return {"ok": True}, 0
     if a.cmd == "viewer":
         from .errors import AgentCADError
-        from .viewer import Viewer
+        from .viewer import Viewer, open_or_serve
+        if a.open:
+            return open_or_serve(policy, a.port)
         try:
             Viewer(policy, a.host, a.port, allow_remote=a.allow_remote).serve()
         except AgentCADError as exc:
