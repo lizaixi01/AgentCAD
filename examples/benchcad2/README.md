@@ -32,6 +32,22 @@ model-only graph reasoning. These remain development-sample results, not Core ra
 [Sealed first nine](results-astra-first-attempts-2026-10-30.json) and
 [all-attempt archive](results-astra-2026-10-30.json) preserve the distinction.
 
+## Native-tool control
+
+[Control design and reproducible runner](native-control.md) describe the native
+Python workbench comparison against the original AgentCAD + Astra attempts.
+The tool-specific interface and runtime differ; model, inputs, evaluator and
+per-case time/call caps are held fixed. Results are recorded as a separate experiment.
+
+[Completed comparison (Chinese)](comparison-native-astra-2026-10-31.md) ·
+[paired metrics and provenance](comparison-native-astra-2026-10-31.json) ·
+[native first nine](results-native-astra-2026-10-31.json): **native 71.77 vs AgentCAD
+56.79**, with the same GPT-6 Astra / max and per-case caps. T1–T5 means are
+**66.63 vs 58.15**. Native submitted 9/9, reference 8/9; its original sealed answers
+were regraded in the same frozen environment with unchanged scores, alongside nine
+fresh 1.0 standard-answer checks. No AgentCAD net gain was observed in this run.
+The comparison changes complete tool workflows and remains a nine-sample experiment.
+
 ## Protocol
 
 - Model explicitly pinned to `gpt-6.1-sol`, reasoning effort `max`, using the
