@@ -1,0 +1,544 @@
+{
+  "date": "2026-10-30",
+  "benchmark": "gnucleus-ai/cad-bench@v3",
+  "official_submission": false,
+  "dataset": {
+    "expected_digest": "sha256:8a786725d3648a76282fc5868df06da3d5e00d603f283573a53430803465d78a",
+    "registry_digest_matches": true,
+    "local_complete_bundle_digest_verified_before_run": false,
+    "task_count": 100
+  },
+  "system": {
+    "agent": "Codex + AgentCAD native MCP",
+    "codex_version": "codex-cli 0.163.0",
+    "model": "gpt-6.1-sol",
+    "requested_effort": "xhigh",
+    "effective_effort_reported": null,
+    "authentication": "Existing ChatGPT login; no Platform API key",
+    "runtime_core_commit": "945e6c649de6db9d4cafd8069f2f8d1a5b845d44",
+    "executed_harness_commit": "cc72d50",
+    "executed_harness_sha256": {
+      "pilot.py": "3397a70d7eabf1b2e40981b7321f92334dcac648501d625eafdeef644ebdc0e0",
+      "stage_server.py": "773f30ba2db74c183ab7466c296980f8596fe4962324c416042a5e1e0303a73c"
+    },
+    "python": "3.11.16",
+    "agentcad_runtime": "0.1.0",
+    "mcp": "1.30.0",
+    "freecad": "1.1.4",
+    "occt": "7.8.1",
+    "validator": "0.6.0",
+    "scorer": "v2",
+    "platform": "Windows 11, build 26200",
+    "scripts_enabled": false
+  },
+  "protocol": {
+    "selection": "stratified random from sorted task IDs, before any run",
+    "seed": 42,
+    "tasks_per_category": 2,
+    "attempts_per_task": 1,
+    "retries": 0,
+    "timeout_sec": 900,
+    "concurrency": 2,
+    "modeling_interface": "AgentCAD native operations; stage-only submission adapter; no answer.py",
+    "grading": "Unmodified task run_scorer.py; canonical reward.json; after task completion",
+    "raw_logs": "Kept locally outside the repository; not an ATIF Harbor job"
+  },
+  "summary": {
+    "tasks": 6,
+    "valid_native_submissions": 6,
+    "scored": 6,
+    "timeouts": 0,
+    "unexpected_tool_calls": 0,
+    "infrastructure_errors": 0,
+    "mean_reward": 0.5543053211452418,
+    "groups": {
+      "create": {
+        "tasks": 2,
+        "mean": 0.5778581222585943
+      },
+      "edit": {
+        "tasks": 2,
+        "mean": 0.6763178411771309
+      },
+      "drawing": {
+        "tasks": 2,
+        "mean": 0.40874
+      }
+    },
+    "total_task_seconds": 2518.5999999999995,
+    "mean_task_seconds": 419.76666666666665,
+    "dollar_cost_measured": false,
+    "token_usage": {
+      "reasoning_output_tokens": 48130,
+      "output_tokens": 66609,
+      "cached_input_tokens": 3682560,
+      "cache_write_input_tokens": 0,
+      "input_tokens": 4001975
+    }
+  },
+  "cases": [
+    {
+      "id": "freecad-aee2c7e191",
+      "kind": "create",
+      "description": "A two-line chemical-resistant plastic routing clamp with a uniform body thickness, an asymmetric closed side profile, two routing-channel...",
+      "instruction_sha256": "c0b0c3018f87fcb6d80d9ea3889cf12364924d58b69e2c1b984708650cc7905d",
+      "task_toml_sha256": "8c8525e429475315c7217339b2ed5324eadc5bc4fabdbe90c5a44d6cad1ea0fd",
+      "status": "done",
+      "seconds": 479.17,
+      "tool_calls": 16,
+      "usage": {
+        "input_tokens": 776212,
+        "cached_input_tokens": 724352,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 15426,
+        "reasoning_output_tokens": 11725
+      },
+      "evaluation": {
+        "status": "scored",
+        "score": 0.15571851323921762,
+        "geometry_similarity": 0.12749104756490057,
+        "cad_spec_consistency": 0.19999999999999996,
+        "combined": 0.15571851323921762,
+        "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=0.127 [solid_count=1 (matched)] (surface_types=0.000, volume=0.200, surface_area=0.000, principal_moments=0.905, icp=0.016); surface_types_diff=21.019% (Far); volume_diff=0.631% (Close); surface_area_diff=16.145% (Far); bbox_diff=2.661% (OCCT OBB; gate passed); principal_moments_diff=1.245% (Close); icp[reference.FCStd vs answer.FCStd: reward=0.016 rmse=1.9081e+00 max_residual=3.9109e+00 mm]",
+        "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=0.200 (28/36 consistent, 5 inconsistent, 3 not_found; failure_budget=10)"
+      },
+      "tool_error_counts": {
+        "UNKNOWN_OPERATION": 1,
+        "FILE_NOT_FOUND": 1,
+        "UNKNOWN_UNIT": 1,
+        "EXPRESSION_NOT_SUPPORTED": 1
+      },
+      "outputs": {
+        "answer.FCStd": {
+          "path": "artifacts/2026-10-30/freecad-aee2c7e191/answer.FCStd",
+          "sha256": "9f6080e01127bf72afef5c28993eeb247ac76d682814f7815139da3f8d59faa7"
+        }
+      },
+      "native_structure": {
+        "answer.FCStd": {
+          "objects": 31,
+          "bodies": 1,
+          "partdesign_features": 11,
+          "sketches": 10
+        }
+      },
+      "preview": "artifacts/2026-10-30/freecad-aee2c7e191/preview.png",
+      "stage_integrity_passed": true,
+      "unexpected_tool_calls": 0,
+      "public_input_sha256": {},
+      "official_scorer_sha256": "0ecbf3f5844136ffdb0d549a042f4356164c709d53a8a38eb139363cf5523b73",
+      "posthoc_spec_failures": {
+        "inconsistent": [
+          {
+            "param": "side_cutout_inner_contact_angle",
+            "spec_value": 74.2715,
+            "measured_value": 76.7754,
+            "unit": "deg",
+            "feature": "Sketch008.corner@(16.11,-1.55)",
+            "rel_diff": 0.032613926022827124,
+            "reason": "derived drawing_dim value disagrees (rel_diff 0.033 > tol 0.01)"
+          },
+          {
+            "param": "side_cutout_outer_contact_angle",
+            "spec_value": 59.3285,
+            "measured_value": 56.3922,
+            "unit": "deg",
+            "feature": "Sketch007.corner@(-7.0844,-1.9951)",
+            "rel_diff": 0.04949261425915963,
+            "reason": "derived drawing_dim value disagrees (rel_diff 0.049 > tol 0.01)"
+          },
+          {
+            "param": "access_slot_divider_width",
+            "spec_value": 0.46,
+            "measured_value": 0.47,
+            "unit": "mm",
+            "feature": "Sketch008.segment_run",
+            "rel_diff": 0.021276595744678443,
+            "reason": "derived drawing_dim value disagrees (rel_diff 0.021 > tol 0.01)"
+          },
+          {
+            "param": "profile_negative_vertical_angle",
+            "spec_value": -90.0,
+            "measured_value": -30.6715,
+            "unit": "deg",
+            "feature": "Sketch007.arc_endpoint_angle",
+            "rel_diff": 0.6592060988714065,
+            "reason": "derived drawing_dim value disagrees (rel_diff 0.659 > tol 0.01)"
+          },
+          {
+            "param": "hourglass_access_slot_waist_inset",
+            "spec_value": 0.46,
+            "measured_value": 0.47,
+            "unit": "mm",
+            "feature": "Sketch008.segment_run",
+            "rel_diff": 0.021276595744678443,
+            "reason": "derived drawing_dim value disagrees (rel_diff 0.021 > tol 0.01)"
+          }
+        ],
+        "not_found": [
+          {
+            "param": "base_inner_surface_height_above_bottom",
+            "spec_value": 2.0,
+            "measured_value": null,
+            "unit": "mm",
+            "feature": "final_geometry:separation",
+            "rel_diff": null,
+            "reason": "Missing corresponding final-geometry witness; legacy values cannot replace it"
+          },
+          {
+            "param": "rear_routing_bore_diameter",
+            "spec_value": 6.8,
+            "measured_value": null,
+            "unit": "mm",
+            "feature": "final_geometry:diameter",
+            "rel_diff": null,
+            "reason": "Missing corresponding final-geometry witness; legacy values cannot replace it"
+          },
+          {
+            "param": "front_routing_bore_diameter",
+            "spec_value": 7.0,
+            "measured_value": null,
+            "unit": "mm",
+            "feature": "final_geometry:diameter",
+            "rel_diff": null,
+            "reason": "Missing corresponding final-geometry witness; legacy values cannot replace it"
+          }
+        ]
+      }
+    },
+    {
+      "id": "freecad-0fe4ba14a9",
+      "kind": "create",
+      "description": "Create a long, straight linkage rod aligned with global X. Its central shank is a solid circular cylinder with diameter rod_outer_diameter....",
+      "instruction_sha256": "6759eb65dd3f51270b1647c4f2a44e3b3b41fc09e1c99d153f9382d17ed90144",
+      "task_toml_sha256": "2ff5db984f63bb320cb094fbcfdbcbff0e6ff2a9ef60c28973f2462d47bab219",
+      "status": "done",
+      "seconds": 326.89,
+      "tool_calls": 13,
+      "usage": {
+        "input_tokens": 587792,
+        "cached_input_tokens": 539776,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 8081,
+        "reasoning_output_tokens": 5406
+      },
+      "evaluation": {
+        "status": "scored",
+        "score": 0.9999977312779711,
+        "geometry_similarity": 0.9999954625662364,
+        "cad_spec_consistency": 1.0,
+        "combined": 0.9999977312779711,
+        "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=1.000 [solid_count=1 (matched)] (surface_types=1.000, volume=1.000, surface_area=1.000, principal_moments=1.000, icp=1.000); surface_types_diff=0.000% (Matched); volume_diff=0.000% (Matched); surface_area_diff=0.000% (Matched); bbox_diff=0.001% (OCCT OBB; gate passed); principal_moments_diff=0.000% (Matched); icp[reference.FCStd vs answer.FCStd: reward=1.000 rmse=3.2550e-06 max_residual=8.6132e-06 mm]",
+        "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=1.000 (11/11 consistent, 0 inconsistent, 0 not_found; failure_budget=10)"
+      },
+      "tool_error_counts": {
+        "UNKNOWN_OPERATION": 1,
+        "EXPRESSION_NOT_SUPPORTED": 2
+      },
+      "outputs": {
+        "answer.FCStd": {
+          "path": "artifacts/2026-10-30/freecad-0fe4ba14a9/answer.FCStd",
+          "sha256": "6bb1636bf93c660b950f3033129d776e0d97b3db017f020f35320c80cac3da6d"
+        }
+      },
+      "native_structure": {
+        "answer.FCStd": {
+          "objects": 25,
+          "bodies": 1,
+          "partdesign_features": 9,
+          "sketches": 6
+        }
+      },
+      "preview": "artifacts/2026-10-30/freecad-0fe4ba14a9/preview.png",
+      "stage_integrity_passed": true,
+      "unexpected_tool_calls": 0,
+      "public_input_sha256": {},
+      "official_scorer_sha256": "0ecbf3f5844136ffdb0d549a042f4356164c709d53a8a38eb139363cf5523b73"
+    },
+    {
+      "id": "freecad-0280cda4fc",
+      "kind": "edit",
+      "description": "A camera base mount consists of a rectangular base block with a stepped rear slot, covered and side openings, four rear mounting holes, a...",
+      "instruction_sha256": "cc2ce42d2aaca3d9ef9d783cd8aabc27ed86dca00e1d9adae21d85e698f43bce",
+      "task_toml_sha256": "39f5649de70a9b2075430db4596f8875af2e8c6c2328e2149c6e3a7a249f7c3e",
+      "status": "done",
+      "seconds": 375.3,
+      "tool_calls": 14,
+      "usage": {
+        "input_tokens": 750158,
+        "cached_input_tokens": 677376,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 10734,
+        "reasoning_output_tokens": 6743
+      },
+      "evaluation": {
+        "status": "scored",
+        "score": 0.5699647937393346,
+        "combined": 0.5699647937393346,
+        "base": {
+          "geometry_similarity": 1.0,
+          "cad_spec_consistency": 1.0,
+          "combined": 1.0,
+          "geometry_similarity_reason": "reference_base.FCStd vs answer_base.FCStd: overall=1.000 [solid_count=1 (matched)] (surface_types=1.000, volume=1.000, surface_area=1.000, principal_moments=1.000, icp=1.000); surface_types_diff=0.000% (Matched); volume_diff=0.000% (Matched); surface_area_diff=0.000% (Matched); bbox_diff=0.000% (OCCT OBB; gate passed); principal_moments_diff=0.000% (Matched); icp[reference_base.FCStd vs answer_base.FCStd: reward=1.000 rmse=2.5753e-14 max_residual=6.5511e-14 mm]",
+          "cad_spec_consistency_reason": "spec_base.json vs answer_base.FCStd: spec_score=1.000 (24/24 consistent, 0 inconsistent, 0 not_found; failure_budget=10)"
+        },
+        "target": {
+          "geometry_similarity": 0.25595962200504946,
+          "cad_spec_consistency": 0.9,
+          "combined": 0.398566966214566,
+          "geometry_similarity_reason": "reference_target.FCStd vs answer_edit.FCStd: overall=0.256 [solid_count=1 (matched)] (surface_types=0.354, volume=0.469, surface_area=0.362, principal_moments=0.929, icp=0.000); surface_types_diff=4.431% (Close); volume_diff=0.339% (Close); surface_area_diff=4.349% (Close); bbox_diff=0.000% (OCCT OBB; gate passed); principal_moments_diff=1.178% (Close); icp[reference_target.FCStd vs answer_edit.FCStd: reward=0.000 rmse=4.2058e+00 max_residual=1.4658e+01 mm]",
+          "cad_spec_consistency_reason": "spec_target.json vs answer_edit.FCStd: spec_score=0.900 (47/48 consistent, 0 inconsistent, 1 not_found; failure_budget=10)"
+        }
+      },
+      "tool_error_counts": {
+        "EXPRESSION_NOT_SUPPORTED": 1
+      },
+      "outputs": {
+        "answer_base.FCStd": {
+          "path": "artifacts/2026-10-30/freecad-0280cda4fc/answer_base.FCStd",
+          "sha256": "c8e1f81f002fecfec208a4890b70e99568af173d299afa540d14aeb7266fdd89"
+        },
+        "answer_edit.FCStd": {
+          "path": "artifacts/2026-10-30/freecad-0280cda4fc/answer_edit.FCStd",
+          "sha256": "7aa2c6c83cae9cb66ec419ad7dccd5b47178219a35a40ea43153c82ef94f9a0d"
+        }
+      },
+      "native_structure": {
+        "answer_base.FCStd": {
+          "objects": 22,
+          "bodies": 1,
+          "partdesign_features": 6,
+          "sketches": 6
+        },
+        "answer_edit.FCStd": {
+          "objects": 42,
+          "bodies": 1,
+          "partdesign_features": 16,
+          "sketches": 16
+        },
+        "base_object_names_and_types_preserved": true
+      },
+      "preview": "artifacts/2026-10-30/freecad-0280cda4fc/preview.png",
+      "stage_integrity_passed": true,
+      "unexpected_tool_calls": 0,
+      "public_input_sha256": {},
+      "official_scorer_sha256": "dbdf46dbac5a836887d320b6383197e0665bf05d22a986d26002d6b773989451",
+      "posthoc_spec_failures": {
+        "inconsistent": [],
+        "not_found": [
+          {
+            "param": "rail_channel_inner_step_height",
+            "spec_value": 3.1,
+            "measured_value": null,
+            "unit": "mm",
+            "feature": "final_geometry:separation",
+            "rel_diff": null,
+            "reason": "Missing corresponding final-geometry witness; legacy values cannot replace it"
+          }
+        ]
+      }
+    },
+    {
+      "id": "freecad-db6e3077ea",
+      "kind": "edit",
+      "description": "A rail mounting bracket for drawer slides combines a long upright channel with a transverse rounded mounting flange at one end. The channel...",
+      "instruction_sha256": "ea917a9188878dcdd6e3604d271d266b3a9527ca0d33b263faee549187321697",
+      "task_toml_sha256": "fe10abd8a4ad5233c4b74d7d549896823437e473d70141eb0ec0a53e8ff07da4",
+      "status": "done",
+      "seconds": 371.88,
+      "tool_calls": 15,
+      "usage": {
+        "input_tokens": 722663,
+        "cached_input_tokens": 671744,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 10301,
+        "reasoning_output_tokens": 7204
+      },
+      "evaluation": {
+        "status": "scored",
+        "score": 0.7826708886149272,
+        "combined": 0.7826708886149272,
+        "base": {
+          "geometry_similarity": 0.9989406148047368,
+          "cad_spec_consistency": 1.0,
+          "combined": 0.9994700266794235,
+          "geometry_similarity_reason": "reference_base.FCStd vs answer_base.FCStd: overall=0.999 [solid_count=1 (matched)] (surface_types=1.000, volume=1.000, surface_area=1.000, principal_moments=1.000, icp=0.998); surface_types_diff=0.000% (Matched); volume_diff=0.033% (Matched); surface_area_diff=0.000% (Matched); bbox_diff=0.000% (OCCT OBB; gate passed); principal_moments_diff=0.026% (Matched); icp[reference_base.FCStd vs answer_base.FCStd: reward=0.998 rmse=7.1567e-04 max_residual=2.0131e-03 mm]",
+          "cad_spec_consistency_reason": "spec_base.json vs answer_base.FCStd: spec_score=1.000 (18/18 consistent, 0 inconsistent, 0 not_found; failure_budget=10)"
+        },
+        "target": {
+          "geometry_similarity": 0.5003669316303425,
+          "cad_spec_consistency": 0.9,
+          "combined": 0.6431603436151159,
+          "geometry_similarity_reason": "reference_target.FCStd vs answer_edit.FCStd: overall=0.500 [solid_count=1 (matched)] (surface_types=1.000, volume=1.000, surface_area=1.000, principal_moments=1.000, icp=0.001); surface_types_diff=0.000% (Matched); volume_diff=0.035% (Matched); surface_area_diff=0.000% (Matched); bbox_diff=0.000% (OCCT OBB; gate passed); principal_moments_diff=0.103% (Matched); icp[reference_target.FCStd vs answer_edit.FCStd: reward=0.001 rmse=1.3485e+00 max_residual=6.8500e+00 mm]",
+          "cad_spec_consistency_reason": "spec_target.json vs answer_edit.FCStd: spec_score=0.900 (22/23 consistent, 0 inconsistent, 1 not_found; failure_budget=10)"
+        }
+      },
+      "tool_error_counts": {
+        "UNKNOWN_UNIT": 1,
+        "EXPRESSION_NOT_SUPPORTED": 1,
+        "UNKNOWN_OPERATION": 1
+      },
+      "outputs": {
+        "answer_base.FCStd": {
+          "path": "artifacts/2026-10-30/freecad-db6e3077ea/answer_base.FCStd",
+          "sha256": "dac6d0429daa6cdc12dfe4994e8a5cc9945f4d8fea6a9ad2f5a68de80f15928c"
+        },
+        "answer_edit.FCStd": {
+          "path": "artifacts/2026-10-30/freecad-db6e3077ea/answer_edit.FCStd",
+          "sha256": "5769d5a99892239e4ed52d99aea17988e4f4ead2b0696e2bc36d3037d0aaacd2"
+        }
+      },
+      "native_structure": {
+        "answer_base.FCStd": {
+          "objects": 16,
+          "bodies": 1,
+          "partdesign_features": 3,
+          "sketches": 3
+        },
+        "answer_edit.FCStd": {
+          "objects": 20,
+          "bodies": 1,
+          "partdesign_features": 5,
+          "sketches": 5
+        },
+        "base_object_names_and_types_preserved": true
+      },
+      "preview": "artifacts/2026-10-30/freecad-db6e3077ea/preview.png",
+      "stage_integrity_passed": true,
+      "unexpected_tool_calls": 0,
+      "public_input_sha256": {},
+      "official_scorer_sha256": "dbdf46dbac5a836887d320b6383197e0665bf05d22a986d26002d6b773989451",
+      "posthoc_spec_failures": {
+        "inconsistent": [],
+        "not_found": [
+          {
+            "param": "vertical_adjustment_slot_width",
+            "spec_value": 4.6,
+            "measured_value": null,
+            "unit": "mm",
+            "feature": "final_geometry:separation",
+            "rel_diff": null,
+            "reason": "Missing corresponding final-geometry witness; legacy values cannot replace it"
+          }
+        ]
+      }
+    },
+    {
+      "id": "freecad-6fd69bd0c4",
+      "kind": "drawing",
+      "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+      "instruction_sha256": "c20356feec279d4e553f875c606f7454927557e65c17c2d8defd46a78263725d",
+      "task_toml_sha256": "3c869ee14ab5f256ea560d5df062d741bfd4809ba963bad2ee354266020802cb",
+      "status": "done",
+      "seconds": 611.45,
+      "tool_calls": 9,
+      "usage": {
+        "input_tokens": 534245,
+        "cached_input_tokens": 483328,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 15606,
+        "reasoning_output_tokens": 13139
+      },
+      "evaluation": {
+        "reward": 0.291999,
+        "geometry_similarity": 0.17859264807784006,
+        "cad_spec_consistency": 0.8,
+        "combined": 0.29199916582841,
+        "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=0.179 [solid_count=1 (matched)] (surface_types=0.000, volume=0.000, surface_area=0.583, principal_moments=0.745, icp=0.012); surface_types_diff=29.496% (Far); volume_diff=1.498% (Far); surface_area_diff=2.614% (Close); bbox_diff=0.007% (OCCT OBB; gate passed); principal_moments_diff=1.799% (Close); icp[reference.FCStd vs answer.FCStd: reward=0.012 rmse=1.3523e+00 max_residual=4.1918e+00 mm]",
+        "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=0.800 (35/37 consistent, 0 inconsistent, 2 not_found; failure_budget=10)",
+        "status": "scored",
+        "score": 0.291999
+      },
+      "tool_error_counts": {},
+      "outputs": {
+        "answer.FCStd": {
+          "path": "artifacts/2026-10-30/freecad-6fd69bd0c4/answer.FCStd",
+          "sha256": "5c8af1800e0ca43b6856f6f51ba7a59cc57d1d47fea8d884c3f3800261cdfc90"
+        }
+      },
+      "native_structure": {
+        "answer.FCStd": {
+          "objects": 24,
+          "bodies": 1,
+          "partdesign_features": 7,
+          "sketches": 7
+        }
+      },
+      "preview": "artifacts/2026-10-30/freecad-6fd69bd0c4/preview.png",
+      "stage_integrity_passed": true,
+      "unexpected_tool_calls": 0,
+      "public_input_sha256": {
+        "6fd69bd0c4.png": "330dfeab1d949265dcd1a5708510d0363b6128b57588c26aa9048b255c57d071"
+      },
+      "official_scorer_sha256": "c052386b999e6d2625fe1f966754c6ea1d8ab77589c457c704157559652370d4"
+    },
+    {
+      "id": "freecad-686f17ce17",
+      "kind": "drawing",
+      "description": "Reconstruct the part shown in an engineering drawing as a parametric FreeCAD PartDesign body — the drawing (orthographic views with dimension callouts) is the agent's only spec; no text parameters or conditions are provided.",
+      "instruction_sha256": "579ff895229de2227aedbe59227397cbcc4bffb37f73ae4d6171bb22cb443e39",
+      "task_toml_sha256": "9d4c42112dc3c948876d5228acfac2a96c75604e249bfb732410b9ce65f4e08a",
+      "status": "done",
+      "seconds": 353.91,
+      "tool_calls": 10,
+      "usage": {
+        "input_tokens": 630905,
+        "cached_input_tokens": 585984,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 6461,
+        "reasoning_output_tokens": 3913
+      },
+      "evaluation": {
+        "reward": 0.525481,
+        "geometry_similarity": 0.3563745072135583,
+        "cad_spec_consistency": 1.0,
+        "combined": 0.5254809867308247,
+        "geometry_similarity_reason": "reference.FCStd vs answer.FCStd: overall=0.356 [solid_count=1 (matched)] (surface_types=0.055, volume=0.439, surface_area=1.000, principal_moments=1.000, icp=0.005); surface_types_diff=8.810% (Close); volume_diff=0.364% (Close); surface_area_diff=0.128% (Matched); bbox_diff=0.002% (OCCT OBB; gate passed); principal_moments_diff=0.379% (Matched); icp[reference.FCStd vs answer.FCStd: reward=0.005 rmse=1.2890e+00 max_residual=4.9925e+00 mm]",
+        "cad_spec_consistency_reason": "spec.json vs answer.FCStd: spec_score=1.000 (12/12 consistent, 0 inconsistent, 0 not_found; failure_budget=10)",
+        "status": "scored",
+        "score": 0.525481
+      },
+      "tool_error_counts": {
+        "UNKNOWN_UNIT": 1
+      },
+      "outputs": {
+        "answer.FCStd": {
+          "path": "artifacts/2026-10-30/freecad-686f17ce17/answer.FCStd",
+          "sha256": "32b0683865e2055488de6842ea707ff8f7df2e307721ade6d059baed5baa131f"
+        }
+      },
+      "native_structure": {
+        "answer.FCStd": {
+          "objects": 20,
+          "bodies": 1,
+          "partdesign_features": 4,
+          "sketches": 6
+        }
+      },
+      "preview": "artifacts/2026-10-30/freecad-686f17ce17/preview.png",
+      "stage_integrity_passed": true,
+      "unexpected_tool_calls": 0,
+      "public_input_sha256": {
+        "686f17ce17.png": "d1107ebd8378387c2ffac6dbd3675bde033e0c21ed315c8d8d9eb26aaee54116"
+      },
+      "official_scorer_sha256": "c052386b999e6d2625fe1f966754c6ea1d8ab77589c457c704157559652370d4"
+    }
+  ],
+  "verification": {
+    "non_autocad_suite_before_main_sync": {
+      "passed": 449,
+      "skipped": 6,
+      "skipped_reason": "Optional CadQuery dependency not installed",
+      "excluded": "tests/test_autocad_live.py"
+    },
+    "focused_suite_after_main_sync": {
+      "passed": 27,
+      "files": [
+        "tests/test_s_cadbench_pilot.py",
+        "tests/test_s_upstream_benchmark.py"
+      ]
+    },
+    "main_synced_commit": "4867199b1de60ea8c108f27c97a571bacf184db6",
+    "independent_review": "https://github.com/lizaixi01/AgentCAD/pull/35#issuecomment-6516348220"
+  }
+}
