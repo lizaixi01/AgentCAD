@@ -121,7 +121,7 @@ def _brief(report: dict[str, Any]) -> dict[str, Any]:
         out["warnings"] = report["warnings"]
     if report.get("shape"):
         s = report["shape"]
-        out["shape"] = {k: s[k] for k in ("valid", "solids", "volume", "size", "bbox", "holes") if k in s}
+        out["shape"] = {k: s[k] for k in ("valid", "solids", "volume", "size", "bbox", "holes", "topology") if k in s}
     return out
 
 
@@ -498,7 +498,8 @@ def compare(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
         return next((b["shape"] for b in s["bodies"] if b.get("shape")), None) or {}
 
     so, sn = shape(old), shape(new)
-    sh = {k: {"old": so.get(k), "new": sn.get(k)} for k in ("volume", "size", "solids", "holes") if so.get(k) != sn.get(k)}
+    sh = {k: {"old": so.get(k), "new": sn.get(k)} for k in ("volume", "size", "solids", "holes", "topology")
+          if so.get(k) != sn.get(k)}
     return {"added": [{"id": n, "type": fn[n]["type"], **({"tag": fn[n]["tag"]} if fn[n].get("tag") else {})}
                       for n in fn.keys() - fo.keys()],
             "deleted": [{"id": n, "type": fo[n]["type"]} for n in fo.keys() - fn.keys()],

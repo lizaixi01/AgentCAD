@@ -387,7 +387,8 @@ class Runtime:
 
     @tool
     def inspect_image(self, path: str, region: list[int] | None = None, max_size: int = 1536,
-                      rotate: int = 0, dimensions: list[dict] | None = None) -> dict[str, Any]:
+                      rotate: int = 0, dimensions: list[dict] | None = None,
+                      code: str | None = None) -> dict[str, Any]:
         """Read a workspace image or magnify a region; return a PNG without writing files.
 
         region is [left, top, right, bottom] in displayed source pixels (top-left origin).
@@ -397,9 +398,10 @@ class Runtime:
         line gives dimension/witness intersections; surfaces gives their corresponding feature points.
         Checks expose mismatched witness projections and inconsistent dimension equations, and derive
         relative levels in mm from the supplied readings. They do not verify OCR or surface semantics.
+        code (needs scripts allowed) runs numpy on the region's pixels at source resolution; see scripting.py.
         """
         from .images import inspect_image
-        return inspect_image(self.policy, path, region, max_size, rotate, dimensions)
+        return inspect_image(self.policy, path, region, max_size, rotate, dimensions, code)
 
     @tool
     def read_drawing(self, path: str) -> dict[str, Any]:

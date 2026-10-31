@@ -363,8 +363,10 @@ def test_step_export_reads_back_as_the_part(rt, ws, plate):
     # BREP keeps the solid; IGES holds faces only, so its readback compares volume and size
     e = ok(rt.export_drawing("plate.FCStd", "plate.brep", "brep"))
     assert e["readback"]["solids"] == 1 and e["readback"]["matches"]
+    assert e["readback"]["topology"] == {"bodies": 1, "genus": 3, "voids": 0}  # the three through-holes
     e = ok(rt.export_drawing("plate.FCStd", "plate.igs", "iges"))
     assert e["readback"]["matches"] and e["readback"]["solids"] == 0 and "IGES" in e["readback"]["note"]
+    assert e["readback"]["topology"] is None  # faces only: no solid to read a genus from
     assert e["readback"]["volume"] == pytest.approx(_plate_volume(6), rel=1e-6)
 
 

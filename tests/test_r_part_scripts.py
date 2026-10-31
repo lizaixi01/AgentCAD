@@ -632,3 +632,47 @@ def test_freecad_script_timeout_leaves_no_folder(ws):
     e = rt.run_script("p.FCStd", "while True:\n    pass", language="freecad")["error"]
     assert e["code"] == "SCRIPT_TIMEOUT" and not (ws / "p.FCStd").exists()
     assert not list((ws / ".agentcad" / "freecad").glob("script-*"))
+
+
+@needs_freecad
+@pytest.mark.parametrize("code, topology", [
+    ("result = Part.makeBox(20, 20, 10)", {"bodies": 1, "genus": 0, "voids": 0}),
+    ("result = Part.makeSphere(5)", {"bodies": 1, "genus": 0, "voids": 0}),
+    ("result = Part.makeCone(5, 0, 10)", {"bodies": 1, "genus": 0, "voids": 0}),
+    ("result = Part.makeTorus(10, 2)", {"bodies": 1, "genus": 1, "voids": 0}),
+    # a vertical through-hole crossed by a horizontal one: three independent loops
+    ("b = Part.makeBox(20, 20, 10)\n"
+     "b = b.cut(Part.makeCylinder(3, 40, Vector(10, 10, -5)))\n"
+     "result = b.cut(Part.makeCylinder(2, 40, Vector(-5, 10, 5), Vector(1, 0, 0)))",
+     {"bodies": 1, "genus": 3, "voids": 0}),
+    ("result = Part.makeBox(20, 20, 10).cut(Part.makeCylinder(3, 40, Vector(10, 10, 5)))",  # blind hole
+     {"bodies": 1, "genus": 0, "voids": 0}),
+    ("result = Part.makeBox(20, 20, 10).cut(Part.makeBox(4, 4, 4, Vector(8, 8, 3)))",  # sealed cavity
+     {"bodies": 1, "genus": 0, "voids": 1}),
+    # a rib that closes a loop: the T3 failure, a handle that neither size nor volume shows
+    ("b = Part.makeBox(20, 20, 10)\n"
+     "result = b.fuse(Part.makeTorus(8, 1.5, Vector(10, 10, 10), Vector(1, 0, 0))).removeSplitter()",
+     {"bodies": 1, "genus": 1, "voids": 0}),
+    # a hole tangent to the outline: the boundary touches itself, which these counts cannot read
+    ("result = Part.makeBox(20, 20, 10).cut(Part.makeCylinder(3, 40, Vector(3, 10, -5)))", None),
+])
+def test_validation_reports_topology(srt, code, topology):
+    """BenchCAD weighs the Betti numbers of a part 20 %: a run's part had one loop too many (genus 1 for 0) and
+    lost 15 of 100 points with no hint in the validation, which reported size, volume and holes only."""
+    r = ok(srt.run_script("t.FCStd", code, language="freecad"))
+    assert shape(r)["topology"] == topology
+
+
+@needs_freecad
+def test_topology_requirement_and_diff(srt):
+    ok(srt.run_script("t.FCStd", "result = Part.makeBox(20, 20, 10)", language="freecad"))
+    r = ok(srt.run_script("t.FCStd", "result = Part.makeBox(20, 20, 10).cut(Part.makeCylinder(3, 40, "
+                                     "Vector(10, 10, -5)))", language="freecad",
+                          requirements=[{"type": "topology", "genus": 0}, {"type": "topology", "voids": 0}]))
+    d = ok(srt.get_diff("t.FCStd", r["checkpoint_before"]))
+    assert d["shape"]["topology"] == {"old": {"bodies": 1, "genus": 0, "voids": 0},
+                                      "new": {"bodies": 1, "genus": 1, "voids": 0}}
+    failed = r["validation"]["requirements"]["failed"]
+    assert [(f["type"], f["expected"], f["actual"]["genus"]) for f in failed] == [("topology", {"genus": 0}, 1)]
+    e = srt.validate_drawing("t.FCStd", requirements=[{"type": "topology"}])
+    assert "needs bodies or genus or voids" in json.dumps(e), e
