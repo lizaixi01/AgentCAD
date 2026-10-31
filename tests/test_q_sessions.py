@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import sys
 import urllib.request
 from pathlib import Path
 
@@ -137,7 +138,8 @@ def test_setup_installs_the_agentcad_skill(home):
 def test_a_reused_pid_is_not_a_session(tmp_path, session):
     """A server killed without removing its file: if the OS gives its pid to another program, that program's start
     time differs, so the viewer does not show it as connected."""
-    assert sessions.CURRENT.get("created") is not None or os.name not in ("nt", "posix")
+    if os.name == "nt" or sys.platform.startswith("linux"):  # macOS has no /proc: the pid alone decides there
+        assert sessions.CURRENT.get("created") is not None
     if sessions.CURRENT.get("created") is None:
         pytest.skip("no process start time on this system")
     assert sessions.alive(os.getpid(), sessions.CURRENT["created"])
