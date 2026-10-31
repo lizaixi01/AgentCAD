@@ -28,10 +28,14 @@ ALLOWED_IMPORTS = {"ezdxf", "math", "cmath", "itertools", "functools", "collecti
                    "fractions", "decimal", "operator", "copy"}
 BANNED_NAMES = {"open", "exec", "eval", "compile", "__import__", "input", "breakpoint", "globals", "locals", "vars",
                 "getattr", "setattr", "delattr", "exit", "quit", "help", "memoryview", "dir"}
-# Frames (a generator's gi_frame.f_back reaches the runner's frame, its real builtins and __import__) and the
-# operator helpers that read or call attributes by name (attrgetter('__globals__') gets past the dunder rule).
+# Frames (a generator's gi_frame.f_back reaches the runner's frame, its real builtins and __import__), the
+# helpers that read or call attributes by name (attrgetter('__globals__') gets past the dunder rule), and the
+# modules allowed modules carry as plain attributes (fractions.sys.modules, dataclasses.builtins.getattr,
+# dataclasses.inspect.currentframe(), numpy.f2py.subprocess).
 _ESCAPE_ATTRS = {"gi_frame", "cr_frame", "ag_frame", "tb_frame", "f_back", "f_globals", "f_locals", "f_builtins",
-                 "attrgetter", "methodcaller"}
+                 "attrgetter", "methodcaller", "getattr", "setattr", "delattr", "eval", "exec", "globals", "locals",
+                 "vars", "breakpoint", "sys", "modules", "os", "builtins", "bltns", "inspect", "currentframe",
+                 "subprocess", "f2py"}
 BANNED_ATTRS = {"saveas", "save", "readfile", "readzip", "write", "write_text", "write_bytes", "unlink", "rmdir",
                 "system", "popen", "spawn", "odafc"} | _ESCAPE_ATTRS
 RUNNER = Path(__file__).with_name("_script_runner.py")

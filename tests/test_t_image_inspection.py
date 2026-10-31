@@ -270,6 +270,11 @@ def test_code_can_return_an_overlay_image(ws):
     ("from numpy.lib.npyio import NpzFile", "SCRIPT_REJECTED"),
     ("from operator import *\nf = attrgetter('__globals__')", "SCRIPT_REJECTED"),
     ("from numpy.lib.npyio import *\nnz = NpzFile('drawing.png')", "SCRIPT_REJECTED"),
+    # allowed modules carry sys, builtins and inspect as attributes
+    ("import fractions\nb = fractions.sys.modules['builtins']", "SCRIPT_REJECTED"),
+    ("import dataclasses\ng = dataclasses.builtins.getattr", "SCRIPT_REJECTED"),
+    ("import dataclasses\nf = dataclasses.inspect", "SCRIPT_REJECTED"),
+    ("s = np.ma.core.inspect.stack()", "SCRIPT_REJECTED"),
     ("def f(nz):\n    nz.zip.extractall('out')", "SCRIPT_REJECTED"),
     ("def f(nz):\n    nz.zip.extract('a', 'out')", "SCRIPT_REJECTED"),
     ("def f(nz):\n    type(nz.zip)('x.zip', 'w').writestr('a', 'b')", "SCRIPT_REJECTED"),

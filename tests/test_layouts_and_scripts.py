@@ -147,6 +147,10 @@ def test_script_is_a_transaction(srt, ws):
     ("import operator\nf = operator.attrgetter('__globals__')", "'attrgetter'"),
     ("from operator import attrgetter", "attrgetter"),
     ("from operator import *\nf = attrgetter('__globals__')", "import *"),
+    # allowed modules carry sys, builtins and inspect as attributes
+    ("import fractions\nb = fractions.sys.modules['builtins']", "'modules'"),
+    ("import statistics\nos = statistics.sys", "'sys'"),
+    ("import copy\ng = copy.builtins.getattr", "'getattr'"),
     ("import operator\noperator.methodcaller('saveas', 'x.dxf')(doc)", "'methodcaller'"),
 ])
 def test_scripts_are_checked_before_running(srt, ws, code, why):

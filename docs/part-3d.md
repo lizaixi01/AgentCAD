@@ -176,7 +176,7 @@ apply_operations("part.FCStd", [{"op": "fillet", "edges": {"type": "line", "dire
 **安全**：和二维脚本同一套策略，真正的边界是**默认关闭**（`AGENTCAD_ALLOW_SCRIPTS=1` 或 CLI `--allow-scripts` 才开启）。
 开启后先做静态检查：只能导入 cadquery / FreeCAD Part、numpy 和标准数学/数据模块；拒绝 eval/exec/getattr/双下划线
 访问，以及常见的读写文件、导入导出和动文档的名字（`open`、`save*`、`read`、`write`、`cq.exporters`/`importers`、
-`export*`/`import*`、numpy 的 `load`/`savez`/`memmap`/`ctypeslib`/`NpzFile`、zip 的 `extract*`/`writestr`、栈帧（`gi_frame`、`f_back` 等）、`operator.attrgetter`/`methodcaller`、OCP 的 `Write`/`Read`、FreeCAD 的
+`export*`/`import*`、numpy 的 `load`/`savez`/`memmap`/`ctypeslib`/`NpzFile`、zip 的 `extract*`/`writestr`、栈帧（`gi_frame`、`f_back` 等）、`operator.attrgetter`/`methodcaller`、允许模块带着的 `sys`/`builtins`/`inspect`/`os` 属性、OCP 的 `Write`/`Read`、FreeCAD 的
 `ActiveDocument`/`activeDocument`/`openDocument`/`ParamGet` 等）。运行时只给精简的内置函数和同一份导入白名单。
 这份名单**不完整**：numpy、OCP 和 FreeCAD 还有别的途径能读写文件（例如经由 `cq.occ_impl` 拿到的 OCP 写出器、
 `Part.insert`）。所以这些检查防的是误操作，不是安全沙箱：只对你愿意让它以你的身份运行 Python 的 Agent 开启。
