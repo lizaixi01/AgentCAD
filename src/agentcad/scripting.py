@@ -115,6 +115,8 @@ def check_script(code: str, language: str = "ezdxf") -> None:
                     or private and any(p.startswith("_") for p in parts)):
                 reject(node, f"import from {mod!r} is not allowed")
             for a in node.names:  # e.g. "from ezdxf.addons import odafc" (launches an external converter)
+                if a.name == "*":  # the names it brings in would be used bare, past the attribute rules
+                    reject(node, f"'from {mod} import *' is not allowed; import the names you use")
                 if (a.name == "odafc" or a.name.startswith("__") or a.name in banned_attrs
                         or private and a.name.startswith("_")):
                     reject(node, f"import of {mod}.{a.name!r} is not allowed")

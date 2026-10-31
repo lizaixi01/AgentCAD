@@ -146,6 +146,7 @@ def test_script_is_a_transaction(srt, ws):
     # attributes read or called by name get past the dunder rule
     ("import operator\nf = operator.attrgetter('__globals__')", "'attrgetter'"),
     ("from operator import attrgetter", "attrgetter"),
+    ("from operator import *\nf = attrgetter('__globals__')", "import *"),
     ("import operator\noperator.methodcaller('saveas', 'x.dxf')(doc)", "'methodcaller'"),
 ])
 def test_scripts_are_checked_before_running(srt, ws, code, why):
