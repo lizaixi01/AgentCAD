@@ -1,5 +1,5 @@
 # AgentCAD desktop icon (Windows). install.create_shortcut fills in the commands below and points the icon at this
-# file through launch-<action>.vbs (wscript, window style 0), so no console window ever shows, on any Windows. A small window says what is happening while
+# file through launch-<action>.js (wscript, window style 0), so no console window ever shows. A small window says what is happening while
 # AgentCAD starts; it closes once the browser page is open. AgentCAD keeps running in the background.
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
@@ -10,7 +10,7 @@ $full = __FULL__   # may download first
 $update = __UPDATE__   # fetches the latest AgentCAD for the next start (at most once a day), or $null
 $stamp = Join-Path $PSScriptRoot 'last-update-check'
 # logs of earlier starts: a running AgentCAD still holds its own (that delete fails quietly), the rest go
-Remove-Item -Path (Join-Path $PSScriptRoot 'open-*.log') -ErrorAction SilentlyContinue
+Get-ChildItem -LiteralPath $PSScriptRoot -Filter 'open-*.log' -ErrorAction SilentlyContinue | Remove-Item -ErrorAction SilentlyContinue
 $log = Join-Path $PSScriptRoot ('open-' + [guid]::NewGuid().ToString('N') + '.log')
 
 $font = 'Microsoft YaHei UI'
@@ -19,7 +19,7 @@ $form.Text = 'AgentCAD'; $form.ClientSize = New-Object Drawing.Size(460, 170)
 $form.StartPosition = 'CenterScreen'; $form.FormBorderStyle = 'FixedDialog'; $form.MaximizeBox = $false
 $form.BackColor = [Drawing.Color]::White
 $ico = Join-Path $PSScriptRoot 'agentcad.ico'
-if (Test-Path $ico) { $form.Icon = New-Object Drawing.Icon($ico) }
+if (Test-Path -LiteralPath $ico) { $form.Icon = New-Object Drawing.Icon($ico) }
 $title = New-Object Windows.Forms.Label
 $title.Font = New-Object Drawing.Font($font, 15, [Drawing.FontStyle]::Bold)
 $title.Location = New-Object Drawing.Point(28, 22); $title.Size = New-Object Drawing.Size(410, 36)
@@ -46,13 +46,13 @@ $timer = New-Object Windows.Forms.Timer
 $timer.Interval = 250
 $timer.Add_Tick({
   $exited = $script:proc.HasExited  # before reading: a quick start can print its link and exit in between
-  $text = if (Test-Path $log) { Get-Content -LiteralPath $log -Raw -ErrorAction SilentlyContinue } else { '' }
+  $text = if (Test-Path -LiteralPath $log) { Get-Content -LiteralPath $log -Raw -ErrorAction SilentlyContinue } else { '' }
   if ($text -match '"viewer":\s*"') {
     $timer.Stop(); $form.Close()
     # The start above used what was already downloaded. Once a day, fetch the latest AgentCAD in the background, so
     # the next double-click has it; a start that just downloaded is already the latest.
     if ($update) {
-      $due = -not (Test-Path $stamp) -or ((Get-Date) - (Get-Item $stamp).LastWriteTime).TotalHours -ge 24
+      $due = -not (Test-Path -LiteralPath $stamp) -or ((Get-Date) - (Get-Item -LiteralPath $stamp).LastWriteTime).TotalHours -ge 24
       if ($script:usedFull) { Set-Content -LiteralPath $stamp (Get-Date -Format o) }
       elseif ($due) { Set-Content -LiteralPath $stamp (Get-Date -Format o); [void](Run $update 'nul') }
     }

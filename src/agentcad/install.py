@@ -381,7 +381,8 @@ def _cmd_line(parts: list[str]) -> str:
 def write_launcher(state: Path, command: str, args: list[str], launcher: str, action: tuple[str, ...]) -> Path:
     """<root>/.agentcad/launch-<action>.ps1 (Windows): a small "Opening AgentCAD..." window instead of a console.
     With uvx it first starts what is already downloaded (--offline, about a second) and downloads only if that fails;
-    a new version comes with the next run of the installer."""
+    once a day, after the page is open, it fetches the latest version for the next start. Next to it goes
+    launch-<action>.js, which the icon runs (see windows_script_host)."""
     fast = _cmd_line([command, "--offline", *args]) if launcher == "uvx" else None
     full = _cmd_line([command, *args])
     # uvx --offline keeps starting the copy it has; this refresh (daily, after the page is open) gets the next one
@@ -395,12 +396,31 @@ def write_launcher(state: Path, command: str, args: list[str], launcher: str, ac
         text = text.replace(key, value)
     path = state / f"launch-{action[0]}.ps1"
     path.write_text(text, "utf-8-sig")  # Windows PowerShell reads a file without a BOM as ANSI: Chinese would break
-    # what the icon points at: wscript runs PowerShell with window style 0, so no console shows on any Windows, also
-    # where Windows Terminal is the default console (it ignores "minimized"); UTF-16 for a Chinese user folder
-    vbs = ('CreateObject("WScript.Shell").Run "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden '
-           f'-File ""{path}""", 0, False\r\n')
-    path.with_suffix(".vbs").write_text(vbs, "utf-16")
+    # what the icon points at: wscript runs PowerShell with window style 0, so no console shows, also where Windows
+    # Terminal is the default console (it ignores "minimized"). JScript, not VBScript, which Windows is phasing out;
+    # UTF-16 for a Chinese user folder.
+    js = ('new ActiveXObject("WScript.Shell").Run(' + json.dumps(_powershell_file(path)) + ", 0, false);\r\n")
+    path.with_suffix(".js").write_text(js, "utf-16")
     return path
+
+
+def _powershell_file(script: Path) -> str:
+    return f'powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File "{script}"'
+
+
+def windows_script_host() -> bool:
+    """False where Windows Script Host is switched off (some company PCs): icons then use conhost --headless."""
+    if os.name != "nt":
+        return True
+    import winreg
+    for hive in (winreg.HKEY_CURRENT_USER, winreg.HKEY_LOCAL_MACHINE):
+        try:
+            with winreg.OpenKey(hive, r"Software\Microsoft\Windows Script Host\Settings") as key:
+                if str(winreg.QueryValueEx(key, "Enabled")[0]).strip() == "0":
+                    return False
+        except OSError:
+            continue
+    return True
 
 
 def _is_chinese() -> bool:
@@ -423,14 +443,25 @@ def mac_app(path: Path, state: Path, command: str, args: list[str], launcher: st
              "# AgentCAD desktop icon (macOS), made by agentcad setup. No Terminal window: output goes to the log.",
              'export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"',
              "osascript -e " + shlex.quote(note) + " >/dev/null 2>&1"]
+    # AgentCAD runs in the background and the app quits at once: macOS does not start an app that is still running,
+    # so a foreground viewer would make the next double-click do nothing.
     if launcher == "uvx":
         update = [command, "--refresh-package", DIST, *args[:args.index("agentcad") + 1], "--help"]
-        lines += [f"if [ ! -f {stamp} ] || [ -n \"$(find {stamp} -mtime +0 2>/dev/null)\" ]; then",
-                  f"  touch {stamp}; (sleep 30; {q(update)} >/dev/null 2>&1) &",
-                  "fi",
-                  f"{q([command, '--offline', *args])} >{log} 2>&1 || exec {q([command, *args])} >{log} 2>&1"]
+        lines += [f"nohup {q([command, '--offline', *args])} >{log} 2>&1 &",
+                  "pid=$!; i=0",
+                  "# the copy already here started when its viewer link is in the log; if it stopped before that",
+                  "# (nothing downloaded yet), download and start",
+                  f"while [ $i -lt 60 ] && ! grep -q '\"viewer\"' {log} 2>/dev/null && kill -0 $pid 2>/dev/null; do",
+                  "  sleep 0.5; i=$((i+1))",
+                  "done",
+                  f"if ! grep -q '\"viewer\"' {log} 2>/dev/null && ! kill -0 $pid 2>/dev/null; then",
+                  f"  nohup {q([command, *args])} >{log} 2>&1 &",
+                  f"elif [ ! -f {stamp} ] || [ -n \"$(find {stamp} -mtime +0 2>/dev/null)\" ]; then",
+                  f"  touch {stamp}; nohup {q(update)} >/dev/null 2>&1 &  # the latest version, for the next start",
+                  "fi"]
     else:
-        lines.append(f"exec {q([command, *args])} >{log} 2>&1")
+        lines.append(f"nohup {q([command, *args])} >{log} 2>&1 &")
+    lines.append("exit 0")
     plist = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
@@ -465,14 +496,18 @@ def create_shortcut(root: Path, launcher: str, source: str | None = None, *, pla
                     action: tuple[str, ...] = VIEWER) -> dict[str, Any]:
     """Put an icon called ``name`` on the desktop that runs ``agentcad <action>`` for ``root``: by default the
     "AgentCAD" icon that opens the user's drawings in the live viewer; ``action=DEMO`` the demo. Windows: a .lnk
-    (made by PowerShell, which knows a desktop moved by OneDrive); macOS: AgentCAD.command; Linux: a .desktop
+    (made by PowerShell, which knows a desktop moved by OneDrive); macOS: an app bundle, AgentCAD.app (mac_app); Linux: a .desktop
     file. The icon image is copied into <root>/.agentcad, which outlives a uvx cache."""
     command, args = viewer_command(root, launcher, source, action)
     state = root / ".agentcad"
     if platform == "win32":
         ico = state / "agentcad.ico"
-        target = str(Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32" / "wscript.exe")
-        target_args = subprocess.list2cmdline([str(state / f"launch-{action[0]}.vbs")])  # see write_launcher
+        system32 = Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32"
+        if windows_script_host():  # any Windows: wscript runs launch-<action>.js (write_launcher)
+            target, target_args = str(system32 / "wscript.exe"), subprocess.list2cmdline([str(state / f"launch-{action[0]}.js")])
+        else:  # Script Host switched off: conhost --headless (Windows 10 1809 and later)
+            target = str(system32 / "conhost.exe")
+            target_args = "--headless " + _powershell_file(state / f"launch-{action[0]}.ps1")
         script = ("[Console]::OutputEncoding = [Text.Encoding]::UTF8; "  # else a Chinese desktop path comes back as ????
                   "$d = [Environment]::GetFolderPath('Desktop'); $p = Join-Path $d " + _ps_quote(name + ".lnk") + "; "
                   "$had = Test-Path $p; "
