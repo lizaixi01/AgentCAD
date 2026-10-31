@@ -159,7 +159,7 @@ def claude_desktop_config() -> Path:
 
 def config_path(client: str, root: Path) -> Path:
     home = Path.home()
-    return {"claude-code": root / ".mcp.json",  # used only when the claude CLI is not on PATH
+    return {"claude-code": home / ".claude.json",  # written directly only when the claude CLI is not on PATH
             "codex": Path(os.environ.get("CODEX_HOME") or home / ".codex") / "config.toml",
             "claude-desktop": claude_desktop_config(),
             "cursor": home / ".cursor" / "mcp.json"}[client]
@@ -703,8 +703,7 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
             if bad:
                 cmds = None
                 rec["message"] = (f"{shutil.which('claude')} runs through cmd.exe, which would garble {bad!r}, so "
-                                  "this wrote .mcp.json instead. A folder name without & | < > ^ % \" ! lets setup "
-                                  "use claude mcp add.")
+                                  "this wrote ~/.claude.json directly instead.")
             if cmds:
                 rec.update(target="claude mcp (user scope)", commands=cmds)
                 if _claude_user_entry(name) == entry:
@@ -718,6 +717,8 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
                 rec["target"] = str(path)
                 if client == "codex":
                     rec["status"] = write_codex_config(path, name, codex_table(name, entry, launcher), dry_run)
+                elif client == "claude-code":  # no claude CLI (e.g. only the desktop app): its user-scope entry
+                    rec["status"] = write_json_config(path, name, {"type": "stdio", **entry}, dry_run)
                 else:
                     rec["status"] = write_json_config(path, name, entry, dry_run)
                 if dry_run and rec["status"] != "unchanged":
@@ -755,7 +756,8 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
     return res
 
 
-_RESTART = {"claude-code": "Start a new Claude Code session (type /mcp to see agentcad listed).",
+_RESTART = {"claude-code": "Start a new Claude Code session, in the terminal or the Claude app's Code tab (type /mcp "
+                           "to see agentcad listed).",
             "codex": "Start a new Codex session (type /mcp to see agentcad listed).",
             "claude-desktop": "Quit Claude Desktop completely (also from the tray / menu bar) and open it again.",
             "cursor": "Restart Cursor, then turn agentcad on under Settings > MCP if it is off."}
@@ -793,10 +795,7 @@ def render_setup(res: SetupResult) -> str:
         L += ["", "Next steps:"]
         n = 1
         for c in done:
-            if c["client"] == "claude-code" and "commands" not in c:
-                L.append(f"  {n}. Open Claude Code in {res.root} and approve the agentcad server when asked.")
-            else:
-                L.append(f"  {n}. {_RESTART[c['client']]}")
+            L.append(f"  {n}. {_RESTART[c['client']]}")
             n += 1
         L += [f"  {n}. Ask your agent:", f"     \"{FIRST_PROMPT}\"",
               f"  {n + 1}. Open {res.root} to see plate.svg.", "",
@@ -825,7 +824,8 @@ def ask_clients(detected: dict[str, bool], ask: Callable[[str], str] = input,
 
 # --- doctor ----------------------------------------------------------------------------------------------------
 def _client_entry(client: str, root: Path) -> tuple[str | None, dict[str, Any] | None]:
-    """(where, entry) of the agentcad server in this client's config, or (None, None)."""
+    """(where, entry) of the agentcad server in this client's config, (where, None) when that config cannot be read,
+    or (None, None)."""
     home = Path.home()
     if client == "claude-code":
         places = [(home / ".claude.json", "user"), (root / ".mcp.json", "project"), (Path.cwd() / ".mcp.json", "project")]
@@ -841,15 +841,17 @@ def _client_entry(client: str, root: Path) -> tuple[str | None, dict[str, Any] |
         return (str(path), e) if e is not None else (None, None)
     else:
         places = [(config_path(client, root), "")]
-    for path, _ in places:
+    bad = None
+    for path, scope in places:
         try:
             data = _read_json(path)
         except Exception:
+            bad = bad or f"{path} is not valid JSON"
             continue
         e = (data.get("mcpServers") or {}).get(NAME)
         if e is not None:
-            return str(path), e
-    return None, None
+            return str(path) + (" (only when Claude Code is opened in that folder)" if scope == "project" else ""), e
+    return bad, None
 
 
 def _check_entry(entry: dict[str, Any]) -> str | None:
@@ -913,6 +915,8 @@ def doctor(root: str | os.PathLike | None = None) -> dict[str, Any]:
             problem = _check_entry(entry)
             add(label, "missing" if problem else "ok", f"{place}" + (f": {problem}" if problem else ""),
                 f"Run agentcad setup --client {client}" if problem else "")
+        elif place:
+            add(label, "missing", place, "Fix or move that file, then run agentcad setup --client " + client)
         elif detected[client]:
             add(label, "missing", "installed, but AgentCAD is not configured", f"Run agentcad setup --client {client}")
         else:
