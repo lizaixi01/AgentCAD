@@ -1,0 +1,137 @@
+[
+ {
+  "call": "list_tools",
+  "result": [
+   "annotation",
+   "batch",
+   "block",
+   "connection",
+   "drawing",
+   "electrical",
+   "entity",
+   "excel_export",
+   "export",
+   "geometry",
+   "layer",
+   "layout",
+   "magicad",
+   "modify",
+   "nlp",
+   "pid",
+   "query",
+   "search",
+   "select",
+   "system",
+   "validate",
+   "view",
+   "xref"
+  ]
+ },
+ {
+  "call": "system",
+  "args": {
+   "operation": "status"
+  },
+  "isError": false,
+  "result": "{\"ok\":true,\"payload\":{\"backend\":\"ezdxf\",\"version\":\"1.4.5\",\"has_document\":true,\"entity_count\":0,\"save_path\":null,\"capabilities\":{\"can_read_drawing\":true,\"can_modify_entities\":true,\"can_create_entities\":true,\"can_screenshot\":true,\"can_save\":true,\"can_plot_pdf\":false,\"can_zoom\":false,\"can_query_entities\":true,\"can_file_operations\":true,\"can_undo\":false}}}"
+ },
+ {
+  "call": "entity",
+  "args": {
+   "operation": "create_line",
+   "x1": 0,
+   "y1": 0,
+   "x2": 3,
+   "y2": 4
+  },
+  "isError": false,
+  "result": "{\"ok\":true,\"payload\":{\"entity_type\":\"LINE\",\"handle\":\"2F\"}}"
+ },
+ {
+  "call": "entity",
+  "args": {
+   "operation": "create_circle",
+   "data": {
+    "cx": 0,
+    "cy": 0,
+    "radius": 2
+   }
+  },
+  "isError": false,
+  "result": "{\"ok\":true,\"payload\":{\"entity_type\":\"CIRCLE\",\"handle\":\"30\"}}"
+ },
+ {
+  "call": "entity",
+  "args": {
+   "operation": "count"
+  },
+  "isError": false,
+  "result": "{\"ok\":true,\"payload\":{\"count\":2}}"
+ },
+ {
+  "call": "geometry",
+  "args": {
+   "operation": "distance",
+   "data": {
+    "x1": 0,
+    "y1": 0,
+    "x2": 3,
+    "y2": 4
+   }
+  },
+  "isError": false,
+  "result": "{\"ok\":true,\"payload\":{\"distance\":5.0,\"dx\":3,\"dy\":4,\"angle\":53.130102}}"
+ },
+ {
+  "call": "entity",
+  "args": {
+   "operation": "move",
+   "entity_id": "NOPE",
+   "data": {
+    "dx": 1,
+    "dy": 1
+   }
+  },
+  "isError": false,
+  "result": "{\"ok\":false,\"error\":\"Entity NOPE not found\"}"
+ },
+ {
+  "call": "entity",
+  "args": {
+   "operation": "create_circle",
+   "data": {
+    "cx": 0
+   }
+  },
+  "isError": false,
+  "result": "{\"error\":\"[entity.create_circle] 'cy'\",\"hint\":\"Unexpected error. Check AutoCAD is responsive and retry.\"}"
+ },
+ {
+  "call": "system",
+  "args": {
+   "operation": "execute_lisp",
+   "data": {
+    "code": "(+ 1 2)"
+   }
+  },
+  "isError": false,
+  "result": "{\"ok\":false,\"error\":\"Not supported on this backend\"}"
+ },
+ {
+  "call": "drawing",
+  "args": {
+   "operation": "save",
+   "data": {
+    "path": "/tmp/mcp_t8i3i19y/m.dxf"
+   }
+  },
+  "isError": false,
+  "result": "{\"ok\":true,\"payload\":{\"path\":\"/tmp/mcp_t8i3i19y/m.dxf\"}}"
+ },
+ {
+  "reopen": [
+   "CIRCLE",
+   "LINE"
+  ]
+ }
+]

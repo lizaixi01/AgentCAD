@@ -63,6 +63,9 @@ still caps C2; the local deductions remain F3 −1, C2 −3, T3 −1 and S1 −2
 separate **93/100 v1.6.0 self-review (2026-09-24)** uses different scoring detail.
 Equal numbers do not make the two assessments interchangeable, and neither is
 combined with unreviewed upstream projects to claim an official overall first.
+The seven other public servers were later scored under this rubric in a separate
+[field review](../examples/source_capability/results/2026-10-31-field/README.md),
+with their own tests and headless probes run in offline containers.
 
 ## M14 and manufacturing annotations
 

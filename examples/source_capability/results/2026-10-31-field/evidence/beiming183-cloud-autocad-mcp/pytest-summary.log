@@ -1,0 +1,108 @@
+# command: .venv/bin/python -m pytest tests -q -rfEs -p no:cacheprovider  (in /work, image rescore/beiming183-cloud-autocad-mcp:1, --network none)
+........................................................................ [ 24%]
+........................................................................ [ 49%]
+.......................................................................F [ 73%]
+..........................F................F............................ [ 98%]
+.....                                                                    [100%]
+=================================== FAILURES ===================================
+____ test_ensure_ready_reports_broken_pywin32_before_com_or_document_access ____
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74c296ab0fb0>
+
+    async def test_ensure_ready_reports_broken_pywin32_before_com_or_document_access(monkeypatch):
+        import autocad_mcp.backends.file_ipc as file_ipc
+    
+        backend = FileIPCBackend()
+        monkeypatch.setattr(
+            file_ipc,
+            "win32_runtime_health",
+            lambda: {
+                "ok": False,
+                "python": "C:/Python/python.exe",
+                "checks": {"pythoncom": {"ok": False, "message": "No module named pywintypes"}},
+            },
+        )
+        monkeypatch.setattr(file_ipc, "find_autocad_window", lambda: (_ for _ in ()).throw(AssertionError()))
+    
+>       result = await backend.ensure_ready()
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+tests/test_resilience.py:38: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+src/autocad_mcp/backends/file_ipc.py:862: in ensure_ready
+    self._hwnd = find_autocad_window()
+                 ^^^^^^^^^^^^^^^^^^^^^
+tests/test_resilience.py:36: in <lambda>
+    monkeypatch.setattr(file_ipc, "find_autocad_window", lambda: (_ for _ in ()).throw(AssertionError()))
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
+
+.0 = <tuple_iterator object at 0x74c296ab2620>
+
+>   monkeypatch.setattr(file_ipc, "find_autocad_window", lambda: (_ for _ in ()).throw(AssertionError()))
+E   AssertionError
+
+tests/test_resilience.py:36: AssertionError
+_____________ test_cer_log_is_used_when_rawdata_is_not_enumerable ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x74c2966e61e0>
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_cer_log_is_used_when_rawd0')
+
+    def test_cer_log_is_used_when_rawdata_is_not_enumerable(monkeypatch, tmp_path):
+        log = tmp_path / "cer.log"
+        log.write_text(
+            "[07/18/26 15:38:44] info ================= cer started =================\n"
+            "[07/18/26 15:38:44] info Setting key SP/UPI_BUILD, value 25.0.58.0.0 (maxCount 1)\n"
+            "[07/18/26 15:38:44] info Setting key SP/THEME_TYPE, value Blue (maxCount 1)\n"
+            "[07/18/26 15:38:44] info Setting key AP/exception/code, value 0xE0434352 (maxCount 1)\n"
+            "[07/18/26 15:38:44] info Setting key AP/exception/module_name, value KERNELBASE.dll (maxCount 1)\n",
+            encoding="utf-8",
+        )
+        monkeypatch.setenv("AUTOCAD_MCP_CER_ROOT", str(tmp_path))
+        monkeypatch.setenv("AUTOCAD_MCP_CER_LOG", str(log))
+    
+        result = autocad_cer_snapshot()
+    
+>       assert result["source"] == "cer_log_fallback"
+               ^^^^^^^^^^^^^^^^
+E       KeyError: 'source'
+
+tests/test_runtime_health.py:103: KeyError
+_________ test_supervisor_launch_owns_pid_and_exports_desktop_contract _________
+
+tmp_path = PosixPath('/tmp/pytest-of-root/pytest-0/test_supervisor_launch_owns_pi0')
+
+    def test_supervisor_launch_owns_pid_and_exports_desktop_contract(tmp_path):
+        executable = tmp_path / "acad.exe"
+        executable.write_bytes(b"stub")
+        output = tmp_path / "D-drive-output"
+        activity = output / "activity-insights"
+        observed = {}
+    
+        def launcher(command, **kwargs):
+            observed.update(command=command, kwargs=kwargs)
+            return SimpleNamespace(pid=4321)
+    
+        supervisor = DesktopSupervisor(
+            SupervisorConfig(
+                acad_exe=str(executable),
+                output_root=str(output),
+                activity_insights_path=str(activity),
+            ),
+            root=tmp_path / "state",
+            launcher=launcher,
+            process_probe=lambda pid: pid == 4321,
+        )
+    
+        assert supervisor.launch() == 4321
+        assert observed["command"][0] == str(executable.resolve())
+        assert "/nologo" in observed["command"]
+>       assert "/product" in observed["command"]
+E       AssertionError: assert '/product' in ['/tmp/pytest-of-root/pytest-0/test_supervisor_launch_owns_pi0/acad.exe', '/nologo']
+
+tests/test_supervisor.py:50: AssertionError
+=========================== short test summary info ============================
+FAILED tests/test_resilience.py::test_ensure_ready_reports_broken_pywin32_before_com_or_document_access
+FAILED tests/test_runtime_health.py::test_cer_log_is_used_when_rawdata_is_not_enumerable
+FAILED tests/test_supervisor.py::test_supervisor_launch_owns_pid_and_exports_desktop_contract
+3 failed, 290 passed, 7 warnings in 10.49s

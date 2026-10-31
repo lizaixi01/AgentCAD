@@ -1,0 +1,5 @@
+# command: pytest -q -m "not autocad_com" -rsfE -p no:cacheprovider  (cwd /work, image rescore/lokmenower-best-cad-mcp:1, --network none)
+=========================== short test summary info ============================
+SKIPPED [1] tests/test_all_interfaces.py:1931: save path normalization follows Windows absolute paths
+SKIPPED [1] tests/test_mcp_v2_native.py:185: pywin32 is required to launch the stdio server process
+454 passed, 2 skipped, 480 subtests passed in 44.07s

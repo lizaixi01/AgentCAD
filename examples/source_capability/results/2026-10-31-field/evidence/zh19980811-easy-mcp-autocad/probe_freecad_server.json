@@ -1,0 +1,71 @@
+{
+ "tools_registered": {
+  "result": [
+   "copy_entity",
+   "count_text_patterns",
+   "create_layer",
+   "create_new_drawing",
+   "draw_circle",
+   "draw_device_connection",
+   "draw_line",
+   "draw_polyline",
+   "draw_rectangle",
+   "draw_text",
+   "execute_query",
+   "export_dxf",
+   "get_all_tables",
+   "get_table_schema",
+   "highlight_entity",
+   "highlight_text_matches",
+   "move_entity",
+   "query_and_highlight",
+   "rotate_entity",
+   "save_drawing",
+   "scan_all_entities"
+  ],
+  "pass": true
+ },
+ "draw_line_bridge_down_reports_failure": {
+  "result": "创建直线失败: 无法连接 FreeCAD bridge（127.0.0.1:8765），请先启动 bridge",
+  "pass": true
+ },
+ "save_bridge_down_reports_failure": {
+  "result": "保存图纸失败: 无法连接 FreeCAD bridge（127.0.0.1:8765），请先启动 bridge",
+  "pass": true
+ },
+ "port_get_table_schema_rejects_bad_name": {
+  "result": "获取表结构失败: 非法表名 x); DROP TABLE text_patterns; --",
+  "pass": true
+ },
+ "device_connection_without_devices": {
+  "result": "未找到标签为 P14 的设备",
+  "pass": true
+ },
+ "DEFECT_port_execute_query_write_allowed": {
+  "result": "执行成功，影响了 0 行",
+  "pass": true
+ },
+ "DEFECT_highlight_text_matches_reports_count_not_coloured": {
+  "result": {
+   "tool_reply": "已高亮显示 2 个包含 'PMC-3M' 的文本实体",
+   "bridge_reply": "已高亮 0 个文本"
+  },
+  "pass": true
+ },
+ "DEFECT_query_and_highlight_reports_len_handles": {
+  "result": {
+   "tool_reply": "已高亮显示 2 个实体（共 2 个结果）",
+   "bridge_reply": "已高亮 0 个实体",
+   "note": "'Nope' is not an object; bridge colours nothing headless"
+  },
+  "pass": true
+ },
+ "highlight_entity_headless_reply": {
+  "result": "已高亮实体 Line，颜色码: 1",
+  "pass": true
+ },
+ "unemulated_bridge_error_propagates": {
+  "result": "移动实体失败: stub: command not emulated: move",
+  "pass": true
+ }
+}

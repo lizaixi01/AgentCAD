@@ -1,0 +1,684 @@
+{
+  "name": "daobataotie/CAD-MCP",
+  "repository": "daobataotie/CAD-MCP",
+  "product_sha": "daf7502951175e01aba9126a702400186ba2d4f9",
+  "source_url": "https://github.com/daobataotie/CAD-MCP/tree/daf7502951175e01aba9126a702400186ba2d4f9",
+  "commit_date": "2026-10-27T05:46:44Z",
+  "license": "MIT",
+  "total_score": 13,
+  "max_score": 100,
+  "categories": [
+    {
+      "id": "F",
+      "name": "Functional CAD coverage",
+      "weight": 25,
+      "score": 4,
+      "item_ids": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Correctness and delivery",
+      "weight": 20,
+      "score": 4,
+      "item_ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Backends and platforms",
+      "weight": 15,
+      "score": 3,
+      "item_ids": [
+        "B1",
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "id": "E",
+      "name": "Engineering production",
+      "weight": 15,
+      "score": 0,
+      "item_ids": [
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    {
+      "id": "T",
+      "name": "Testing and maintenance",
+      "weight": 15,
+      "score": 0,
+      "item_ids": [
+        "T1",
+        "T2",
+        "T3"
+      ]
+    },
+    {
+      "id": "S",
+      "name": "Security and operations",
+      "weight": 10,
+      "score": 2,
+      "item_ids": [
+        "S1",
+        "S2"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "F1",
+      "name": "Geometry and measurement",
+      "score": 1,
+      "max_score": 5,
+      "basis": "COM entry points add line, circle, arc, ellipse, lightweight polyline, rectangle, text and a single-loop hatch; get_entity_properties reads back line length, circle radius/area, polyline coordinates/length and hatch area.",
+      "scope_and_limits": "Source reading only. Hatch accepts one outer loop from a point list (no islands/inner loops, no curved boundaries); no topology or general measurement tool. No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: draw_line through a real MCP session reached the (fake) AddLine with the requested points and get_entity_properties read back layer/colour/endpoints; a collinear 3-point hatch boundary is accepted by the tool layer without geometry checks. Strict pass: executed only against reviewer COM stubs (fakecad), i.e. interface evidence; the CAD-side ordinary path is COM-only and was not executable, so the score stays at its first-pass evidence level. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/cad_controller.py#L644",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L644"
+        },
+        {
+          "path": "src/cad_controller.py#L866",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L866"
+        },
+        {
+          "path": "src/cad_controller.py#L1126",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1126"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no output evidence for any drawing or measurement; hatch islands and topology are absent."
+      }
+    },
+    {
+      "id": "F2",
+      "name": "Editing",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Handle-based erase/move/rotate/scale/copy/mirror/offset and linear/polar arrays exist, each wrapped in an undo mark.",
+      "scope_and_limits": "No trim/join/fillet, no requirement-driven change. Arrays are emulated by Copy+Move/Rotate. No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: rotate_entity passes pi/2 radians for 90 degrees; array_linear count=3 makes 2 copies; bad handle -> success=false. Strict pass: executed only against reviewer COM stubs (fakecad), i.e. interface evidence; the CAD-side ordinary path is COM-only and was not executable, so the score stays at its first-pass evidence level. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/cad_controller.py#L1265",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1265"
+        },
+        {
+          "path": "src/cad_controller.py#L1347",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1347"
+        },
+        {
+          "path": "src/cad_controller.py#L1361",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1361"
+        },
+        {
+          "path": "src/cad_controller.py#L1381",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1381"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no behavioral evidence; trim/join/fillet absent."
+      }
+    },
+    {
+      "id": "F3",
+      "name": "Annotation and styles",
+      "score": 1,
+      "max_score": 5,
+      "basis": "add_dimension creates an aligned dimension (AddDimAligned) with text height; draw_text adds single-line text.",
+      "scope_and_limits": "No dimension/text styles, tolerances or fits, no read-back of a dimension's measured value or displayed text (get_entity_properties has no dimension branch). No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: not separately probed beyond schema validation; dimensions are COM-only. Strict pass: executed only against reviewer COM stubs (fakecad), i.e. interface evidence; the CAD-side ordinary path is COM-only and was not executable, so the score stays at its first-pass evidence level. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/cad_controller.py#L1008",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1008"
+        },
+        {
+          "path": "src/cad_controller.py#L839",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L839"
+        },
+        {
+          "path": "src/cad_controller.py#L1126",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1126"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no output evidence; styles, tolerances and post-edit display checks absent."
+      }
+    },
+    {
+      "id": "F4",
+      "name": "Organization and exchange",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Layers (create/set current/list), block definition create/insert/list, new/open/close/save drawing through COM SaveAs.",
+      "scope_and_limits": "No block attributes, paper space, layouts, viewports, plotting/PDF or tables. save_drawing calls SaveAs(path) with no file-type argument although the tool says DWG/DXF is chosen by extension; whether a .dxf path yields a real DXF depends on the CAD's default save format and is unverified. No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: save_drawing('/out/tmp/sub/out.dxf') called SaveAs with the path only (no file-type argument) and reported saved without checking the file. Strict pass: executed only against reviewer COM stubs (fakecad), i.e. interface evidence; the CAD-side ordinary path is COM-only and was not executable, so the score stays at its first-pass evidence level. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/cad_controller.py#L972",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L972"
+        },
+        {
+          "path": "src/cad_controller.py#L1509",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1509"
+        },
+        {
+          "path": "src/cad_controller.py#L551",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L551"
+        },
+        {
+          "path": "src/server.py#L1017",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L1017"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no output evidence; layouts/viewports/print/tables absent; DXF format selection not implemented explicitly."
+      }
+    },
+    {
+      "id": "F5",
+      "name": "Domain workflows",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No P&ID, mechanical view/BOM, architectural room or foreign-drawing takeoff workflow exists. The legacy process_command is a keyword/regex parser mapping phrases to the same primitive calls.",
+      "scope_and_limits": "Not part of the declared contract; scored 0 once here and not penalized again elsewhere. Strict pass: nothing to execute. Unchanged: 0.",
+      "source": [
+        {
+          "path": "src/nlp_processor.py#L161",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/nlp_processor.py#L161"
+        },
+        {
+          "path": "src/server.py#L448",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L448"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No verified implementation."
+      }
+    },
+    {
+      "id": "C1",
+      "name": "Transactions",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Each tool wraps its COM calls in StartUndoMark/EndUndoMark; draw_hatch deletes its boundary polyline if hatch creation fails; undo/redo tools exist.",
+      "scope_and_limits": "No batch, preview, checkpoint or rollback. Source shows partial writes on reported failure: draw_line/circle/... add the entity and then apply layer/color; if styling raises, the entity stays in the drawing while the tool returns success=false with no handle (no cleanup). Arrays failing mid-loop leave earlier copies. undo/redo send 'UNDO 1'/'_.REDO' asynchronously, sleep command_delay and return success=True without checking that anything was undone (false success, cap 2). No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: undo/redo false success REPRODUCED against the stub (success=true, entities 3->3, only an async SendCommand queued); partial write REPRODUCED with an injected layer-write failure (tool returns success=false but the line remains). Item already below the cap of 2. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/cad_controller.py#L505",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L505"
+        },
+        {
+          "path": "src/cad_controller.py#L644",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L644"
+        },
+        {
+          "path": "src/cad_controller.py#L1361",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1361"
+        },
+        {
+          "path": "src/cad_controller.py#L1401",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1401"
+        },
+        {
+          "path": "src/server.py#L936",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L936"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no behavioral evidence; undo/redo report success unverified; partial entities left on reported failure."
+      }
+    },
+    {
+      "id": "C2",
+      "name": "Intent and geometry",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Tools return the created entity handle; get_entity_properties lets an agent read actual geometry back.",
+      "scope_and_limits": "No saved specification, no comparison of requested vs actual geometry, no check that a dimension's displayed text matches geometry; success means only that the COM call did not raise. No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: tool results carry handles and readback is available, but no intent check exists to execute. Strict pass: executed only against reviewer COM stubs (fakecad), i.e. interface evidence; the CAD-side ordinary path is COM-only and was not executable, so the score stays at its first-pass evidence level. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/server.py#L623",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L623"
+        },
+        {
+          "path": "src/cad_controller.py#L1126",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1126"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no intent verification and no output evidence."
+      }
+    },
+    {
+      "id": "C3",
+      "name": "Delivery",
+      "score": 1,
+      "max_score": 5,
+      "basis": "save_drawing resolves an absolute path, creates the directory, refuses a target locked by another open document and calls SaveAs; the tool deliberately does not auto-start CAD, to avoid overwriting a file with a blank drawing.",
+      "scope_and_limits": "No gate, readback, hash, version stamp or DXF parity; existing files are overwritten without confirmation; format by extension is claimed but not passed to SaveAs. No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: save reports success with no readback; it created the missing directory /out/tmp/sub as a side effect. Strict pass: executed only against reviewer COM stubs (fakecad), i.e. interface evidence; the CAD-side ordinary path is COM-only and was not executable, so the score stays at its first-pass evidence level. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/cad_controller.py#L524",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L524"
+        },
+        {
+          "path": "src/cad_controller.py#L551",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L551"
+        },
+        {
+          "path": "src/server.py#L1017",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L1017"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no readback or per-format check; no output evidence."
+      }
+    },
+    {
+      "id": "C4",
+      "name": "Foreign and abnormal inputs",
+      "score": 1,
+      "max_score": 5,
+      "basis": "open_drawing refuses a missing path; COM busy/transient save errors are retried; dead COM references reset the connection; unknown entity types are listed with a generic type name.",
+      "scope_and_limits": "No handling of corrupt files, units, unsupported features or external edits beyond what CAD itself does; get_entity_properties silently returns no geometry for unhandled types. No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass (executed, server layer): missing file for open_drawing -> success=false; unknown handle -> success=false with error; negative/zero radius, count=1, 2-point hatch and 1-component point rejected as MCP tool errors before any CAD call; no CAD -> success=false with ProgID and HRESULT. These are error-path checks only; the ordinary foreign-drawing path is COM-only, so anchor 2 is not met. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/cad_controller.py#L1468",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1468"
+        },
+        {
+          "path": "src/cad_controller.py#L40",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L40"
+        },
+        {
+          "path": "src/cad_controller.py#L469",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L469"
+        },
+        {
+          "path": "src/cad_controller.py#L1048",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1048"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no behavioral evidence; abnormal-input contract largely delegated to CAD."
+      }
+    },
+    {
+      "id": "B1",
+      "name": "Backend contract",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Configurable CAD type (AutoCAD/GstarCAD/ZWCAD), explicit or registry-discovered versioned ProgIDs, last_connect_error surfaced in tool messages when CAD cannot start.",
+      "scope_and_limits": "No capability map or per-backend boundaries; the same COM calls are assumed to work on all three CADs. No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: with no CAD the server returns a diagnosable failure (ProgID list, HRESULT 0x800401F3) over stdio; without pywin32 the server cannot even import (ModuleNotFoundError: win32com), so there is no headless or degraded mode. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/cad_controller.py#L230",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L230"
+        },
+        {
+          "path": "src/cad_controller.py#L274",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L274"
+        },
+        {
+          "path": "src/cad_controller.py#L320",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L320"
+        },
+        {
+          "path": "src/server.py#L666",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L666"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no evidence the backends behave consistently."
+      }
+    },
+    {
+      "id": "B2",
+      "name": "Native interoperability",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Operates the real CAD application through COM (GetActiveObject/Dispatch) and saves native drawings via SaveAs.",
+      "scope_and_limits": "imgs/demo.gif is an untraced historical demo (no version or commit linkage) and is not used as evidence. No AUDIT, no reopen verification, no layout/dimension readback. No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: native interoperability is COM-only; not executable in Linux. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/cad_controller.py#L320",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L320"
+        },
+        {
+          "path": "src/cad_controller.py#L551",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L551"
+        },
+        {
+          "path": "imgs/demo.gif",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/imgs/demo.gif"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no traced native run at the pinned commit."
+      }
+    },
+    {
+      "id": "B3",
+      "name": "Platforms",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Declared Windows-only (pywin32 COM), Python >=3.10.",
+      "scope_and_limits": "No CI or recorded runs on any OS or Python version; no headless mode. No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: the server module imports and serves stdio/HTTP on Linux Python 3.12 only with reviewer stubs; this is not a supported platform run. Unchanged: 1.",
+      "source": [
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/pyproject.toml"
+        },
+        {
+          "path": "requirements.txt",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/requirements.txt"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no platform run evidence."
+      }
+    },
+    {
+      "id": "E1",
+      "name": "Standard data",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No standards data (fasteners, fits, sizes) exists.",
+      "scope_and_limits": "Outside the declared contract; scored 0 once. Strict pass: nothing to execute. Unchanged: 0.",
+      "source": [
+        {
+          "path": "src/server.py#L684",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L684"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No verified implementation."
+      }
+    },
+    {
+      "id": "E2",
+      "name": "Drawing production",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No title block, frame, views, sections, BOM or sheet production; only primitives plus a window screenshot tool.",
+      "scope_and_limits": "Outside the declared contract; scored 0 once. Strict pass: nothing to execute. Unchanged: 0.",
+      "source": [
+        {
+          "path": "src/server.py#L839",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L839"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No verified implementation."
+      }
+    },
+    {
+      "id": "E3",
+      "name": "Domain loop",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No connections, room area, BOM/balloon or quantity readback or error gates.",
+      "scope_and_limits": "Outside the declared contract; scored 0 once. Strict pass: nothing to execute. Unchanged: 0.",
+      "source": [
+        {
+          "path": "src/server.py#L684",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L684"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No verified implementation."
+      }
+    },
+    {
+      "id": "T1",
+      "name": "Behavioral regressions",
+      "score": 0,
+      "max_score": 5,
+      "basis": "The pinned tree contains no tests of any kind.",
+      "scope_and_limits": "git ls-files at the pinned SHA lists only README files, LICENSE, pyproject/requirements, .gitignore, imgs/demo.gif and src/*.py. Strict pass: confirmed in the container: no test files and no workflows (0 passed/0 failed/0 errors/0 skipped). Unchanged: 0.",
+      "source": [
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/pyproject.toml"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No verified implementation."
+      }
+    },
+    {
+      "id": "T2",
+      "name": "Reproducibility",
+      "score": 0,
+      "max_score": 5,
+      "basis": "Dependencies are open ranges (mcp>=1.12,<2; pywin32>=306; pydantic>=2; Pillow>=10) with no lock file, no fixed evaluator or environment record.",
+      "scope_and_limits": "Version ranges alone do not establish a reproducible environment. Strict pass: open ranges resolved to mcp 1.30.0, pydantic 2.14.2, pillow 13.0.0 on 2026-10-31; nothing pins them. Unchanged: 0.",
+      "source": [
+        {
+          "path": "requirements.txt",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/requirements.txt"
+        },
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/pyproject.toml"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No lock, hashes or fixed evaluation."
+      }
+    },
+    {
+      "id": "T3",
+      "name": "Continuous verification",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No workflow files (.github absent). The only Actions run (34955979173, 2026-09-15) is GitHub's automatic Dependency Graph submission, not a test or gate.",
+      "scope_and_limits": "Read-only gh run list. Strict pass: no CI to run. Unchanged: 0.",
+      "source": [
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/pyproject.toml"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No CI verification."
+      }
+    },
+    {
+      "id": "S1",
+      "name": "Security defaults",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Default transport is stdio; HTTP default bind 127.0.0.1; erase/new/open/close/save/send_command carry destructiveHint annotations; save refuses when CAD is not connected.",
+      "scope_and_limits": "send_command (arbitrary CAD command-line input, which can reach SHELL/LISP) is enabled by default with no allowlist or opt-in; open/save accept any filesystem path and save overwrites silently; streamable-http has no authentication and the host is configurable via --host. These are demonstrated permission-scope defects (cap 2). No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: send_command forwarded '(command \"_.SHELL\" ...)' verbatim with success=true, REPRODUCED both in-process and over streamable-http on 127.0.0.1 without any credentials; a foreign Host header was rejected with 421 by the installed mcp 1.30 SDK (the repo allows mcp>=1.12, so that protection depends on the resolved SDK version, not the product). save_drawing accepts any path and creates directories. Item already below the cap of 2. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/server.py#L1034",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L1034"
+        },
+        {
+          "path": "src/cad_controller.py#L1572",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1572"
+        },
+        {
+          "path": "src/server.py#L1150",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L1150"
+        },
+        {
+          "path": "src/config.json",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/config.json"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: dangerous execution on by default, no path scope, unauthenticated HTTP; no adversarial evidence."
+      }
+    },
+    {
+      "id": "S2",
+      "name": "Long tasks",
+      "score": 1,
+      "max_score": 5,
+      "basis": "All COM calls are serialized on one STA thread; transient COM errors retry for about 10 s; rotating log file; stdio misuse warning.",
+      "scope_and_limits": "No cancellation; COMExecutor.submit waits on future.result() with no timeout, so a hung CAD blocks every tool; no crash recovery beyond reconnecting. No committed tests, result logs, benchmarks or CI test runs exist at the pinned commit (the only GitHub Actions run is a Dependency Graph job, 34955979173), so no ordinary-path output evidence exists; anchors 2+ are unavailable. Strict pass: no timeout or cancellation behaviour could be executed meaningfully against a stub. Unchanged: 1.",
+      "source": [
+        {
+          "path": "src/cad_controller.py#L160",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L160"
+        },
+        {
+          "path": "src/cad_controller.py#L40",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L40"
+        },
+        {
+          "path": "src/server.py#L49",
+          "url": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L49"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no timeouts/cancellation and no behavioral evidence."
+      }
+    }
+  ],
+  "declared_contract": "A Python FastMCP server (v2.0.0, 35 tools) that drives a running Windows CAD application (AutoCAD, GstarCAD/GCAD or ZWCAD) over COM via pywin32: draw primitives, text, single-loop hatch and aligned dimensions; list layers/entities and read entity properties by handle; screenshot the CAD window; handle-based edits and arrays; undo/redo; layers; new/open/close/save drawings (DWG/DXF claimed by extension); block definition/insert; raw command passthrough; a legacy natural-language parser. Transports: stdio and unauthenticated streamable-http. No headless or file-based backend.",
+  "evidence_used": [
+    "Pinned source tree at daf7502951175e01aba9126a702400186ba2d4f9 (read only; nothing executed)",
+    "GitHub Actions run 34955979173 (Dependency Graph, completed 2026-09-15): not a test run",
+    "No committed tests, results, logs or benchmarks exist in the repository",
+    "Strict pass: offline Docker probes and transport checks listed in executed_evidence"
+  ],
+  "serious_defects": [
+    {
+      "item": "C1",
+      "description": "undo/redo send 'UNDO 1' / '_.REDO' through asynchronous SendCommand, sleep command_delay and return success=True without checking that the drawing changed (false success).",
+      "source": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/cad_controller.py#L1401",
+      "reproduction": "reproduced (against reviewer COM stub; real CAD undo not executable)"
+    },
+    {
+      "item": "S1",
+      "description": "send_command passes arbitrary text to the CAD command line by default (no allowlist or opt-in), and the streamable-http transport has no authentication while its host is configurable; open/save accept any path and save overwrites silently.",
+      "source": "https://github.com/daobataotie/CAD-MCP/blob/daf7502951175e01aba9126a702400186ba2d4f9/src/server.py#L1034",
+      "reproduction": "reproduced (stdio in-memory session and unauthenticated streamable-http subprocess; command was forwarded to a stub, not a real CAD)"
+    }
+  ],
+  "limitations": [
+    "Static source review only: the repository was not installed or run and no CAD was launched, per brief.",
+    "Behavior of SaveAs without a file type on each CAD (DXF vs DWG output) was not verified.",
+    "imgs/demo.gif was not traced to any commit and was not used as evidence.",
+    "Scores of 1 reflect code that exists without output evidence; they do not imply the code fails.",
+    "Strict pass probes replace pywin32 with reviewer stubs; they test the product's Python logic and MCP interface, never a CAD backend."
+  ],
+  "method": "strict: pinned source + committed evidence + executed headless tests and probes in an offline Docker container",
+  "first_pass_total": 13,
+  "executed_evidence": {
+    "image": "python@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159",
+    "committed_image": "rescore/daobataotie-cad-mcp:1 (removed after the run)",
+    "install_command": "cp -r /src /work && grep -v pywin32 requirements.txt > /tmp/req.txt && pip install -r /tmp/req.txt && pip install ezdxf  (resolved mcp 1.30.0, pydantic 2.14.2, pillow 13.0.0; pywin32 skipped)",
+    "run_flags": "docker --context desktop-linux run --rm --network none --memory 2g --cpus 2 --pids-limit 512, clone mounted read-only",
+    "test_suite": {
+      "command": null,
+      "passed": 0,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "note": "The pinned repository has no tests and no CI workflows."
+    },
+    "probes": [
+      {
+        "name": "P0 import without pywin32",
+        "result": "ModuleNotFoundError: win32com (no headless mode)"
+      },
+      {
+        "name": "probes.py none (no CAD; validation; list_tools; legacy NLP)",
+        "result": "12 PASS, 1 FAIL: English 'draw a rectangle from (0,0) to (10,5)' parsed as unknown"
+      },
+      {
+        "name": "probes.py mem (fake COM: draw/readback, bad handles, rotate, array, undo/redo, send_command, save, hatch)",
+        "result": "11 PASS (interface evidence only)"
+      },
+      {
+        "name": "probes.py faillayer (injected layer-write failure)",
+        "result": "1 PASS: partial write reproduced"
+      },
+      {
+        "name": "transports.py stdio subprocess",
+        "result": "initialize + 35 tools, negative radius -> tool error, draw_line without CAD -> success=false"
+      },
+      {
+        "name": "transports.py streamable-http 127.0.0.1:8765",
+        "result": "initialize 200 without credentials; send_command accepted (success=true); foreign Host header -> 421 from mcp 1.30"
+      }
+    ],
+    "defect_reproduction": [
+      {
+        "item": "C1",
+        "defect": "undo/redo report success without verification",
+        "status": "reproduced (mock COM)"
+      },
+      {
+        "item": "S1",
+        "defect": "unscoped send_command; unauthenticated HTTP; arbitrary save path",
+        "status": "reproduced"
+      },
+      {
+        "item": "C1",
+        "defect": "new: entity left in drawing when the tool reports failure (style write rejected)",
+        "status": "reproduced (mock COM, injected failure)"
+      },
+      {
+        "item": "F4/C3",
+        "defect": "SaveAs called without a DXF file type (format by extension claimed)",
+        "status": "argument wiring observed; real CAD output not executable here"
+      }
+    ],
+    "not_executed": [
+      "All AutoCAD/GstarCAD/ZWCAD COM behaviour (drawing, editing, real undo, open/save output, SaveAs format, screenshot)",
+      "Windows registry ProgID discovery",
+      "Any Windows run"
+    ]
+  },
+  "evidence_paths": [
+    "examples/source_capability/results/2026-10-31-field/evidence/daobataotie-cad-mcp/run-summary.txt",
+    "examples/source_capability/results/2026-10-31-field/evidence/daobataotie-cad-mcp/probes_none.json",
+    "examples/source_capability/results/2026-10-31-field/evidence/daobataotie-cad-mcp/probes_mem.json",
+    "examples/source_capability/results/2026-10-31-field/evidence/daobataotie-cad-mcp/probes_faillayer.json",
+    "examples/source_capability/results/2026-10-31-field/evidence/daobataotie-cad-mcp/transports.json",
+    "examples/source_capability/results/2026-10-31-field/evidence/daobataotie-cad-mcp/probes/probes.py",
+    "examples/source_capability/results/2026-10-31-field/evidence/daobataotie-cad-mcp/probes/transports.py",
+    "examples/source_capability/results/2026-10-31-field/evidence/daobataotie-cad-mcp/probes/stubs/fakecad.py",
+    "examples/source_capability/results/2026-10-31-field/evidence/daobataotie-cad-mcp/probes/stubs/pythoncom.py",
+    "examples/source_capability/results/2026-10-31-field/evidence/daobataotie-cad-mcp/probes/stubs/win32com/__init__.py",
+    "examples/source_capability/results/2026-10-31-field/evidence/daobataotie-cad-mcp/probes/stubs/win32com/client.py"
+  ]
+}

@@ -1,0 +1,737 @@
+{
+  "name": "beiming183-cloud/AutoCAD-MCP",
+  "repository": "beiming183-cloud/AutoCAD-MCP",
+  "product_sha": "11f7c47e5038796a20451b38b23032e625b5aa26",
+  "source_url": "https://github.com/beiming183-cloud/AutoCAD-MCP/tree/11f7c47e5038796a20451b38b23032e625b5aa26",
+  "commit_date": "2026-07-19T01:41:26Z",
+  "license": "MIT",
+  "total_score": 33,
+  "max_score": 100,
+  "categories": [
+    {
+      "id": "F",
+      "name": "Functional CAD coverage",
+      "weight": 25,
+      "score": 7,
+      "item_ids": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Correctness and delivery",
+      "weight": 20,
+      "score": 9,
+      "item_ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Backends and platforms",
+      "weight": 15,
+      "score": 5,
+      "item_ids": [
+        "B1",
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "id": "E",
+      "name": "Engineering production",
+      "weight": 15,
+      "score": 3,
+      "item_ids": [
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    {
+      "id": "T",
+      "name": "Testing and maintenance",
+      "weight": 15,
+      "score": 5,
+      "item_ids": [
+        "T1",
+        "T2",
+        "T3"
+      ]
+    },
+    {
+      "id": "S",
+      "name": "Security and operations",
+      "weight": 10,
+      "score": 4,
+      "item_ids": [
+        "S1",
+        "S2"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "F1",
+      "name": "Geometry and measurement",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed in an offline container: line/circle/rectangle/arc/polyline created headless, saved and re-opened with ezdxf (line end [30,40] exact); a HATCH over a closed rectangle reopens with pattern ANSI31 and scale 2.0; over MCP stdio a create_line returns requested/actual/diff and the saved DXF reopens with the line at (0,0)-(50,0); a negative radius is rejected over MCP (E_PARAMETER_REJECTED), a missing layer returns E_LAYER_NOT_FOUND, and a bad handle is refused.",
+      "scope_and_limits": "Measurement is absent headless: entity_get returns no length/area for line, circle, rectangle, arc or polyline, and the HATCH readback has no area (probe F1-measure, all null). create_hatch takes a single boundary so islands are not expressible headless. The backend API itself accepts radius -5 and NaN coordinates (only the MCP layer validates). Change from first pass: none in score; evidence is now executed rather than historical.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/backends/ezdxf_backend.py#L402"
+        },
+        {
+          "path": "src/autocad_mcp/audit.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/audit.py#L60"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_backend.out.jsonl",
+          "url": null
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_stdio.out.jsonl",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: length/area/topology measurement returns nothing headless, no islands; COM measurement unexecutable here."
+      }
+    },
+    {
+      "id": "F2",
+      "name": "Editing",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed: move (5,5) then rotate 90 then scale 2 gives a line at (-10,10)-(-10,30) as computed by hand; mirror and a 2x3 array produce 7 lines in the reopened DXF; moving a bad handle is refused. offset and fillet are refused headless with explicit 'not supported' errors (honest refusal).",
+      "scope_and_limits": "Offset/fillet/chamfer/trim/extend/break/join exist only on the COM/LISP path, which cannot run here, so they stay at their first-pass (code-only) level. No requirement-driven editing. Change from first pass: 1 -> 2 because the headless editing path now has executed, independently re-read output evidence.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/backends/ezdxf_backend.py#L490"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/backends/ezdxf_backend.py#L561"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_backend.out.jsonl",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: half of the item (trim/join/offset/fillet) is COM-only and unexecuted; no requirement-driven changes."
+      }
+    },
+    {
+      "id": "F3",
+      "name": "Annotation/styles",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Executed: a linear dimension between (0,0) and (37.5,0) reopens with measurement 37.5 and rendered block text '37,5'.",
+      "scope_and_limits": "Ordinary dimensions work, but dimension/text styles, numeric tolerances and fits are absent from the tool surface on every backend, and the headless rendered text uses a comma decimal separator with no style control. Change from first pass: none; the absent key capability keeps the item at 1.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/backends/ezdxf_backend.py#L822"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_backend.out.jsonl",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "No styles/tolerances/fits capability."
+      }
+    },
+    {
+      "id": "F4",
+      "name": "Organization/exchange",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Executed: layers, block define (uppercase types), insert with attributes, update_attribute and DXF save/reopen work (reopened TAG=P-102); a missing block is refused.",
+      "scope_and_limits": "block.define silently drops entity definitions whose type is not exactly uppercase CIRCLE/LINE/ATTDEF and still returns ok with entity_count equal to the number requested (probe: reported 2, actual 0); the MCP block tool passes data straight through. A duplicate define raises an uncaught DXFTableEntryError at backend level. No paper-space layouts, viewports or tables on any backend; DWG/PDF COM-only. Change from first pass: none.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/backends/ezdxf_backend.py#L788"
+        },
+        {
+          "path": "src/autocad_mcp/server.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/server.py#L1253"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_backend.out.jsonl",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Layouts/viewports/tables absent; block.define false success."
+      }
+    },
+    {
+      "id": "F5",
+      "name": "Domain workflows",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Executed: pid_setup_layers and pid_list_symbols work headless.",
+      "scope_and_limits": "Defect reproduced: pid_insert_symbol('NO-SUCH-CATEGORY','NO-SUCH-SYMBOL', rotation=45) returns ok=true and the reopened DXF contains only an LWPOLYLINE placeholder and TEXT, no INSERT. No mechanical views/BOM, rooms or takeoff. Change from first pass: none (defect now executed, cap 2 applies).",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/backends/ezdxf_backend.py#L917"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_backend.out.jsonl",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "P&ID symbol false success reproduced (cap 2); other domain workflows absent."
+      }
+    },
+    {
+      "id": "C1",
+      "name": "Transactions",
+      "score": 3,
+      "max_score": 5,
+      "basis": "Executed: an atomic headless batch with a missing-layer member returns E_BATCH_ROLLED_BACK, rolls back both created handles and the saved/reopened DXF has 0 entities; an invalid-radius member also rolls back; a non-atomic batch reports failures=1 with the partial entity left and ok=false. Over MCP stdio, a second write with the stale expected_revision is rejected with E_DOCUMENT_REVISION_MISMATCH, a wrong doc_id with E_DOCUMENT_ID_MISMATCH, a missing layer with E_LAYER_NOT_FOUND (entity_created=false), and the idempotency journal records journal_state=committed.",
+      "scope_and_limits": "Headless only. The native worker's database transaction and COM undo marks cannot run here and keep their first-pass level; no undo/checkpoint headless. Saved/reopened postconditions were checked for the rollback, but no cross-process native transaction was. Change from first pass: 2 -> 3 from executed error/boundary evidence with no false success.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/base.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/backends/base.py"
+        },
+        {
+          "path": "src/autocad_mcp/server.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/server.py#L306"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_backend.out.jsonl",
+          "url": null
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_stdio.out.jsonl",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 2,
+        "reason": "Withhold 2: native/COM transaction paths unexecuted; no checkpoints/undo on the executable backend."
+      }
+    },
+    {
+      "id": "C2",
+      "name": "Intent/geometry",
+      "score": 3,
+      "max_score": 5,
+      "basis": "Executed: batch entries report verified=true with empty diffs; the suite's postcondition-mismatch test (entity deleted, E_POSTCONDITION_MISMATCH) passes; an out-of-band edit of a line endpoint changes the geometry digest and drawing.audit lists the handle under changes.modified; MCP create_line returns requested/actual/diff.",
+      "scope_and_limits": "In-memory headless only; no saved-specification check of a delivered artifact (delivery is COM-only). Change from first pass: 2 -> 3.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/contracts.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/contracts.py"
+        },
+        {
+          "path": "src/autocad_mcp/audit.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/audit.py"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_backend.out.jsonl",
+          "url": null
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/pytest-summary.log",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 2,
+        "reason": "Withhold 2: no saved/reopened artifact verification against a specification; COM readback unexecuted."
+      }
+    },
+    {
+      "id": "C3",
+      "name": "Delivery",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Executed: headless delivery refuses ('requires the visible AutoCAD file_ipc backend').",
+      "scope_and_limits": "Delivery is COM-only and could not run. Over MCP the refusal is reported as E_INTERNAL with recoverable=true and 'inspect_logs_and_retry', a misleading code for a permanent capability boundary. Change from first pass: none.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/delivery.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/delivery.py"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_stdio.out.jsonl",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "No executable delivery path."
+      }
+    },
+    {
+      "id": "C4",
+      "name": "Foreign/abnormal inputs",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed: audit_dxf on a missing file and on a truncated DXF both return ok=false with explicit errors (open also refuses the corrupt file); an independently written inch-unit DXF reports units {code 1, inches} and counts LINE and SPLINE.",
+      "scope_and_limits": "A MESH entity written into the foreign file does not appear in the counts and is not reported as unsupported or skipped (it may not have been written by ezdxf because it was empty; not resolved). No incomplete-data or unsupported-feature reporting evidenced. Change from first pass: 1 -> 2.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/audit.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/audit.py"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/backends/ezdxf_backend.py#L160"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_backend.out.jsonl",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: unknown-entity handling unresolved, no unsupported-feature reporting."
+      }
+    },
+    {
+      "id": "B1",
+      "name": "Backend contract",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed: the server starts over stdio with AUTOCAD_MCP_BACKEND=ezdxf, lists 12 tools, status succeeds, and the ezdxf backend is selected; unsupported operations are refused rather than simulated (offset, fillet, deliver, visual style).",
+      "scope_and_limits": "Native-plugin required/auto fallback and COM discovery cannot run here. The delivery capability refusal surfaces as E_INTERNAL/recoverable=true, so capability boundaries are not consistently typed. Change from first pass: 1 -> 2.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/client.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/client.py"
+        },
+        {
+          "path": "src/autocad_mcp/server.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/server.py#L2078"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_stdio.out.jsonl",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: inconsistent refusal codes; native/COM discovery unexecuted."
+      }
+    },
+    {
+      "id": "B2",
+      "name": "Native interoperability",
+      "score": 1,
+      "max_score": 5,
+      "basis": "No change: AutoCAD/COM/native worker cannot run in a Linux container.",
+      "scope_and_limits": "No native output evidence from either pass.",
+      "source": [
+        {
+          "path": "native/AutoCADMcp.Plugin/CadDispatcher.cs",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/native/AutoCADMcp.Plugin/CadDispatcher.cs"
+        },
+        {
+          "path": "docs/CAD-5-ROUND-CAMPAIGN-20260719.md",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/docs/CAD-5-ROUND-CAMPAIGN-20260719.md"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Not executable here; no committed native results."
+      }
+    },
+    {
+      "id": "B3",
+      "name": "Platforms",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed on Linux, Python 3.12 (python:3.12-slim), headless: install from uv.lock and the suite (290 passed, 3 failed) and probes run; Windows CI at the pin is red.",
+      "scope_and_limits": "The 3 Linux failures are tests whose expectations depend on sys.platform=='win32' code paths (pywin32 health gate, CER log fallback, supervisor /product argument), so they are platform assumptions in the tests rather than headless defects. Single Python version; native vs headless still not distinguished in CI. Change from first pass: 1 -> 2.",
+      "source": [
+        {
+          "path": ".github/workflows/tests.yml",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/.github/workflows/tests.yml"
+        },
+        {
+          "path": "src/autocad_mcp/backends/file_ipc.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/backends/file_ipc.py#L849"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/pytest-summary.log",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: one Python, Windows CI red, platform-dependent tests fail on Linux."
+      }
+    },
+    {
+      "id": "E1",
+      "name": "Standard data",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Executed: drawing setup_mechanical creates the GB/T-named layer set with lineweights.",
+      "scope_and_limits": "No standards data, editions or ranges exist. Change from first pass: none.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/drafting.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/drafting.py"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_backend.out.jsonl",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Standard data absent."
+      }
+    },
+    {
+      "id": "E2",
+      "name": "Drawing production",
+      "score": 1,
+      "max_score": 5,
+      "basis": "No change: no frame/title block/BOM/views generation exists headless; product views are COM-only.",
+      "scope_and_limits": "Unexecutable product rendering; absent key capabilities.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/product_design.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/product_design.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Key drawing-production capabilities absent."
+      }
+    },
+    {
+      "id": "E3",
+      "name": "Domain loop",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Pure-Python product review/semantic DRC unit tests pass in the suite.",
+      "scope_and_limits": "No domain readback loop; P&ID placeholder false success reproduced. Change from first pass: none.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/product_design.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/product_design.py"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/pytest-summary.log",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "No domain loop with output evidence."
+      }
+    },
+    {
+      "id": "T1",
+      "name": "Behavioral regressions",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed the repository suite as CI runs it: 293 collected, 290 passed, 3 failed, 0 skipped, 0 errors. Tests include behavioral headless readback, atomic rollback, contracts, DRC, COM STA timeout quarantine, transport guard and journal tests; many file_ipc/delivery tests use monkeypatched backends (interface evidence only).",
+      "scope_and_limits": "The 3 failures are win32-platform assumptions; the pinned Windows CI run is red for unknown tests (logs expired). Change from first pass: 1 -> 2.",
+      "source": [
+        {
+          "path": "tests/test_ezdxf_backend.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/tests/test_ezdxf_backend.py"
+        },
+        {
+          "path": "tests/test_contracts.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/tests/test_contracts.py"
+        },
+        {
+          "path": "tests/test_resilience.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/tests/test_resilience.py#L23"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/pytest-summary.log",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: suite red on both the executed platform and Windows CI; mock-heavy for COM paths."
+      }
+    },
+    {
+      "id": "T2",
+      "name": "Reproducibility",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed: uv sync --dev --frozen from the committed uv.lock installs a working environment; the offline container then runs tests and probes.",
+      "scope_and_limits": "No fixed evaluator, environment/hash record or generated docs. Change from first pass: 1 -> 2.",
+      "source": [
+        {
+          "path": "uv.lock",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/uv.lock"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: lock file only; no recorded evaluator or environment."
+      }
+    },
+    {
+      "id": "T3",
+      "name": "Continuous verification",
+      "score": 1,
+      "max_score": 5,
+      "basis": "No change: CI at the pin and its two ancestors is red; no version comparison.",
+      "scope_and_limits": "The pinned commit and its two ancestors are red; no same-environment correctness/performance comparison between versions.",
+      "source": [
+        {
+          "path": ".github/workflows/tests.yml",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/.github/workflows/tests.yml"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "CI red; no comparisons."
+      }
+    },
+    {
+      "id": "S1",
+      "name": "Defaults",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed over MCP stdio: execute_lisp is refused by default; drawing.save to /etc/escape_probe.dxf is redirected into the managed root and nothing is written to /etc; resolve_output_target sanitizes ../ traversal into the category folder.",
+      "scope_and_limits": "The LISP dispatcher's ungated execute-lisp (SECURELOAD set to 0) runs only inside AutoCAD and could not be executed; it remains a source-demonstrated permission defect and caps the item at 2. Native pipe token defaults to empty. Change from first pass: 1 -> 2 (capped).",
+      "source": [
+        {
+          "path": "lisp-code/mcp_dispatch.lsp",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/lisp-code/mcp_dispatch.lsp#L745"
+        },
+        {
+          "path": "src/autocad_mcp/workspace.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/workspace.py#L100"
+        },
+        {
+          "path": "src/autocad_mcp/server.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/server.py#L2168"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_stdio.out.jsonl",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Capped at 2 by the source-demonstrated dispatcher permission defect."
+      }
+    },
+    {
+      "id": "S2",
+      "name": "Long tasks",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed: the suite's COM STA timeout/quarantine, transport guard, journal and supervisor-state tests pass on Linux (except the supervisor /product win32 test); over MCP the idempotency journal records committed operations.",
+      "scope_and_limits": "Real AutoCAD hangs, crash recovery and the cross-process COM mutex cannot run here. Change from first pass: 1 -> 2.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/com_sta.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/com_sta.py"
+        },
+        {
+          "path": "src/autocad_mcp/transport_guard.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/transport_guard.py"
+        },
+        {
+          "path": "src/autocad_mcp/journal.py",
+          "url": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/journal.py"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/pytest-summary.log",
+          "url": null
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: no real-process crash/recovery evidence."
+      }
+    }
+  ],
+  "declared_contract": "Version 4.0.0 fork of puran-water/autocad-mcp: a stdio MCP server with 12 consolidated tools (drawing, entity, solid, product, layer, block, annotation, pid, transaction, view, job, system) that claims checked writes (handle readback, requested/actual diffs, document revisions), 2D drafting, dimensions, topology DRC, native AutoCAD 3D solids and bounded product features, and delivery evidence (DWG/DXF/PDF/PNG, exported-DXF re-audit, manifests, SHA-256). Backends: a .NET 8 native worker over a current-user named pipe for full AutoCAD 2025/2026 (atomic DocumentLock transactions), a File IPC COM/LISP compatibility path for AutoCAD and AutoCAD LT 2024+ (undo-group compensation, explicitly not provably atomic), and a headless ezdxf backend for any platform without delivery, plot, undo, offset/fillet/trim or 3D.",
+  "evidence_used": [
+    "Pinned source tree at 11f7c47e5038796a20451b38b23032e625b5aa26 (read only, not executed)",
+    "GitHub Actions run 29668991160 (tests.yml, push, head 11f7c47 = pinned SHA): completed, conclusion failure at step 'uv run pytest tests -q' (windows-latest); logs expired (HTTP 410), failing tests unknown",
+    "GitHub Actions runs 29668970089 (4561994) and 29668244634 (cd8531d): completed, failure (immediate ancestors of the pin)",
+    "GitHub Actions run 29568285169 (tests.yml, push, head 2c50d72, ancestor 3 commits before the pin): completed, conclusion success; logs expired (HTTP 410), so per-test pass/skip detail is unavailable",
+    "git diff --stat 2c50d7232b4b94f355e1d0db08141d413f85e975..11f7c47e5038796a20451b38b23032e625b5aa26 used to trace which code boundaries the green run exercised",
+    "docs/CAD-5-ROUND-CAMPAIGN-20260719.md (test plan, no results) and docs/INCIDENT-20260718-EXECUTION-HANG.md (self-reported local counts, not a result file)",
+    "Strict pass: repository test suite executed in an offline python:3.12-slim container (examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/pytest-summary.log)",
+    "Strict pass: backend probes (examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_backend.out.jsonl) and MCP stdio probes (examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_stdio.out.jsonl)"
+  ],
+  "serious_defects": [
+    {
+      "item": "S1",
+      "description": "mcp_dispatch.lsp dispatches execute-lisp from any command file in the IPC directory (default C:/temp) without its own authorisation and sets SECURELOAD to 0 while loading the referenced file; AUTOCAD_MCP_ALLOW_ARBITRARY_LISP is enforced only in the Python server, so a planted command file yields arbitrary AutoLISP execution. Demonstrated by source reading, not executed. Strict pass: not executable here (runs only inside AutoCAD); remains source-demonstrated.",
+      "source": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/lisp-code/mcp_dispatch.lsp#L745",
+      "reproduction": "not executable here"
+    },
+    {
+      "item": "F5",
+      "description": "Headless pid_insert_symbol returns ok=true for a nonexistent category/symbol and writes only a placeholder LWPOLYLINE + TEXT (no INSERT), ignoring rotation; README says the ezdxf backend has built-in CTO support.",
+      "source": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/backends/ezdxf_backend.py#L917",
+      "reproduction": "reproduced"
+    },
+    {
+      "item": "F4",
+      "description": "block.define (ezdxf, reachable through the MCP block tool unchanged) silently skips entity definitions whose type is not exactly 'CIRCLE', 'LINE' or 'ATTDEF' and returns ok with entity_count equal to the requested count; probe: reported 2, block actually empty.",
+      "source": "https://github.com/beiming183-cloud/AutoCAD-MCP/blob/11f7c47e5038796a20451b38b23032e625b5aa26/src/autocad_mcp/backends/ezdxf_backend.py#L788",
+      "reproduction": "reproduced (new in strict pass)"
+    }
+  ],
+  "limitations": [
+    "Historical green evidence comes from ancestor 2c50d72; it is credited only for headless paths whose code changed trivially since. About 12.7k inserted lines (native worker, File IPC, server, transport) postdate it.",
+    "The repository commits no live AutoCAD result files, so native-backend items are capped at 1 by the evidence rule, not because the code was shown to be wrong.",
+    "The S1 permission defect assumes the IPC directory is writable by other local processes (default C:/temp); actual ACLs on a given machine were not checked.",
+    "Four pull-request CI runs (37082618038, 37082187577, 39402662433, 39402601537) are for later fork branches, not ancestors of the pin, and were not used.",
+    "Strict pass executed only the headless ezdxf path and pure-Python modules on Linux/Python 3.12; COM/native items keep their first-pass evidence level.",
+    "Windows CI logs for the pinned run expired, so whether its failures match the three Linux platform failures is unknown."
+  ],
+  "method": "strict: pinned source + committed evidence + executed headless tests and probes in an offline Docker container",
+  "first_pass_total": 23,
+  "executed_evidence": {
+    "image": "python@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159 (python:3.12-slim), committed as rescore/beiming183-cloud-autocad-mcp:1",
+    "install_command": "cp -r /src /work; cd /work; pip install uv==0.8.17; uv sync --dev --frozen  (network only for this phase; pywin32 skipped by its win32 marker)",
+    "run_flags": "docker --context desktop-linux run --rm --network none --memory 2g --cpus 2 --pids-limit 512, clone mounted read-only, only /out writable",
+    "test_command": ".venv/bin/python -m pytest tests -q -rfEs -p no:cacheprovider",
+    "test_counts": {
+      "collected": 293,
+      "passed": 290,
+      "failed": 3,
+      "errors": 0,
+      "skipped": 0
+    },
+    "test_failures": [
+      "tests/test_resilience.py::test_ensure_ready_reports_broken_pywin32_before_com_or_document_access (the pywin32 gate in file_ipc.ensure_ready only applies when sys.platform == 'win32')",
+      "tests/test_runtime_health.py::test_cer_log_is_used_when_rawdata_is_not_enumerable (KeyError 'source'; CER fallback is platform-dependent)",
+      "tests/test_supervisor.py::test_supervisor_launch_owns_pid_and_exports_desktop_contract ('/product' argument only added on win32)"
+    ],
+    "probes": [
+      {
+        "id": "F1-measure",
+        "result": "fail",
+        "note": "no length/area returned for any primitive"
+      },
+      {
+        "id": "F1-hatch-save-reopen",
+        "result": "pass"
+      },
+      {
+        "id": "F1-errors / MCP-negative-radius-rejected / MCP-bad-handle",
+        "result": "pass",
+        "note": "backend API itself accepts radius -5 and NaN; MCP layer rejects"
+      },
+      {
+        "id": "F2-transforms-reopen",
+        "result": "pass"
+      },
+      {
+        "id": "F3-dimension-reopen",
+        "result": "pass",
+        "note": "measurement 37.5, text '37,5'"
+      },
+      {
+        "id": "F4-block-attr-reopen",
+        "result": "pass"
+      },
+      {
+        "id": "F4-block-define-lowercase-silent-drop",
+        "result": "defect reproduced"
+      },
+      {
+        "id": "F5-pid-placeholder-success",
+        "result": "defect reproduced"
+      },
+      {
+        "id": "C1-atomic-missing-layer / invalid-radius / nonatomic / revision-fence",
+        "result": "pass"
+      },
+      {
+        "id": "MCP-stale-revision-rejected / MCP-missing-layer",
+        "result": "pass"
+      },
+      {
+        "id": "C2-readback-verified / external-edit-detected",
+        "result": "pass"
+      },
+      {
+        "id": "C3-deliver-headless",
+        "result": "refused (COM-only); MCP code E_INTERNAL recoverable=true"
+      },
+      {
+        "id": "C4-missing-file / corrupt-file / foreign-units",
+        "result": "pass",
+        "note": "MESH entity absent from counts, unresolved"
+      },
+      {
+        "id": "E1-setup-mechanical",
+        "result": "pass"
+      },
+      {
+        "id": "S1-output-containment / MCP-save-contained / MCP-execute-lisp-refused",
+        "result": "pass"
+      },
+      {
+        "id": "MCP-list-tools / MCP-status / MCP-create / MCP-context / MCP-create-line / MCP-save-reopen / MCP-audit",
+        "result": "pass"
+      }
+    ],
+    "defect_reproduction": [
+      {
+        "item": "S1",
+        "defect": "LISP dispatcher execute-lisp bypass",
+        "status": "not executable here"
+      },
+      {
+        "item": "F5",
+        "defect": "P&ID placeholder reported as success",
+        "status": "reproduced"
+      },
+      {
+        "item": "F4",
+        "defect": "block.define silent drop with false entity_count",
+        "status": "reproduced (new)"
+      }
+    ],
+    "not_executed": [
+      "Full AutoCAD / AutoCAD LT, COM (pywin32) and the File IPC LISP dispatcher",
+      "The .NET native worker and named-pipe transactions",
+      "DWG save, PDF/PNG plot, delivery jobs, 3D solids and product features (all COM/native only)",
+      "Windows platform runs (host execution forbidden); Windows CI logs expired"
+    ]
+  },
+  "evidence_paths": [
+    "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/pytest-summary.log",
+    "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_backend.out.jsonl",
+    "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probe_stdio.out.jsonl",
+    "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probes/probe_backend.py",
+    "examples/source_capability/results/2026-10-31-field/evidence/beiming183-cloud-autocad-mcp/probes/probe_stdio.py"
+  ]
+}

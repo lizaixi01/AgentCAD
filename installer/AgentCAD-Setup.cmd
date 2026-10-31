@@ -6,7 +6,16 @@ set "AGENTCAD_SETUP_FILE=%~f0"
 if not "%AGENTCAD_SOURCE%"=="" goto start
 set "AGENTCAD_SOURCE=https://github.com/lizaixi01/AgentCAD/archive/refs/heads/main.zip"
 :start
-rem conhost --headless: Windows Terminal ignores -WindowStyle Hidden and would show a console
+rem wscript runs PowerShell with window style 0: no console, also where Windows Terminal is the default console
+rem (it ignores -WindowStyle Hidden). JScript, not VBScript, which Windows is phasing out. Where Windows Script Host
+rem is switched off (some company PCs): conhost --headless (Windows 10 1809 and later).
+reg query "HKCU\Software\Microsoft\Windows Script Host\Settings" /v Enabled 2>nul | findstr /r /e /c:"0x0" /c:"REG_SZ *0" >nul && goto noscripthost
+reg query "HKLM\Software\Microsoft\Windows Script Host\Settings" /v Enabled 2>nul | findstr /r /e /c:"0x0" /c:"REG_SZ *0" >nul && goto noscripthost
+set "AGENTCAD_SETUP_JS=%TEMP%\agentcad-setup.js"
+> "%AGENTCAD_SETUP_JS%" echo new ActiveXObject("WScript.Shell").Run("powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command \"$t = Get-Content -LiteralPath $env:AGENTCAD_SETUP_FILE -Raw -Encoding UTF8; iex ($t -split ('#PS' + '-START#'), 2)[1]\"", 0, false);
+start "" wscript.exe //E:JScript "%AGENTCAD_SETUP_JS%"
+exit /b 0
+:noscripthost
 start "" conhost.exe --headless powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "$t = Get-Content -LiteralPath $env:AGENTCAD_SETUP_FILE -Raw -Encoding UTF8; iex ($t -split ('#PS' + '-START#'), 2)[1]"
 exit /b 0
 #PS-START#

@@ -1,0 +1,71 @@
+{
+ "results": {
+  "circle": {
+   "ok": true,
+   "payload": {
+    "handle": "32"
+   }
+  },
+  "line": {
+   "ok": true,
+   "payload": {
+    "handle": "33"
+   }
+  },
+  "arc": {
+   "ok": true,
+   "payload": {
+    "handle": "34"
+   }
+  }
+ },
+ "circle_center": [
+  -100.0,
+  -0.0,
+  0.0
+ ],
+ "circle_extrusion": [
+  0.0,
+  0.0,
+  -1.0
+ ],
+ "circle_wcs_center": [
+  100.0,
+  -0.0,
+  -0.0
+ ],
+ "line": [
+  [
+   100.0,
+   -0.0,
+   0.0
+  ],
+  [
+   90.0,
+   5.0,
+   0.0
+  ]
+ ],
+ "arc_center_ocs": [
+  -100.0,
+  -0.0,
+  0.0
+ ],
+ "arc_extrusion": [
+  0.0,
+  0.0,
+  -1.0
+ ],
+ "arc_wcs_start_end": [
+  [
+   95.0,
+   -0.0,
+   -0.0
+  ],
+  [
+   100.0,
+   5.0,
+   0.0
+  ]
+ ]
+}

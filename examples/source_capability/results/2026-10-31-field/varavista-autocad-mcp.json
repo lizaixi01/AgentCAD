@@ -1,0 +1,882 @@
+{
+  "name": "varavista/autocad-mcp",
+  "repository": "varavista/autocad-mcp",
+  "product_sha": "7034dc444ba5b5680145a1eff52b4d83a262a75a",
+  "source_url": "https://github.com/varavista/autocad-mcp/tree/7034dc444ba5b5680145a1eff52b4d83a262a75a",
+  "commit_date": "2026-04-04T15:40:50+05:30",
+  "license": "Apache-2.0",
+  "total_score": 31,
+  "max_score": 100,
+  "categories": [
+    {
+      "id": "F",
+      "name": "Functional CAD coverage",
+      "weight": 25,
+      "score": 10,
+      "item_ids": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Correctness and delivery",
+      "weight": 20,
+      "score": 4,
+      "item_ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Backends and platforms",
+      "weight": 15,
+      "score": 6,
+      "item_ids": [
+        "B1",
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "id": "E",
+      "name": "Engineering production",
+      "weight": 15,
+      "score": 5,
+      "item_ids": [
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    {
+      "id": "T",
+      "name": "Testing and maintenance",
+      "weight": 15,
+      "score": 4,
+      "item_ids": [
+        "T1",
+        "T2",
+        "T3"
+      ]
+    },
+    {
+      "id": "S",
+      "name": "Security and operations",
+      "weight": 10,
+      "score": 2,
+      "item_ids": [
+        "S1",
+        "S2"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "F1",
+      "name": "Geometry and measurement",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): probe F1-ordinary saved and reopened line/circle/LWPOLYLINE/arc/ellipse/hatch with identical geometry; geometry_length/area returned 50, 200, 25*pi and 5*pi exactly; unknown handle refused (F1-bad-handle). MCP stdio call geometry.distance returned 5.0. First-pass COM narrative still applies to the native path.",
+      "scope_and_limits": "Unchanged at 2. Boundary evidence is mixed: create_hatch on a CIRCLE boundary fails ('Circle' has no get_points), and every batch.draw_* call on a fresh empty drawing refuses with 'No drawing open' because `if not self._msp` tests the empty modelspace's length (probe C1-batch-empty-drawing). No hatch islands or topology. Not a false success, so no cap, but the anchor-3 bar (boundary cases without failure) is not met.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:145",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L145"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:1181",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L1181"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:1240",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L1240"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:350",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L350"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:4217",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L4217"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: ordinary path proven; boundary failures (empty-drawing batch refusal, circle hatch) and no islands/topology keep it below 3."
+      }
+    },
+    {
+      "id": "F2",
+      "name": "Editing",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): probe F2-transforms: move/rotate/scale/mirror/array gave exact expected coordinates after save and reopen (5 array copies, 7 lines in file); F2-trim trimmed at x=7; unknown handle refused; offset/fillet/chamfer refuse honestly. MCP stdio move with a bad handle returned ok=false.",
+      "scope_and_limits": "Unchanged at 2. Corner operations (fillet/chamfer) are unsupported on both backends that could be evidenced (COM report, ezdxf run); offset only on COM (narrative). No requirement-driven edits or identity tracking.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:251",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L251"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:326",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L326"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3007",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3007"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:344",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L344"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: transforms and trim behave correctly, but fillet/chamfer/offset are absent on the executable backend and there is no requirement or identity layer."
+      }
+    },
+    {
+      "id": "F3",
+      "name": "Annotation and styles",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): probe F3-dims: linear, aligned, angular and radius dimensions plus a leader and text saved; on reopen the DIMENSION measurements were 25.4, 50, 90 and 7.5 and the rendered blocks contain '25,4', '50', '90°', 'R7,5'.",
+      "scope_and_limits": "Raised 1 -> 2: executed ordinary annotation now has output evidence. Rendered text uses a decimal comma (the default style the backend creates), the tools return no handle for dimensions, and there is still no tolerance/fit, style creation/modification or post-edit display check.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:527",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L527"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:539",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L539"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:551",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L551"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:570",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L570"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: tolerances/fits and style editing are not implemented; dimension handles are not returned."
+      }
+    },
+    {
+      "id": "F4",
+      "name": "Organization and exchange",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): probe F4-layers-blocks: layer WALLS red/frozen/locked, block TAG with ATTDEF, INSERT with ID=P-101, and layout SHEET2 all present after save and reopen; wblock wrote a file.",
+      "scope_and_limits": "Raised 1 -> 2 and capped at 2. Reproduced false success: layout_page_setup('SHEET2', A4, portrait) returned ok=true but the saved layout stayed 420x297; layout_viewport_set_scale, layout_viewport_lock and layout_batch_plot returned ok=true with no change and no plot file (F4-page-setup-noop, F4-viewport-noop). layout_viewport_create always fails with an ezdxf signature error. COM save_as_dxf R12 not executable here.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3530",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3530"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3540",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3540"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3548",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3548"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3556",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3556"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3584",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3584"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: capped at 2 by the reproduced ok=true no-op page setup / viewport / batch plot operations; viewport creation is broken."
+      }
+    },
+    {
+      "id": "F5",
+      "name": "Domain workflows",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): 232/232 repository tests pass, including equipment find, place_equipment_tag, batch_find_and_tag and phase 4/5 (electrical/validate) behaviour on ezdxf; probe E3-connectivity-bom returned 4 dangling endpoints and BOM PUMP=3 as constructed.",
+      "scope_and_limits": "Raised 1 -> 2: ordinary headless domain paths now have output evidence. P&ID drawing itself was not probed; no mechanical views, architectural rooms/openings or takeoff with uncertainty.",
+      "source": [
+        {
+          "path": "tests/test_equipment_find.py",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/tests/test_equipment_find.py"
+        },
+        {
+          "path": "tests/test_phase4_5.py",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/tests/test_phase4_5.py"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:1889",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L1889"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3223",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3223"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/pytest.log",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/pytest.log"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: most item areas (mechanical, architectural, uncertain takeoff) absent."
+      }
+    },
+    {
+      "id": "C1",
+      "name": "Transactions",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): ezdxf undo refuses honestly (C1-undo).",
+      "scope_and_limits": "Unchanged at 1. Reproduced on ezdxf the pattern found in COM source: batch.draw_lines with one invalid item returns ok=true, creates the valid line and keeps it (no rollback). Batch on an empty drawing refuses entirely. No preview, checkpoint or conflict handling. COM batch/undo not executable here.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:4217",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L4217"
+        },
+        {
+          "path": "src/autocad_mcp/backends/com_backend.py:1925",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/com_backend.py#L1925"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no transaction mechanism; partial batch failures are returned as ok=true."
+      }
+    },
+    {
+      "id": "C2",
+      "name": "Intent and geometry",
+      "score": 0,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): probe C2-purge: after adding an unused layer and block, drawing_purge returned ok=true, purged=true, and both were still present after save and reopen.",
+      "scope_and_limits": "Unchanged at 0: no intent/geometry verification exists, and the purge false success is now reproduced. COM setup_lisp not executable here.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:115",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L115"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no implementation of intent checks; reproduced false success."
+      }
+    },
+    {
+      "id": "C3",
+      "name": "Delivery",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): save then independent reopen works for every probe; MCP stdio drawing.save produced a file whose reopen contained the created CIRCLE and LINE.",
+      "scope_and_limits": "Raised 0 -> 1: the save entry point is now executed. Still no gate, hash, readback or parity. drawing.save to 'x.dwg' returns ok=true and writes ASCII DXF under a .dwg name (C3-dwg-ext); an existing non-DXF file is overwritten without warning; an unwritable directory raises inside the backend (the server wrapper turns it into an error).",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:94",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L94"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no delivery verification; mislabeled .dwg output reported as success."
+      }
+    },
+    {
+      "id": "C4",
+      "name": "Foreign and abnormal inputs",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): probe C4-open-errors: missing file and a malformed DXF are refused with clear errors and the previous document is kept; audit(fix=false) returns an issue list.",
+      "scope_and_limits": "Raised 1 -> 2: ordinary abnormal-input refusal is evidenced. Boundary failures: audit(fix=true) always fails ('Auditor' object has no attribute 'fix_all'); drawing.units accepts LUNITS=99 with ok=true; nec_lookup returns ok=true for an unknown table; MCP create_circle with missing fields returns a KeyError text ('cy') with a misleading 'check AutoCAD' hint.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:121",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L121"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3311",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3311"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3324",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3324"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: boundary and invalid-value cases fail or are accepted; no external-edit or unknown-unit handling."
+      }
+    },
+    {
+      "id": "B1",
+      "name": "Backend contract",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): MCP stdio server on Linux auto-selected ezdxf (logged 'wsl_linux_python_fallback_ezdxf'), listed 23 tools, reported backend and capability flags; execute_lisp returned 'Not supported on this backend'. pywin32 absence did not break startup.",
+      "scope_and_limits": "Unchanged at 2. Postconditions still differ by backend (reproduced ok=true no-ops on ezdxf); capability flags do not mark the no-op layout operations; the committed report's coverage table is inaccurate. File IPC/COM selection not executable here.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/config.py:139",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/config.py#L139"
+        },
+        {
+          "path": "src/autocad_mcp/client.py:26",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/client.py#L26"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_results.json"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: missing-dependency fallback works, but capability boundaries and postconditions are inconsistent."
+      }
+    },
+    {
+      "id": "B2",
+      "name": "Native interoperability",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Unchanged first-pass evidence: the agent-written COM checklist against AutoCAD 2026.",
+      "scope_and_limits": "COM, File IPC and AutoCAD were not executable in a Linux container, so the level stays at the first-pass narrative evidence (no save/reopen/AUDIT natively).",
+      "source": [
+        {
+          "path": "MCP_VALIDATION_REPORT.md",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/MCP_VALIDATION_REPORT.md"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: no native save/reopen/AUDIT evidence; strict pass could not run native paths."
+      }
+    },
+    {
+      "id": "B3",
+      "name": "Platforms",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): Linux / Python 3.12.16 headless run: 232 tests passed and the MCP server worked over stdio. Windows native evidence remains the committed COM report.",
+      "scope_and_limits": "Raised 1 -> 2: headless Linux and native Windows paths now each have output evidence and are distinguished. Only one Python version; no CI; the repository's own committed Windows test run errored.",
+      "source": [
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/pytest.log",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/pytest.log"
+        },
+        {
+          "path": "MCP_VALIDATION_REPORT.md",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/MCP_VALIDATION_REPORT.md"
+        },
+        {
+          "path": "pytest_output.txt",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/pytest_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: one Python version, no CI, no repository-run cross-platform evidence."
+      }
+    },
+    {
+      "id": "E1",
+      "name": "Standard data",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): electrical_voltage_drop(120 V, 20 A, #12, 100 ft) returned 7.92 V (matches 2*I*R*L with the table's 1.98 ohm/kft); nec_lookup refuses an unknown wire gauge.",
+      "scope_and_limits": "Raised 1 -> 2, capped at 2. Reproduced: an unknown gauge '999' silently uses 1.0 ohm/kft and returns ok=true with a 3.33% drop and an acceptability verdict; nec_lookup('bogus_table') returns ok=true. No NEC edition or source locators.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3594",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3594"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3731",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3731"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: capped at 2 by the reproduced silent default for unknown values; no editions/sources."
+      }
+    },
+    {
+      "id": "E2",
+      "name": "Drawing production",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Unchanged: titleblock_fill, block insertion and BOM export exist.",
+      "scope_and_limits": "No model views, sections, frame or readability check to execute.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3564",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3564"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: key drawing-production capabilities absent."
+      }
+    },
+    {
+      "id": "E3",
+      "name": "Domain loop",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): probe E3-connectivity-bom: validate_connectivity found exactly the 4 dangling endpoints of a constructed 2-line chain plus an isolated line; export_bom counted PUMP=3.",
+      "scope_and_limits": "Raised 1 -> 2. Connectivity covers LINE entities only; no room area, balloons, gates or uncertainty.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:3223",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3223"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py:1889",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L1889"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: ordinary checks only, LINE-only connectivity, no gating or uncertainty."
+      }
+    },
+    {
+      "id": "T1",
+      "name": "Behavioral regressions",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): `python -m pytest -p no:cacheprovider` collected 232 tests: 232 passed, 0 failed, 0 errors, 0 skipped. They test ezdxf backend behaviour with assertions on returned values, and the IPC JSON protocol and screenshot provider with mocks (interface evidence only).",
+      "scope_and_limits": "Raised 1 -> 2. The suite misses defects the probes found (batch on empty drawing, audit fix=true, no-op ok=true layout operations, unknown-gauge default), has no COM/IPC integration and little adversarial coverage.",
+      "source": [
+        {
+          "path": "tests/test_ezdxf_backend.py",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/tests/test_ezdxf_backend.py"
+        },
+        {
+          "path": "tests/test_ipc_protocol.py",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/tests/test_ipc_protocol.py"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/pytest.log",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/pytest.log"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: behavioural unit/interface tests pass, but boundary and adversarial coverage is thin and misses demonstrated defects."
+      }
+    },
+    {
+      "id": "T2",
+      "name": "Reproducibility",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Executed (strict pass, ezdxf backend, offline Docker): a fresh python:3.12-slim install via the README route (`pip install -e .`, unpinned, ezdxf 1.4.5 vs 1.4.3 in uv.lock) reproduced a passing suite offline.",
+      "scope_and_limits": "Raised 1 -> 2. The documented install ignores uv.lock; no fixed evaluator, environment record or hashes; the repository's own committed run did not pass.",
+      "source": [
+        {
+          "path": "uv.lock",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/uv.lock"
+        },
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/pyproject.toml"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/pytest.log",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/pytest.log"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: reproducible ordinary run, but no locked install path, evaluator or environment record."
+      }
+    },
+    {
+      "id": "T3",
+      "name": "Continuous verification",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No .github workflows; gh run list returns no runs.",
+      "scope_and_limits": "Unchanged.",
+      "source": [
+        {
+          "path": "(no .github directory)",
+          "url": "https://github.com/varavista/autocad-mcp/tree/7034dc444ba5b5680145a1eff52b4d83a262a75a"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no CI."
+      }
+    },
+    {
+      "id": "S1",
+      "name": "Defaults and boundaries",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Unchanged first-pass basis: stdio-only transport and a whitelist dispatcher in LISP.",
+      "scope_and_limits": "Executed (strict pass, ezdxf backend, offline Docker): probe S1-path-scope: drawing.save to a path outside the working directory wrote /tmp/escaped.dxf with ok=true (no path scope), and an existing file was overwritten. execute_lisp and setup_lisp need File IPC / COM and AutoCAD and were not executable here (on ezdxf execute_lisp refuses).",
+      "source": [
+        {
+          "path": "src/autocad_mcp/server.py:582",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/server.py#L582"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp:871",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/lisp-code/mcp_dispatch.lsp#L871"
+        },
+        {
+          "path": "src/autocad_mcp/backends/com_backend.py:529",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/com_backend.py#L529"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: dangerous execution and registry changes are on by default (source), and unscoped writes are reproduced."
+      }
+    },
+    {
+      "id": "S2",
+      "name": "Long tasks",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Unchanged first-pass basis: IPC lock, timeout, stale-file cleanup and structlog.",
+      "scope_and_limits": "The IPC lock/timeout/retry paths need Windows and AutoCAD and were not executable here. The MCP stdio run shows structured logging of tool errors.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/file_ipc.py:132",
+          "url": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/file_ipc.py#L132"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_output.txt",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_output.txt"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: mechanisms unevidenced; no cancellation or crash recovery."
+      }
+    }
+  ],
+  "declared_contract": "A unified Python MCP server (v5.1.0, stdio) exposing 22 tool groups (drawing, entity, layer, block, annotation, P&ID, view, query, search, geometry, select/bulk, validate, export, xref, layout, electrical NEC, connection, batch, NLP, Excel export) over three backends: File IPC (JSON files plus an AutoLISP dispatcher triggered in AutoCAD LT via PostMessage), Windows COM (AutoCAD 2018+, ZWCAD, GstarCAD, BricsCAD) and headless ezdxf. Backend auto-detection with runtime switching; operations a backend does not override return 'Not supported on this backend'.",
+  "evidence_used": [
+    "MCP_VALIDATION_REPORT.md (agent-written COM checklist against AutoCAD 2026, dated 2026-04-03; COM code traced unchanged except the added setup_lisp)",
+    "pytest_output.txt (committed Windows run; errored at the first test and stopped)",
+    "gh run list -R varavista/autocad-mcp: no runs; no .github directory",
+    "Pinned source read without execution",
+    "Strict pass: repository test suite run offline in Docker (232 passed)",
+    "Strict pass: 29 backend probes with independent ezdxf reopen, and an MCP stdio session"
+  ],
+  "serious_defects": [
+    {
+      "item": "F4",
+      "description": "Reproduced: ezdxf layout_page_setup, layout_viewport_set_scale, layout_viewport_lock and layout_batch_plot return ok=true without changing the saved drawing or producing a plot.",
+      "source": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3540",
+      "reproduction": "reproduced"
+    },
+    {
+      "item": "C2",
+      "description": "Reproduced: ezdxf drawing_purge returns ok=true, purged=true; the unused layer and block remain after save/reopen. COM setup_lisp reports lisp_loaded=true without confirmation (source only).",
+      "source": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L115",
+      "reproduction": "reproduced (purge); not executable here (setup_lisp, COM)"
+    },
+    {
+      "item": "E1",
+      "description": "Reproduced: electrical_voltage_drop with unknown gauge '999' substitutes 1.0 ohm/kft and returns ok=true with an acceptability verdict; nec_lookup returns ok=true for an unknown table.",
+      "source": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L3731",
+      "reproduction": "reproduced"
+    },
+    {
+      "item": "S1",
+      "description": "execute_lisp is on by default and loads arbitrary AutoLISP with SECURELOAD=0; setup_lisp writes AutoCAD startup registry entries via PowerShell -ExecutionPolicy Bypass (source). Reproduced on ezdxf: saves accept any path, outside any workspace, and overwrite existing files.",
+      "source": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/lisp-code/mcp_dispatch.lsp#L871",
+      "reproduction": "not executable here (execute_lisp/setup_lisp need AutoCAD); path scope reproduced"
+    },
+    {
+      "item": "C1",
+      "description": "COM batch_draw_* returns ok=true when items fail, no rollback (source). Same behaviour reproduced on ezdxf batch.draw_lines (1 of 2 created, ok=true, valid item kept).",
+      "source": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/com_backend.py#L1925",
+      "reproduction": "not executable here (COM); ezdxf analogue reproduced"
+    },
+    {
+      "item": "C3",
+      "description": "New: drawing.save to a .dwg path returns ok=true but writes ASCII DXF.",
+      "source": "https://github.com/varavista/autocad-mcp/blob/7034dc444ba5b5680145a1eff52b4d83a262a75a/src/autocad_mcp/backends/ezdxf_backend.py#L94",
+      "reproduction": "reproduced"
+    }
+  ],
+  "limitations": [
+    "Only the headless ezdxf backend and the stdio MCP interface were executed; COM and File IPC scores rest on first-pass source reading and the committed narrative report.",
+    "The install used the README route (unpinned), giving ezdxf 1.4.5 rather than the 1.4.3 in uv.lock; the defects found do not depend on that difference (API misuse and explicit no-op code).",
+    "The native evidence is an agent-written narrative without raw outputs, and its coverage table contains claims the source contradicts.",
+    "The COM save_as_dxf R12 reading (SaveAs(path, 1) = acR12_dxf) comes from the AutoCAD enumeration, not observed output.",
+    "Auxiliary scripts (lisps/jxp_shelf_detail.lsp, batch_tag.py, check_ipc.py) are outside the MCP tool contract and were not scored."
+  ],
+  "method": "strict: pinned source + committed evidence + executed headless tests and probes in an offline Docker container",
+  "first_pass_total": 21,
+  "executed_evidence": {
+    "image": "python:3.12-slim @ python@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159 (committed as rescore/varavista-autocad-mcp:1)",
+    "isolation": "docker --context desktop-linux; clone mounted read-only and copied in; runs with --network none --memory 2g --cpus 2 --pids-limit 512 --rm",
+    "install_command": "cp -r /src /work && cd /work && pip install -e . 'pytest>=9.0.2' 'pytest-asyncio>=1.3.0'  (pywin32 skipped by its win32 marker; resolved ezdxf 1.4.5, mcp 1.30.0, pytest 9.2.0, pytest-asyncio 1.4.1; uv.lock pins ezdxf 1.4.3)",
+    "test_command": "cd /work && python -m pytest -p no:cacheprovider -rfEs",
+    "test_counts": {
+      "collected": 232,
+      "passed": 232,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "note": "ezdxf behaviour tests plus mocked IPC-protocol and screenshot tests; no COM/IPC integration"
+    },
+    "probes": [
+      {
+        "id": "F1-ordinary",
+        "result": "pass"
+      },
+      {
+        "id": "F1-hatch-circle",
+        "result": "fails (no get_points on CIRCLE)"
+      },
+      {
+        "id": "F1-bad-handle",
+        "result": "pass"
+      },
+      {
+        "id": "F2-transforms",
+        "result": "pass"
+      },
+      {
+        "id": "F2-trim",
+        "result": "pass"
+      },
+      {
+        "id": "F2-unsupported",
+        "result": "offset/fillet/chamfer refuse"
+      },
+      {
+        "id": "F2-bad-handle",
+        "result": "pass"
+      },
+      {
+        "id": "F3-dims",
+        "result": "pass (decimal comma in rendered text)"
+      },
+      {
+        "id": "F4-layers-blocks",
+        "result": "pass"
+      },
+      {
+        "id": "F4-page-setup-noop",
+        "result": "false success"
+      },
+      {
+        "id": "F4-viewport-noop",
+        "result": "false success; viewport_create errors"
+      },
+      {
+        "id": "F4-wblock",
+        "result": "file written"
+      },
+      {
+        "id": "C1-batch-empty-drawing",
+        "result": "fail: refuses with 'No drawing open'"
+      },
+      {
+        "id": "C1-batch-partial",
+        "result": "ok=true with partial creation, no rollback"
+      },
+      {
+        "id": "C1-undo",
+        "result": "refuses (correct)"
+      },
+      {
+        "id": "C2-purge",
+        "result": "false success"
+      },
+      {
+        "id": "C3-overwrite",
+        "result": "overwrites without warning"
+      },
+      {
+        "id": "C3-bad-dir",
+        "result": "raises in backend"
+      },
+      {
+        "id": "C3-dwg-ext",
+        "result": "false success (DXF written as .dwg)"
+      },
+      {
+        "id": "C4-open-errors",
+        "result": "pass"
+      },
+      {
+        "id": "C4-audit",
+        "result": "fix=false pass; fix=true always fails"
+      },
+      {
+        "id": "C4-bad-units",
+        "result": "accepts invalid LUNITS 99"
+      },
+      {
+        "id": "E1-vd-ordinary",
+        "result": "pass"
+      },
+      {
+        "id": "E1-vd-unknown-gauge",
+        "result": "false success"
+      },
+      {
+        "id": "E1-unknown-table",
+        "result": "ok=true"
+      },
+      {
+        "id": "E1-unknown-size",
+        "result": "pass"
+      },
+      {
+        "id": "E3-connectivity-bom",
+        "result": "pass"
+      },
+      {
+        "id": "S1-execute-lisp-ezdxf",
+        "result": "refuses on ezdxf"
+      },
+      {
+        "id": "S1-path-scope",
+        "result": "unscoped write"
+      },
+      {
+        "id": "MCP-stdio",
+        "result": "server started, 23 tools listed, create/count/distance/save worked, saved file reopened with CIRCLE+LINE; bad input returned error text"
+      }
+    ],
+    "defect_reproduction": [
+      {
+        "defect": "F4 layout/viewport/plot ok=true no-ops",
+        "status": "reproduced"
+      },
+      {
+        "defect": "C2 purge false success",
+        "status": "reproduced"
+      },
+      {
+        "defect": "C2 setup_lisp unconditional success",
+        "status": "not executable here"
+      },
+      {
+        "defect": "E1 unknown-gauge silent default",
+        "status": "reproduced"
+      },
+      {
+        "defect": "S1 execute_lisp / setup_lisp defaults",
+        "status": "not executable here"
+      },
+      {
+        "defect": "S1 unscoped paths",
+        "status": "reproduced"
+      },
+      {
+        "defect": "C1 COM batch ok=true on item failure",
+        "status": "not executable here (COM); ezdxf analogue reproduced"
+      },
+      {
+        "defect": "F4/C3 COM save_as_dxf R12",
+        "status": "not executable here"
+      }
+    ],
+    "not_executed": [
+      "COM backend (pywin32/AutoCAD/ZWCAD/GstarCAD/BricsCAD) and File IPC backend (AutoCAD LT + mcp_dispatch.lsp): Windows-only, not run",
+      "execute_lisp, setup_lisp, plot_pdf, screenshots of a live CAD window, MagiCAD",
+      "Excel export and P&ID drawing were not probed"
+    ]
+  },
+  "evidence_paths": [
+    "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/pytest.log",
+    "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_output.txt",
+    "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probe_results.json",
+    "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_output.txt",
+    "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/mcp_stdio_results.json",
+    "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probes/probe_backend.py",
+    "examples/source_capability/results/2026-10-31-field/evidence/varavista-autocad-mcp/probes/probe_mcp_stdio.py"
+  ]
+}

@@ -1,0 +1,18 @@
+============================= test session starts ==============================
+platform linux -- Python 3.12.16, pytest-9.2.0, pluggy-1.7.0
+rootdir: /work
+configfile: pyproject.toml
+testpaths: tests
+plugins: asyncio-1.4.1, anyio-4.15.1
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 232 items
+tests/test_batch_find_and_tag.py ........                                [  3%]
+tests/test_equipment_find.py .......................                     [ 13%]
+tests/test_ezdxf_backend.py ............................................ [ 32%]
+................................                                         [ 46%]
+tests/test_find_text.py ...............                                  [ 52%]
+tests/test_ipc_protocol.py ......................................        [ 68%]
+tests/test_phase4_5.py ...............................................   [ 89%]
+tests/test_place_equipment_tag.py ................                       [ 96%]
+tests/test_screenshot.py .........                                       [100%]
+============================= 232 passed in 3.56s ==============================
