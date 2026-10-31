@@ -370,6 +370,32 @@ def _ps_quote(text: str) -> str:
     return "'" + "".join(ch * 2 if ch in PS_QUOTES else ch for ch in text) + "'"
 
 
+LAUNCH_TITLES = {VIEWER: ("正在打开 AgentCAD…", "Opening AgentCAD..."), DEMO: ("正在准备演示…", "Getting the demo ready...")}
+
+
+def _cmd_line(parts: list[str]) -> str:
+    """A command line for ``cmd /d /s /c``: every part in double quotes, so & ^ | < > and spaces in a path (an account
+    called R&D, a folder D:\\Drawings&Models) stay inside their argument. A trailing backslash is doubled so it
+    does not escape the closing quote."""
+    return " ".join('"' + (p + "\\" if p.endswith("\\") else p) + '"' for p in parts)
+
+
+def write_launcher(state: Path, command: str, args: list[str], launcher: str, action: tuple[str, ...]) -> Path:
+    """<root>/.agentcad/launch-<action>.ps1 (Windows): a small "Opening AgentCAD..." window instead of a console.
+    With uvx it first starts what is already downloaded (--offline, about a second) and downloads only if that fails;
+    a new version comes with the next run of the installer."""
+    fast = _cmd_line([command, "--offline", *args]) if launcher == "uvx" else None
+    full = _cmd_line([command, *args])
+    zh, en = LAUNCH_TITLES.get(action, LAUNCH_TITLES[VIEWER])
+    text = (STATIC / "launch.ps1").read_text("utf-8")
+    for key, value in (("__FAST__", _ps_quote(fast) if fast else "$null"), ("__FULL__", _ps_quote(full)),
+                       ("'__ZH__'", _ps_quote(zh)), ("'__EN__'", _ps_quote(en))):
+        text = text.replace(key, value)
+    path = state / f"launch-{action[0]}.ps1"
+    path.write_text(text, "utf-8-sig")  # Windows PowerShell reads a file without a BOM as ANSI: Chinese would break
+    return path
+
+
 def _desktop_quote(arg: str) -> str:
     """An Exec= argument of a .desktop file (freedesktop Desktop Entry spec): % is doubled, \\ " ` $ are escaped
     inside the quotes, and then every backslash is doubled again for the string-value escaping."""
@@ -390,18 +416,24 @@ def create_shortcut(root: Path, launcher: str, source: str | None = None, *, pla
     state = root / ".agentcad"
     if platform == "win32":
         ico = state / "agentcad.ico"
+        script_path = state / f"launch-{action[0]}.ps1"
+        # conhost --headless: no console window, also where Windows Terminal is the default (it ignores minimized)
+        target = str(Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32" / "conhost.exe")
+        target_args = subprocess.list2cmdline(["--headless", "powershell.exe", "-NoProfile", "-ExecutionPolicy",
+                                               "Bypass", "-WindowStyle", "Hidden", "-File", str(script_path)])
         script = ("[Console]::OutputEncoding = [Text.Encoding]::UTF8; "  # else a Chinese desktop path comes back as ????
                   "$d = [Environment]::GetFolderPath('Desktop'); $p = Join-Path $d " + _ps_quote(name + ".lnk") + "; "
                   "$had = Test-Path $p; "
                   + ("" if dry_run else
                      "$s = (New-Object -ComObject WScript.Shell).CreateShortcut($p); "
-                     f"$s.TargetPath = {_ps_quote(command)}; $s.Arguments = {_ps_quote(subprocess.list2cmdline(args))}; "
+                     f"$s.TargetPath = {_ps_quote(target)}; $s.Arguments = {_ps_quote(target_args)}; "
                      f"$s.WorkingDirectory = {_ps_quote(str(root))}; $s.IconLocation = {_ps_quote(str(ico))}; "
-                     f"$s.Description = {_ps_quote(name)}; $s.WindowStyle = 7; $s.Save(); ")
+                     f"$s.Description = {_ps_quote(name)}; $s.Save(); ")
                   + "Write-Output $had; Write-Output $p")
         if not dry_run:
             state.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(STATIC / "logo.ico", ico)
+            write_launcher(state, command, args, launcher, action)
         p = (runner or _run)([shutil.which("powershell") or "powershell.exe", "-NoProfile", "-NonInteractive",
                               "-Command", script])
         if p.returncode != 0:
