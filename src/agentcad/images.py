@@ -1,13 +1,17 @@
-"""Read-only image inspection for small callouts and section views in drawings."""
+"""Read-only image inspection for small callouts and section views in drawings, and pixel measurement by script."""
 from __future__ import annotations
 
 import base64
 import hashlib
+import shutil
+import tempfile
+import uuid
 from io import BytesIO
+from pathlib import Path
 
 from PIL import Image, ImageOps, UnidentifiedImageError
 
-from .errors import file_error, input_error
+from .errors import AgentCADError, file_error, input_error
 from .policy import Policy
 
 MAX_PIXELS = 32_000_000
@@ -17,7 +21,14 @@ FORMATS = {"PNG", "JPEG", "WEBP"}
 
 
 def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size: int, rotate: int = 0,
-                  dimensions: list[dict] | None = None) -> dict:
+                  dimensions: list[dict] | None = None, code: str | None = None) -> dict:
+    if code is not None:
+        if rotate or dimensions is not None:
+            raise input_error("BAD_IMAGE_SCRIPT", "code runs on the unrotated region: it takes no rotate or "
+                              "dimensions", hint="Rotate inside the script (np.rot90) if you need to")
+        from .scripting import check_script
+        policy.check_scripts_allowed()
+        check_script(code, "image")
     source = policy.resolve(path, must_exist=True, suffixes=(".png", ".jpg", ".jpeg", ".webp"))
     if isinstance(max_size, bool) or not isinstance(max_size, int) or not 64 <= max_size <= 2048:
         raise input_error("BAD_IMAGE_SIZE", "max_size must be an integer from 64 to 2048")
@@ -47,6 +58,12 @@ def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size:
             background.alpha_composite(rgba)
             crop = background.convert("RGB")
             extra = {}
+            if code is not None:
+                extra["script"], crop = _measure(policy, code, crop, (left, top))
+                if crop is None:  # numbers only: no picture to send
+                    return {"source": source.relative_to(policy.root).as_posix(),
+                            "source_sha256": hashlib.sha256(raw).hexdigest(), "source_size": [width, height],
+                            "region": list(box), **extra}
             if dimensions is not None:
                 from .image_dimensions import check_dimensions, evidence_preview
                 evidence = check_dimensions(dimensions, list(box), crop)
@@ -72,3 +89,31 @@ def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size:
             "source_sha256": hashlib.sha256(raw).hexdigest(), "source_size": [width, height],
             "region": list(box), "rotate": rotate, "preview_size": list(size), "pixel_scale": scale,
             "mime_type": "image/png", "image_base64": base64.b64encode(png).decode("ascii"), **extra}
+
+
+def _measure(policy: Policy, code: str, crop: Image.Image, origin: tuple[int, int]) -> tuple[dict, Image.Image | None]:
+    """Run an image script on the region at full source resolution: its output, and the image it returned (or
+    None). The job folder is a short path under the system temp directory (a deep workspace would pass Windows'
+    260-character limit), removed afterwards."""
+    from .scripting import run_image
+    stream = BytesIO()
+    crop.save(stream, format="PNG")
+    job = Path(tempfile.gettempdir()) / "agentcad-img" / uuid.uuid4().hex[:12]
+    try:
+        res = run_image(code, stream.getvalue(), origin, job, policy.script_timeout)
+        if not res["ok"]:
+            raise AgentCADError(res.get("code", "SCRIPT_FAILED"), f"The script raised {res.get('error')}",
+                                category="input",
+                                details={k: res[k] for k in ("script_lines", "stdout", "traceback") if res.get(k)},
+                                hint="Fix the script and run it again; `image` is read-only, draw on image.copy()")
+        picture = None
+        if res.get("image"):
+            with Image.open(job / "result.png") as im:
+                picture = im.convert("RGB")
+    finally:
+        shutil.rmtree(job, ignore_errors=True)
+    info = {"seconds": res["seconds"], "stdout": res.get("stdout", "")}
+    for k in ("result", "result_truncated", "image"):
+        if k in res:
+            info[k] = res[k]
+    return info, picture

@@ -187,3 +187,93 @@ def test_png_export_preserves_inline_image_through_sdk(ws, monkeypatch, profile)
     assert [block.type for block in result] == ["text", "image"]
     assert json.loads(result[0].text)["ok"]
     assert Image.open(BytesIO(base64.b64decode(result[1].data))).size == (120, 80)
+
+
+# --- measuring pixels with code ------------------------------------------------------------------------------
+
+EXTENTS = """
+blue = (image[:, :, 2] > 200) & (image[:, :, 0] < 50)
+ys, xs = np.nonzero(blue)
+print("x", xs.min() + origin[0], xs.max() + origin[0], "y", ys.min() + origin[1], ys.max() + origin[1])
+"""
+
+
+def scripted(ws):
+    drawing(ws / "drawing.png")
+    return Runtime(Policy(root=ws, allow_scripts=True, script_timeout=60))
+
+
+def test_code_measures_source_pixels_and_sends_no_picture_for_numbers(ws):
+    """The native BenchCAD runs measured drawings with numpy (silhouette extents, fitted ellipses) where the
+    AgentCAD runs could only look at crops: code runs on the region at source resolution, in source coordinates."""
+    runtime = scripted(ws)
+    original = (ws / "drawing.png").read_bytes()
+    r = runtime.inspect_image("drawing.png", [10, 5, 100, 50], 160, code=EXTENTS)
+    assert r["ok"], r
+    assert r["script"]["stdout"].split() == ["x", "20", "59", "y", "10", "29"]
+    assert "image_base64" not in r and r["region"] == [10, 5, 100, 50]
+    r = runtime.inspect_image("drawing.png", code="result = {'blue': ((image[:, :, 2] > 200) & (image[:, :, 0] < 50)).sum(), "
+                                                  "'mean': image.mean(axis=(0, 1))}")
+    assert r["ok"] and r["script"]["result"]["blue"] == 40 * 20 and len(r["script"]["result"]["mean"]) == 3
+    r = runtime.inspect_image("drawing.png", code="result = np.zeros(100000)")
+    assert r["script"]["result_truncated"] and len(r["script"]["result"]) == 16000
+    assert (ws / "drawing.png").read_bytes() == original
+    assert list(ws.iterdir()) == [ws / "drawing.png"]
+
+
+def test_code_can_return_an_overlay_image(ws):
+    runtime = scripted(ws)
+    code = ("from PIL import Image, ImageDraw\n"
+            "im = Image.fromarray(image.copy())\n"
+            "ImageDraw.Draw(im).line((0, 0, im.width - 1, 0), fill=(255, 0, 0))\n"
+            "result = im")
+    r = runtime.inspect_image("drawing.png", [20, 10, 100, 50], 160, code=code)
+    preview = decode(r)
+    assert r["script"]["image"] == [80, 40] and preview.size == (160, 80)
+    assert preview.getpixel((80, 0))[0] > 200 and preview.getpixel((10, 10)) == (0, 0, 255)
+    r = runtime.inspect_image("drawing.png", code="result = image[:, :, 2] > 200")  # a mask shows as an image
+    assert decode(r).getpixel((30, 15)) == (255, 255, 255)
+
+
+@pytest.mark.parametrize("code, error", [
+    ("open('drawing.png')", "SCRIPT_REJECTED"),
+    ("from PIL import Image\nImage.open('drawing.png')", "SCRIPT_REJECTED"),
+    ("np.save('x.npy', image)", "SCRIPT_REJECTED"),
+    ("import os", "SCRIPT_REJECTED"),
+    ("x = 1\nimage[0, 0] = 0", "SCRIPT_FAILED"),
+    ("x = 1\ny = x / 0", "SCRIPT_FAILED"),
+])
+def test_code_is_checked_and_its_errors_point_at_the_line(ws, code, error):
+    e = scripted(ws).inspect_image("drawing.png", code=code)["error"]
+    assert e["code"] == error, e
+    if error == "SCRIPT_FAILED":
+        assert e["details"]["script_lines"][-1].startswith("line 2:")
+
+
+def test_code_needs_scripts_and_takes_no_rotation(ws):
+    drawing(ws / "drawing.png")
+    e = Runtime(Policy(root=ws)).inspect_image("drawing.png", code=EXTENTS)["error"]
+    assert e["code"] == "SCRIPTS_DISABLED"
+    runtime = scripted(ws)
+    for kwargs in ({"rotate": 90}, {"dimensions": []}):
+        e = runtime.inspect_image("drawing.png", code=EXTENTS, **kwargs)["error"]
+        assert e["code"] == "BAD_IMAGE_SCRIPT"
+
+
+def test_mcp_returns_measurements_without_an_image(ws):
+    from mcp import ClientSession, StdioServerParameters
+    from mcp.client.stdio import stdio_client
+
+    drawing(ws / "drawing.png")
+
+    async def run():
+        env = {**os.environ, "AGENTCAD_ROOT": str(ws), "AGENTCAD_ALLOW_SCRIPTS": "1", "AGENTCAD_VIEWER": "0",
+               "AGENTCAD_TOOL_PROFILE": "full"}
+        params = StdioServerParameters(command=sys.executable, args=["-m", "agentcad.mcp_server"], env=env)
+        async with stdio_client(params) as (reader, writer):
+            async with ClientSession(reader, writer) as client:
+                await client.initialize()
+                return await client.call_tool("inspect_image", {"path": "drawing.png", "code": EXTENTS})
+    result = asyncio.run(run())
+    assert [block.type for block in result.content] == ["text"], result
+    assert json.loads(result.content[0].text)["script"]["stdout"].split()[1:3] == ["20", "59"]

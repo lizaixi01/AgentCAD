@@ -120,8 +120,10 @@ def test_no_shell_or_arbitrary_execution_surface():
     pkg = Path(agentcad.__file__).parent
     launchers = {pkg / "backends" / "autocad.py", pkg / "backends" / "freecad.py", pkg / "scripting.py",
                  pkg / "install.py"}
-    # the script runners execute an agent's script (run_script, opt-in), each in exactly one place
+    # the script runners execute an agent's script (run_script and inspect_image code, opt-in), each in exactly
+    # one place
     exec_sites = {pkg / "_script_runner.py": ["main"], pkg / "part" / "_cq_runner.py": ["main"],
+                  pkg / "_image_runner.py": ["main"],
                   pkg / "part" / "_fc_runner.py": ["_exec_freecad_script"]}
     for f in pkg.rglob("*.py"):
         text = f.read_text("utf-8")
@@ -141,9 +143,9 @@ def test_no_shell_or_arbitrary_execution_surface():
     assert fc.count("subprocess.run(") == 1 and 'subprocess.run([taskkill, "/F", "/T", "/PID", str(p.pid)]' in fc
     assert '"System32" / "taskkill.exe"' in fc
     scripting = (pkg / "scripting.py").read_text("utf-8")
-    # two launchers (ezdxf scripts, CadQuery scripts), each without a shell and with the time limit
-    assert scripting.count("shell=False") == 2 and "shell=True" not in scripting
-    assert scripting.count("timeout=timeout") == 2 and scripting.count("subprocess.run(") == 2
+    # three launchers (ezdxf scripts, CadQuery scripts, image scripts), each without a shell and with the time limit
+    assert scripting.count("shell=False") == 3 and "shell=True" not in scripting
+    assert scripting.count("timeout=timeout") == 3 and scripting.count("subprocess.run(") == 3
     # install.py runs only the user's own 'claude mcp' CLI and the file manager, from 'agentcad setup' (and its
     # --gui wizard). Modules that serve tools may import nothing from it but ensure_workspace, nor the wizard.
     inst = (pkg / "install.py").read_text("utf-8")

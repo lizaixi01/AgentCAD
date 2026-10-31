@@ -8,6 +8,7 @@ than letting the agent edit files directly, ``Runtime.run_script`` takes Python 
   3. hands the result back to the runtime, which re-reads it strictly and commits it like any batch: checkpoint,
      journal (with the full script), diff, independent validation, optional ``strict``.
 3D parts (``.FCStd``) take CadQuery or FreeCAD Part scripts that build a solid (``LANGUAGES``, part/service.py).
+``inspect_image(..., code=...)`` takes read-only numpy scripts that measure an image's pixels (images.py).
 It is disabled unless the policy allows scripts (``AGENTCAD_ALLOW_SCRIPTS=1``). The checks guard against mistakes;
 they are not a security sandbox: only enable scripts for agents you would let run Python as your user.
 """
@@ -31,6 +32,7 @@ BANNED_ATTRS = {"saveas", "save", "readfile", "readzip", "write", "write_text", 
                 "system", "popen", "spawn", "odafc"}
 RUNNER = Path(__file__).with_name("_script_runner.py")
 CQ_RUNNER = Path(__file__).parent / "part" / "_cq_runner.py"
+IMAGE_RUNNER = Path(__file__).with_name("_image_runner.py")
 
 # 3D part scripts (run_script on a .FCStd): the program builds a solid and sets ``result``; the runtime stores it.
 # Each runs in a process of its own: CadQuery in a child of this interpreter (cadquery is the optional extra
@@ -63,6 +65,12 @@ LANGUAGES: dict[str, dict] = {
     "freecad": {"imports": _DATA | {"Part", "FreeCAD", "numpy"}, "attrs": _FILE_ATTRS,
                 "hint": "Build the part with FreeCAD's Part module (`Part`, `App`, `Vector` are given) and set "
                         "`result` to a Part.Shape; do not open, save or export documents or files."},
+    # numpy (and scipy where installed) on the pixels of one image; PIL to draw an overlay (Image.fromarray,
+    # ImageDraw): the file names above keep it from opening or saving files
+    "image": {"imports": _DATA | {"numpy", "scipy", "PIL"}, "attrs": _FILE_ATTRS,
+              "hint": "Measure the pixels of `image` (numpy uint8, height x width x 3; source pixel = local + "
+                      "`origin`) and print the numbers; optionally set `result` to an image array or a JSON "
+                      "value. Do not open or save files."},
 }
 
 
@@ -143,6 +151,31 @@ def run_cadquery(code: str, job: Path, timeout: float) -> dict[str, Any]:
         raise AgentCADError("SCRIPT_TIMEOUT", f"The script ran longer than {timeout:g} s and was stopped",
                             category="input", hint="Simplify the script (CadQuery itself takes a few seconds to "
                                                    "load), or raise AGENTCAD_SCRIPT_TIMEOUT")
+    res_file = job / "result.json"
+    if not res_file.is_file():
+        raise AgentCADError("SCRIPT_CRASHED", "The script process ended without a result", category="internal",
+                            details={"returncode": proc.returncode,
+                                     "stderr": proc.stderr.decode("utf-8", "replace")[-2000:]})
+    res = json.loads(res_file.read_text(encoding="utf-8"))
+    res["seconds"] = round(time.perf_counter() - t0, 3)
+    return res
+
+
+def run_image(code: str, crop: bytes, origin: tuple[int, int], job: Path, timeout: float) -> dict[str, Any]:
+    """Run an image-measuring script (already checked) on ``crop`` (PNG bytes of the region whose top-left source
+    pixel is ``origin``) in a child process. On success with an image result ``job / 'result.png'`` holds it."""
+    job.mkdir(parents=True, exist_ok=True)
+    (job / "script.py").write_text(code, encoding="utf-8")
+    (job / "image.png").write_bytes(crop)
+    (job / "job.json").write_text(json.dumps({"origin": list(origin)}), encoding="utf-8")
+    t0 = time.perf_counter()
+    try:
+        proc = subprocess.run([sys.executable, "-I", str(IMAGE_RUNNER), str(job)], cwd=job, shell=False,
+                              stdin=subprocess.DEVNULL, capture_output=True, timeout=timeout)
+    except subprocess.TimeoutExpired:
+        raise AgentCADError("SCRIPT_TIMEOUT", f"The script ran longer than {timeout:g} s and was stopped",
+                            category="input", hint="Measure a smaller region, or vectorise loops over pixels "
+                                                   "with numpy")
     res_file = job / "result.json"
     if not res_file.is_file():
         raise AgentCADError("SCRIPT_CRASHED", "The script process ended without a result", category="internal",

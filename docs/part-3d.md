@@ -69,6 +69,24 @@ AgentCAD 用同一组工具处理二维图纸（`.dxf`）和三维零件（`.FCS
 另一个交点当成尖端。候选线也可能是其他尺寸、剖面线或文字；探测不自动选择端点或修正数值，
 低对比度或没有候选时会明确报告，仍需人工/模型核对原图。
 
+### 用脚本测量像素
+
+肉眼估读像素容易偏几个百分点。`inspect_image` 的 `code` 参数（需要 `AGENTCAD_ALLOW_SCRIPTS=1`）在所选区域的
+原图分辨率像素上运行一段 numpy 程序：`image` 是只读的 `uint8` 数组（高 × 宽 × 3），`origin` 是区域左上角，
+原图坐标 = 局部坐标 + `origin`。可用 numpy（`np`）、装了的话 scipy，以及 PIL 的 `Image.fromarray`/`ImageDraw`
+画叠加图。程序打印测得的数，或者把 `result` 设为一张图（替代裁剪图返回）或一个 JSON 值；只返回数字时不发图片。
+例如求一个视图的轮廓范围：
+
+```python
+dark = (image.min(axis=2) < 128)
+ys, xs = np.nonzero(dark)
+print("x", xs.min() + origin[0], xs.max() + origin[0], "y", ys.min() + origin[1], ys.max() + origin[1])
+```
+
+同样可以对圆形边线的投影拟合椭圆、反求视图的相机方向，再用相同的程序测量自己的预览图做对比。脚本与
+`run_script` 一样在单独进程里运行、有时限，不能打开或保存文件；它不改动工作区（临时作业目录在系统临时目录下，
+结束即删除）。和 `dimensions` 一样，像素只是证据，尺寸仍以图纸标注为准。
+
 建模前保留标注 id、原图哈希、视图、两端点及对应表面；将图像 +x 向右、+y 向下的层级
 统一映射到 CAD 坐标。复核中若改变表面归属，应重新提交相连的整组标注并说明哪条界线
 改变了判断，不能只凭再次裁剪数字就改写验收目标。最终用同一组已确认的表面对照
@@ -173,7 +191,13 @@ apply_operations("part.FCStd", [{"op": "fillet", "edges": {"type": "line", "dire
 - Body 之外带几何的对象（`GEOMETRY_OUTSIDE_BODY`，错误；脚本基体所在的 `ScriptSolid` 除外）。
 
 需求：`bbox {size}`、`volume`/`area {value, rel_tolerance}`、`hole {diameter, count}`（按内圆柱面识别、同轴合并）、
-`hole_count`、`solid_count`、`parameter {name, value}`、`center_of_mass`、`feature_count {feature_type, count|min}`。零件参数按零件单位报告和比较，几何（体积、尺寸、包围盒）一律按 mm。
+`hole_count`、`solid_count`、`topology {bodies, genus, voids}`、`parameter {name, value}`、`center_of_mass`、
+`feature_count {feature_type, count|min}`。
+
+验证结果的 `shape.topology` 给出实体的 Betti 数：`bodies`（实体数）、`genus`（贯穿孔和环柄数）、`voids`
+（封闭空腔数），由 B-rep 按 Euler–Poincaré 公式逐个壳体计算，不经网格。体积和外形都对、亏格却多 1，说明某个
+筋或凸台意外闭合成了环，或者打通了图纸上没有的孔；亏格少了则是漏了通孔。零件改动前后的 `changes.shape` 也列出
+`topology` 的变化。壳体不闭合或边界自接触（孔与外轮廓只在一点相切）时读不出亏格，`topology` 为 null。零件参数按零件单位报告和比较，几何（体积、尺寸、包围盒）一律按 mm。
 
 ### 局部厚度与表面间距
 

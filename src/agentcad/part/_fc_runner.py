@@ -1488,7 +1488,32 @@ def shape_summary(sh):
     except Exception:
         out["center_of_mass"] = None
     out["holes"] = holes(sh)
+    out["topology"] = topology(sh)
     return out
+
+
+def topology(sh):
+    """Betti numbers of the solids, read off the B-rep: bodies (b0, solids), genus (b1: through-holes and handles,
+    summed over every shell) and voids (b2: sealed inner shells). None when a shell's counts give no genus (an open
+    shell, or a boundary that touches itself: a hole meeting the outline in one point).
+
+    Per closed shell, Euler-Poincare: V - E + F - R = 2 - 2g, where R counts the faces' inner wires and E leaves out
+    degenerate edges (a sphere's pole, a cone's apex). A seam is one edge used twice by its face: a cylinder's side
+    is a disc cut along it, so it needs no special case. A part whose genus differs from the drawing's has a
+    tunnel the drawing lacks (a rib that closes a loop) or misses a through-hole: neither shows in the volume."""
+    genus = voids = 0
+    for so in sh.Solids:
+        shells = so.Shells
+        voids += max(0, len(shells) - 1)
+        for shell in shells:
+            if not shell.isClosed():
+                return None
+            chi = (len(shell.Vertexes) - sum(1 for e in shell.Edges if not e.Degenerated) + len(shell.Faces)
+                   - sum(len(f.Wires) - 1 for f in shell.Faces))
+            if chi > 2 or chi % 2:
+                return None
+            genus += (2 - chi) // 2
+    return {"bodies": len(sh.Solids), "genus": genus, "voids": voids}
 
 
 def holes(sh):
@@ -1688,7 +1713,7 @@ REQ_KEYS = {
     "face_distance": {"from", "to", "value", "tolerance"},
     "bbox": {"size", "min", "max", "tolerance", "any_orientation"}, "volume": {"value", "tolerance", "rel_tolerance"},
     "area": {"value", "tolerance", "rel_tolerance"}, "hole": {"diameter", "count", "tolerance"},
-    "hole_count": {"count"}, "solid_count": {"count"}, "parameter": {"name", "value", "tolerance"},
+    "hole_count": {"count"}, "solid_count": {"count"}, "topology": {"bodies", "genus", "voids"}, "parameter": {"name", "value", "tolerance"},
     "center_of_mass": {"value", "tolerance"}, "feature_count": {"feature_type", "count", "min"},
 }
 
@@ -1696,7 +1721,7 @@ REQ_KEYS = {
 REQ_NEEDS = {"bbox": [("size", "min", "max")], "volume": [("value",)], "area": [("value",)],
              "face_distance": [("from",), ("to",), ("value",)],
              "hole": [("diameter",)], "hole_count": [("count",)], "solid_count": [("count",)],
-             "parameter": [("name",)], "center_of_mass": [("value",)], "feature_count": [("count", "min")]}
+             "topology": [("bodies", "genus", "voids")], "parameter": [("name",)], "center_of_mass": [("value",)], "feature_count": [("count", "min")]}
 
 
 def check_requirements(doc, reqs):
@@ -1775,6 +1800,12 @@ def check_requirements(doc, reqs):
             out.update(expected=int(r["count"]), actual=n, passed=n == int(r["count"]))
         elif t == "solid_count":
             out.update(expected=int(r["count"]), actual=s["solids"], passed=s["solids"] == int(r["count"]))
+        elif t == "topology":
+            want = {k: int(r[k]) for k in ("bodies", "genus", "voids") if r.get(k) is not None}
+            act = s["topology"]
+            out.update(expected=want, actual=act, passed=act is not None and all(act[k] == v for k, v in want.items()))
+            if act is None:
+                out["message"] = "The B-rep gives no genus (an open shell, or a boundary touching itself)"
         elif t == "parameter":
             v = params.get(r.get("name"))
             act = None if v is None else v["value"]
@@ -2159,7 +2190,8 @@ def readback(path, ref=None):
     its own STEP differed by up to 5e-4 of it on swept B-spline solids (BenchCAD runs, where OCC's volume of such a
     solid was 2% off a fine mesh), so volumes match within 1e-3. Exact sizes came back within 1e-11 mm."""
     got = Part.read(path)
-    out = {k: v for k, v in shape_summary(got).items() if k in ("valid", "solids", "faces", "volume", "size", "bbox")}
+    out = {k: v for k, v in shape_summary(got).items() if k in ("valid", "solids", "faces", "volume", "size", "bbox",
+                                                                      "topology")}
     iges = Path(path).suffix.lower() in (".iges", ".igs")
     if iges:
         out["note"] = "IGES stores faces, not solids: compared by faces, volume and size"
