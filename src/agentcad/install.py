@@ -554,6 +554,53 @@ def create_shortcut(root: Path, launcher: str, source: str | None = None, *, pla
     return {"status": ("would be " + status) if dry_run else status, "path": str(path)}
 
 
+# --- the "agentcad" skill: /agentcad in Claude Code, $agentcad in Codex -------------------------------------------
+SKILL_MARK = "<!-- written by agentcad setup -->"
+SKILL = """---
+name: agentcad
+description: Check that AgentCAD (CAD drawings and 3D parts) is connected, name this conversation in AgentCAD's live viewer, and give the user the viewer link. Use when the user types /agentcad or $agentcad, or asks whether AgentCAD works.
+---
+""" + SKILL_MARK + """
+
+# AgentCAD: check the connection
+
+1. Call the AgentCAD tool `agentcad_status` (shown as `mcp__agentcad__agentcad_status` in Claude Code, or under the
+   `agentcad` server in Codex). Pass `label`: two to five words for what the user is working on, or "AgentCAD" if
+   there is no task yet.
+2. If it answers, reply briefly in the user's language, for example:
+   - "✓ AgentCAD 已连接" / "✓ AgentCAD is connected"
+   - where drawings are saved (`workspace`)
+   - the live viewer link (`viewer_url`), where they can watch each change
+   - one sentence they could try, such as "画一块 200×100 的安装板，四个角倒圆 R8，四个 Ø12 的孔离边 15 毫米。"
+   With only `search_tools`, `tool_schema` and `call_tool` (AgentCAD's short tool list), use
+   `call_tool(name="agentcad_status", arguments={"label": ...})`: that is connected too.
+3. If there is no AgentCAD tool at all, AgentCAD is not connected to this app. Say so plainly and how to fix it:
+   run the AgentCAD installer (or open it again and tap "Already installed? Check it", then "Fix it for me"), then
+   start a new conversation.
+"""
+
+
+def skill_path(client: str) -> Path | None:
+    home = Path.home()
+    if client == "claude-code":
+        return home / ".claude" / "skills" / NAME / "SKILL.md"
+    if client == "codex":
+        return Path(os.environ.get("CODEX_HOME") or home / ".codex") / "skills" / NAME / "SKILL.md"
+    return None
+
+
+def write_skill(client: str, dry_run: bool = False) -> str | None:
+    """Install the agentcad skill for Claude Code or Codex; leaves a SKILL.md the user wrote alone."""
+    path = skill_path(client)
+    if path is None:
+        return None
+    if path.is_file() and SKILL_MARK not in path.read_text("utf-8", "replace"):
+        return None
+    if not dry_run:
+        _write(path, SKILL)
+    return str(path)
+
+
 # --- setup -----------------------------------------------------------------------------------------------------
 @dataclass
 class SetupResult:
@@ -683,6 +730,13 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
             rec.update(status="error", code="TIMEOUT", message=str(exc))
         except (OSError, ValueError, subprocess.SubprocessError) as exc:
             rec.update(status="error", code="WRITE_FAILED", message=str(exc))
+        if rec["status"] != "error":
+            try:
+                skill = write_skill(client, dry_run)
+                if skill:
+                    rec["skill"] = skill
+            except OSError:  # the connection works without it
+                pass
         res.clients.append(rec)
         tell(client, "error" if rec["status"] == "error" else "done", rec)
     if shortcut:  # a convenience: a failure is reported, but does not fail the setup

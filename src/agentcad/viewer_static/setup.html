@@ -202,6 +202,7 @@ const T = {
     restart_claude_desktop: "Quit Claude completely (also the icon next to the clock) and open it again.",
     restart_cursor: "Restart Cursor. If AgentCAD is switched off, turn it on in Settings → MCP.",
     sayThis: "Then say one of these to your assistant:",
+    checkConn: "To check it is connected, type /agentcad in Claude Code, or $agentcad in Codex.",
     p1: "Draw a 200 × 100 mounting plate with R8 corners and four 12 mm holes 15 mm from the edges. Save it as plate.dxf and show me a picture.",
     p2: "Make a flange: 120 mm across, 14 mm thick, with six 12 mm bolt holes on a 90 mm circle. Show me a preview.",
     p3: "Make the plate 240 wide and tell me what changed.",
@@ -254,6 +255,7 @@ const T = {
     restart_claude_desktop: "完全退出 Claude（包括屏幕右下角托盘里的图标），再重新打开。",
     restart_cursor: "重启 Cursor。如果 AgentCAD 是关着的，在 设置 → MCP 里把它打开。",
     sayThis: "然后对助手说一句（点「复制」再粘贴过去）：",
+    checkConn: "想确认连上了？在 Claude Code 里输入 /agentcad，在 Codex 里输入 $agentcad。",
     p1: "画一块 200×100 的安装板，四个角倒圆 R8，四个 Ø12 的孔离边 15 毫米。保存为 plate.dxf，并给我看一张图。",
     p2: "做一个法兰：直径 120 毫米、厚 14 毫米，在直径 90 的圆上均布六个 Ø12 螺栓孔。给我看预览。",
     p3: "把安装板改成 240 宽，告诉我改了什么。",
@@ -464,7 +466,8 @@ function renderProgress() {
   const ok = state.phase === "done";
   const res = state.result || {};
   const good = (res.clients || []).filter(c => c.status !== "error");
-  const todo = good.map(c => `<li>${esc(t("restart_" + c.client.replace("-", "_")))}</li>`).join("");
+  const todo = good.map(c => `<li>${esc(t("restart_" + c.client.replace("-", "_")))}</li>`).join("") +
+    (good.some(c => c.client === "claude-code" || c.client === "codex") ? `<li>${esc(t("checkConn"))}</li>` : "");
   const prompts = ["p1", "p2", "p3"].map(k => `<div class="prompt"><q>${esc(t(k))}</q><button class="btn small" type="button" data-copy="${k}">${esc(t("copy"))}</button></div>`).join("");
   card.innerHTML = demo() + dots(ok ? 3 : 1) + `<div class="done"><div class="yay"><div class="ring ${ok ? "" : "bad"} pop">${ok ? ICON.check : ICON.x}</div>
       <h1>${esc(ok ? t("doneTitle") : t("errTitle"))}</h1><p class="lead">${esc(ok ? t("doneLead") : t("errLead"))}</p></div>

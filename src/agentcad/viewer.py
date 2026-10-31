@@ -19,6 +19,7 @@ Files are read into a content-addressed cache outside the workspace before they 
     GET /api/png?path=&v=         3D part: the shaded preview grid (fallback when WebGL is unavailable)
     GET /api/thumb?path=&v=       small picture for the file list and before/after (2D: SVG, 3D: iso PNG)
     GET /api/activity             recent progress events the runtime wrote (progress.py), oldest first
+    GET /api/sessions             the assistants connected now (sessions.py): app, conversation label, last activity
     GET /api/export?path=&v=      a self-contained HTML snapshot (picture + change history) to send to someone
     GET /api/events?progress=1    SSE: {"drawing", "kind": changed|added|removed, "id"}; progress=1 adds
                                   {"kind": "activity", "activity": <progress event>}
@@ -631,6 +632,9 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                     return self._json({"ok": False, "error": {"code": "NOT_FOUND"}}, 404)
                 if u.path == "/api/activity":
                     return self._json({"ok": True, "events": list(feed.activity), "last_event": feed.last_id})
+                if u.path == "/api/sessions":
+                    from .sessions import list_sessions
+                    return self._json({"ok": True, "sessions": list_sessions(ws.policy.root)})
                 if u.path == "/api/ping":
                     return self._json({"ok": True, "root": str(ws.policy.root)})
                 if u.path == "/api/drawings":

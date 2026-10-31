@@ -1504,7 +1504,8 @@ def _changes(res: dict[str, Any]) -> dict[str, Any]:
 
 def _journal_line(r: dict[str, Any]) -> dict[str, Any]:
     """A journal record without its payload: what ran, the outcome, change counts and the checkpoint."""
-    line = {k: r[k] for k in ("seq", "ts", "tool", "ok", "label", "checkpoint_before") if r.get(k) is not None}
+    line = {k: r[k] for k in ("seq", "ts", "tool", "ok", "label", "client", "conversation", "checkpoint_before")
+            if r.get(k) is not None}
     ops = r.get("operations") or r.get("plan")
     if ops:
         counts: dict[str, int] = {}
