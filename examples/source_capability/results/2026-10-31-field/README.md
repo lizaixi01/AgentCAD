@@ -3,8 +3,9 @@
 The [source-capability recheck](../2026-10-31-recheck/README.md) scored AgentCAD and AutoCAD MCP Pro
 under the frozen [local rubric v1](../../../../docs/source-capability-rubric.md). The other public
 servers on the README board had only U-C4N's July 2026 scores, which were assigned by Pro's author with
-different scoring detail. This review scores them under the same rubric, by the same strict method: read
-the pinned source and committed evidence, then run the product's own tests and targeted probes.
+different scoring detail. This review scores them under the same rubric, by a comparable strict method:
+read the pinned source and committed evidence, then run the product's own tests and targeted probes. The
+protocol differs from the recheck in the ways listed under Method.
 
 | Repository | Pinned commit | Commit date | F /25 | C /20 | B /15 | E /15 | T /15 | S /10 | **Total** | Source-only pass | U-C4N, 2026-07 |
 |---|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
