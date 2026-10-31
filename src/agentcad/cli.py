@@ -130,10 +130,10 @@ def build_parser() -> argparse.ArgumentParser:
     for name, hlp in (("checkpoints", "List checkpoints"), ("recover", "Recover from a crash / corrupted file")):
         s = sub.add_parser(name, help=hlp); s.add_argument("path")
 
-    s = sub.add_parser("export", help="Export to dxf (other version, incl. R12) / svg / json / pdf / dwg")
+    s = sub.add_parser("export", help="Export to dxf (other version, incl. R12) / svg / json / pdf / png / dwg")
     s.add_argument("path"); s.add_argument("output"); s.add_argument("--format", default=None)
     s.add_argument("--dxf-version"); s.add_argument("--overwrite", action="store_true")
-    s.add_argument("--layout", help="pdf: 'Model', a paper layout, or '*' (default: paper layouts with content)")
+    s.add_argument("--layout", help="pdf: 'Model', a paper layout, or '*' (default: paper layouts with content); png: one layout")
     s.add_argument("--paper", help="pdf: A0-A4 or auto"); s.add_argument("--scale", type=float,
                                                                          help="pdf: paper mm per drawing unit")
     s.add_argument("--orientation", default="auto"); s.add_argument("--monochrome", action="store_true")

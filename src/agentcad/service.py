@@ -32,7 +32,7 @@ from .policy import Policy
 from .store import DrawingStore, busy_error, finalize, read_dxf, now, sha256_file
 from .units import UNITS, normalize_unit, unit_from_insunits
 from .validate import validate_file
-from .validate.checks import MIN_PRINTED_TEXT
+from .validate.checks import MIN_PRINTED_TEXT, PLOT_TEXT_CODES
 
 DXF_VERSIONS = {"R12": "AC1009", "R2000": "AC1015", "R2004": "AC1018", "R2007": "AC1021", "R2010": "AC1024",
                 "R2013": "AC1027", "R2018": "AC1032"}
@@ -989,23 +989,27 @@ class Runtime:
         their page setup; model space at ``scale`` (paper mm per drawing unit) or the largest standard scale that
         fits ``paper`` (A0-A4 or 'auto').
 
+        png: a raster of one layout drawn like the pdf (``layout``, default as for pdf; ``image_size`` the longer
+        side in pixels, default 1600), to look at what was drawn.
+
         3D parts (.FCStd): step, iges, brep, stl, obj, or png (shaded preview: ``views``, ``image_size``,
         ``fit``; ``reference``: compare with a reference image of the same views; see part.service.export)."""
         if table not in {"entities", "pid_lines", "bom"} or table != "entities" and format.lower() not in {"csv", "xlsx"}:
             raise input_error("INVALID_TABLE", "pid_lines and bom tables require CSV or XLSX export")
         if part.is_part(path):
             return part.export(self, path, output, format, overwrite, views, image_size, fit, reference)
-        if views or image_size or fit or reference:
-            raise input_error("UNKNOWN_PARAM", "views, image_size, fit and reference apply to png previews of 3D "
-                                               "parts")
+        if views or fit or reference:
+            raise input_error("UNKNOWN_PARAM", "views, fit and reference apply to png previews of 3D parts")
+        if image_size and format.lower() != "png":
+            raise input_error("UNKNOWN_PARAM", "image_size applies to png export")
         self.policy.check_write()
         p, store = self._drawing(path)
         fmt = format.lower()
         suffix = {"dxf": ".dxf", "svg": ".svg", "json": ".json", "dwg": ".dwg", "pdf": ".pdf",
-                  "csv": ".csv", "xlsx": ".xlsx"}.get(fmt)
+                  "csv": ".csv", "xlsx": ".xlsx", "png": ".png"}.get(fmt)
         if suffix is None:
             raise input_error("UNSUPPORTED_FORMAT", f"Unsupported export format {format!r}",
-                              hint="dxf | svg | json | pdf | dwg | csv | xlsx")
+                              hint="dxf | svg | json | pdf | png | dwg | csv | xlsx")
         out = self.policy.resolve(output, suffixes=(suffix,))
         if out.exists() and not overwrite:
             raise input_error("FILE_EXISTS", f"{output} exists", hint="overwrite=true")
@@ -1038,7 +1042,8 @@ class Runtime:
                 raise input_error("INVALID_ENUM", "orientation must be auto | landscape | portrait")
             res = plot.plot_pdf(doc, out, _plot_layouts(doc, layout), paper=paper, orientation=orientation,
                                 scale=scale, monochrome=monochrome, title=p.stem)
-            warn = [i for i in validate_file(p)["issues"] if i["code"] == "PRINTED_TEXT_TOO_SMALL"]
+            warn = [i for i in validate_file(p)["issues"]
+                    if i["code"] == "PRINTED_TEXT_TOO_SMALL" or i["code"] in PLOT_TEXT_CODES]
             small = _min_model_text(doc) if any(pg["layout"] == "Model" for pg in res["pages"]) else None
             for pg in res["pages"]:
                 if small and pg["layout"] == "Model" and small * pg["scale"] < MIN_PRINTED_TEXT - 1e-9:
@@ -1048,6 +1053,16 @@ class Runtime:
                                  "hint": "Plot at a larger scale or paper, or enlarge the text"})
             store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": "pdf"})
             return {"drawing": self._rel(p), "output": self._rel(out), "format": "pdf", **res,
+                    **({"warnings": warn[:20]} if warn else {})}
+        if fmt == "png":
+            from . import plot
+            names = _plot_layouts(doc, layout)
+            if layout == "*" and len(names) > 1:
+                raise input_error("MULTIPLE_LAYOUTS", "A png shows one layout", hint=f"layout = one of {names}")
+            res = plot.plot_png(doc, out, names[0], size=image_size or 1600, monochrome=monochrome)
+            warn = [i for i in validate_file(p)["issues"] if i["code"] in PLOT_TEXT_CODES]
+            store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": "png"})
+            return {"drawing": self._rel(p), "output": self._rel(out), "format": "png", **res,
                     **({"warnings": warn[:20]} if warn else {})}
         finalize(doc)
         out.parent.mkdir(parents=True, exist_ok=True)

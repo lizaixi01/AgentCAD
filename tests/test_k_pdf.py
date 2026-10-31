@@ -78,3 +78,43 @@ def test_pdf_respects_sandbox_and_overwrite(rt, ws, plate):
     ok(rt.export_drawing(plate, "a.pdf", "pdf"))
     assert rt.export_drawing(plate, "a.pdf", "pdf")["error"]["code"] == "FILE_EXISTS"
     assert rt.export_drawing(plate, "a.dxf", "pdf")["error"]["code"] == "BAD_EXTENSION"
+
+
+def test_png_preview_of_a_2d_drawing(rt, ws, blank):
+    from PIL import Image
+    # a square hatch with a square hole: even-odd fill keeps the hole white, as for glyph counters
+    ok(rt.apply_operations(blank, [
+        {"op": "add_hatch", "points": [[0, 0], [100, 0], [100, 100], [0, 100]],
+         "holes": [[[30, 30], [70, 30], [70, 70], [30, 70]]], "color": 1},
+        {"op": "add_line", "start": [0, -20], "end": [100, -20]}]))
+    r = ok(rt.export_drawing(blank, "v.png", "png"))
+    assert r["layout"] == "Model" and max(r["pixels"]) == 1600 and not r["empty"]
+    with Image.open(ws / "v.png") as im:
+        assert im.size == tuple(r["pixels"])
+        w, h = im.size
+        hole = im.getpixel((w // 2, round(h * 0.4)))  # the hole is in the upper part: the line is below the square
+        ring = im.getpixel((round(w * 0.15), round(h * 0.4)))
+    assert hole == (255, 255, 255) and ring[0] > 200 and ring[1] < 60
+    assert max(ok(rt.export_drawing(blank, "s.png", "png", image_size=300))["pixels"]) == 300
+    assert rt.export_drawing(blank, "v.pdf", "pdf", image_size=300)["error"]["code"] == "UNKNOWN_PARAM"
+    assert rt.export_drawing(blank, "v.png", "png")["error"]["code"] == "FILE_EXISTS"
+
+
+def test_text_that_does_not_plot_as_written_is_reported(rt, ws, blank):
+    from agentcad.plot import font_cmap
+    if font_cmap("arial.ttf") is None:
+        pytest.skip("no TrueType font to check against")
+    nowhere = chr(0x10FFFD)  # private use, plane 16: no font has a glyph for it
+    r = ok(rt.apply_operations(blank, [
+        {"op": "create_text_style", "name": "TT", "font": "arial.ttf"},
+        {"op": "add_text", "text": f"20 {nowhere}s", "insert": [0, 0], "height": 5, "style": "TT", "tag": "box"},
+        {"op": "add_text", "text": "e^(-jx)", "insert": [0, 10], "height": 5, "tag": "caret"},
+        {"op": "add_text", "text": "a^ b", "insert": [0, 20], "height": 5}]))  # '^ ' is a literal caret
+    issues = {i["code"]: i for i in r["validation"]["issues"]}
+    boxes = issues["TEXT_PLOTS_AS_BOXES"]
+    assert boxes["details"]["characters"] == [nowhere] and len(boxes["entities"]) == 1
+    assert len(issues["TEXT_CARET_CODE"]["entities"]) == 1
+    warned = {w["code"] for w in ok(rt.export_drawing(blank, "t.pdf", "pdf"))["warnings"]}
+    assert {"TEXT_PLOTS_AS_BOXES", "TEXT_CARET_CODE"} <= warned
+    warned = {w["code"] for w in ok(rt.export_drawing(blank, "t.png", "png"))["warnings"]}
+    assert {"TEXT_PLOTS_AS_BOXES", "TEXT_CARET_CODE"} <= warned
