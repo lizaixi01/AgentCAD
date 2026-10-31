@@ -199,6 +199,57 @@ def _text_items(msp):
             yield a, a.dxf.get("style", "Standard"), a.dxf.text
 
 
+PLOT_TEXT_CODES = ("TEXT_PLOTS_AS_BOXES", "TEXT_CARET_CODE")
+CARET_RE = re.compile(r"\^[^ ]")
+
+
+def plot_text_issues(doc: Drawing, layout: str | None = None) -> list[dict[str, Any]]:
+    """Text the PDF / PNG plot does not show as written: characters the plotted font has no glyph for come out as
+    boxes (simhei.ttf has no µ U+00B5 or − U+2212), and '^' + character in TEXT is AutoCAD caret notation
+    for a control character ('e^(-jθ)' plotted as 'ef-jθ)'). Both were found only by looking at the plot."""
+    from ezdxf.tools.text import caret_decode
+    from ..model import layout_spaces
+    from ..plot import font_cmap, plot_fonts
+    msp = layout_spaces(doc, layout)[0]
+    fonts, cmaps = plot_fonts(doc), {}
+    missing: dict[str, dict[str, list[str]]] = {}  # font -> char -> handles
+    caret = []
+    for e, style, text in _text_items(msp):
+        if not text:
+            continue
+        if e.dxftype() != "MTEXT" and "^" in text:
+            if CARET_RE.search(text):  # '^ ' is the literal caret
+                caret.append(e.dxf.handle)
+            text = caret_decode(text)
+        if text.isascii():
+            continue
+        font = fonts.get(str(style).lower())
+        if font is None:
+            continue
+        if font not in cmaps:
+            cmaps[font] = font_cmap(font)
+        if cmaps[font] is None:
+            continue
+        for ch in dict.fromkeys(text):
+            if not ch.isspace() and ord(ch) >= 32 and ord(ch) not in cmaps[font]:
+                missing.setdefault(font, {}).setdefault(ch, []).append(e.dxf.handle)
+    out = []
+    for font, chars in missing.items():
+        hs = list(dict.fromkeys(h for v in chars.values() for h in v))
+        listed = ", ".join(f"'{c}' U+{ord(c):04X}" for c in chars)
+        out.append(issue("TEXT_PLOTS_AS_BOXES", "warning",
+                         f"{len(hs)} text(s) use characters that {font} has no glyph for ({listed}); the PDF / PNG "
+                         "plot shows them as boxes", hs[:50], font=font, characters=list(chars),
+                         hint="Use a character the font has (μ U+03BC for micro, '-' for minus, no combining "
+                              "accents), or a text style with another font"))
+    if caret:
+        out.append(issue("TEXT_CARET_CODE", "warning",
+                         f"{len(caret)} TEXT(s) contain '^' followed by a character: AutoCAD reads that as a "
+                         "control character, so the '^' and the next character do not print", caret[:50],
+                         hint="Write '^ ' (caret, space) for a literal '^', or use MTEXT"))
+    return out
+
+
 def annotation_issues(doc: Drawing, layout: str | None = None) -> list[dict[str, Any]]:
     """Readability problems seen only when AutoCAD plots the drawing (examples/trials)."""
     out = []
@@ -369,6 +420,7 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
                 seen[k] = h
 
     out.extend(annotation_issues(doc, layout))
+    out.extend(plot_text_issues(doc, layout))
     out.extend(printed_text_issues(doc))
 
     # Tolerance declarations are document integrity, including nested/unreferenced

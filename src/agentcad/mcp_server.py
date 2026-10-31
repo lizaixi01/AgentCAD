@@ -439,7 +439,8 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
                        dxf_version: Literal["R12", "R2000", "R2004", "R2007", "R2010", "R2013", "R2018"] | None = None,
                        overwrite: bool = False,
                        layout: Annotated[str | None, Field(description="pdf: 'Model', a paper layout or '*'; default "
-                                                          "every paper layout with content, else Model")] = None,
+                                                          "every paper layout with content, else Model. png of a "
+                                                          "2D drawing: one layout, default the first of these")] = None,
                        paper: Annotated[Literal["A0", "A1", "A2", "A3", "A4", "auto"] | None,
                                         Field(description="pdf, model space: sheet size")] = None,
                        scale: Annotated[float | None, Field(gt=0, description="pdf, model space: paper mm per "
@@ -451,8 +452,9 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
                            "to render, names (iso, front, back, right, left, top, bottom, iso_back, iso_bottom) or "
                            "[x, y, z] directions from the part to the camera (the camera's position); several make one labelled grid. "
                            "Default ['iso']")] = None,
-                       image_size: Annotated[int | None, Field(ge=64, le=2048, description="png: pixels per view "
-                                                               "(default 512 for one view, 256 per view in a grid)")] = None,
+                       image_size: Annotated[int | None, Field(ge=64, le=2048, description="png: 3D part, pixels per view "
+                                                               "(default 512 for one view, 256 per view in a grid); "
+                                                               "2D drawing, the longer side (default 1600)")] = None,
                        fit: Annotated[Literal["view", "uniform"] | None, Field(description="png: 'view' (default) "
                            "fills each view with the part (no fixed scale: do not measure pixels); 'uniform' uses "
                            "one scale for every view")] = None,
@@ -466,7 +468,8 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
                        table: Literal["entities", "pid_lines", "bom"] = "entities") -> Any:
         """Export to another DXF version (R12 via a safe converter), SVG preview, JSON, PDF (plotted without
         external software: one page per layout, paper layouts 1:1 on their sheet, vector output, reports scale and
-        too-small printed text), CSV/XLSX (table: entities, pid_lines or bom), or DWG (optional AutoCAD backend).
+        too-small printed text and text that plots as boxes), PNG (one layout drawn like the PDF, to look at what you
+        drew), CSV/XLSX (table: entities, pid_lines or bom), or DWG (optional AutoCAD backend).
         3D parts: step, iges, brep, stl, obj, or png: a shaded preview (parallel projection, part centred and
         filling the frame, edges drawn) to look at what you built, e.g. against a reference image. It renders
         even a part that is not one valid solid, to show what went wrong.
