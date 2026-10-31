@@ -137,6 +137,34 @@ def test_script_is_a_transaction(srt, ws):
     ("x = ().__class__.__bases__", "'__"),
     ("f = getattr(doc, 'saveas')", "'getattr'"),
     ("from ezdxf.addons import odafc", "odafc"),
+    # a running generator's frame reaches the runner's frame and its real builtins
+    ("def g():\n    yield\ngen = g()\nf = gen.gi_frame", "'gi_frame'"),
+    ("def g(f):\n    yield f.f_back, f.f_locals", "'f_back'"),
+    ("def g(f):\n    yield f.f_globals, f.f_builtins", "'f_globals'"),
+    ("def g(t):\n    return t.tb_frame", "'tb_frame'"),
+    ("async def c():\n    pass\nf = c().cr_frame", "'cr_frame'"),
+    # attributes read or called by name get past the dunder rule
+    ("import operator\nf = operator.attrgetter('__globals__')", "'attrgetter'"),
+    ("from operator import attrgetter", "attrgetter"),
+    ("from operator import *\nf = attrgetter('__globals__')", "import *"),
+    # allowed modules carry sys, builtins and inspect as attributes
+    ("import fractions\nb = fractions.sys.modules['builtins']", "'modules'"),
+    ("import statistics\nos = statistics.sys", "'sys'"),
+    ("import copy\ng = copy.builtins.getattr", "'getattr'"),
+    ("import collections\nf = collections._sys", "'_sys'"),
+    ("import statistics\nr = statistics.random._os", "'_os'"),
+    ("x = ezdxf.npshapes.np.testing.importlib", "'importlib'"),
+    # ezdxf carries numpy: its file functions and NpzFile are off here too
+    ("nz = ezdxf.npshapes.np.lib.npyio.NpzFile('x.zip')", "'NpzFile'"),
+    ("ezdxf.npshapes.np.savetxt('x.txt', [1])", "'savetxt'"),
+    ("imp = ezdxf.npshapes.np._core._methods.pickle", "'pickle'"),
+    ("def f(t):\n    return t.linecache.getline('x.txt', 1)", "'linecache'"),
+    # string annotations are evaluated unchecked (singledispatch().register, typing.get_type_hints)
+    ("import functools\ndef f(x: '(1, int)[1]'):\n    pass\nfunctools.singledispatch(len).register(f)", "string annotations"),
+    ("x: 'int' = 1", "string annotations"),
+    ("import functools\nr = functools.singledispatch", "'singledispatch'"),
+    ("def f(nz):\n    nz.zip.extractall('out')", "'extractall'"),
+    ("import operator\noperator.methodcaller('saveas', 'x.dxf')(doc)", "'methodcaller'"),
 ])
 def test_scripts_are_checked_before_running(srt, ws, code, why):
     name, _ = sheet_drawing(ws)

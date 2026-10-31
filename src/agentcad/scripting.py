@@ -3,7 +3,7 @@
 Some edits are outside the operation catalogue (the comparison trials showed real drawings needing them). Rather
 than letting the agent edit files directly, ``Runtime.run_script`` takes Python source, and this module
   1. checks it statically (imports limited to ezdxf and the standard math/data modules; no file, eval/exec,
-     getattr or dunder access; no saving, reading or creating documents),
+     getattr, dunder or frame access; no saving, reading or creating documents),
   2. runs it in a separate Python process (``-I``, no shell, time limit) on a copy of the drawing,
   3. hands the result back to the runtime, which re-reads it strictly and commits it like any batch: checkpoint,
      journal (with the full script), diff, independent validation, optional ``strict``.
@@ -28,8 +28,30 @@ ALLOWED_IMPORTS = {"ezdxf", "math", "cmath", "itertools", "functools", "collecti
                    "fractions", "decimal", "operator", "copy"}
 BANNED_NAMES = {"open", "exec", "eval", "compile", "__import__", "input", "breakpoint", "globals", "locals", "vars",
                 "getattr", "setattr", "delattr", "exit", "quit", "help", "memoryview", "dir"}
+# Frames (a generator's gi_frame.f_back reaches the runner's frame, its real builtins and __import__), the
+# helpers that read or call attributes by name (attrgetter('__globals__') gets past the dunder rule), and the
+# modules allowed modules carry as plain attributes (fractions.sys.modules, dataclasses.builtins.getattr,
+# dataclasses.inspect.currentframe(), numpy.f2py.subprocess), also under private aliases (collections._sys,
+# statistics.random._os, numpy's _datasource._open) where the language allows private names; numpy.testing and gc
+# lead to the rest (gc.get_objects() holds the real builtins dict), pickle.loads(b'cbuiltins\n__import__\n.') to
+# __import__, linecache.getline to any text file, settrace to frames. The stdlib evaluates strings that this check
+# never sees: string annotations (singledispatch().register, get_type_hints) and dataclasses._create_fn.
+_ESCAPE_ATTRS = {"gi_frame", "cr_frame", "ag_frame", "tb_frame", "f_back", "f_globals", "f_locals", "f_builtins",
+                 "attrgetter", "methodcaller", "getattr", "setattr", "delattr", "eval", "exec", "globals", "locals",
+                 "vars", "breakpoint", "sys", "modules", "os", "builtins", "bltns", "inspect", "currentframe",
+                 "subprocess", "f2py", "_sys", "_os", "_open", "_builtin_open", "_getframe", "importlib",
+                 "import_module", "io", "pathlib", "shutil", "testing", "gc", "get_objects", "get_referrers",
+                 "get_referents", "pickle", "_pickle", "Unpickler", "linecache", "settrace", "setprofile",
+                 "singledispatch", "singledispatchmethod", "get_type_hints", "ForwardRef", "_eval_type", "_evaluate",
+                 "_create_fn", "get_annotations"}
+# numpy file access and native code: numpy is importable in the part and image languages, and ezdxf carries it as
+# an attribute (ezdxf.npshapes.np). NpzFile(path) reads any zip; its .zip extracts files, and type(.zip)(path, 'w')
+# writes a zip.
+_NUMPY_FILE_ATTRS = {"load", "dump", "loadtxt", "savetxt", "fromfile", "tofile", "savez", "savez_compressed",
+                     "genfromtxt", "fromregex", "memmap", "open_memmap", "DataSource", "Repository", "zipfile_factory",
+                     "ctypeslib", "ctypes", "load_library", "NpzFile", "extractall", "extract", "writestr"}
 BANNED_ATTRS = {"saveas", "save", "readfile", "readzip", "write", "write_text", "write_bytes", "unlink", "rmdir",
-                "system", "popen", "spawn", "odafc"}
+                "system", "popen", "spawn", "odafc"} | _ESCAPE_ATTRS | _NUMPY_FILE_ATTRS
 RUNNER = Path(__file__).with_name("_script_runner.py")
 CQ_RUNNER = Path(__file__).parent / "part" / "_cq_runner.py"
 IMAGE_RUNNER = Path(__file__).with_name("_image_runner.py")
@@ -46,16 +68,14 @@ _FILE_ATTRS = {"save", "saveas", "saveAs", "write", "write_text", "write_bytes",
                "rmdir", "mkdir", "system", "popen", "spawn", "export", "exporters", "importers", "exportStep",
                "exportStl", "exportBrep", "exportBin", "exportBinary", "exportSvg", "exportDXF", "exportIges",
                "importStep", "importBrep", "importStl", "importDXF", "importBin", "importBinary", "importSvg", "read",
-               "readfile", "open", "load", "dump", "loadtxt", "savetxt", "fromfile", "tofile",
-               # numpy and OCP file access and native code
-               "savez", "savez_compressed", "genfromtxt", "fromregex", "memmap", "open_memmap", "DataSource",
-               "Repository", "zipfile_factory", "ctypeslib", "ctypes",
-               "load_library", "Write", "Read", "Write_s", "Read_s",
+               "readfile", "open",
+               # OCP file access
+               "Write", "Read", "Write_s", "Read_s",
                # FreeCAD: documents and settings belong to the runtime, not to the script
                "openDocument", "newDocument", "closeDocument", "getDocument", "listDocuments", "ActiveDocument",
                "activeDocument", "setActiveDocument", "loadFile", "ParamGet",
                # cadquery.vis opens a window and would wait for it until the time limit
-               "vis"}
+               "vis"} | _ESCAPE_ATTRS | _NUMPY_FILE_ATTRS
 LANGUAGES: dict[str, dict] = {
     "ezdxf": {"imports": ALLOWED_IMPORTS, "attrs": BANNED_ATTRS,
               "hint": "Scripts get the drawing as `doc` (and `msp`); edit it in place, do not open, save or import "
@@ -70,7 +90,7 @@ LANGUAGES: dict[str, dict] = {
     # Image.core capture the screen and clipboard, ImageShow starts a viewer, plugins read and write files) and no
     # scipy (scipy.io and sparse read and write files). Private names are off too: numpy's private modules hold its
     # file and download helpers.
-    "image": {"imports": _DATA | {"numpy"}, "attrs": _FILE_ATTRS | {"testing", "f2py", "distutils"}, "private": True,
+    "image": {"imports": _DATA | {"numpy"}, "attrs": _FILE_ATTRS | {"distutils"}, "private": True,
               "hint": "Measure the pixels of `image` (numpy uint8, height x width x 3; source pixel = local + "
                       "`origin`) with numpy (`np`) and print the numbers; draw overlays with draw_line, draw_rect, "
                       "draw_ellipse and draw_text; optionally set `result` to an image array or a JSON value. "
@@ -109,6 +129,8 @@ def check_script(code: str, language: str = "ezdxf") -> None:
                     or private and any(p.startswith("_") for p in parts)):
                 reject(node, f"import from {mod!r} is not allowed")
             for a in node.names:  # e.g. "from ezdxf.addons import odafc" (launches an external converter)
+                if a.name == "*":  # the names it brings in would be used bare, past the attribute rules
+                    reject(node, f"'from {mod} import *' is not allowed; import the names you use")
                 if (a.name == "odafc" or a.name.startswith("__") or a.name in banned_attrs
                         or private and a.name.startswith("_")):
                     reject(node, f"import of {mod}.{a.name!r} is not allowed")
@@ -120,6 +142,12 @@ def check_script(code: str, language: str = "ezdxf") -> None:
                 reject(node, f"attribute {node.attr!r} is not allowed")
         elif isinstance(node, (ast.Global, ast.Nonlocal)):
             reject(node, "global/nonlocal statements are not allowed")
+        elif isinstance(node, (ast.arg, ast.FunctionDef, ast.AsyncFunctionDef, ast.AnnAssign)):
+            # the stdlib evaluates string annotations (typing, functools.singledispatch) unchecked
+            ann = node.returns if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) else node.annotation
+            if ann is not None and any(isinstance(n, ast.Constant) and isinstance(n.value, str)
+                                       for n in ast.walk(ann)):
+                reject(node, "string annotations are not allowed")
 
 
 def run(source: Path, code: str, job: Path, timeout: float) -> dict[str, Any]:

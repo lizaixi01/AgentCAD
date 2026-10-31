@@ -97,6 +97,52 @@ def test_freecad_scripts_are_checked_before_running(srt, ws, code, why):
     assert not (ws / "p.FCStd").exists()
 
 
+# Ways around the attribute rules that every part language shares: frames (a running generator's frame reaches the
+# runner's frame and its real builtins), attributes read or called by name, and numpy's NpzFile (reads any zip by
+# path; its .zip extracts and writes files).
+@pytest.mark.parametrize("language", ["cadquery", "freecad"])
+@pytest.mark.parametrize("code, why", [
+    ("def g():\n    yield\ngen = g()\nf = gen.gi_frame", "'gi_frame'"),
+    ("def g(f):\n    yield f.f_back, f.f_locals", "'f_back'"),
+    ("def g(f):\n    yield f.f_globals, f.f_builtins", "'f_globals'"),
+    ("def g(t):\n    return t.tb_frame", "'tb_frame'"),
+    ("async def c():\n    pass\nf = c().cr_frame", "'cr_frame'"),
+    ("async def a():\n    yield 1\nf = a().ag_frame", "'ag_frame'"),
+    ("import operator\nf = operator.attrgetter('__globals__')", "'attrgetter'"),
+    ("from operator import attrgetter", "attrgetter"),
+    ("from operator import methodcaller", "methodcaller"),
+    ("import numpy as np\nnz = np.lib.npyio.NpzFile('x.zip')", "'NpzFile'"),
+    ("from numpy.lib.npyio import NpzFile", "NpzFile"),
+    ("from operator import *\nf = attrgetter('__globals__')", "import *"),
+    ("from numpy.lib.npyio import *\nnz = NpzFile('x.zip')", "import *"),
+    ("from numpy import *\nx = load('x.npy')", "import *"),
+    ("import fractions\nb = fractions.sys.modules['builtins']", "'modules'"),
+    ("import dataclasses\ng = dataclasses.builtins", "'builtins'"),
+    ("import enum\ng = enum.bltns", "'bltns'"),
+    ("import dataclasses\nf = dataclasses.inspect.currentframe()", "'currentframe'"),
+    ("import numpy as np\np = np.f2py.subprocess", "'subprocess'"),
+    ("import numpy as np\np = np.f2py", "'f2py'"),
+    ("import collections\nf = collections._sys", "'_sys'"),
+    ("import statistics\nr = statistics.random._os", "'_os'"),
+    ("import numpy as np\nf = np.lib._datasource._open", "'_open'"),
+    ("import numpy as np\nm = np.testing", "'testing'"),
+    ("def f(u):\n    return u.gc.get_objects()", "'get_objects'"),
+    ("import numpy as np\nimp = np._core._methods.pickle.loads(data)", "'pickle'"),
+    ("import functools\ndef f(x: '(1, int)[1]'):\n    pass\nfunctools.singledispatch(len).register(f)", "string annotations"),
+    ("import typing\ndef f(x) -> 'int':\n    pass\nh = typing.get_type_hints(f)", "string annotations"),
+    ("x: 'int' = 1", "string annotations"),
+    ("import typing\nh = typing.get_type_hints", "'get_type_hints'"),
+    ("import dataclasses\nf = dataclasses._create_fn('f', [], ['return 1'])", "'_create_fn'"),
+    ("def f(nz):\n    nz.zip.extractall('out')", "'extractall'"),
+    ("def f(nz):\n    nz.zip.extract('a', 'out')", "'extract'"),
+    ("def f(nz):\n    type(nz.zip)('x.zip', 'w').writestr('a', 'b')", "'writestr'"),
+])
+def test_escape_routes_are_rejected_in_every_part_language(srt, ws, language, code, why):
+    e = srt.run_script("p.FCStd", code, language=language)["error"]
+    assert e["code"] == "SCRIPT_REJECTED" and why in e["message"], e
+    assert not (ws / "p.FCStd").exists()
+
+
 def test_script_languages(srt, ws):
     e = srt.run_script("p.FCStd", BLOCK, language="ezdxf")["error"]
     assert e["code"] == "BAD_LANGUAGE" and "cadquery" in e["hint"]
