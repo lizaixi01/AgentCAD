@@ -1,0 +1,759 @@
+{
+  "name": "LokmenoWer/best-cad-mcp",
+  "repository": "LokmenoWer/best-cad-mcp",
+  "product_sha": "e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8",
+  "source_url": "https://github.com/LokmenoWer/best-cad-mcp/tree/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8",
+  "commit_date": "2026-10-28T12:49:01Z",
+  "license": "MIT",
+  "total_score": 43,
+  "max_score": 100,
+  "categories": [
+    {
+      "id": "F",
+      "name": "Functional CAD coverage",
+      "weight": 25,
+      "score": 11,
+      "item_ids": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Correctness and delivery",
+      "weight": 20,
+      "score": 9,
+      "item_ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Backends and platforms",
+      "weight": 15,
+      "score": 7,
+      "item_ids": [
+        "B1",
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "id": "E",
+      "name": "Engineering production",
+      "weight": 15,
+      "score": 5,
+      "item_ids": [
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    {
+      "id": "T",
+      "name": "Testing and maintenance",
+      "weight": 15,
+      "score": 8,
+      "item_ids": [
+        "T1",
+        "T2",
+        "T3"
+      ]
+    },
+    {
+      "id": "S",
+      "name": "Security and operations",
+      "weight": 10,
+      "score": 3,
+      "item_ids": [
+        "S1",
+        "S2"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "F1",
+      "name": "Geometry and measurement",
+      "score": 3,
+      "max_score": 5,
+      "basis": "Live AutoCAD run drew lines, arcs, circles, polylines, rectangles and two boundary hatches through a 90-step CADPlan, then scan_all_entities read back 81 entities (Length/Area taken from COM read-back) with zero-issue geometry validation. The pure-Python topology layer (closed profiles across entities, line-curve intersections, coplanarity, unitless arc angles left unresolved, budget failures fail atomically) has many ordinary/boundary/adversarial regression tests that ran green in CI on the pinned SHA.",
+      "scope_and_limits": "Creation paths are traced unchanged except lint since the live run. Topology tests use real production code over a SQLite fixture, not AutoCAD. No saved/reopened or cross-process independent check of measurements; the committed DWG is not re-read by the repo. Freshly drawn entities are cached in SQLite from input arguments (draw_circle area uses 3.14159) until a rescan. Live AutoCAD artifacts were recorded 2026-08-08..10 (commits bdb6c25/d986289/b02d0fa). Since then creation/annotation/hatch/table/array/delete paths changed only by lint; move/copy/rotate/scale and all LISP-based edits (trim/extend/fillet/break/join/stretch), connection ProgID logic, DXF import and selection changed, so those are not covered by the live artifacts.",
+      "source": [
+        {
+          "path": "src/cad_tools/drawing_tools.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_tools/drawing_tools.py"
+        },
+        {
+          "path": "src/cad_controller.py:2540",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L2540"
+        },
+        {
+          "path": "src/cad_understanding/drawing_graph.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/drawing_graph.py"
+        },
+        {
+          "path": "tests/test_drawing_graph_face_safety.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_drawing_graph_face_safety.py"
+        },
+        {
+          "path": "tests/test_curve_topology_contract.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_curve_topology_contract.py"
+        },
+        {
+          "path": "docs/artifacts/readme-real-cad/cadplan-execution.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/docs/artifacts/readme-real-cad/cadplan-execution.json"
+        },
+        {
+          "path": "docs/artifacts/readme-real-cad/scan.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/docs/artifacts/readme-real-cad/scan.json"
+        }
+      ],
+      "deduction": {
+        "points": 2,
+        "reason": "Withhold 2: no fixed-version saved/reopened postcondition check and no current-SHA live run; structurally different real-drawing cases are absent."
+      }
+    },
+    {
+      "id": "F2",
+      "name": "Editing",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Live flange-coupling demo executed move_entity, array_rectangular, array_polar, delete_entity and edit_table_cell through CADPlans with a 91-entity rescan afterwards. Mocked unit tests now check that a failed move/copy is not reported as success and that edited geometry is marked stale.",
+      "scope_and_limits": "Array/delete/table paths are traced unchanged; move/copy changed after the live run and are covered only by mocked tests. trim/extend/fillet/break/join/stretch have no output evidence. Source shows trim/extend report success whenever the LISP command returns to idle, without checking that geometry changed (see serious_defects). Live AutoCAD artifacts were recorded 2026-08-08..10 (commits bdb6c25/d986289/b02d0fa). Since then creation/annotation/hatch/table/array/delete paths changed only by lint; move/copy/rotate/scale and all LISP-based edits (trim/extend/fillet/break/join/stretch), connection ProgID logic, DXF import and selection changed, so those are not covered by the live artifacts.",
+      "source": [
+        {
+          "path": "src/cad_controller.py:4189",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L4189"
+        },
+        {
+          "path": "src/cad_controller.py:4123",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L4123"
+        },
+        {
+          "path": "src/cad_tools/edit_tools.py:416",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_tools/edit_tools.py#L416"
+        },
+        {
+          "path": "tests/test_geometry_cache.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_geometry_cache.py"
+        },
+        {
+          "path": "tests/test_move_result_contract.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_move_result_contract.py"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/cadplans.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/cadplans.json"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/verification-report.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/verification-report.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Cap at 2: LISP-driven trim/extend (and other run_lisp edits) return success after the command queue goes idle, including when a handle is missing or nothing is trimmed; no postcondition is read back. Requirement-driven change identity is not verified."
+      }
+    },
+    {
+      "id": "F3",
+      "name": "Annotation and styles",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Live runs created aligned and diametric dimensions, text, MText, mleaders and dimension text overrides/positions; the rendered PNG/PDF show them. Constraint tests show a text override that disagrees with geometry becomes a violated constraint and ambiguous dimensions stay unknown.",
+      "scope_and_limits": "No numeric tolerance/fit computation (draw_tolerance passes raw GD&T text). No evidence of displayed result after dimension-style or text-style edits. The demo image shows dimensions drawn outside the sheet frame that the verification did not flag. Live AutoCAD artifacts were recorded 2026-08-08..10 (commits bdb6c25/d986289/b02d0fa). Since then creation/annotation/hatch/table/array/delete paths changed only by lint; move/copy/rotate/scale and all LISP-based edits (trim/extend/fillet/break/join/stretch), connection ProgID logic, DXF import and selection changed, so those are not covered by the live artifacts.",
+      "source": [
+        {
+          "path": "src/cad_tools/dimension_tools.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_tools/dimension_tools.py"
+        },
+        {
+          "path": "src/cad_tools/drawing_tools.py:697",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_tools/drawing_tools.py#L697"
+        },
+        {
+          "path": "tests/test_constraints.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_constraints.py"
+        },
+        {
+          "path": "docs/images/live-flange-coupling-demo.png",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/docs/images/live-flange-coupling-demo.png"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/cadplans.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/cadplans.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: no error/boundary behavioral evidence for annotation in AutoCAD, no tolerance/fit support and no post-edit display check."
+      }
+    },
+    {
+      "id": "F4",
+      "name": "Organization and exchange",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Layers, a native TABLE (add_table/edit_table_cell/format_table) and DWG save, DXF export and A3 PDF plot were produced in the live demo; the DXF and PDF are committed. DXF import refuses Documents.Open for .dxf and requires allow_modify (mocked tests).",
+      "scope_and_limits": "Blocks/attributes, xrefs, layouts, viewports and page setups have entry points but no output evidence. DXF import was added after the live runs and is evidenced only with a mocked controller. Exports confirm file existence only. Live AutoCAD artifacts were recorded 2026-08-08..10 (commits bdb6c25/d986289/b02d0fa). Since then creation/annotation/hatch/table/array/delete paths changed only by lint; move/copy/rotate/scale and all LISP-based edits (trim/extend/fillet/break/join/stretch), connection ProgID logic, DXF import and selection changed, so those are not covered by the live artifacts.",
+      "source": [
+        {
+          "path": "src/cad_controller.py:496",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L496"
+        },
+        {
+          "path": "src/cad_controller.py:921",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L921"
+        },
+        {
+          "path": "tests/test_dxf_import.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_dxf_import.py"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/flange-coupling-assembly-final.DXF",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/flange-coupling-assembly-final.DXF"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/flange-coupling-assembly-readme-demo.pdf",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/flange-coupling-assembly-readme-demo.pdf"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: block/attribute and paper-space/viewport paths lack output evidence; no reopen or exchange round-trip checks."
+      }
+    },
+    {
+      "id": "F5",
+      "name": "Domain workflows",
+      "score": 2,
+      "max_score": 5,
+      "basis": "The declared domain is mechanical drawings plus drawing understanding. Live artifacts show a three-view bearing housing and a flange-coupling assembly with BOM table and item leaders, and a VLM review grounded to handles with the section hatch correctly left ambiguous. Rule-based semantic detection (slots, bolt circles, walls, doors, title blocks) is tested on synthetic data.",
+      "scope_and_limits": "Understanding evidence is on drawings the tool itself created, not foreign drawings. No P&ID, architectural room/opening or takeoff workflow with output evidence. Image-to-CAD tracing is tested on synthetic rasters only (PIL tests skipped in Linux CI).",
+      "source": [
+        {
+          "path": "src/cad_understanding/semantic_graph.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/semantic_graph.py"
+        },
+        {
+          "path": "src/cad_understanding/vlm.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/vlm.py"
+        },
+        {
+          "path": "docs/artifacts/readme-real-cad/vlm-review-grounded.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/docs/artifacts/readme-real-cad/vlm-review-grounded.json"
+        },
+        {
+          "path": "tests/test_semantic_graph.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_semantic_graph.py"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/verification-report.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/verification-report.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: no foreign-drawing or non-mechanical domain workflow with output evidence."
+      }
+    },
+    {
+      "id": "C1",
+      "name": "Transactions",
+      "score": 2,
+      "max_score": 5,
+      "basis": "CADPlan validation, the allow_modify gate, failure-text/structured-failure detection and the rollback call are covered by monkeypatched tests that pass in CI. The live 90-step plan shows StartUndoMark/EndUndoMark succeeding.",
+      "scope_and_limits": "Rollback is EndUndoMark plus one 'U' command; it reports success when the command is sent, without checking that the entities are gone. If StartUndoMark fails, execution continues with a warning. A live rollback smoke case exists in scripts/verify_cad_understanding_workflow.py, but no result is committed. Dry-run is static.",
+      "source": [
+        {
+          "path": "src/cad_understanding/plan.py:484",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/plan.py#L484"
+        },
+        {
+          "path": "src/cad_understanding/plan.py:493",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/plan.py#L493"
+        },
+        {
+          "path": "src/cad_controller.py:4375",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L4375"
+        },
+        {
+          "path": "tests/test_plan_dsl.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_plan_dsl.py"
+        },
+        {
+          "path": "scripts/verify_cad_understanding_workflow.py:272",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/scripts/verify_cad_understanding_workflow.py#L272"
+        },
+        {
+          "path": "docs/artifacts/readme-real-cad/cadplan-execution.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/docs/artifacts/readme-real-cad/cadplan-execution.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: execute_cad_plan accepts rollback_on_high_severity_validation (default true) and validate_after_each_step, then discards both with del, so the advertised validation rollback never happens. Rollback success is not verified and there is no output evidence of a real rollback."
+      }
+    },
+    {
+      "id": "C2",
+      "name": "Intent and geometry",
+      "score": 3,
+      "max_score": 5,
+      "basis": "Dimension binding compares dimension measurements and text overrides with bound geometry; mismatches become violated constraints, ambiguous bindings stay unknown, and unchecked postconditions are returned as ok=null ('requires rescan') rather than passed. The live demo checked 134 constraints (127 satisfied, 7 unknown, 0 violated).",
+      "scope_and_limits": "Behavioral cases use synthetic SQLite fixtures with production code. Plan handle capture falls back to taking up to three hex-looking tokens from result strings, which can mis-bind save_as variables. Post-plan validation reads the SQLite cache, which holds input-argument geometry until a rescan. No tampering or saved-artifact check.",
+      "source": [
+        {
+          "path": "src/cad_understanding/dimension_binding.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/dimension_binding.py"
+        },
+        {
+          "path": "src/cad_understanding/constraints.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/constraints.py"
+        },
+        {
+          "path": "src/cad_understanding/plan.py:382",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/plan.py#L382"
+        },
+        {
+          "path": "src/cad_understanding/plan.py:429",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/plan.py#L429"
+        },
+        {
+          "path": "tests/test_constraints.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_constraints.py"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/verification-report.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/verification-report.json"
+        }
+      ],
+      "deduction": {
+        "points": 2,
+        "reason": "Withhold 2: no saved/reopened independent check, no tampering cases, and the heuristic handle capture risks wrong identities."
+      }
+    },
+    {
+      "id": "C3",
+      "name": "Delivery",
+      "score": 2,
+      "max_score": 5,
+      "basis": "DWG save, DXF export and an A3 PDF plot were delivered in the live demo; the DXF and PDF are committed, and the README reports an independent one-page landscape A3 check of the PDF. Export waits for the output file to appear.",
+      "scope_and_limits": "No delivery gate, source version or hash, readback of the saved file, DXF semantic parity or per-format check scope. save_drawing reports success when SaveAs raises no exception. A DWG export uses doc.SaveAs, which also re-points the active document. The verification report records no product SHA.",
+      "source": [
+        {
+          "path": "src/cad_controller.py:540",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L540"
+        },
+        {
+          "path": "src/cad_controller.py:597",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L597"
+        },
+        {
+          "path": "src/cad_controller.py:972",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L972"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/verification-report.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/verification-report.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: no readback, hash or parity checks on delivered files."
+      }
+    },
+    {
+      "id": "C4",
+      "name": "Foreign and abnormal inputs",
+      "score": 2,
+      "max_score": 5,
+      "basis": "DXF passed to open_drawing is refused before AutoCAD is touched; import checks permission and file existence before creating a document, does not modify a non-empty template, and preserves the document and settings on failure (mocked). Scans report truncated=true past max_entities. Unitless legacy arc angles and unsampled splines are left unresolved instead of guessed (real code, synthetic data).",
+      "scope_and_limits": "No corrupted-file, unknown-entity, unit-mismatch or external-edit case is evidenced against AutoCAD. The README tells agents to rescan after external changes; the server does not detect them.",
+      "source": [
+        {
+          "path": "src/cad_controller.py:469",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L469"
+        },
+        {
+          "path": "tests/test_dxf_import.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_dxf_import.py"
+        },
+        {
+          "path": "tests/test_curve_topology_contract.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_curve_topology_contract.py"
+        },
+        {
+          "path": "tests/test_grounding_adversarial_regressions.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_grounding_adversarial_regressions.py"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: abnormal-input handling is shown only with mocks or synthetic caches; no real corrupted or foreign file cases."
+      }
+    },
+    {
+      "id": "B1",
+      "name": "Backend contract",
+      "score": 3,
+      "max_score": 5,
+      "basis": "cad-mcp-doctor and check_runtime_environment report missing or blocked dependencies (MCP v1 rejected, optional visual extras, strict startup preflight), with tests. The Windows release run executed doctor --json from a clean wheel. The live preflight artifact passed with AutoCAD. ProgID fallback and stale-proxy refresh have tests. Tool profiles are discoverable through recommend_cad_tools and get_tool_help.",
+      "scope_and_limits": "Postconditions are not consistent across tools (string vs dict results, trim/extend success without read-back). There is a single AutoCAD COM backend; no capability map per operation.",
+      "source": [
+        {
+          "path": "src/doctor.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/doctor.py"
+        },
+        {
+          "path": "tests/test_runtime_preflight.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_runtime_preflight.py"
+        },
+        {
+          "path": "tests/test_cad_controller_connection.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_cad_controller_connection.py"
+        },
+        {
+          "path": "docs/artifacts/readme-real-cad/preflight.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/docs/artifacts/readme-real-cad/preflight.json"
+        },
+        {
+          "path": ".github/workflows/release.yml",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/.github/workflows/release.yml"
+        }
+      ],
+      "deduction": {
+        "points": 2,
+        "reason": "Withhold 2: no fixed-version workflow with consistent independently checked postconditions."
+      }
+    },
+    {
+      "id": "B2",
+      "name": "Native interoperability",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Real AutoCAD (Windows 11) live runs show save, DXF/PDF export, dimensions, hatches, TABLE, mleaders and scan read-back; the DWG and DXF are committed.",
+      "scope_and_limits": "These are historical artifacts (August 2026) whose connection, edit and import code has since changed. No AUDIT result, no reopen-and-edit of a saved DWG, no layouts or paper-space evidence. Live AutoCAD artifacts were recorded 2026-08-08..10 (commits bdb6c25/d986289/b02d0fa). Since then creation/annotation/hatch/table/array/delete paths changed only by lint; move/copy/rotate/scale and all LISP-based edits (trim/extend/fillet/break/join/stretch), connection ProgID logic, DXF import and selection changed, so those are not covered by the live artifacts.",
+      "source": [
+        {
+          "path": "docs/artifacts/readme-real-cad/bearing-housing-three-view.dwg",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/docs/artifacts/readme-real-cad/bearing-housing-three-view.dwg"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/flange-coupling-assembly-final.DXF",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/flange-coupling-assembly-final.DXF"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/verification-report.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/verification-report.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: no AUDIT/reopen evidence and no current-boundary native run."
+      }
+    },
+    {
+      "id": "B3",
+      "name": "Platforms",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Completed CI on the pinned SHA ran lint and 418 tests on ubuntu/Python 3.11 with COM stubs (run 40690962494). The Windows release run on ancestor 964a236 ran 394 tests, built and clean-installed the wheel and verified MCP stdio (run 35863718917). Live AutoCAD runs were on Windows 11. The autocad_com marker separates native from headless tests.",
+      "scope_and_limits": "Only Python 3.11 runs in CI despite 3.12/3.13 classifiers. Windows CI is not at the pinned SHA. The live AutoCAD runs record no Python/product version tied to the current code.",
+      "source": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/.github/workflows/ci.yml"
+        },
+        {
+          "path": ".github/workflows/release.yml",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/.github/workflows/release.yml"
+        },
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/pyproject.toml"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: a single Python version, Windows CI not at the pinned SHA, and no current native run."
+      }
+    },
+    {
+      "id": "E1",
+      "name": "Standard data",
+      "score": 1,
+      "max_score": 5,
+      "basis": "The assembly skill reference gives generic mechanical drafting practice and explicitly forbids claiming ISO/ASME/GB compliance. The live demo is marked DEMO - NOT FOR MANUFACTURE with formal_compliance_claimed=false.",
+      "scope_and_limits": "There are no sourced standard tables (fits, fasteners, threads), editions, ranges or unknown-value refusals in the code. BOM standard part numbers in the demo are free text.",
+      "source": [
+        {
+          "path": ".agents/skills/draw-assembly-diagrams/references/assembly/standards/generic-mechanical.md",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/.agents/skills/draw-assembly-diagrams/references/assembly/standards/generic-mechanical.md"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/verification-report.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/verification-report.json"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no standard-data implementation; only the absence of false certification is credited."
+      }
+    },
+    {
+      "id": "E2",
+      "name": "Drawing production",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Live outputs include a three-view bearing housing (front, top, section A-A, centerlines, hatches, dimensions, title block) and an A3 flange-coupling assembly (half-section, end view, exploded schematic, 8-row BOM, item leaders, title block), committed as DWG/DXF/PDF/PNG.",
+      "scope_and_limits": "The plans are deterministic, script-built (generate_demo.py), not a general view generator. In the inspected PNG, the overall dimensions (230, diameter 120) extend past the sheet frame, and the title block crosses the frame. Text collides with lines, and a BOM cell wraps mid-word ('SPRIN G'). The run still passed with zero validation issues. No saved parity check. Live AutoCAD artifacts were recorded 2026-08-08..10 (commits bdb6c25/d986289/b02d0fa). Since then creation/annotation/hatch/table/array/delete paths changed only by lint; move/copy/rotate/scale and all LISP-based edits (trim/extend/fillet/break/join/stretch), connection ProgID logic, DXF import and selection changed, so those are not covered by the live artifacts.",
+      "source": [
+        {
+          "path": "docs/images/live-flange-coupling-demo.png",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/docs/images/live-flange-coupling-demo.png"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/generate_demo.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/generate_demo.py"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/verification-report.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/verification-report.json"
+        },
+        {
+          "path": "docs/images/readme-cad-real.png",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/docs/images/readme-cad-real.png"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: visible layout defects passed verification; no saved parity check or structurally different production cases."
+      }
+    },
+    {
+      "id": "E3",
+      "name": "Domain loop",
+      "score": 2,
+      "max_score": 5,
+      "basis": "The demo loop ran scan, semantic detection, dimension binding and constraint checks with explicit unknowns, followed by two autonomous visual-repair plans and a rescan.",
+      "scope_and_limits": "No BOM-to-balloon or quantity readback, no room-area or connectivity checks. The visual-repair gate did not catch the frame overflow visible in the final image.",
+      "source": [
+        {
+          "path": "examples/live-flange-coupling-demo/verification-report.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/verification-report.json"
+        },
+        {
+          "path": "src/cad_understanding/constraints.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/constraints.py"
+        },
+        {
+          "path": "src/cad_understanding/validators.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/validators.py"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: domain readback (BOM/balloon linkage, quantities) is absent and the error gates missed visible defects."
+      }
+    },
+    {
+      "id": "T1",
+      "name": "Behavioral regressions",
+      "score": 3,
+      "max_score": 5,
+      "basis": "418 tests passed in CI on the pinned SHA. They include strong adversarial suites for topology, grounding and VLM safety, MCP v2 protocol and concurrency-serialization tests, LISP-literal injection tests and plan gating tests.",
+      "scope_and_limits": "The AutoCAD tool layer is tested through MagicMock controllers; test_all_interfaces is largely signature/consistency checks. 22 tests skipped in Linux CI (PIL and real stdio). No integration test runs against AutoCAD in CI, and no live smoke result is committed.",
+      "source": [
+        {
+          "path": "tests/test_all_interfaces.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_all_interfaces.py"
+        },
+        {
+          "path": "tests/test_grounding_adversarial_regressions.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_grounding_adversarial_regressions.py"
+        },
+        {
+          "path": "tests/test_mcp_v2_native.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_mcp_v2_native.py"
+        },
+        {
+          "path": "tests/test_lisp_literals.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_lisp_literals.py"
+        },
+        {
+          "path": "tests/test_plan_dsl.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_plan_dsl.py"
+        }
+      ],
+      "deduction": {
+        "points": 2,
+        "reason": "Withhold 2: no integration or process tests against the real backend in the regression suite."
+      }
+    },
+    {
+      "id": "T2",
+      "name": "Reproducibility",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Dependencies are bounded ranges (mcp>=2,<3). The release workflow builds and clean-installs the wheel and checks version consistency with server.json. The demo records the prompt SHA-256, and generate_demo.py rebuilds its CADPlans deterministically.",
+      "scope_and_limits": "No lock file or hashes. Live artifacts do not record the product commit or environment beyond the platform string. The agent-benchmark ledger is pending, with no results.",
+      "source": [
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/pyproject.toml"
+        },
+        {
+          "path": "requirements.txt",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/requirements.txt"
+        },
+        {
+          "path": ".github/workflows/release.yml",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/.github/workflows/release.yml"
+        },
+        {
+          "path": "examples/live-flange-coupling-demo/generate_demo.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/examples/live-flange-coupling-demo/generate_demo.py"
+        },
+        {
+          "path": "benchmarks/agent-loop/suite.json",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/benchmarks/agent-loop/suite.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: unlocked dependencies and no product SHA in recorded evidence."
+      }
+    },
+    {
+      "id": "T3",
+      "name": "Continuous verification",
+      "score": 3,
+      "max_score": 5,
+      "basis": "Per-push/PR CI completed successfully on the pinned SHA. The release workflow gates PyPI/registry publication on tests. Release run 31231381533 (v1.6.0) failed its unit tests and the publish jobs were skipped, which shows failing reports block release.",
+      "scope_and_limits": "Per-push CI is Linux-only with COM stubbed. There is no same-environment correctness or performance comparison between versions.",
+      "source": [
+        {
+          "path": ".github/workflows/ci.yml",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/.github/workflows/ci.yml"
+        },
+        {
+          "path": ".github/workflows/release.yml",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/.github/workflows/release.yml"
+        }
+      ],
+      "deduction": {
+        "points": 2,
+        "reason": "Withhold 2: no version-to-version comparison and no native verification in CI."
+      }
+    },
+    {
+      "id": "S1",
+      "name": "Defaults and security",
+      "score": 1,
+      "max_score": 5,
+      "basis": "SQL queries run under a SQLite read-only authorizer. Handles and numbers are validated before AutoLISP is built (tests). Tools carry readOnly/destructive annotations. Transport is local stdio only.",
+      "scope_and_limits": "The code default profile is 'full', and send_command (raw AutoCAD command line, including AutoLISP) is exposed in every profile, even lean, with no denylist. open/save/export/import accept arbitrary absolute paths with no workspace scoping, and save overwrites silently with FILEDIA=0. Safety relies on client approval of annotations.",
+      "source": [
+        {
+          "path": "src/server.py:893",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/server.py#L893"
+        },
+        {
+          "path": "src/server.py:3288",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/server.py#L3288"
+        },
+        {
+          "path": "src/cad_controller.py:4099",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L4099"
+        },
+        {
+          "path": "src/cad_controller.py:540",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L540"
+        },
+        {
+          "path": "src/cad_database.py:2518",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_database.py#L2518"
+        },
+        {
+          "path": "tests/test_lisp_literals.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_lisp_literals.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no path or operation scoping by default and raw command execution is always available; only SQL read-only and LISP literal guards are credited."
+      }
+    },
+    {
+      "id": "S2",
+      "name": "Long tasks",
+      "score": 2,
+      "max_score": 5,
+      "basis": "Tool calls are serialized on the event-loop thread (tested for concurrent calls). AutoCAD idle waits, save retries, and SQL timeouts and result caps exist. A rotating log records tool-call context. Scans are bounded with truncation reporting.",
+      "scope_and_limits": "No cancellation, lock or crash-recovery behavior. Rollback is best-effort and unverified. run_lisp treats any return to idle as success. No long-task output evidence beyond the live demo's multi-phase run.",
+      "source": [
+        {
+          "path": "src/server.py:94",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/server.py#L94"
+        },
+        {
+          "path": "src/server.py:684",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/server.py#L684"
+        },
+        {
+          "path": "tests/test_mcp_v2_native.py",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/tests/test_mcp_v2_native.py"
+        },
+        {
+          "path": "src/cad_controller.py:4107",
+          "url": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L4107"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: no cancellation or recovery behavior, and timeouts are not evidenced on failure paths."
+      }
+    }
+  ],
+  "declared_contract": "A local, handle-first stdio MCP server (Python, MCP SDK 2.x) that drives a running, licensed AutoCAD on Windows through COM, exposing 116/213/324 tools in lean/core/full profiles. It claims 2D drafting, editing, annotation, tables, blocks, layouts, plotting and export, plus 3D solids. It also claims a SQLite-backed drawing-understanding layer (CAD-IR, semantic graph, constraints, dimension binding, validation) and guarded CADPlans (validate, static dry-run, transactional execution through AutoCAD undo marks with best-effort rollback). Further claims are visual grounding and VLM-finding reconciliation, image-to-CAD tracing, and mechanical drawing workflows. The only backend is AutoCAD COM. It is explicitly beta, for operator-reviewed local workflows, with no formal standards compliance claimed.",
+  "evidence_used": [
+    "GitHub Actions CI run 40690962494 (pinned SHA e02b612, ubuntu, Python 3.11: ruff clean, 418 passed, 22 skipped)",
+    "GitHub Actions Release run 35863718917 (ancestor 964a236, windows-latest, Python 3.11: 394 passed, 20 skipped, wheel clean install, doctor --json, MCP stdio verify)",
+    "GitHub Actions Release run 31231381533 (64363475, v1.6.0: unit-test failure, publish jobs skipped)",
+    "docs/artifacts/readme-real-cad/*.json (live AutoCAD, 2026-08-08/09; historical, boundary partly traced)",
+    "examples/live-flange-coupling-demo/verification-report.json, cadplans.json, DXF, PDF (live AutoCAD, 2026-08-10; historical, boundary partly traced)",
+    "docs/images/live-flange-coupling-demo.png (visually inspected)"
+  ],
+  "serious_defects": [
+    {
+      "item": "F2",
+      "description": "trim/extend (and other run_lisp-based edits) report success once AutoCAD returns to idle, without checking that the target exists or that geometry changed. A nonexistent handle yields (handent) nil and still returns 'trimmed'.",
+      "source": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_controller.py#L4189"
+    },
+    {
+      "item": "C1",
+      "description": "execute_cad_plan advertises rollback_on_high_severity_validation=True and validate_after_each_step but deletes both parameters unused, so high-severity post-plan validation never triggers rollback. Rollback success means only that a 'U' command was sent.",
+      "source": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/cad_understanding/plan.py#L493"
+    },
+    {
+      "item": "S1",
+      "description": "send_command (raw AutoCAD command line, including AutoLISP) is registered in every tool profile, and the code-default profile is 'full'. File open/save/export paths are not scoped to the workspace.",
+      "source": "https://github.com/LokmenoWer/best-cad-mcp/blob/e02b6120f4ef5fd2f3f101702cdb73f6c3e2d7a8/src/server.py#L3288"
+    }
+  ],
+  "limitations": [
+    "No repository code was executed; scores rest on source reading, completed CI runs and committed artifacts.",
+    "All live AutoCAD evidence is historical (August 2026). Edit, connection, DXF import and selection code changed afterwards, and no live run at the pinned SHA is committed.",
+    "Unit tests for the AutoCAD tool layer mock the COM controller, so they evidence wrapper behavior, not CAD output.",
+    "Visual judgement of the demo PNG is a single reviewer's inspection.",
+    "The rubric's anchors were applied literally; the 324-tool count, star counts and README claims earned no points."
+  ]
+}

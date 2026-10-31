@@ -1,0 +1,603 @@
+{
+  "name": "AnCode666/multiCAD-mcp",
+  "repository": "AnCode666/multiCAD-mcp",
+  "product_sha": "360ec77c970ec95a962bd4d0a3238715ee78dd7c",
+  "source_url": "https://github.com/AnCode666/multiCAD-mcp/tree/360ec77c970ec95a962bd4d0a3238715ee78dd7c",
+  "commit_date": "2026-06-27T17:45:46Z",
+  "license": "Apache-2.0",
+  "total_score": 15,
+  "max_score": 100,
+  "categories": [
+    {
+      "id": "F",
+      "name": "Functional CAD coverage",
+      "weight": 25,
+      "score": 5,
+      "item_ids": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Correctness and delivery",
+      "weight": 20,
+      "score": 3,
+      "item_ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Backends and platforms",
+      "weight": 15,
+      "score": 3,
+      "item_ids": [
+        "B1",
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "id": "E",
+      "name": "Engineering production",
+      "weight": 15,
+      "score": 0,
+      "item_ids": [
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    {
+      "id": "T",
+      "name": "Testing and maintenance",
+      "weight": 15,
+      "score": 2,
+      "item_ids": [
+        "T1",
+        "T2",
+        "T3"
+      ]
+    },
+    {
+      "id": "S",
+      "name": "Security and operations",
+      "weight": 10,
+      "score": 2,
+      "item_ids": [
+        "S1",
+        "S2"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "F1",
+      "name": "Geometry and measurement",
+      "score": 1,
+      "max_score": 5,
+      "basis": "manage_drawing dispatches line, circle, arc, rectangle, polyline and spline through COM AddLine/AddCircle/etc. export_data/extract_drawing_data reads back Length, Area, Radius and Circumference per entity.",
+      "scope_and_limits": "Source-only. draw_hatch exists in drawing_mixin but is not reachable from the ENTITY_DISPATCH table, so hatch/islands are absent from the MCP contract; no topology (loops, connectivity) is computed. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/mcp_tools/tools/drawing.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/drawing.py"
+        },
+        {
+          "path": "src/adapters/mixins/drawing_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/drawing_mixin.py"
+        },
+        {
+          "path": "src/adapters/mixins/export_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/export_mixin.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no output evidence for any primitive or measurement; hatch not exposed; no topology."
+      }
+    },
+    {
+      "id": "F2",
+      "name": "Editing",
+      "score": 1,
+      "max_score": 5,
+      "basis": "manage_entities offers move, rotate, scale, copy/paste (via SendCommand clipboard), delete, set_color/set_layer on handles.",
+      "scope_and_limits": "Source-only. No trim/join/offset/fillet/array, no requirement-driven edits. move/rotate/scale report success=True and count=len(handles) when only one of several handles was transformed (manipulation_mixin returns moved_count > 0; entities.py reports the requested count). No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/mcp_tools/tools/entities.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/entities.py"
+        },
+        {
+          "path": "src/adapters/mixins/manipulation_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/manipulation_mixin.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no output evidence; key editing operations (trim/offset/fillet/array) absent; partial failure reported as full count."
+      }
+    },
+    {
+      "id": "F3",
+      "name": "Annotation/styles",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Aligned dimension, single-line text, MLeader (multi-group via _AIMLEADEREDITADD SendCommand) and native table creation exist.",
+      "scope_and_limits": "Source-only. No text/dimension style management, no numeric tolerances/fits, no check of displayed dimension text after edits. Extra MLeader arrows are added by an asynchronous SendCommand whose failure is only logged; the op still reports success. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/mcp_tools/tools/drawing.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/drawing.py"
+        },
+        {
+          "path": "src/adapters/mixins/drawing_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/drawing_mixin.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no output evidence; styles/tolerances absent; leader extra-arrow failure is swallowed."
+      }
+    },
+    {
+      "id": "F4",
+      "name": "Organization/exchange",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Layers (create/rename/delete/on/off/color/list), blocks (create/insert/list/info, get/set attributes), native table, multi-document new/close/switch/save, Excel/JSON entity export.",
+      "scope_and_limits": "Source-only. No paper space, layouts, viewports or page setups. save takes format dwg/dxf/pdf but only appends the extension and calls Document.SaveAs(path) with no SaveAsType and no plot path for PDF, so DXF/PDF output is not established. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/mcp_tools/tools/layers.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/layers.py"
+        },
+        {
+          "path": "src/mcp_tools/tools/blocks.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/blocks.py"
+        },
+        {
+          "path": "src/mcp_tools/tools/files.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/files.py"
+        },
+        {
+          "path": "src/adapters/mixins/file_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/file_mixin.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no output evidence; model/paper and viewports absent; DXF/PDF save path unverified and format-unaware."
+      }
+    },
+    {
+      "id": "F5",
+      "name": "Domain workflows",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Generic foreign-drawing extraction exists: paged entity listing with layer/color/length/area and block instance counts (get_block_counts, export_data to JSON/Excel), usable as a raw quantity listing.",
+      "scope_and_limits": "No P&ID, mechanical views/BOM, architectural rooms/openings or takeoff with uncertainty; these are outside the repo's declared general-purpose contract and are not deducted again elsewhere. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/adapters/mixins/export_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/export_mixin.py"
+        },
+        {
+          "path": "src/adapters/mixins/block_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/block_mixin.py"
+        },
+        {
+          "path": "src/mcp_tools/tools/export.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/export.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: only raw extraction; no domain workflow and no output evidence."
+      }
+    },
+    {
+      "id": "C1",
+      "name": "Transactions",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Undo/redo exist (SendCommand _undo/_redo N). Batches are per-op try/except with per-op results.",
+      "scope_and_limits": "A failed op does not roll back earlier ops in the same batch; no preview, no checkpoints, no conflict detection, no document identity check beyond name-based switch. Undo is a fire-and-forget SendCommand with no verification. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/mcp_tools/tools/drawing.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/drawing.py"
+        },
+        {
+          "path": "src/adapters/mixins/view_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/view_mixin.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no transactional batch; undo unverified; no output evidence."
+      }
+    },
+    {
+      "id": "C2",
+      "name": "Intent/geometry",
+      "score": 0,
+      "max_score": 5,
+      "basis": "Input shapes are validated (pydantic models, validator.py) before COM calls, but nothing checks created or edited geometry against requested values or saved specifications.",
+      "scope_and_limits": "No readback of created entities, no dimension-vs-geometry check, no tamper detection. Draw ops return the handle as success without reading the entity back. Partial transform failures are reported with the full requested count.",
+      "source": [
+        {
+          "path": "src/mcp_tools/validator.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/validator.py"
+        },
+        {
+          "path": "src/core/models.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/core/models.py"
+        },
+        {
+          "path": "src/mcp_tools/tools/drawing.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/drawing.py"
+        },
+        {
+          "path": "src/mcp_tools/tools/entities.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/entities.py"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no verified implementation of intent/geometry checking."
+      }
+    },
+    {
+      "id": "C3",
+      "name": "Delivery",
+      "score": 1,
+      "max_score": 5,
+      "basis": "manage_files save writes via COM Document.SaveAs and returns a path.",
+      "scope_and_limits": "Serious false success (source-demonstrated): files.py _save reports path=output_dir/filename (or the caller's filepath), while file_mixin actually saves to output_dir/drawings/<name>.<format> (resolve_export_path adds the 'drawings' subfolder and an extension), so the returned path can name a file that was not written. format=dxf/pdf only changes the filename extension; SaveAs is called without SaveAsType and PDF has no plot path, yet the op reports 'Drawing saved'. No readback, hashes, version or per-format scope. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/mcp_tools/tools/files.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/files.py"
+        },
+        {
+          "path": "src/adapters/mixins/file_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/file_mixin.py"
+        },
+        {
+          "path": "src/adapters/mixins/utility_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/utility_mixin.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no output evidence; no delivery gate/readback; reported save path and format are not a verified postcondition (the serious defect would cap at 2 regardless)."
+      }
+    },
+    {
+      "id": "C4",
+      "name": "Foreign/abnormal inputs",
+      "score": 1,
+      "max_score": 5,
+      "basis": "open_drawing and extraction catch COM exceptions and return False/empty; extraction pages large drawings and skips entities whose properties fail.",
+      "scope_and_limits": "No explicit handling of corruption, unknown units, unsupported entities or external edits beyond swallowing exceptions; skipped entities are logged at debug level, not reported as incomplete. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/adapters/mixins/file_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/file_mixin.py"
+        },
+        {
+          "path": "src/adapters/mixins/export_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/export_mixin.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: silent skip rather than incomplete report; no output evidence."
+      }
+    },
+    {
+      "id": "B1",
+      "name": "Backend contract",
+      "score": 1,
+      "max_score": 5,
+      "basis": "One COM adapter parameterised by ProgID for AutoCAD, ZWCAD, GstarCAD and BricsCAD; manage_session offers list_supported, check_running, connect/status; lazy connection with auto-detection.",
+      "scope_and_limits": "No per-backend capability map (e.g. _AIMLEADEREDITADD and PNGOUT command strings are sent to every backend); missing pywin32 or an absent CAD surfaces as a generic error. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/adapters/adapter_manager.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/adapter_manager.py"
+        },
+        {
+          "path": "src/adapters/mixins/connection_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/connection_mixin.py"
+        },
+        {
+          "path": "src/config.json",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/config.json"
+        },
+        {
+          "path": "src/mcp_tools/tools/session.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/session.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: capability boundaries undeclared; no output evidence."
+      }
+    },
+    {
+      "id": "B2",
+      "name": "Native interoperability",
+      "score": 1,
+      "max_score": 5,
+      "basis": "All operations run against the real CAD application over COM (pywin32), so a native save/edit path exists.",
+      "scope_and_limits": "logs/multicad_mcp.example.log shows only a 2025-11-14 v0.1.0 startup connecting to ZWCAD, with no tool call; it predates and does not exercise the pinned code boundary, so it is historical. No AUDIT, no recorded save/reopen. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/adapters/autocad_adapter.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/autocad_adapter.py"
+        },
+        {
+          "path": "logs/multicad_mcp.example.log",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/logs/multicad_mcp.example.log"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no recorded native workflow at the pinned code."
+      }
+    },
+    {
+      "id": "B3",
+      "name": "Platforms",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Declared Windows-only (COM); pyproject lists Python 3.10-3.12.",
+      "scope_and_limits": "No run of any kind on any OS/Python is recorded; no CI. Linux is outside the declared contract and not deducted twice. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/pyproject.toml"
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/README.md"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no platform run evidence."
+      }
+    },
+    {
+      "id": "E1",
+      "name": "Standard data",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No standards tables (fits, fasteners, sheet sizes) exist.",
+      "scope_and_limits": "Outside the declared general-purpose contract; scored 0 as no implementation, not deducted elsewhere.",
+      "source": [
+        {
+          "path": "src/mcp_tools/tools/drawing.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/drawing.py"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no implementation."
+      }
+    },
+    {
+      "id": "E2",
+      "name": "Drawing production",
+      "score": 0,
+      "max_score": 5,
+      "basis": "Individual primitives, dimensions and tables can be drawn, but there is no specification-to-drawing, model views, sections, frame/title block or BOM generation.",
+      "scope_and_limits": "Outside the declared contract; no saved parity or visual readability check.",
+      "source": [
+        {
+          "path": "src/mcp_tools/tools/drawing.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/drawing.py"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no drawing-production implementation."
+      }
+    },
+    {
+      "id": "E3",
+      "name": "Domain loop",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No connections, room area, BOM/balloon or quantity readback loop with error gates.",
+      "scope_and_limits": "Outside the declared contract.",
+      "source": [
+        {
+          "path": "src/mcp_tools/tools/export.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/export.py"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no implementation."
+      }
+    },
+    {
+      "id": "T1",
+      "name": "Behavioral regressions",
+      "score": 1,
+      "max_score": 5,
+      "basis": "tests/unit has mock-based tests for shorthand parsing, validator, batch response structure, path-traversal validation and adapter method presence.",
+      "scope_and_limits": "All tests use MagicMock COM objects; no integration/process/native tests; tests/manual scripts need a live CAD and have no committed output. The tests were not run (untrusted code) and no completed test run exists, so they are code without output evidence.",
+      "source": [
+        {
+          "path": "tests/unit/test_adapters.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/tests/unit/test_adapters.py"
+        },
+        {
+          "path": "tests/unit/test_security.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/tests/unit/test_security.py"
+        },
+        {
+          "path": "tests/unit/test_batch_operations.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/tests/unit/test_batch_operations.py"
+        },
+        {
+          "path": "tests/manual/verify_screenshot.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/tests/manual/verify_screenshot.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no completed run; mocks only."
+      }
+    },
+    {
+      "id": "T2",
+      "name": "Reproducibility",
+      "score": 1,
+      "max_score": 5,
+      "basis": "uv.lock pins the dependency graph; pyproject declares versions.",
+      "scope_and_limits": "No fixed evaluator, environment record, hashes or generated-doc check; the version string (0.2.0) is the only product identity. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "uv.lock",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/uv.lock"
+        },
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/pyproject.toml"
+        },
+        {
+          "path": "src/__version__.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/__version__.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: lockfile only, no reproduced run."
+      }
+    },
+    {
+      "id": "T3",
+      "name": "Continuous verification",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No test CI: the repository has no .github/workflows in its history; the only Actions runs are GitHub Pages deployments (23094624408, 23107086677).",
+      "scope_and_limits": "Docs builds are not correctness verification.",
+      "source": [
+        {
+          "path": "mkdocs.yml",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/mkdocs.yml"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no continuous verification."
+      }
+    },
+    {
+      "id": "S1",
+      "name": "Defaults",
+      "score": 1,
+      "max_score": 5,
+      "basis": "resolve_export_path/_validate_export_path block traversal outside the output directory; PNGOUT paths are character-sanitised; dashboard binds 127.0.0.1 by default.",
+      "scope_and_limits": "The shipped src/config.json sets output.allow_arbitrary_paths=true, which bypasses the traversal check; save/close/delete have no read-only mode. HTTP mode (stdin is a TTY) mounts the MCP endpoint and dashboard POST endpoints (/api/cad/export, /api/cad/switch_drawing) with no authentication or origin check; host is configurable with no bind guard. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/config.json",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/config.json"
+        },
+        {
+          "path": "src/adapters/mixins/utility_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/utility_mixin.py"
+        },
+        {
+          "path": "src/adapters/mixins/file_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/file_mixin.py"
+        },
+        {
+          "path": "src/server.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/server.py"
+        },
+        {
+          "path": "src/web/api.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/web/api.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: shipped default disables path scoping; unauthenticated HTTP; no output evidence."
+      }
+    },
+    {
+      "id": "S2",
+      "name": "Long tasks",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Thread locks guard config and adapter-registry singletons; connection waits with a startup timeout; file and in-memory logs (dashboard /api/logs).",
+      "scope_and_limits": "No cancellation, per-call timeouts, document locks or crash recovery; COM calls run synchronously. No committed results, logs of tool calls, benchmarks or completed test CI exist for this commit or its ancestors (only gh-pages deployment runs 23094624408/23107086677, which build docs). Without output/behavioral evidence the anchor caps this item at 1.",
+      "source": [
+        {
+          "path": "src/core/config.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/core/config.py"
+        },
+        {
+          "path": "src/adapters/adapter_manager.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/adapter_manager.py"
+        },
+        {
+          "path": "src/adapters/mixins/connection_mixin.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/connection_mixin.py"
+        },
+        {
+          "path": "src/web/api.py",
+          "url": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/web/api.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no cancellation/recovery; no output evidence."
+      }
+    }
+  ],
+  "declared_contract": "A Windows-only Python MCP server (FastMCP, v0.2.0) that drives a running AutoCAD, ZWCAD, GstarCAD or BricsCAD over COM (pywin32) through seven shorthand batch tools: drawing primitives/dimensions/leaders/tables, layers, entity selection and transforms, blocks and attributes, file new/save(dwg/dxf/pdf)/close/switch, session/view/undo/screenshot, and entity data export to JSON/Excel, plus a local web dashboard. No headless/DXF backend and no domain or engineering-standards workflows are claimed.",
+  "evidence_used": [
+    "Pinned source at 360ec77 (read only; nothing executed)",
+    "logs/multicad_mcp.example.log (historical v0.1.0 startup, 2025-11-14; not the pinned code boundary; no tool calls)",
+    "gh run list -R AnCode666/multiCAD-mcp: only pages-build-deployment runs 23094624408 and 23107086677 (docs, not tests)"
+  ],
+  "serious_defects": [
+    {
+      "item": "C3",
+      "description": "manage_files save reports success and a path that is not where the file is written: _save returns output_dir/filename or the caller's filepath, while save_drawing writes to output_dir/drawings/<name>.<fmt> via resolve_export_path (and appends an extension). format=dxf/pdf only changes the extension; SaveAs is called without a SaveAsType and PDF has no plot path, yet 'Drawing saved' is returned.",
+      "source": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/mcp_tools/tools/files.py"
+    },
+    {
+      "item": "F2",
+      "description": "move/rotate/scale return success=True with count=len(handles) when only some handles were transformed (adapter returns moved_count > 0; per-handle failures only logged).",
+      "source": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/adapters/mixins/manipulation_mixin.py"
+    },
+    {
+      "item": "S1",
+      "description": "Shipped config.json sets output.allow_arbitrary_paths=true, disabling the path-traversal guard by default; HTTP mode exposes MCP and dashboard POST endpoints without authentication.",
+      "source": "https://github.com/AnCode666/multiCAD-mcp/blob/360ec77c970ec95a962bd4d0a3238715ee78dd7c/src/config.json"
+    }
+  ],
+  "limitations": [
+    "No code from the repository was executed (untrusted); defects are source-demonstrated, not reproduced against a CAD application.",
+    "The exact AutoCAD/ZWCAD behaviour of Document.SaveAs with a .dxf/.pdf name and no SaveAsType was not tested; the path-mismatch half of the C3 defect does not depend on it.",
+    "Without any output evidence every item is capped at 1 by the rubric, so the defects did not lower the scores; they are recorded for when evidence appears.",
+    "Published scores of this repository (including U-C4N's) were not consulted."
+  ]
+}

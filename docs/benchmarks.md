@@ -76,7 +76,7 @@ was invalidated; its original record is retained below.
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/source-capability/board-dark.svg">
-    <img src="assets/source-capability/board-light.svg" alt="Source capability, 2026-10-31: two separate reviews on the same six weighted categories, out of 100, not one ranking. Our local recheck, same rubric v1 for both, one independent AI reviewer: AgentCAD 100, AutoCAD MCP Pro 93 (its own self-review of v1.6.0 also gave 93; different assessments of different versions). U-C4N's published review of July 2026 snapshots, by Pro's author, not re-scored: varavista 84, beiming183-cloud 83, LokmenoWer 74, AnCode666 73, puran-water 70, NCO-1986 68, daobataotie 35, zh19980811 30. Not an upstream listing or an official ranking." width="860">
+    <img src="assets/source-capability/board-light.svg" alt="Source capability, 2026-10-31, the same local rubric v1 for all nine servers, out of 100, pinned sources: AgentCAD 100, AutoCAD MCP Pro 93 (its own v1.6.0 self-review: 93), LokmenoWer/best-cad-mcp 43, beiming183-cloud/AutoCAD-MCP 23, varavista/autocad-mcp 21, AnCode666/multiCAD-mcp 15, puran-water/autocad-mcp 15, zh19980811/Easy-MCP-AutoCad 14, daobataotie/CAD-MCP 13; NCO-1986/AutoCAD_mcp not scored (repository returns 404). The seven other servers were scored from source, committed results and CI without running their code; most record no results, so their items stop at 1. U-C4N's July 2026 scores are noted for reference. Independent AI reviewers, requested and published by AgentCAD; not an official ranking." width="860">
   </picture>
 </p>
 
@@ -86,6 +86,14 @@ correctness-checked performance observations. This is a local comparison of two
 pinned sources, not an official overall ranking. Pro's historical self-review
 93 remains separate. [Full review and limits](source-capability-recheck.md) ·
 [Reproduce / inspect evidence](../examples/source_capability/results/2026-10-31-recheck/README.md).
+
+**Field review, 2026-10-31.** The seven other public servers on the board were scored under the
+same rubric v1 at their pinned heads, one independent AI reviewer each: LokmenoWer 43, beiming183-cloud 23,
+varavista 21, AnCode666 15, puran-water 15, zh19980811 14, daobataotie 13. NCO-1986/AutoCAD_mcp now
+returns 404 and was not scored. Their code was not run; evidence is source, committed results and CI.
+Most commit no results and run no test CI, so their items stop at 1, "implemented, not evidenced",
+which is the main reason for the gap to U-C4N's July scores. Defects found by reading the source are
+recorded per item. [Scores, method and limits](../examples/source_capability/results/2026-10-31-field/README.md).
 
 <details>
 <summary>Superseded 6699109 assessment and earlier historical records (preserved)</summary>

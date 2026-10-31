@@ -1,0 +1,638 @@
+{
+  "name": "puran-water/autocad-mcp",
+  "repository": "puran-water/autocad-mcp",
+  "product_sha": "95476a33a1c246308326eb4709d6379ef2efdbc1",
+  "source_url": "https://github.com/puran-water/autocad-mcp/tree/95476a33a1c246308326eb4709d6379ef2efdbc1",
+  "commit_date": "2026-02-20T17:36:06Z",
+  "license": "MIT",
+  "total_score": 15,
+  "max_score": 100,
+  "categories": [
+    {
+      "id": "F",
+      "name": "Functional CAD coverage",
+      "weight": 25,
+      "score": 5,
+      "item_ids": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Correctness and delivery",
+      "weight": 20,
+      "score": 3,
+      "item_ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Backends and platforms",
+      "weight": 15,
+      "score": 3,
+      "item_ids": [
+        "B1",
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "id": "E",
+      "name": "Engineering production",
+      "weight": 15,
+      "score": 1,
+      "item_ids": [
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    {
+      "id": "T",
+      "name": "Testing and maintenance",
+      "weight": 15,
+      "score": 2,
+      "item_ids": [
+        "T1",
+        "T2",
+        "T3"
+      ]
+    },
+    {
+      "id": "S",
+      "name": "Security and operations",
+      "weight": 10,
+      "score": 1,
+      "item_ids": [
+        "S1",
+        "S2"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "F1",
+      "name": "Geometry and measurement",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Real entry points create LINE, CIRCLE, ARC, ELLIPSE, LWPOLYLINE, rectangle, MTEXT and single-boundary HATCH in both backends (ezdxf_backend.py create_*; mcp_dispatch.lsp mcp-cmd-create-*). entity get reads back start/end for LINE and center/radius for CIRCLE only.",
+      "scope_and_limits": "Source reading only. No length/area/topology measurement exists in either backend; entity get returns geometry only for LINE and CIRCLE; ezdxf create_hatch only accepts entities with get_points (LWPOLYLINE), no islands. No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L140",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L140"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L345",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L345"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L826",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L826"
+        },
+        {
+          "path": "src/autocad_mcp/server.py#L88",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/server.py#L88"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no measurement capability (length/area/topology) and no output evidence for any primitive; capped at 1."
+      }
+    },
+    {
+      "id": "F2",
+      "name": "Editing",
+      "score": 1,
+      "max_score": 5,
+      "basis": "copy/move/rotate/scale/mirror/array exist in both backends; offset/fillet/chamfer only through AutoCAD commands in File IPC. Handles serve as entity identity.",
+      "scope_and_limits": "Source reading only. No trim/join, no requirement-driven edits. ezdxf mirror adds the copy to modelspace before validating a zero-length mirror line, so the refused call still leaves a stray copy (ezdxf_backend.py L290-296). IPC copy/mirror/offset report the handle of (entlast) without checking that the command produced a new entity. No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L285",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L285"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L321",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L321"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L915",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L915"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L931",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L931"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no trim/join and no output evidence; capped at 1. The mirror partial-write would cap at 2 independently."
+      }
+    },
+    {
+      "id": "F3",
+      "name": "Annotation and styles",
+      "score": 1,
+      "max_score": 5,
+      "basis": "TEXT, MTEXT, linear/aligned/angular/radius dimensions and leaders exist. ezdxf dimensions call render(); IPC uses DIMLINEAR/DIMALIGNED/DIMANGULAR/DIMRADIUS.",
+      "scope_and_limits": "Source reading only. No text/dimension style management, no numeric tolerances or fits, and no readback of displayed dimension text. IPC dimension handlers return ok with {entity_type: DIMENSION} unconditionally and no handle (mcp_dispatch.lsp L1094 onward). No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L522",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L522"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1094",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1094"
+        },
+        {
+          "path": "src/autocad_mcp/server.py#L288",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/server.py#L288"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: styles, tolerances/fits and display readback absent; no output evidence; capped at 1."
+      }
+    },
+    {
+      "id": "F4",
+      "name": "Organization and exchange",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Layer list/create/current/properties/freeze/lock, block list/insert/attributes, ezdxf block define, DXF save (ezdxf) and SAVEAS/QSAVE/-PLOT to PDF via AutoCAD exist.",
+      "scope_and_limits": "Source reading only. No paper space, layouts, viewports or tables; ezdxf ignores lineweight in layer_set_properties; DWG only through the user's AutoCAD. The File IPC block insert_with_attributes receives an attributes dict but the LISP handler never applies it and returns ok (mcp_dispatch.lsp L1029-1045, comment 'attribute values are applied separately'); IPC update_attribute returns ok even when the tag does not exist (set_attribute_value L1349). No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/file_ipc.py#L413",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/file_ipc.py#L413"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1029",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1029"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1349",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1349"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L388",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L388"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1200",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1200"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no model/paper space, viewports or tables; demonstrated IPC attribute omitted-edit false success; no output evidence; capped at 1."
+      }
+    },
+    {
+      "id": "F5",
+      "name": "Domain workflows",
+      "score": 1,
+      "max_score": 5,
+      "basis": "A P&ID tool exists: layer setup, process lines, orthogonal connect, flow arrows, tags, line numbers, valve/pump/tank/instrument symbols and a CTO symbol catalog.",
+      "scope_and_limits": "Source reading only. In ezdxf every symbol is a placeholder rectangle/diamond/circle with a text label; rotation and attributes are ignored for valve/tank/pump attributes (ezdxf_backend.py L617-683), although the README says the ezdxf backend 'has built-in CTO library support'. In File IPC every P&ID handler depends on pid_tools.lsp, which is not in the repository (handlers return 'pid_tools.lsp not loaded'), and the CTO library itself is a third-party install. No mechanical, architectural, foreign-drawing understanding or takeoff. No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L617",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L617"
+        },
+        {
+          "path": "src/autocad_mcp/pid/cto_library.py",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/pid/cto_library.py"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L658",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L658"
+        },
+        {
+          "path": "README.md#L142",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/README.md#L142"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: only placeholder P&ID geometry is self-contained; no other domain workflow; no output evidence; capped at 1."
+      }
+    },
+    {
+      "id": "C1",
+      "name": "Transactions",
+      "score": 1,
+      "max_score": 5,
+      "basis": "File IPC exposes single-step UNDO/REDO through AutoCAD; ezdxf returns 'Not supported' for undo/redo (base.py).",
+      "scope_and_limits": "Source reading only. No batches, preview, conflict detection or checkpoints. IPC undo/redo return ok without checking. ezdxf failures can leave partial writes: entity_mirror adds a copy before rejecting a zero-length line (L290-296) and create_hatch adds an empty HATCH before get_points can fail (L350-354). No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L182",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L182"
+        },
+        {
+          "path": "src/autocad_mcp/backends/base.py#L92",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/base.py#L92"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L290",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L290"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L350",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L350"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no transactional batches/checkpoints; demonstrated partial writes on failed ezdxf calls; no output evidence; capped at 1."
+      }
+    },
+    {
+      "id": "C2",
+      "name": "Intent and geometry",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No saved specification, requirement or dimension-vs-geometry verification exists.",
+      "scope_and_limits": "Source reading only. Results report what was requested, not what was verified: IPC create/copy/mirror/offset/hatch return the handle of (entlast) without confirming the command created a new entity, so a failed command (for example a hatch with an invalid boundary) can return the previous entity's handle with ok=true; IPC block insert_with_attributes drops the requested attributes and returns ok; ezdxf drawing_purge returns purged:true without doing anything.",
+      "source": [
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L826",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L826"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1029",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1029"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L110",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L110"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no intent/geometry verification entry point; several demonstrated false-success paths would cap at 2 in any case."
+      }
+    },
+    {
+      "id": "C3",
+      "name": "Delivery",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Delivery entry points exist: ezdxf saveas to DXF; IPC QSAVE/SAVEAS/SAVEAS DXF/-PLOT to PDF.",
+      "scope_and_limits": "Source reading only. No gates, hashes, source version, readback or parity checks. IPC drawing-save, drawing-save-as-dxf, drawing-plot-pdf and drawing-open return ok unconditionally after issuing the AutoCAD command, without checking that the file exists or that the command completed (mcp_dispatch.lsp L301-330, L1200-1210); save-as-dxf also writes the unescaped path into JSON. No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L301",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L301"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1200",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1200"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L89",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L89"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no delivery checks; demonstrated unconditional-success save/plot handlers (would cap at 2); no output evidence; capped at 1."
+      }
+    },
+    {
+      "id": "C4",
+      "name": "Foreign and abnormal inputs",
+      "score": 1,
+      "max_score": 5,
+      "basis": "ezdxf drawing_open catches readfile exceptions and returns ok=false; missing entities return 'not found'; unsupported ezdxf operations return 'not supported'.",
+      "scope_and_limits": "Source reading only. No corruption recovery/audit, unit detection, unknown-entity reporting or external-edit detection. ezdxf block_insert_with_attributes swallows attribute errors with bare except/pass. No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L116",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L116"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L450",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L450"
+        },
+        {
+          "path": "src/autocad_mcp/backends/base.py#L81",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/base.py#L81"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: only basic exception catching; no output evidence; capped at 1."
+      }
+    },
+    {
+      "id": "B1",
+      "name": "Backend contract",
+      "score": 1,
+      "max_score": 5,
+      "basis": "config.detect_backend selects file_ipc/ezdxf with explicit errors when file_ipc is requested without Windows, pywin32 or an AutoCAD window; status returns a capabilities map; base class returns 'Not supported' defaults.",
+      "scope_and_limits": "Source reading only. The capability map is reported but not enforced or tied to operations (e.g. offset/fillet/plot are rejected only by implementation); 'auto' silently falls back to ezdxf, so the same call can act on an in-memory DXF instead of the user's AutoCAD drawing, distinguishable only through status. Postconditions differ between backends (e.g. insert_with_attributes applies attributes in ezdxf but not IPC). No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/config.py#L66",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/config.py#L66"
+        },
+        {
+          "path": "src/autocad_mcp/backends/base.py#L28",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/base.py#L28"
+        },
+        {
+          "path": "src/autocad_mcp/client.py#L27",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/client.py#L27"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: inconsistent postconditions across backends and no output evidence; capped at 1."
+      }
+    },
+    {
+      "id": "B2",
+      "name": "Native interoperability",
+      "score": 1,
+      "max_score": 5,
+      "basis": "A real AutoCAD LT path exists: JSON command files in C:/temp, keystroke-triggered (c:mcp-dispatch) in mcp_dispatch.lsp, AutoCAD commands for create/edit/save/plot/open.",
+      "scope_and_limits": "Source reading only; AutoCAD was not run per the brief. No committed native run logs, AUDIT or DWG round-trip evidence. P&ID native path requires an uncommitted pid_tools.lsp. No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/file_ipc.py#L140",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/file_ipc.py#L140"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1272",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1272"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no native output evidence; capped at 1."
+      }
+    },
+    {
+      "id": "B3",
+      "name": "Platforms",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Code distinguishes Windows (pywin32, Win32 PrintWindow) from Linux/macOS/WSL (ezdxf fallback, WSL detection); requires-python >=3.10.",
+      "scope_and_limits": "No CI workflows and no recorded runs on any platform or Python version; native and headless runs are not evidenced. No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/config.py#L35",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/config.py#L35"
+        },
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/pyproject.toml"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no platform run evidence; capped at 1."
+      }
+    },
+    {
+      "id": "E1",
+      "name": "Standard data",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No engineering standard data (sizes, fits, tolerances, editions). cto_library.py is a hard-coded list of third-party symbol file names, not dimensional standard data.",
+      "scope_and_limits": "Source reading only. The module docstring cites ISA 5.1-2009 for the external CTO library, but the repository holds no symbol geometry or standard values and no refusal of unknown values beyond an empty list.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/pid/cto_library.py",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/pid/cto_library.py"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no standard-data implementation."
+      }
+    },
+    {
+      "id": "E2",
+      "name": "Drawing production",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Dimensions and AutoCAD -PLOT to a fixed ANSI A landscape PDF exist.",
+      "scope_and_limits": "Source reading only. No frame/title block, model views, sections, BOM or saved-parity/visual-readability checks; the plot handler hard-codes DWG To PDF.pc3, ANSI A, extents/fit and returns ok unconditionally. No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1200",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1200"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L522",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L522"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: most drawing-production elements absent; no output evidence; capped at 1."
+      }
+    },
+    {
+      "id": "E3",
+      "name": "Domain loop",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No readback of P&ID connections, quantities, BOM or room area; connect_equipment draws a polyline between two points with no link to equipment entities.",
+      "scope_and_limits": "Source reading only. P&ID entities are not bound to each other, so no connection/quantity loop or error gate exists.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L690",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L690"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no domain readback loop."
+      }
+    },
+    {
+      "id": "T1",
+      "name": "Behavioral regressions",
+      "score": 1,
+      "max_score": 5,
+      "basis": "tests/test_ezdxf_backend.py exercises ezdxf create/query/modify/layer/block/annotation/P&ID calls with assertions and one save-and-reload round trip.",
+      "scope_and_limits": "Tests were not executed (brief forbids) and no run results exist. The File IPC/LISP path has no behavioral test: test_ipc_protocol.py mostly asserts on self-built dicts, constants and a hand-copied command list rather than on the dispatcher. Many ezdxf tests assert only ok/handle presence. No adversarial tests. Golden DXFs are produced by generate_golden.py calling ezdxf directly, not the product code, and no test reads them.",
+      "source": [
+        {
+          "path": "tests/test_ezdxf_backend.py#L613",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/tests/test_ezdxf_backend.py#L613"
+        },
+        {
+          "path": "tests/test_ipc_protocol.py#L85",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/tests/test_ipc_protocol.py#L85"
+        },
+        {
+          "path": "tests/generate_golden.py",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/tests/generate_golden.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: tests exist but have no run evidence and do not cover the native path; capped at 1."
+      }
+    },
+    {
+      "id": "T2",
+      "name": "Reproducibility",
+      "score": 1,
+      "max_score": 5,
+      "basis": "uv.lock is committed and pyproject pins mcp<2.",
+      "scope_and_limits": "No fixed evaluator, environment/hash records or generated docs; AutoCAD/LISP side unversioned against the Python side (IPC dir must be edited in two places). No reproduction record exists. No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "uv.lock",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/uv.lock"
+        },
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/pyproject.toml"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: only a lock file; no reproducibility evidence; capped at 1."
+      }
+    },
+    {
+      "id": "T3",
+      "name": "Continuous verification",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No .github/workflows directory; GitHub API reports 0 workflows and gh run list returns no runs.",
+      "scope_and_limits": "Checked read-only on 2026-10-31.",
+      "source": [
+        {
+          "path": "README.md#L187",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/README.md#L187"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no continuous verification."
+      }
+    },
+    {
+      "id": "S1",
+      "name": "Security defaults",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No path restriction or operation scoping. execute_lisp (arbitrary AutoLISP) is enabled by default on the File IPC backend, sits in the 'system' tool annotated readOnlyHint=True, and the loader sets SECURELOAD to 0 while loading the code; the LISP header still states 'SECURITY: No raw eval'.",
+      "scope_and_limits": "Source reading only; no exploit was run. drawing save/open/save_as_dxf/plot accept arbitrary paths (ezdxf saveas overwrites any writable path). stdio only, so no HTTP surface. This is a demonstrated permission defect (misleading read-only annotation plus default-enabled code execution).",
+      "source": [
+        {
+          "path": "src/autocad_mcp/server.py#L461",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/server.py#L461"
+        },
+        {
+          "path": "src/autocad_mcp/server.py#L512",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/server.py#L512"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L621",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L621"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L9",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L9"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L89",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L89"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no protective default is implemented; the default-enabled arbitrary-code path behind a read-only annotation is a serious permission defect."
+      }
+    },
+    {
+      "id": "S2",
+      "name": "Long tasks",
+      "score": 1,
+      "max_score": 5,
+      "basis": "File IPC uses an asyncio.Lock for one in-flight command, a configurable timeout clamped to 1-300 s, request-id matching, atomic tmp-then-rename writes, stale-file cleanup, ESC prefix to cancel stuck commands, and structlog logging to stderr.",
+      "scope_and_limits": "Source reading only. The lock is per process; c:mcp-dispatch processes whichever autocad_mcp_cmd_*.json it lists first, so two server processes sharing C:/temp can execute each other's commands. A timeout returns ok=false while AutoCAD may still complete the command, so the drawing state after a timeout is unknown. No cancellation API or crash recovery. No committed result files, no golden output produced by the product code, and no GitHub Actions workflows or runs exist for this repository, so no output/behavioral evidence is available; under the brief, code without output evidence is capped at 1.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/file_ipc.py#L135",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/file_ipc.py#L135"
+        },
+        {
+          "path": "src/autocad_mcp/backends/file_ipc.py#L216",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/file_ipc.py#L216"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1272",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1272"
+        },
+        {
+          "path": "src/autocad_mcp/config.py#L20",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/config.py#L20"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: per-process locking only, unknown state after timeout, no output evidence; capped at 1."
+      }
+    }
+  ],
+  "declared_contract": "MCP stdio server (v3.0.0 in pyproject, v3.1 in README/server) exposing 8 consolidated tools (drawing, entity, layer, block, annotation, pid, view, system) for AutoCAD LT 2024+ automation and headless DXF generation. Two backends: File IPC (Windows; Python writes JSON command files to C:/temp and posts '(c:mcp-dispatch)' keystrokes to AutoCAD LT, where mcp_dispatch.lsp runs AutoCAD commands and writes result files) and ezdxf (any platform, in-memory DXF, matplotlib screenshots). Declared scope: 2D primitives, basic transforms, layers, blocks/attributes, text/dimensions/leaders, P&ID symbols from the third-party CTO library, save/DXF/PDF, undo/redo and arbitrary AutoLISP via execute_lisp (File IPC).",
+  "evidence_used": [
+    "Pinned source tree at 95476a33a1c246308326eb4709d6379ef2efdbc1 (read only; nothing executed)",
+    "gh run list -R puran-water/autocad-mcp: no runs; gh api repos/puran-water/autocad-mcp/actions/workflows: total_count 0",
+    "tests/golden/*.dxf inspected and rejected as product evidence: produced by tests/generate_golden.py calling ezdxf directly and not referenced by any test"
+  ],
+  "serious_defects": [
+    {
+      "item": "F4",
+      "description": "File IPC block insert_with_attributes ignores the requested attributes (handler never reads them) and returns ok=true; omitted edit reported as success. Also counted under C2.",
+      "source": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1029"
+    },
+    {
+      "item": "C2",
+      "description": "File IPC create/copy/mirror/offset/hatch report the handle of (entlast) without checking that the AutoCAD command created a new entity, so a failed command can return a pre-existing entity's handle with ok=true.",
+      "source": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L826"
+    },
+    {
+      "item": "C3",
+      "description": "File IPC drawing-save, drawing-save-as-dxf, drawing-open and drawing-plot-pdf return ok=true unconditionally after issuing the command, without checking file existence or command completion.",
+      "source": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L301"
+    },
+    {
+      "item": "C1",
+      "description": "ezdxf entity_mirror adds the copy before rejecting a zero-length mirror line, and create_hatch adds an empty HATCH before the boundary lookup can fail; failed calls leave partial writes.",
+      "source": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L290"
+    },
+    {
+      "item": "S1",
+      "description": "execute_lisp (arbitrary AutoLISP, loaded with SECURELOAD temporarily 0) is enabled by default and exposed through the 'system' tool annotated readOnlyHint=True; the dispatcher header claims 'No raw eval'.",
+      "source": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/server.py#L461"
+    }
+  ],
+  "limitations": [
+    "Source-only review: per the brief nothing was installed or executed, AutoCAD was not launched, and the repository has no committed results or CI runs, so every item is capped at 1 by the anchors.",
+    "Defects are demonstrated by reading the code paths; they were not reproduced by running them.",
+    "The P&ID File IPC path depends on pid_tools.lsp and the CTO symbol library, neither of which is in the repository; their behavior could not be assessed.",
+    "Line anchors in URLs point to the start of the relevant handler at the pinned SHA.",
+    "Scores are under the frozen local rubric v1 and are not comparable to any upstream or published score."
+  ]
+}

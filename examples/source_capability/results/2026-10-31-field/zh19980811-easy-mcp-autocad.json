@@ -1,0 +1,651 @@
+{
+  "name": "zh19980811/Easy-MCP-AutoCad",
+  "repository": "zh19980811/Easy-MCP-AutoCad",
+  "product_sha": "47347ced06c663f1c51385467bfe478c5e1ec2fc",
+  "source_url": "https://github.com/zh19980811/Easy-MCP-AutoCad/tree/47347ced06c663f1c51385467bfe478c5e1ec2fc",
+  "commit_date": "2026-10-15T03:25:53Z",
+  "license": null,
+  "total_score": 14,
+  "max_score": 100,
+  "categories": [
+    {
+      "id": "F",
+      "name": "Functional CAD coverage",
+      "weight": 25,
+      "score": 5,
+      "item_ids": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Correctness and delivery",
+      "weight": 20,
+      "score": 2,
+      "item_ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Backends and platforms",
+      "weight": 15,
+      "score": 3,
+      "item_ids": [
+        "B1",
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "id": "E",
+      "name": "Engineering production",
+      "weight": 15,
+      "score": 1,
+      "item_ids": [
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    {
+      "id": "T",
+      "name": "Testing and maintenance",
+      "weight": 15,
+      "score": 1,
+      "item_ids": [
+        "T1",
+        "T2",
+        "T3"
+      ]
+    },
+    {
+      "id": "S",
+      "name": "Security and operations",
+      "weight": 10,
+      "score": 2,
+      "item_ids": [
+        "S1",
+        "S2"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "F1",
+      "name": "Geometry and measurement",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Real COM entry points for line, circle, lightweight polyline/rectangle and single-line text in server.py; the FreeCAD port mirrors them through bridge commands (Part::Line, Part::Circle, makePolygon).",
+      "scope_and_limits": "No arcs, ellipses, splines or hatch; no length/area/topology measurement tool. scan_all_entities reads back only coordinates of lines/circles/text. No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L67",
+          "line": 67
+        },
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L604",
+          "line": 604
+        },
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L67",
+          "line": 67
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Key ordinary capabilities (curves beyond circle, hatch, measurement) absent and no output evidence."
+      }
+    },
+    {
+      "id": "F2",
+      "name": "Editing",
+      "score": 1,
+      "max_score": 5,
+      "basis": "move_entity, rotate_entity and copy_entity by handle via COM Move/Rotate/Copy; the FreeCAD bridge implements equivalent placement edits.",
+      "scope_and_limits": "No scale, mirror, array, trim, extend, offset, fillet, join or delete; no requirement-driven edits. Handles returned as text only. No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L807",
+          "line": 807
+        },
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L204",
+          "line": 204
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Only three transforms exist; no output evidence."
+      }
+    },
+    {
+      "id": "F3",
+      "name": "Annotation and styles",
+      "score": 1,
+      "max_score": 5,
+      "basis": "draw_text adds single-line text with height and rotation (AutoCAD AddText).",
+      "scope_and_limits": "No dimensions, leaders, MText, text/dimension styles or tolerances. In the FreeCAD port the height is stored only in SQLite because FreeCAD 1.x Annotation has no FontSize (documented in freecad_linux/使用说明.md). No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L654",
+          "line": 654
+        },
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L113",
+          "line": 113
+        },
+        {
+          "path": "freecad_linux/使用说明.md",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Dimensions and styles absent; no output evidence."
+      }
+    },
+    {
+      "id": "F4",
+      "name": "Organization and exchange",
+      "score": 1,
+      "max_score": 5,
+      "basis": "create_layer and optional per-call layer creation; the FreeCAD port adds save_drawing (FCStd) and export_dxf (FreeCAD importDXF).",
+      "scope_and_limits": "AutoCAD server has no open/save/export tool at all (AutoCADManager.export_drawing exists but is not wired to any tool). No blocks/attributes, paper space, viewports, plotting or tables. FreeCAD DXF export is documented to drop text and duplicate polygon edges. No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L692",
+          "line": 692
+        },
+        {
+          "path": "autocad_manager.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/autocad_manager.py#L130",
+          "line": 130
+        },
+        {
+          "path": "freecad_linux/server_freecad.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/server_freecad.py#L345",
+          "line": 345
+        },
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L287",
+          "line": 287
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "No save/exchange in the AutoCAD backend, no blocks/layouts; no output evidence."
+      }
+    },
+    {
+      "id": "F5",
+      "name": "Domain workflows",
+      "score": 1,
+      "max_score": 5,
+      "basis": "count_text_patterns / highlight_text_matches (e.g. 'PMC-3M' tags), SQLite mirroring of scanned entities with ad-hoc SQL, and draw_device_connection (three-segment connector between labelled devices).",
+      "scope_and_limits": "draw_device_connection needs rows of type 'CustomDevice' that no tool creates (the port's docs say they must be inserted by hand with execute_query). No P&ID symbols, BOM, rooms or uncertainty-tagged takeoff. The advertised 'PMC control diagram generation' has no implementing tool. No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L279",
+          "line": 279
+        },
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L714",
+          "line": 714
+        },
+        {
+          "path": "freecad_linux/使用说明.md",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/%E4%BD%BF%E7%94%A8%E8%AF%B4%E6%98%8E.md"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Domain support is limited to text counting and a connector stub; no output evidence."
+      }
+    },
+    {
+      "id": "C1",
+      "name": "Transactions",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No transaction, preview, checkpoint, undo or rollback mechanism exists in either backend.",
+      "scope_and_limits": "Multi-step tools write partially on failure (draw_device_connection adds three lines independently; draw_line inserts a SQLite row after the entity is drawn). highlight_text_matches and query_and_highlight overwrite entity Color without recording the original, so the 'highlight' cannot be reverted by the server.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L787",
+          "line": 787
+        },
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L385",
+          "line": 385
+        },
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L537",
+          "line": 537
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No verified implementation."
+      }
+    },
+    {
+      "id": "C2",
+      "name": "Intent and geometry",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No check of produced geometry against requested values; SQLite records the requested parameters, not read-back geometry, for draw_line/draw_circle.",
+      "scope_and_limits": "Demonstrated false success in the FreeCAD port: highlight_text_matches reports a count taken from count_text, and query_and_highlight reports len(handles), not the bridge's actual coloured count; in headless mode set_color colours nothing yet the tools report success. A duplicate draw_line definition (server.py:566-602) is dead code because FastMCP keeps the first registration, so it is not counted as a defect.",
+      "source": [
+        {
+          "path": "freecad_linux/server_freecad.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/server_freecad.py#L202",
+          "line": 202
+        },
+        {
+          "path": "freecad_linux/server_freecad.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/server_freecad.py#L259",
+          "line": 259
+        },
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L48",
+          "line": 48
+        },
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L566",
+          "line": 566
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No verified implementation; the serious false-success defect would cap this item at 2 in any case."
+      }
+    },
+    {
+      "id": "C3",
+      "name": "Delivery",
+      "score": 1,
+      "max_score": 5,
+      "basis": "The FreeCAD port has save_drawing (saveAs plus GuiDocument.xml injection) and export_dxf entry points.",
+      "scope_and_limits": "The AutoCAD backend has no delivery path. No gates, source hash, readback of saved files, DXF parity check or per-format scope reporting; saveAs overwrites any existing file at an agent-chosen path. No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L279",
+          "line": 279
+        },
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L287",
+          "line": 287
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Only an unchecked save/export entry point in one backend."
+      }
+    },
+    {
+      "id": "C4",
+      "name": "Foreign and abnormal inputs",
+      "score": 1,
+      "max_score": 5,
+      "basis": "scan_all_entities iterates any model-space entity of an open drawing and records type/layer, with per-entity try/except.",
+      "scope_and_limits": "Unknown entity types get empty properties; failing entities are silently dropped from the result (only printed). In the stdio AutoCAD server those print() calls write to stdout, the JSON-RPC channel. Paper space, blocks, units and corrupt files are not handled. No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L176",
+          "line": 176
+        },
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L236",
+          "line": 236
+        },
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L146",
+          "line": 146
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Foreign-drawing handling is minimal and unverified."
+      }
+    },
+    {
+      "id": "B1",
+      "name": "Backend contract",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Two separate servers: AutoCAD via pywin32 COM (server.py) and FreeCAD via a loopback TCP bridge (freecad_linux/). The FreeCAD client reports an unreachable bridge.",
+      "scope_and_limits": "No capability discovery or dependency check: server.py imports win32com at module load. Errors are returned as ordinary text content rather than MCP tool errors, so clients cannot distinguish failure from success structurally. Headless highlight returns success while doing nothing. No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L1",
+          "line": 1
+        },
+        {
+          "path": "freecad_linux/server_freecad.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/server_freecad.py#L17",
+          "line": 17
+        },
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L180",
+          "line": 180
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Contract is undocumented and inconsistent between backends; no output evidence."
+      }
+    },
+    {
+      "id": "B2",
+      "name": "Native interoperability",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Real AutoCAD COM calls (AddLine, AddCircle, AddLightWeightPolyline, AddText, Move/Rotate/Copy, Layers).",
+      "scope_and_limits": "No save/read/AUDIT, no DWG round trip. test/*.py are manual scripts against a live AutoCAD with hard-coded handles and no recorded output. The committed demo video was not used as evidence because it cannot be traced to the pinned code boundary. No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L98",
+          "line": 98
+        },
+        {
+          "path": "test/test_complex_features.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/test/test_complex_features.py"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "No output evidence of native behaviour."
+      }
+    },
+    {
+      "id": "B3",
+      "name": "Platforms",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Windows (AutoCAD COM) and Linux (FreeCAD AppImage headless bridge) entry points exist.",
+      "scope_and_limits": "No CI or recorded runs on any platform or Python version; README states Python 3.10+ while pyproject requires >=3.13. The Linux start script points to ./squashfs-root, which is not in the repo. No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/pyproject.toml"
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/README.md"
+        },
+        {
+          "path": "freecad_linux/start_bridge_headless.sh",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/start_bridge_headless.sh"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "No platform run evidence."
+      }
+    },
+    {
+      "id": "E1",
+      "name": "Standard data",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No standards data (fasteners, sizes, editions) exists.",
+      "scope_and_limits": "Outside the declared contract; scored 0 for absence without a second penalty elsewhere.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No verified implementation."
+      }
+    },
+    {
+      "id": "E2",
+      "name": "Drawing production",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No model views, sections, dimensions, title frame or BOM generation.",
+      "scope_and_limits": "The README's 'PMC control diagram' feature has no implementing tool.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py"
+        },
+        {
+          "path": "README.md",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/README.md"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No verified implementation."
+      }
+    },
+    {
+      "id": "E3",
+      "name": "Domain loop",
+      "score": 1,
+      "max_score": 5,
+      "basis": "Text-pattern counts are read back from the drawing and stored; SQLite queries can feed query_and_highlight for review.",
+      "scope_and_limits": "No connection checking, quantities with uncertainty or error gates; draw_device_connection depends on hand-inserted rows. No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L279",
+          "line": 279
+        },
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L483",
+          "line": 483
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Only a count/readback entry point; no output evidence."
+      }
+    },
+    {
+      "id": "T1",
+      "name": "Behavioral regressions",
+      "score": 0,
+      "max_score": 5,
+      "basis": "test/ holds three scripts that call AutoCAD COM directly; they do not import or call server.py tools and contain no assertions.",
+      "scope_and_limits": "No unit, interface, process or adversarial tests of the product code; no tests for the FreeCAD port are committed (its README describes tests that are not in the repo).",
+      "source": [
+        {
+          "path": "test/test_complex_features.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/test/test_complex_features.py"
+        },
+        {
+          "path": "test/test_highlight.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/test/test_highlight.py"
+        },
+        {
+          "path": "test/test_highlight_simple.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/test/test_highlight_simple.py"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No verified test of the product."
+      }
+    },
+    {
+      "id": "T2",
+      "name": "Reproducibility",
+      "score": 1,
+      "max_score": 5,
+      "basis": "uv.lock pins Python dependencies (e.g. mcp 1.4.1, pywin32 309) and .python-version pins 3.13.",
+      "scope_and_limits": "requirements.txt is unpinned and the README installs from it; the FreeCAD version/AppImage for the port is not pinned or hashed; no fixed evaluator or generated docs.",
+      "source": [
+        {
+          "path": "uv.lock",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/uv.lock"
+        },
+        {
+          "path": "requirements.txt",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/requirements.txt"
+        },
+        {
+          "path": ".python-version",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/.python-version"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Lockfile only; no reproducible evaluation."
+      }
+    },
+    {
+      "id": "T3",
+      "name": "Continuous verification",
+      "score": 0,
+      "max_score": 5,
+      "basis": "No .github workflows exist; gh run list for the repository returns no runs.",
+      "scope_and_limits": "Nothing to gate.",
+      "source": [
+        {
+          "path": ".gitignore",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/.gitignore"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "No verified implementation."
+      }
+    },
+    {
+      "id": "S1",
+      "name": "Defaults and security",
+      "score": 1,
+      "max_score": 5,
+      "basis": "The FreeCAD bridge binds to 127.0.0.1 only; the FreeCAD port validates table names in get_table_schema.",
+      "scope_and_limits": "execute_query runs arbitrary SQL including DELETE/DROP on the database; AutoCAD get_table_schema interpolates table_name into SQL unvalidated; the bridge accepts unauthenticated commands from any local process and save/export write to arbitrary paths with overwrite. Highlight tools permanently recolour user entities.",
+      "source": [
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L428",
+          "line": 428
+        },
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L453",
+          "line": 453
+        },
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L349",
+          "line": 349
+        },
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L279",
+          "line": 279
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Permission and destructive-write defects (would cap at 2); no evidence of tested boundaries."
+      }
+    },
+    {
+      "id": "S2",
+      "name": "Long tasks",
+      "score": 1,
+      "max_score": 5,
+      "basis": "bridge_call sets a 60 s socket timeout.",
+      "scope_and_limits": "No locks: the bridge serves each connection on its own thread and mutates the FreeCAD document from non-main threads concurrently; no cancellation, recovery or structured logs (the AutoCAD server prints to stdout, the stdio protocol channel). No committed result logs, benchmark outputs or CI runs exist at this SHA, so no item can rise above 1 on output evidence.",
+      "source": [
+        {
+          "path": "freecad_linux/server_freecad.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/server_freecad.py#L17",
+          "line": 17
+        },
+        {
+          "path": "freecad_linux/bridge.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L355",
+          "line": 355
+        },
+        {
+          "path": "server.py",
+          "url": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L236",
+          "line": 236
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Only a timeout; no concurrency control or evidence."
+      }
+    }
+  ],
+  "declared_contract": "A FastMCP stdio server (server.py) that drives a running AutoCAD on Windows through pywin32 COM: create a drawing, draw line/circle/polyline/rectangle/text, create layers, move/rotate/copy/highlight entities by handle, scan model-space entities into a local SQLite database, count and highlight text patterns (e.g. PMC tags), run SQL against that database, and draw a three-segment connector between labelled devices. A community port (freecad_linux/) exposes the same tools plus save_drawing (FCStd) and export_dxf against FreeCAD on Linux through a loopback TCP bridge running inside freecadcmd or the FreeCAD GUI.",
+  "evidence_used": [
+    "Pinned source only (server.py, freecad_linux/*.py, test/*.py, pyproject.toml, uv.lock, README.md, freecad_linux/使用说明.md); no committed result logs or benchmark outputs exist",
+    "gh run list -R zh19980811/Easy-MCP-AutoCad: no GitHub Actions runs",
+    "Installed mcp FastMCP ToolManager.add_tool (keeps the first registration of a duplicate tool name), read to classify the duplicate draw_line definition"
+  ],
+  "serious_defects": [
+    {
+      "item": "C2",
+      "description": "The FreeCAD port reports highlight success counts not taken from the bridge's actual result: highlight_text_matches uses count_text's match count and query_and_highlight uses len(handles); headless set_color colours nothing, yet success with N is reported.",
+      "source": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/server_freecad.py#L202"
+    },
+    {
+      "item": "S1",
+      "description": "execute_query executes arbitrary SQL (including DELETE/DROP) against the database; AutoCAD get_table_schema interpolates an unvalidated table name into SQL.",
+      "source": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L453"
+    },
+    {
+      "item": "S1",
+      "description": "The FreeCAD bridge accepts unauthenticated commands from any local process; save/export_dxf write to any path and overwrite existing files.",
+      "source": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/freecad_linux/bridge.py#L279"
+    },
+    {
+      "item": "C1",
+      "description": "highlight_text_matches and query_and_highlight permanently overwrite entity Color in the user's drawing without recording originals, so the server cannot revert them.",
+      "source": "https://github.com/zh19980811/Easy-MCP-AutoCad/blob/47347ced06c663f1c51385467bfe478c5e1ec2fc/server.py#L385"
+    }
+  ],
+  "limitations": [
+    "No code from the repository was executed; AutoCAD and FreeCAD behaviour was not observed.",
+    "The committed demo video (CAD-mpc简单实现.mp4, 2025-03) was not reviewed as evidence; it predates later server.py changes and cannot be traced to the pinned code boundary.",
+    "FreeCAD port test claims in freecad_linux/README.md and 使用说明.md are prose without committed logs and earned nothing.",
+    "Classification of the duplicate draw_line relies on current FastMCP behaviour (first registration kept); the locked mcp 1.4.1 source was not inspected directly.",
+    "Scores at or below 1 are bounded by the absence of output evidence; several items would stay low even with evidence because the capability is absent."
+  ]
+}
