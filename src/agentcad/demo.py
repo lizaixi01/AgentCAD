@@ -97,7 +97,7 @@ def run(workspace: Path, *, open_browser: bool = True, linger: float = 600.0) ->
         print(json.dumps({"ok": ok, "steps": len(results)}), flush=True)
         if not ok:
             return 1
-        time.sleep(linger)  # people look around; closing the window ends it
+        time.sleep(linger)  # people look around; then the demo stops by itself
     except KeyboardInterrupt:
         pass
     finally:
