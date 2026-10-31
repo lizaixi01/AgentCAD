@@ -13,6 +13,7 @@ from typing import Annotated, Any, Literal
 from mcp.server.fastmcp import FastMCP, Image
 from pydantic import Field
 
+from . import sessions
 from .policy import Policy
 from .service import Runtime
 from .worker import CADWorker
@@ -127,13 +128,47 @@ Basics
   names sides where the reference runs out of its picture: nothing beyond them is compared.
 
 Live viewer: results that change a file carry viewer_url, a page on this computer where the user watches the
-work step by step and can save or share it. Give the user that link once, the first time you change something."""
+work step by step and can save or share it. Give the user that link once, the first time you change something.
+At the start of a task call agentcad_status(label="<2-5 words for the user's task>") once: it names this
+conversation in the viewer and returns the viewer link."""
 
 Path_ = Annotated[str, Field(description="Drawing path (.dxf) or 3D part (.FCStd), relative to the workspace "
                                         "root")]
 
 
-class CADServer(FastMCP):
+SESSION: sessions.Session | None = None  # this process's entry in the live viewer's list (serve_stdio sets it)
+
+
+class NotesClient:
+    """Tell SESSION which app is calling (the clientInfo it sent when it connected), on tools/list and on every
+    tool call, so the live viewer can say "Claude Code is connected" and who made each change."""
+
+    def _note(self, tool: str | None = None, arguments: Any = None) -> None:
+        if SESSION is None:
+            return
+        try:
+            params = self.get_context().session.client_params
+            info = params.clientInfo if params else None
+            drawing = arguments.get("path") if isinstance(arguments, dict) else None
+            SESSION.note(info.name if info else None, info.version if info else None, tool=tool,
+                         drawing=drawing if isinstance(drawing, str) else None)
+        except Exception:  # noqa: BLE001 - a convenience, never a reason to fail a request
+            pass
+
+    async def list_tools(self):
+        self._note()
+        return await super().list_tools()
+
+    async def call_tool(self, name, arguments):
+        self._note(name, arguments)
+        return await super().call_tool(name, arguments)
+
+
+class DiscoveryServer(NotesClient, FastMCP):
+    pass
+
+
+class CADServer(NotesClient, FastMCP):
     """Run all synchronous CAD work on one cancellation-safe worker, keeping SDK validation."""
     def __init__(self, *args, **kwargs):
         self.worker = CADWorker()
@@ -490,6 +525,19 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
         return rt.standard_library(item, size, drawing)
 
     @mcp.tool()
+    def agentcad_status(label: Annotated[str | None, Field(description="A few words for what the user is working "
+                                                           "on, e.g. 'mounting plate'; names this conversation in the "
+                                                           "live viewer")] = None) -> dict:
+        """Check that AgentCAD is connected: the workspace folder, the live viewer link (started if needed) and which
+        app this conversation is. Call it once at the start of a task, with a short label."""
+        if label is not None and SESSION is not None:
+            SESSION.note(label=label)
+        url = rt._viewer_link({"drawing": ""})
+        return {"ok": True, "connected": True, "app": sessions.CURRENT.get("client"),
+                "label": sessions.CURRENT.get("label"), "workspace": str(rt.policy.root),
+                "viewer_url": url.rstrip("#") if url else None}
+
+    @mcp.tool()
     def get_metrics() -> dict:
         """Tool-call counts, durations and payload sizes for this server session (no model calls are made)."""
         return rt.get_metrics()
@@ -502,7 +550,7 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
         return mcp
     if profile != "discovery":
         raise ValueError("AGENTCAD_TOOL_PROFILE must be full or discovery")
-    discovery = FastMCP("agentcad", instructions="Search tools and operations, fetch their schema, then call a tool. "
+    discovery = DiscoveryServer("agentcad", instructions="Search tools and operations, fetch their schema, then call a tool. "
                         "Operations execute through apply_operations. Paths are relative to the workspace.")
 
     @discovery.tool()
@@ -542,6 +590,9 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
 
 
 def serve_stdio(policy: Policy | None = None) -> None:
+    global SESSION
+    policy = policy or Policy()
+    SESSION = sessions.Session(policy)  # the viewer lists this process until it exits
     build_server(policy).run("stdio")
 
 

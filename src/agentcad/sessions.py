@@ -25,7 +25,7 @@ DIR = "sessions"
 CLIENTS = (("claude-code", "Claude Code"), ("codex", "Codex"), ("cursor", "Cursor"), ("claude", "Claude Desktop"),
            ("vscode", "VS Code"), ("windsurf", "Windsurf"))
 
-# This process's session; progress events and journal records carry its client and label.
+# This process's session; progress events and journal records carry its client and label (tag).
 CURRENT: dict[str, Any] = {}
 
 
@@ -41,8 +41,13 @@ def friendly(raw: str | None) -> str | None:
 
 
 def tag() -> dict[str, Any]:
-    """What a progress event or journal record says about who made it: {} until a client is known."""
-    out = {k: CURRENT[k] for k in ("client", "label") if CURRENT.get(k)}
+    """What a progress event or journal record says about who made it: {} until a client is known. ("label" is
+    taken: a journal record's label describes the change; this is the conversation's.)"""
+    out: dict[str, Any] = {}
+    if CURRENT.get("client"):
+        out["client"] = CURRENT["client"]
+    if CURRENT.get("label"):
+        out["conversation"] = CURRENT["label"]
     if out and CURRENT.get("pid"):
         out["session"] = CURRENT["pid"]
     return out
@@ -100,10 +105,10 @@ def alive(pid: int) -> bool:
         return False
     if os.name == "nt":
         import ctypes
-        k32 = ctypes.windll.kernel32
+        k32 = ctypes.WinDLL("kernel32", use_last_error=True)
         h = k32.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
-        if not h:
-            return False
+        if not h:  # access denied: it runs, as another user or elevated (an assistant started as admin)
+            return ctypes.get_last_error() == 5
         try:
             code = ctypes.c_ulong()
             return bool(k32.GetExitCodeProcess(h, ctypes.byref(code))) and code.value == 259  # STILL_ACTIVE
@@ -124,7 +129,7 @@ def list_sessions(root: Path) -> list[dict[str, Any]]:
     folder = root / STATE_DIR / DIR
     for f in folder.glob("*.json") if folder.is_dir() else []:
         try:
-            s = json.loads(f.read_text("utf-8"))
+            s = json.loads(f.read_text("utf-8-sig"))
             pid = int(s.get("pid") or f.stem)
         except (OSError, ValueError, TypeError):
             continue

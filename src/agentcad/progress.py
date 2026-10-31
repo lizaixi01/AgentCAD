@@ -24,6 +24,7 @@ import uuid
 from contextvars import ContextVar
 from typing import Any
 
+from . import sessions
 from .policy import STATE_DIR, Policy
 
 LOG_FILE = "activity.jsonl"
@@ -136,7 +137,7 @@ class Activity:
         try:
             self.n += 1
             ev = {"run": self.run, "n": self.n, "ts": round(time.time(), 3), "tool": self.tool,
-                  "drawing": self.drawing, "state": state, **fields}
+                  "drawing": self.drawing, "state": state, **sessions.tag(), **fields}
             line = json.dumps(ev, ensure_ascii=False, default=str, separators=(",", ":")) + "\n"
             self.path.parent.mkdir(parents=True, exist_ok=True)
             with open(self.path, "a", encoding="utf-8") as f:
