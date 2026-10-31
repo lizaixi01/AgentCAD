@@ -48,7 +48,8 @@ _FILE_ATTRS = {"save", "saveas", "saveAs", "write", "write_text", "write_bytes",
                "importStep", "importBrep", "importStl", "importDXF", "importBin", "importBinary", "importSvg", "read",
                "readfile", "open", "load", "dump", "loadtxt", "savetxt", "fromfile", "tofile",
                # numpy and OCP file access and native code
-               "savez", "savez_compressed", "genfromtxt", "fromregex", "memmap", "DataSource", "ctypeslib", "ctypes",
+               "savez", "savez_compressed", "genfromtxt", "fromregex", "memmap", "open_memmap", "DataSource",
+               "ctypeslib", "ctypes",
                "load_library", "Write", "Read", "Write_s", "Read_s",
                # FreeCAD: documents and settings belong to the runtime, not to the script
                "openDocument", "newDocument", "closeDocument", "getDocument", "listDocuments", "ActiveDocument",
@@ -66,8 +67,11 @@ LANGUAGES: dict[str, dict] = {
                 "hint": "Build the part with FreeCAD's Part module (`Part`, `App`, `Vector` are given) and set "
                         "`result` to a Part.Shape; do not open, save or export documents or files."},
     # numpy (and scipy where installed) on the pixels of one image; PIL to draw an overlay (Image.fromarray,
-    # ImageDraw): the file names above keep it from opening or saving files
-    "image": {"imports": _DATA | {"numpy", "scipy", "PIL"}, "attrs": _FILE_ATTRS,
+    # ImageDraw). Besides the file names above: no screen or clipboard capture (PIL.ImageGrab), font files, scipy's
+    # file readers and writers (scipy.io) or its dataset downloads
+    "image": {"imports": _DATA | {"numpy", "scipy", "PIL"},
+              "attrs": _FILE_ATTRS | {"ImageGrab", "grab", "grabclipboard", "truetype", "FreeTypeFont", "load_path",
+                                      "io", "datasets"},
               "hint": "Measure the pixels of `image` (numpy uint8, height x width x 3; source pixel = local + "
                       "`origin`) and print the numbers; optionally set `result` to an image array or a JSON "
                       "value. Do not open or save files."},

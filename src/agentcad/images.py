@@ -85,9 +85,13 @@ def inspect_image(policy: Policy, path: str, region: list[int] | None, max_size:
         raise file_error("IMAGE_READ_FAILED", f"Cannot read image: {exc}") from exc
     if len(png) > MAX_PREVIEW_BYTES:
         raise input_error("IMAGE_PREVIEW_TOO_LARGE", "Preview exceeds 2 MB", hint="Use a smaller max_size")
+    if code is not None:  # the picture is the script's: its pixels are not the region's
+        extra["script"]["preview_scale"] = scale
+    else:
+        extra["pixel_scale"] = scale
     return {"source": source.relative_to(policy.root).as_posix(),
             "source_sha256": hashlib.sha256(raw).hexdigest(), "source_size": [width, height],
-            "region": list(box), "rotate": rotate, "preview_size": list(size), "pixel_scale": scale,
+            "region": list(box), "rotate": rotate, "preview_size": list(size),
             "mime_type": "image/png", "image_base64": base64.b64encode(png).decode("ascii"), **extra}
 
 

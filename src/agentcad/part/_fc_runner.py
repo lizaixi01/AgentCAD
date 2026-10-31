@@ -1495,12 +1495,14 @@ def shape_summary(sh):
 def topology(sh):
     """Betti numbers of the solids, read off the B-rep: bodies (b0, solids), genus (b1: through-holes and handles,
     summed over every shell) and voids (b2: sealed inner shells). None when a shell's counts give no genus (an open
-    shell, or a boundary that touches itself: a hole meeting the outline in one point).
+    shell, a boundary that touches itself: a hole tangent to the outline, or a shape with no solid, e.g. an IGES).
 
     Per closed shell, Euler-Poincare: V - E + F - R = 2 - 2g, where R counts the faces' inner wires and E leaves out
     degenerate edges (a sphere's pole, a cone's apex). A seam is one edge used twice by its face: a cylinder's side
     is a disc cut along it, so it needs no special case. A part whose genus differs from the drawing's has a
     tunnel the drawing lacks (a rib that closes a loop) or misses a through-hole: neither shows in the volume."""
+    if not sh.Solids:
+        return None
     genus = voids = 0
     for so in sh.Solids:
         shells = so.Shells

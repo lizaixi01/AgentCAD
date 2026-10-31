@@ -653,6 +653,8 @@ def test_freecad_script_timeout_leaves_no_folder(ws):
     ("b = Part.makeBox(20, 20, 10)\n"
      "result = b.fuse(Part.makeTorus(8, 1.5, Vector(10, 10, 10), Vector(1, 0, 0))).removeSplitter()",
      {"bodies": 1, "genus": 1, "voids": 0}),
+    # a hole tangent to the outline: the boundary touches itself, which these counts cannot read
+    ("result = Part.makeBox(20, 20, 10).cut(Part.makeCylinder(3, 40, Vector(3, 10, -5)))", None),
 ])
 def test_validation_reports_topology(srt, code, topology):
     """BenchCAD weighs the Betti numbers of a part 20 %: a run's part had one loop too many (genus 1 for 0) and

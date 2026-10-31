@@ -230,6 +230,7 @@ def test_code_can_return_an_overlay_image(ws):
     r = runtime.inspect_image("drawing.png", [20, 10, 100, 50], 160, code=code)
     preview = decode(r)
     assert r["script"]["image"] == [80, 40] and preview.size == (160, 80)
+    assert r["script"]["preview_scale"] == 2 and "pixel_scale" not in r  # the picture is the script's
     assert preview.getpixel((80, 0))[0] > 200 and preview.getpixel((10, 10)) == (0, 0, 255)
     r = runtime.inspect_image("drawing.png", code="result = image[:, :, 2] > 200")  # a mask shows as an image
     assert decode(r).getpixel((30, 15)) == (255, 255, 255)
@@ -240,6 +241,13 @@ def test_code_can_return_an_overlay_image(ws):
     ("from PIL import Image\nImage.open('drawing.png')", "SCRIPT_REJECTED"),
     ("np.save('x.npy', image)", "SCRIPT_REJECTED"),
     ("import os", "SCRIPT_REJECTED"),
+    # no screen or clipboard capture, font files, scipy file I/O or numpy memory maps
+    ("from PIL import ImageGrab", "SCRIPT_REJECTED"),
+    ("import PIL.ImageGrab", "SCRIPT_REJECTED"),
+    ("from PIL import ImageFont\nImageFont.truetype('x.ttf')", "SCRIPT_REJECTED"),
+    ("import scipy.io", "SCRIPT_REJECTED"),
+    ("from scipy import io", "SCRIPT_REJECTED"),
+    ("np.lib.format.open_memmap('x.npy', mode='w+', shape=(1,))", "SCRIPT_REJECTED"),
     ("x = 1\nimage[0, 0] = 0", "SCRIPT_FAILED"),
     ("x = 1\ny = x / 0", "SCRIPT_FAILED"),
 ])
@@ -248,6 +256,24 @@ def test_code_is_checked_and_its_errors_point_at_the_line(ws, code, error):
     assert e["code"] == error, e
     if error == "SCRIPT_FAILED":
         assert e["details"]["script_lines"][-1].startswith("line 2:")
+
+
+@pytest.mark.parametrize("code", ["from PIL import ImageGrab", "import PIL.ImageGrab", "import scipy.io",
+                                  "import os"])
+def test_runner_import_hook_refuses_what_the_check_rejects(ws, code):
+    """Second line of defence: the runner refuses these imports even for code that skipped the static check."""
+    from agentcad import scripting
+    png = BytesIO()
+    Image.new("RGB", (4, 4), "white").save(png, format="PNG")
+    res = scripting.run_image(code, png.getvalue(), (0, 0), ws / "job", 60)
+    assert not res["ok"] and "ImportError" in res["error"], res
+
+
+def test_slow_code_is_stopped(ws):
+    drawing(ws / "drawing.png")
+    runtime = Runtime(Policy(root=ws, allow_scripts=True, script_timeout=3))
+    e = runtime.inspect_image("drawing.png", code="while True:\n    pass")["error"]
+    assert e["code"] == "SCRIPT_TIMEOUT"
 
 
 def test_code_needs_scripts_and_takes_no_rotation(ws):

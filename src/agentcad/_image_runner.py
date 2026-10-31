@@ -60,10 +60,12 @@ def main() -> None:
 
         from agentcad._script_runner import SAFE_BUILTINS
         from agentcad.scripting import LANGUAGES
-        allowed = LANGUAGES["image"]["imports"]
+        allowed, banned = LANGUAGES["image"]["imports"], LANGUAGES["image"]["attrs"]
 
         def guarded_import(name, globals=None, locals=None, fromlist=(), level=0):  # noqa: A002
-            if level != 0 or name.split(".")[0] not in allowed:
+            parts = name.split(".")
+            if (level != 0 or parts[0] not in allowed or any(p in banned for p in parts[1:])
+                    or any(f in banned for f in fromlist or ())):
                 raise ImportError(f"import of {name!r} is not allowed in an image script")
             return __import__(name, globals, locals, fromlist, level)
 
