@@ -3,7 +3,7 @@
 Some edits are outside the operation catalogue (the comparison trials showed real drawings needing them). Rather
 than letting the agent edit files directly, ``Runtime.run_script`` takes Python source, and this module
   1. checks it statically (imports limited to ezdxf and the standard math/data modules; no file, eval/exec,
-     getattr or dunder access; no saving, reading or creating documents),
+     getattr, dunder or frame access; no saving, reading or creating documents),
   2. runs it in a separate Python process (``-I``, no shell, time limit) on a copy of the drawing,
   3. hands the result back to the runtime, which re-reads it strictly and commits it like any batch: checkpoint,
      journal (with the full script), diff, independent validation, optional ``strict``.
@@ -28,8 +28,12 @@ ALLOWED_IMPORTS = {"ezdxf", "math", "cmath", "itertools", "functools", "collecti
                    "fractions", "decimal", "operator", "copy"}
 BANNED_NAMES = {"open", "exec", "eval", "compile", "__import__", "input", "breakpoint", "globals", "locals", "vars",
                 "getattr", "setattr", "delattr", "exit", "quit", "help", "memoryview", "dir"}
+# Frames (a generator's gi_frame.f_back reaches the runner's frame, its real builtins and __import__) and the
+# operator helpers that read or call attributes by name (attrgetter('__globals__') gets past the dunder rule).
+_ESCAPE_ATTRS = {"gi_frame", "cr_frame", "ag_frame", "tb_frame", "f_back", "f_globals", "f_locals", "f_builtins",
+                 "attrgetter", "methodcaller"}
 BANNED_ATTRS = {"saveas", "save", "readfile", "readzip", "write", "write_text", "write_bytes", "unlink", "rmdir",
-                "system", "popen", "spawn", "odafc"}
+                "system", "popen", "spawn", "odafc"} | _ESCAPE_ATTRS
 RUNNER = Path(__file__).with_name("_script_runner.py")
 CQ_RUNNER = Path(__file__).parent / "part" / "_cq_runner.py"
 IMAGE_RUNNER = Path(__file__).with_name("_image_runner.py")
@@ -51,11 +55,13 @@ _FILE_ATTRS = {"save", "saveas", "saveAs", "write", "write_text", "write_bytes",
                "savez", "savez_compressed", "genfromtxt", "fromregex", "memmap", "open_memmap", "DataSource",
                "Repository", "zipfile_factory", "ctypeslib", "ctypes",
                "load_library", "Write", "Read", "Write_s", "Read_s",
+               # NpzFile(path) reads any zip; its .zip extracts files, and type(.zip)(path, 'w') writes a zip
+               "NpzFile", "extractall", "extract", "writestr",
                # FreeCAD: documents and settings belong to the runtime, not to the script
                "openDocument", "newDocument", "closeDocument", "getDocument", "listDocuments", "ActiveDocument",
                "activeDocument", "setActiveDocument", "loadFile", "ParamGet",
                # cadquery.vis opens a window and would wait for it until the time limit
-               "vis"}
+               "vis"} | _ESCAPE_ATTRS
 LANGUAGES: dict[str, dict] = {
     "ezdxf": {"imports": ALLOWED_IMPORTS, "attrs": BANNED_ATTRS,
               "hint": "Scripts get the drawing as `doc` (and `msp`); edit it in place, do not open, save or import "

@@ -257,6 +257,20 @@ def test_code_can_return_an_overlay_image(ws):
     ("np.lib.npyio.DataSource()", "SCRIPT_REJECTED"),
     ("np.testing.tempdir()", "SCRIPT_REJECTED"),
     ("x = image._something", "SCRIPT_REJECTED"),
+    # frames reach the runner's real builtins; attrgetter/methodcaller read attributes by name; NpzFile reads any
+    # zip by path and its .zip extracts and writes files
+    ("def g():\n    yield\ngen = g()\nf = gen.gi_frame.f_back", "SCRIPT_REJECTED"),
+    ("def g(f):\n    yield f.f_globals, f.f_locals, f.f_builtins", "SCRIPT_REJECTED"),
+    ("def g(t):\n    return t.tb_frame", "SCRIPT_REJECTED"),
+    ("async def c():\n    pass\nf = c().cr_frame", "SCRIPT_REJECTED"),
+    ("async def a():\n    yield 1\nf = a().ag_frame", "SCRIPT_REJECTED"),
+    ("import operator\nf = operator.attrgetter('__globals__')", "SCRIPT_REJECTED"),
+    ("from operator import methodcaller", "SCRIPT_REJECTED"),
+    ("nz = np.lib.npyio.NpzFile('drawing.png')", "SCRIPT_REJECTED"),
+    ("from numpy.lib.npyio import NpzFile", "SCRIPT_REJECTED"),
+    ("def f(nz):\n    nz.zip.extractall('out')", "SCRIPT_REJECTED"),
+    ("def f(nz):\n    nz.zip.extract('a', 'out')", "SCRIPT_REJECTED"),
+    ("def f(nz):\n    type(nz.zip)('x.zip', 'w').writestr('a', 'b')", "SCRIPT_REJECTED"),
     ("x = 1\nimage[0, 0] = 0", "SCRIPT_FAILED"),
     ("x = 1\ny = x / 0", "SCRIPT_FAILED"),
 ])

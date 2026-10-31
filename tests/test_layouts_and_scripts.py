@@ -137,6 +137,16 @@ def test_script_is_a_transaction(srt, ws):
     ("x = ().__class__.__bases__", "'__"),
     ("f = getattr(doc, 'saveas')", "'getattr'"),
     ("from ezdxf.addons import odafc", "odafc"),
+    # a running generator's frame reaches the runner's frame and its real builtins
+    ("def g():\n    yield\ngen = g()\nf = gen.gi_frame", "'gi_frame'"),
+    ("def g(f):\n    yield f.f_back, f.f_locals", "'f_back'"),
+    ("def g(f):\n    yield f.f_globals, f.f_builtins", "'f_globals'"),
+    ("def g(t):\n    return t.tb_frame", "'tb_frame'"),
+    ("async def c():\n    pass\nf = c().cr_frame", "'cr_frame'"),
+    # attributes read or called by name get past the dunder rule
+    ("import operator\nf = operator.attrgetter('__globals__')", "'attrgetter'"),
+    ("from operator import attrgetter", "attrgetter"),
+    ("import operator\noperator.methodcaller('saveas', 'x.dxf')(doc)", "'methodcaller'"),
 ])
 def test_scripts_are_checked_before_running(srt, ws, code, why):
     name, _ = sheet_drawing(ws)

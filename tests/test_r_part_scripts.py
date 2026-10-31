@@ -97,6 +97,32 @@ def test_freecad_scripts_are_checked_before_running(srt, ws, code, why):
     assert not (ws / "p.FCStd").exists()
 
 
+# Ways around the attribute rules that every part language shares: frames (a running generator's frame reaches the
+# runner's frame and its real builtins), attributes read or called by name, and numpy's NpzFile (reads any zip by
+# path; its .zip extracts and writes files).
+@pytest.mark.parametrize("language", ["cadquery", "freecad"])
+@pytest.mark.parametrize("code, why", [
+    ("def g():\n    yield\ngen = g()\nf = gen.gi_frame", "'gi_frame'"),
+    ("def g(f):\n    yield f.f_back, f.f_locals", "'f_back'"),
+    ("def g(f):\n    yield f.f_globals, f.f_builtins", "'f_globals'"),
+    ("def g(t):\n    return t.tb_frame", "'tb_frame'"),
+    ("async def c():\n    pass\nf = c().cr_frame", "'cr_frame'"),
+    ("async def a():\n    yield 1\nf = a().ag_frame", "'ag_frame'"),
+    ("import operator\nf = operator.attrgetter('__globals__')", "'attrgetter'"),
+    ("from operator import attrgetter", "attrgetter"),
+    ("from operator import methodcaller", "methodcaller"),
+    ("import numpy as np\nnz = np.lib.npyio.NpzFile('x.zip')", "'NpzFile'"),
+    ("from numpy.lib.npyio import NpzFile", "NpzFile"),
+    ("def f(nz):\n    nz.zip.extractall('out')", "'extractall'"),
+    ("def f(nz):\n    nz.zip.extract('a', 'out')", "'extract'"),
+    ("def f(nz):\n    type(nz.zip)('x.zip', 'w').writestr('a', 'b')", "'writestr'"),
+])
+def test_escape_routes_are_rejected_in_every_part_language(srt, ws, language, code, why):
+    e = srt.run_script("p.FCStd", code, language=language)["error"]
+    assert e["code"] == "SCRIPT_REJECTED" and why in e["message"], e
+    assert not (ws / "p.FCStd").exists()
+
+
 def test_script_languages(srt, ws):
     e = srt.run_script("p.FCStd", BLOCK, language="ezdxf")["error"]
     assert e["code"] == "BAD_LANGUAGE" and "cadquery" in e["hint"]
