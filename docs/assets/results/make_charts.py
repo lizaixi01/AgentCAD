@@ -17,11 +17,6 @@ OUT = Path(__file__).parent
 plt.rcParams.update({"svg.fonttype": "path", "font.family": "DejaVu Sans", "font.size": 10, "svg.hashsalt": "agentcad"})
 R_PT = 3  # corner radius at a bar's data end: about 4 px at the README's 860 px width
 
-# Scored against AutoCAD MCP Pro with no agent in the loop: (benchmark, how it was scored, AgentCAD, Pro, out of)
-CAPABILITY = [
-    ("Source-capability review", "vs. AutoCAD MCP Pro · local rubric v1", 100, 93, 100),  # source-capability-recheck.md
-    ("U-C4N v8 runtime matrix, 31 tasks", "vs. AutoCAD MCP Pro · upstream evaluator", 31, 31, 31),     # benchmarks.md
-]
 # Typical minutes per run (median of 3, or of the paired successes; lower is better): (task, alternative, AgentCAD, alternative)
 SPEED = [
     ("Five-round revision with undo", "vs. writing code · Claude Code", 4.1, 12.9),        # comparison-claude-code.md
@@ -93,38 +88,23 @@ def pair_rows(ax, rows, t, fmt, xmax):
 
 def draw(theme):
     t = THEMES[theme]
-    fig = plt.figure(figsize=(9.2, 9.6), facecolor=t["bg"])
-    gs = fig.add_gridspec(4, 1, height_ratios=[2, 5, 3, 2], hspace=0.62, left=0.37, right=0.96, top=0.875, bottom=0.085)
-    fig.text(0.02, 0.965, "AgentCAD vs. the alternatives", color=t["ink"], fontsize=13,
+    fig = plt.figure(figsize=(9.2, 7.9), facecolor=t["bg"])
+    gs = fig.add_gridspec(3, 1, height_ratios=[5, 3, 2], hspace=0.62, left=0.37, right=0.96, top=0.855, bottom=0.1)
+    fig.text(0.02, 0.965, "AgentCAD vs. the alternatives, same agent and model", color=t["ink"], fontsize=13,
              fontweight="bold")
     # legend, as text with colored keys
-    fig.patches.append(plt.Rectangle((0.02, 0.932), 0.014, 0.014, color=t["us"], transform=fig.transFigure))
-    fig.text(0.04, 0.933, "AgentCAD", color=t["ink"], fontsize=9.5)
-    fig.patches.append(plt.Rectangle((0.135, 0.932), 0.014, 0.014, color=t["alt"], transform=fig.transFigure))
-    fig.text(0.155, 0.933, "The alternative named on each row; the same agent and model wherever an agent runs", color=t["ink"], fontsize=9.5)
+    fig.patches.append(plt.Rectangle((0.02, 0.922), 0.014, 0.014, color=t["us"], transform=fig.transFigure))
+    fig.text(0.04, 0.923, "Agent + AgentCAD", color=t["ink"], fontsize=9.5)
+    fig.patches.append(plt.Rectangle((0.20, 0.922), 0.014, 0.014, color=t["alt"], transform=fig.transFigure))
+    fig.text(0.22, 0.923, "Same agent, the alternative named on each row", color=t["ink"], fontsize=9.5)
 
     ax = fig.add_subplot(gs[0])
-    style(ax, t)
-    rows = [(task, alt, a / n, b / n) for task, alt, a, b, n in CAPABILITY]
-    pair_rows(ax, rows, t, lambda v: "", 1.18)
-    for i, (_, _, a, b, n) in enumerate(CAPABILITY):
-        y = -i * 1.25
-        ax.text(a / n + 0.012, y + 0.17, f"{a}/{n}", va="center", color=t["ink"], fontsize=9, fontweight="bold")
-        ax.text(b / n + 0.012, y - 0.17, f"{b}/{n}", va="center", color=t["muted"], fontsize=9)
-    ax.set_xticks([0, 0.5, 1])
-    ax.set_xticklabels(["0%", "50%", "100%"])
-    ax.text(-0.555, -0.42, "Review: one AI reviewer, both pinned sources (AgentCAD 290ced3, Pro 58a05dd) · v8: upstream evaluator · "
-            "run locally, not an upstream ranking", transform=ax.transAxes, color=t["muted"], fontsize=8.5)
-    ax.set_title("Capability scores, no agent in the loop (higher is better)", loc="left",
-                 color=t["ink"], fontsize=10.5, fontweight="bold", x=-0.555)
-
-    ax = fig.add_subplot(gs[1])
     style(ax, t)
     pair_rows(ax, SPEED, t, lambda v: f"{v:.1f} min", 14.5)
     ax.set_title("Typical minutes per run (lower is better)", loc="left", color=t["ink"], fontsize=10.5,
                  fontweight="bold", x=-0.555)
 
-    ax = fig.add_subplot(gs[2])
+    ax = fig.add_subplot(gs[1])
     style(ax, t)
     rows = [(task, alt, a / n, b / n) for task, alt, a, b, n in RELIABILITY]
     pair_rows(ax, rows, t, lambda v: "", 1.18)
@@ -136,7 +116,7 @@ def draw(theme):
     ax.set_xticklabels(["0%", "50%", "100%"])
     ax.set_title("Runs that fully succeeded", loc="left", color=t["ink"], fontsize=10.5, fontweight="bold", x=-0.555)
 
-    ax = fig.add_subplot(gs[3])
+    ax = fig.add_subplot(gs[2])
     style(ax, t)
     pair_rows(ax, BENCH, t, lambda v: f"{v:.3f}", 1.18)
     ax.set_xticks([0, 0.5, 1])
