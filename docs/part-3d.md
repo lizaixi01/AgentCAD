@@ -73,8 +73,9 @@ AgentCAD 用同一组工具处理二维图纸（`.dxf`）和三维零件（`.FCS
 
 肉眼估读像素容易偏几个百分点。`inspect_image` 的 `code` 参数（需要 `AGENTCAD_ALLOW_SCRIPTS=1`）在所选区域的
 原图分辨率像素上运行一段 numpy 程序：`image` 是只读的 `uint8` 数组（高 × 宽 × 3），`origin` 是区域左上角，
-原图坐标 = 局部坐标 + `origin`。可用 numpy（`np`）、装了的话 scipy，以及 PIL 的 `Image.fromarray`/`ImageDraw`
-画叠加图。程序打印测得的数，或者把 `result` 设为一张图（替代裁剪图返回）或一个 JSON 值；只返回数字时不发图片。
+原图坐标 = 局部坐标 + `origin`。只能用 numpy（`np`）和标准数学模块，不能导入 PIL 或 scipy（PIL 能截屏、读剪贴板、
+打开看图程序和读写文件，scipy 能读写文件，黑名单堵不全）；叠加图用注入的 `draw_line`、`draw_rect`、`draw_ellipse`、
+`draw_text` 画，它们返回新数组。下划线开头的私有属性一律拒绝。程序打印测得的数，或者把 `result` 设为一张图（替代裁剪图返回）或一个 JSON 值；只返回数字时不发图片。
 例如求一个视图的轮廓范围：
 
 ```python
@@ -84,7 +85,7 @@ print("x", xs.min() + origin[0], xs.max() + origin[0], "y", ys.min() + origin[1]
 ```
 
 同样可以对圆形边线的投影拟合椭圆、反求视图的相机方向，再用相同的程序测量自己的预览图做对比。脚本与
-`run_script` 一样在单独进程里运行、有时限，拒绝打开或保存文件、截屏、读剪贴板和字体文件（和 `run_script`
+`run_script` 一样在单独进程里运行、有时限，拒绝常见的打开、保存文件和下载方式（和 `run_script`
 一样，这是防误用的检查，不是安全沙箱）；它不改动工作区（临时作业目录在系统临时目录下，
 结束即删除）。和 `dimensions` 一样，像素只是证据，尺寸仍以图纸标注为准。
 

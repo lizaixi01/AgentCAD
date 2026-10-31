@@ -3,8 +3,11 @@ image. Started as ``python -I _image_runner.py <job dir>`` with the job dir as c
 
 Loads job/image.png (the requested region of the source, unscaled) as ``image``, a numpy uint8 array of shape
 (height, width, 3), with ``origin`` = (left, top) of the region in source pixels, and runs job/script.py. The
-script prints what it measured and may set ``result``: an image (numpy array or PIL image), which this runner saves
-to job/result.png for the caller to show, or a JSON value, which it returns. It never writes anything else.
+script prints what it measured and may set ``result``: an image (a numpy array), which this runner saves to
+job/result.png for the caller to show, or a JSON value, which it returns. It never writes anything else.
+
+The script gets numpy but not PIL: PIL reaches the screen, the clipboard, an image viewer and files through more
+names than a deny-list keeps up with. It draws overlays with the ``draw_*`` helpers, which use PIL here, on a copy.
 
 The script has passed scripting.check_script(code, "image"). Here it also gets reduced builtins and an import hook
 limited to the same allow-list. This guards against mistakes; it is not a security sandbox.
@@ -23,11 +26,9 @@ RESULT_CHARS = 16000
 
 
 def _as_image(value):
-    """A PIL image of ``value`` when it is an image (PIL image, or a 2D/3D numeric array), else None."""
+    """A PIL image of ``value`` when it is an image (a 2D/3D numeric array), else None."""
     import numpy as np
     from PIL import Image
-    if isinstance(value, Image.Image):
-        return value.convert("RGB")
     if isinstance(value, np.ndarray) and value.ndim in (2, 3) and min(value.shape[:2]) > 0:
         a = value
         if a.ndim == 3 and a.shape[2] not in (1, 3, 4):
@@ -40,6 +41,37 @@ def _as_image(value):
             a = a[:, :, 0]
         return Image.fromarray(a).convert("RGB")
     return None
+
+
+def _drawing(canvas, paint):
+    """A new RGB array: ``canvas`` (an image array) with ``paint(ImageDraw)`` applied to a copy."""
+    from PIL import ImageDraw
+    im = _as_image(canvas)
+    if im is None:
+        raise TypeError("canvas must be an image array (height x width or height x width x 3)")
+    paint(ImageDraw.Draw(im))
+    import numpy as np
+    return np.array(im)
+
+
+def draw_line(canvas, start, end, color=(255, 0, 0), width=1):
+    """canvas with a line from start (x, y) to end (x, y), local pixels."""
+    return _drawing(canvas, lambda d: d.line((tuple(start), tuple(end)), fill=tuple(color), width=int(width)))
+
+
+def draw_rect(canvas, box, color=(255, 0, 0), width=1):
+    """canvas with the outline of box (left, top, right, bottom)."""
+    return _drawing(canvas, lambda d: d.rectangle(tuple(box), outline=tuple(color), width=int(width)))
+
+
+def draw_ellipse(canvas, box, color=(255, 0, 0), width=1):
+    """canvas with the outline of the ellipse inscribed in box (left, top, right, bottom)."""
+    return _drawing(canvas, lambda d: d.ellipse(tuple(box), outline=tuple(color), width=int(width)))
+
+
+def draw_text(canvas, xy, text, color=(255, 0, 0)):
+    """canvas with text at (x, y), PIL's built-in font."""
+    return _drawing(canvas, lambda d: d.text(tuple(xy), str(text), fill=tuple(color)))
 
 
 def _plain(value):
@@ -56,13 +88,15 @@ def main() -> None:
         import math
 
         import numpy as np
-        from PIL import Image
+        from PIL import Image  # the runner's own: the script does not get it
 
         from agentcad._script_runner import SAFE_BUILTINS
         from agentcad.scripting import LANGUAGES
         allowed, banned = LANGUAGES["image"]["imports"], LANGUAGES["image"]["attrs"]
 
         def guarded_import(name, globals=None, locals=None, fromlist=(), level=0):  # noqa: A002
+            # Not private names: numpy's C code imports its own private modules through the calling frame's
+            # builtins, i.e. through this hook. The static check refuses them in the script's own source.
             parts = name.split(".")
             if (level != 0 or parts[0] not in allowed or any(p in banned for p in parts[1:])
                     or any(f in banned for f in fromlist or ())):
@@ -78,7 +112,8 @@ def main() -> None:
         safe["__import__"] = guarded_import
         safe["__build_class__"] = builtins.__build_class__
         env = {"__builtins__": safe, "__name__": "agent_script", "np": np, "numpy": np, "math": math,
-               "image": image, "origin": tuple(meta["origin"]), "result": None}
+               "image": image, "origin": tuple(meta["origin"]), "result": None, "draw_line": draw_line,
+               "draw_rect": draw_rect, "draw_ellipse": draw_ellipse, "draw_text": draw_text}
         try:
             with contextlib.redirect_stdout(buf):
                 exec(compile(code, "agent_script.py", "exec"), env)  # the agent's script, checked beforehand

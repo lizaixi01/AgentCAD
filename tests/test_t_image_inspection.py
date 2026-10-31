@@ -223,15 +223,17 @@ def test_code_measures_source_pixels_and_sends_no_picture_for_numbers(ws):
 
 def test_code_can_return_an_overlay_image(ws):
     runtime = scripted(ws)
-    code = ("from PIL import Image, ImageDraw\n"
-            "im = Image.fromarray(image.copy())\n"
-            "ImageDraw.Draw(im).line((0, 0, im.width - 1, 0), fill=(255, 0, 0))\n"
-            "result = im")
+    code = ("canvas = draw_line(image, (0, 0), (image.shape[1] - 1, 0), (255, 0, 0))\n"
+            "canvas = draw_rect(canvas, (60, 30, 79, 39), (0, 255, 0))\n"
+            "result = draw_text(draw_ellipse(canvas, (0, 0, 10, 10)), (40, 20), 'x')")
     r = runtime.inspect_image("drawing.png", [20, 10, 100, 50], 160, code=code)
     preview = decode(r)
     assert r["script"]["image"] == [80, 40] and preview.size == (160, 80)
     assert r["script"]["preview_scale"] == 2 and "pixel_scale" not in r  # the picture is the script's
-    assert preview.getpixel((80, 0))[0] > 200 and preview.getpixel((10, 10)) == (0, 0, 255)
+    assert preview.getpixel((80, 0))[0] > 200 and preview.getpixel((30, 30)) == (0, 0, 255)
+    assert preview.getpixel((158, 70))[1] > 200  # the green rectangle's right edge
+    e = runtime.inspect_image("drawing.png", code="result = draw_line(5, (0, 0), (1, 1))")["error"]
+    assert e["code"] == "SCRIPT_FAILED" and "canvas must be an image array" in e["message"]
     r = runtime.inspect_image("drawing.png", code="result = image[:, :, 2] > 200")  # a mask shows as an image
     assert decode(r).getpixel((30, 15)) == (255, 255, 255)
 
@@ -241,13 +243,20 @@ def test_code_can_return_an_overlay_image(ws):
     ("from PIL import Image\nImage.open('drawing.png')", "SCRIPT_REJECTED"),
     ("np.save('x.npy', image)", "SCRIPT_REJECTED"),
     ("import os", "SCRIPT_REJECTED"),
-    # no screen or clipboard capture, font files, scipy file I/O or numpy memory maps
+    # no PIL (screen and clipboard capture through ImageGrab or Image.core, ImageShow viewers, plugin file I/O), no
+    # scipy (scipy.io, sparse.save_npz), no numpy file or download helpers, public or private
     ("from PIL import ImageGrab", "SCRIPT_REJECTED"),
     ("import PIL.ImageGrab", "SCRIPT_REJECTED"),
-    ("from PIL import ImageFont\nImageFont.truetype('x.ttf')", "SCRIPT_REJECTED"),
+    ("from PIL import Image", "SCRIPT_REJECTED"),
+    ("from PIL import ImageShow", "SCRIPT_REJECTED"),
     ("import scipy.io", "SCRIPT_REJECTED"),
-    ("from scipy import io", "SCRIPT_REJECTED"),
+    ("from scipy import sparse", "SCRIPT_REJECTED"),
     ("np.lib.format.open_memmap('x.npy', mode='w+', shape=(1,))", "SCRIPT_REJECTED"),
+    ("np.lib._npyio_impl.zipfile_factory('x.zip', mode='w')", "SCRIPT_REJECTED"),
+    ("from numpy.lib import _datasource", "SCRIPT_REJECTED"),
+    ("np.lib.npyio.DataSource()", "SCRIPT_REJECTED"),
+    ("np.testing.tempdir()", "SCRIPT_REJECTED"),
+    ("x = image._something", "SCRIPT_REJECTED"),
     ("x = 1\nimage[0, 0] = 0", "SCRIPT_FAILED"),
     ("x = 1\ny = x / 0", "SCRIPT_FAILED"),
 ])
@@ -258,8 +267,8 @@ def test_code_is_checked_and_its_errors_point_at_the_line(ws, code, error):
         assert e["details"]["script_lines"][-1].startswith("line 2:")
 
 
-@pytest.mark.parametrize("code", ["from PIL import ImageGrab", "import PIL.ImageGrab", "import scipy.io",
-                                  "import os"])
+@pytest.mark.parametrize("code", ["from PIL import ImageGrab", "import PIL", "import scipy", "import os",
+                                  "from numpy import f2py", "from numpy import testing"])
 def test_runner_import_hook_refuses_what_the_check_rejects(ws, code):
     """Second line of defence: the runner refuses these imports even for code that skipped the static check."""
     from agentcad import scripting

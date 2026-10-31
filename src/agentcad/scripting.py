@@ -49,7 +49,7 @@ _FILE_ATTRS = {"save", "saveas", "saveAs", "write", "write_text", "write_bytes",
                "readfile", "open", "load", "dump", "loadtxt", "savetxt", "fromfile", "tofile",
                # numpy and OCP file access and native code
                "savez", "savez_compressed", "genfromtxt", "fromregex", "memmap", "open_memmap", "DataSource",
-               "ctypeslib", "ctypes",
+               "Repository", "zipfile_factory", "ctypeslib", "ctypes",
                "load_library", "Write", "Read", "Write_s", "Read_s",
                # FreeCAD: documents and settings belong to the runtime, not to the script
                "openDocument", "newDocument", "closeDocument", "getDocument", "listDocuments", "ActiveDocument",
@@ -66,22 +66,22 @@ LANGUAGES: dict[str, dict] = {
     "freecad": {"imports": _DATA | {"Part", "FreeCAD", "numpy"}, "attrs": _FILE_ATTRS,
                 "hint": "Build the part with FreeCAD's Part module (`Part`, `App`, `Vector` are given) and set "
                         "`result` to a Part.Shape; do not open, save or export documents or files."},
-    # numpy (and scipy where installed) on the pixels of one image; PIL to draw an overlay (Image.fromarray,
-    # ImageDraw). Besides the file names above: no screen or clipboard capture (PIL.ImageGrab), font files, scipy's
-    # file readers and writers (scipy.io) or its dataset downloads
-    "image": {"imports": _DATA | {"numpy", "scipy", "PIL"},
-              "attrs": _FILE_ATTRS | {"ImageGrab", "grab", "grabclipboard", "truetype", "FreeTypeFont", "load_path",
-                                      "io", "datasets"},
+    # numpy alone on the pixels of one image, drawing through helpers the runner injects: no PIL (ImageGrab and
+    # Image.core capture the screen and clipboard, ImageShow starts a viewer, plugins read and write files) and no
+    # scipy (scipy.io and sparse read and write files). Private names are off too: numpy's private modules hold its
+    # file and download helpers.
+    "image": {"imports": _DATA | {"numpy"}, "attrs": _FILE_ATTRS | {"testing", "f2py", "distutils"}, "private": True,
               "hint": "Measure the pixels of `image` (numpy uint8, height x width x 3; source pixel = local + "
-                      "`origin`) and print the numbers; optionally set `result` to an image array or a JSON "
-                      "value. Do not open or save files."},
+                      "`origin`) with numpy (`np`) and print the numbers; draw overlays with draw_line, draw_rect, "
+                      "draw_ellipse and draw_text; optionally set `result` to an image array or a JSON value. "
+                      "Do not open or save files."},
 }
 
 
 def check_script(code: str, language: str = "ezdxf") -> None:
     """Static allow-list check. Raises input_error SCRIPT_REJECTED with the line of the first problem."""
     lang = LANGUAGES[language]
-    allowed, banned_attrs = lang["imports"], lang["attrs"]
+    allowed, banned_attrs, private = lang["imports"], lang["attrs"], lang.get("private", False)
     if not code or not code.strip():
         raise input_error("SCRIPT_EMPTY", "The script is empty")
     try:
@@ -99,21 +99,24 @@ def check_script(code: str, language: str = "ezdxf") -> None:
         if isinstance(node, ast.Import):
             for a in node.names:
                 parts = a.name.split(".")
-                if parts[0] not in allowed or "odafc" in a.name or any(p in banned_attrs for p in parts[1:]):
+                if (parts[0] not in allowed or "odafc" in a.name or any(p in banned_attrs for p in parts[1:])
+                        or private and any(p.startswith("_") for p in parts)):
                     reject(node, f"import of {a.name!r} is not allowed")
         elif isinstance(node, ast.ImportFrom):
             mod = node.module or ""
             parts = mod.split(".")
-            if node.level or parts[0] not in allowed or "odafc" in mod or any(p in banned_attrs for p in parts[1:]):
+            if (node.level or parts[0] not in allowed or "odafc" in mod or any(p in banned_attrs for p in parts[1:])
+                    or private and any(p.startswith("_") for p in parts)):
                 reject(node, f"import from {mod!r} is not allowed")
             for a in node.names:  # e.g. "from ezdxf.addons import odafc" (launches an external converter)
-                if a.name == "odafc" or a.name.startswith("__") or a.name in banned_attrs:
+                if (a.name == "odafc" or a.name.startswith("__") or a.name in banned_attrs
+                        or private and a.name.startswith("_")):
                     reject(node, f"import of {mod}.{a.name!r} is not allowed")
         elif isinstance(node, ast.Name):
             if node.id in BANNED_NAMES or node.id.startswith("__"):
                 reject(node, f"use of {node.id!r} is not allowed")
         elif isinstance(node, ast.Attribute):
-            if node.attr.startswith("__") or node.attr in banned_attrs:
+            if node.attr.startswith("_" if private else "__") or node.attr in banned_attrs:
                 reject(node, f"attribute {node.attr!r} is not allowed")
         elif isinstance(node, (ast.Global, ast.Nonlocal)):
             reject(node, "global/nonlocal statements are not allowed")

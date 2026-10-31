@@ -168,7 +168,9 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
                       code: Annotated[str | None, Field(description="Optional Python measuring the region's "
                           "pixels at source resolution (needs AGENTCAD_ALLOW_SCRIPTS=1): `image` is a read-only "
                           "numpy uint8 array (height, width, 3), `origin`=(left, top) so source pixel = local + "
-                          "origin; numpy as np (scipy if installed, PIL.Image.fromarray/ImageDraw for overlays). "
+                          "origin; numpy as np, no PIL/scipy. Overlays: draw_line(canvas, start, end, color, width), "
+                          "draw_rect/draw_ellipse(canvas, box, color, width), draw_text(canvas, xy, text, color) "
+                          "return a new array. "
                           "Print what you measure (edge positions, fitted circles/ellipses, line spacing); "
                           "optionally set `result` to an image array (shown instead of the crop) or a JSON "
                           "value. No files.")] = None) -> Any:
