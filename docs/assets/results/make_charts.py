@@ -99,9 +99,9 @@ def draw(theme):
              fontweight="bold")
     # legend, as text with colored keys
     fig.patches.append(plt.Rectangle((0.02, 0.932), 0.014, 0.014, color=t["us"], transform=fig.transFigure))
-    fig.text(0.04, 0.933, "Agent + AgentCAD", color=t["ink"], fontsize=9.5)
-    fig.patches.append(plt.Rectangle((0.20, 0.932), 0.014, 0.014, color=t["alt"], transform=fig.transFigure))
-    fig.text(0.22, 0.933, "The alternative named on each row; the same agent and model wherever an agent runs", color=t["ink"], fontsize=9.5)
+    fig.text(0.04, 0.933, "AgentCAD", color=t["ink"], fontsize=9.5)
+    fig.patches.append(plt.Rectangle((0.135, 0.932), 0.014, 0.014, color=t["alt"], transform=fig.transFigure))
+    fig.text(0.155, 0.933, "The alternative named on each row; the same agent and model wherever an agent runs", color=t["ink"], fontsize=9.5)
 
     ax = fig.add_subplot(gs[0])
     style(ax, t)
@@ -113,8 +113,8 @@ def draw(theme):
         ax.text(b / n + 0.012, y - 0.17, f"{b}/{n}", va="center", color=t["muted"], fontsize=9)
     ax.set_xticks([0, 0.5, 1])
     ax.set_xticklabels(["0%", "50%", "100%"])
-    ax.text(-0.555, -0.42, "Run locally: one AI reviewer scored both pinned sources (AgentCAD 290ced3, Pro 58a05dd) · not an upstream "
-            "ranking", transform=ax.transAxes, color=t["muted"], fontsize=8.5)
+    ax.text(-0.555, -0.42, "Review: one AI reviewer, both pinned sources (AgentCAD 290ced3, Pro 58a05dd) · v8: upstream evaluator · "
+            "run locally, not an upstream ranking", transform=ax.transAxes, color=t["muted"], fontsize=8.5)
     ax.set_title("Capability scores, no agent in the loop (higher is better)", loc="left",
                  color=t["ink"], fontsize=10.5, fontweight="bold", x=-0.555)
 
