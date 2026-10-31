@@ -1,0 +1,303 @@
+[
+ {
+  "id": "P01",
+  "item": "F1",
+  "description": "4 separate lines forming a 10x5 rectangle are found as one closed cross-entity profile with area 50",
+  "verdict": "pass",
+  "observed": {
+   "profile_count": 1,
+   "areas": [
+    50.0
+   ],
+   "excerpt": "[{\"profile_id\": \"shape_34621a20ba263f59\", \"shape_type\": \"closed_profile\", \"source_coverage\": [[\"A\", \"e0\", \"line\", \"\", [[\"run\", -4, [0, 0], [100000, 0], [50000, 0], 100000]]], [\"B\", \"e0\", \"line\", \"\", [[\"run\", -5, [1000000, 0], [0, 500000], [0, 250000], 500000]]], [\"C\", \"e0\", \"line\", \"\", [[\"run\", -4, [0, 50000], [100000, 0], [50000, 0], 100000]]], [\"D\", \"e0\", \"line\", \"\", [[\"run\", -5, [0, 0], [0, 500000], [0, 250000], 500000]]]], \"entity_handles\": [\"A\", \"B\", \"C\", \"D\"], \"member_primitives\": [{\"handle\": \"A\", \"primitive_key\": \"e0\", \"segment_id\": \"A:e0@0\", \"primitive_type\": \"line\", \"curve_kind\": \"\", "
+  }
+ },
+ {
+  "id": "P02",
+  "item": "F1",
+  "description": "Boundary: open chain (3 sides) and a 1e-3 gap must not be reported as closed",
+  "verdict": "pass",
+  "observed": {
+   "profile_count": 0,
+   "excerpt": "[]"
+  }
+ },
+ {
+  "id": "P03",
+  "item": "C2",
+  "description": "Radial dim override R6 on R5 circle -> violated; correct R5 -> satisfied; dim with no candidate -> not satisfied",
+  "verdict": "pass",
+  "observed": {
+   "dimension_constraints": {
+    "D2": {
+     "source": "dimension:bound",
+     "status": "satisfied",
+     "value": 5.0,
+     "actual": 5.0
+    },
+    "D1": {
+     "source": "dimension:bound",
+     "status": "violated",
+     "value": 6.0,
+     "actual": 5.0
+    },
+    "D3": {
+     "source": "dimension:scanned",
+     "status": "unknown",
+     "value": 77.0,
+     "actual": null
+    }
+   },
+   "D3_binding": "unbound"
+  }
+ },
+ {
+  "id": "P04",
+  "item": "C2",
+  "description": "validate_geometry flags zero-length line, duplicates and unclosed polyline; clean drawing passes",
+  "verdict": "pass",
+  "observed": {
+   "issue_types": [
+    "duplicate_entities",
+    "overlapping_lines",
+    "zero_length_lines"
+   ],
+   "severities": [
+    "high",
+    "medium"
+   ],
+   "passed": false,
+   "clean_issue_count": 0
+  }
+ },
+ {
+  "id": "P05",
+  "item": "C2",
+  "description": "Plan handle capture: a terse result with coordinates but no handle mis-binds save_as to coordinate tokens",
+  "verdict": "reproduced",
+  "observed": {
+   "inserted_with_coords": [
+    "100",
+    "200"
+   ],
+   "created_no_handle": [
+    "120",
+    "250"
+   ],
+   "proper": [
+    "8A"
+   ]
+  }
+ },
+ {
+  "id": "P06",
+  "item": "C1",
+  "description": "validate/dry-run gates: unknown op, send_command, missing variable rejected; execute without allow_modify refused",
+  "verdict": "pass",
+  "observed": {
+   "unknown_op_ok": false,
+   "send_command_ok": false,
+   "missing_var_ok": false,
+   "dry_run_ok": true,
+   "dry_run_steps": 2,
+   "execute_without_allow_ok": false,
+   "execute_msg": "execute_cad_plan refused to modify the DWG because allow_modify is not true."
+  }
+ },
+ {
+  "id": "P07",
+  "item": "C1",
+  "description": "Failed step (string failure) triggers rollback and ok=false with completed_steps",
+  "verdict": "pass",
+  "observed": {
+   "ok": false,
+   "calls": [
+    "begin",
+    "draw_circle",
+    "move_entity",
+    "rollback"
+   ],
+   "msg": "CAD plan execution failed at step s2: move_entity returned failure: 移动失败: entity not found"
+  }
+ },
+ {
+  "id": "P08",
+  "item": "C1",
+  "description": "DEFECT: rollback_on_high_severity_validation=True is ignored when post-plan validation reports high-severity issues",
+  "verdict": "reproduced",
+  "observed": {
+   "execute_ok": true,
+   "validation_passed": false,
+   "severities": [
+    "high",
+    "medium"
+   ],
+   "high_present": true,
+   "rollback_called": false,
+   "calls": [
+    "begin",
+    "draw_circle",
+    "move_entity",
+    "end"
+   ]
+  }
+ },
+ {
+  "id": "P09",
+  "item": "F2",
+  "description": "DEFECT: trim/extend of handles that do not exist report success; nothing is read back",
+  "verdict": "reproduced",
+  "observed": {
+   "trim": {
+    "success": true,
+    "message": "已执行 LISP 表达式"
+   },
+   "extend": {
+    "success": true,
+    "message": "已执行 LISP 表达式"
+   },
+   "trim_entity_tool_text": "OK: 已修剪实体 FFFF2\n  cutting_edges: ['EEEE2']\n  geometry_cache: stale",
+   "lisp_sent": [
+    "(setq ss (ssadd))(ssadd (handent \"EEEE0\") ss)(command \"._TRIM\" ss \"\" (handent \"FFFF0\") \"\")\n",
+    "(setq ss (ssadd))(ssadd (handent \"EEEE1\") ss)(command \"._EXTEND\" ss \"\" (handent \"FFFF1\") \"\")\n",
+    "(setq ss (ssadd))(ssadd (handent \"EEEE2\") ss)(command \"._TRIM\" ss \"\" (handent \"FFFF2\") \"\")\n"
+   ]
+  }
+ },
+ {
+  "id": "P10",
+  "item": "S1",
+  "description": "LISP literal guards reject handle/number injection before anything is sent",
+  "verdict": "pass",
+  "observed": {
+   "trim": {
+    "success": false,
+    "message": "非法实体句柄: '8A\") (command \"SHELL\" \"calc'"
+   },
+   "fillet": {
+    "success": false,
+    "message": "非法数值 radius: '1)(command \"SHELL\"'"
+   },
+   "commands_sent": 0
+  }
+ },
+ {
+  "id": "P11",
+  "item": "S1",
+  "description": "send_command forwards an arbitrary string (incl. AutoLISP startapp) with no filter",
+  "verdict": "reproduced",
+  "observed": {
+   "result": {
+    "success": true,
+    "message": "已发送命令: (startapp \"cmd.exe\" \"/c whoami\")"
+   },
+   "sent": [
+    "(startapp \"cmd.exe\" \"/c whoami\")\n"
+   ]
+  }
+ },
+ {
+  "id": "P12",
+  "item": "S1",
+  "description": "execute_query read-only: SELECT works; INSERT/DELETE/ATTACH/PRAGMA writable refused",
+  "verdict": "pass",
+  "observed": {
+   "SELECT handle, type FROM cad_entities": {
+    "ok": true,
+    "rows": 1,
+    "keys": [
+     "columns",
+     "rows",
+     "count",
+     "truncated",
+     "result_bytes"
+    ],
+    "error": null
+   },
+   "INSERT INTO cad_entities(handle) VALUES('X')": {
+    "ok": false,
+    "error": "ValueError('Only read-only SELECT/WITH/PRAGMA/EXPLAIN SQL is allowed')"
+   },
+   "DELETE FROM cad_entities": {
+    "ok": false,
+    "error": "ValueError('Only read-only SELECT/WITH/PRAGMA/EXPLAIN SQL is allowed')"
+   },
+   "ATTACH DATABASE '/tmp/evil.db' AS e": {
+    "ok": false,
+    "error": "ValueError('Only read-only SELECT/WITH/PRAGMA/EXPLAIN SQL is allowed')"
+   },
+   "PRAGMA journal_mode=DELETE": {
+    "ok": false,
+    "error": "DatabaseError('not authorized')"
+   },
+   "WITH x AS (SELECT 1) DELETE FROM cad_entities": {
+    "ok": false,
+    "error": "OperationalError('cannot modify cad_entities because it is a view')"
+   },
+   "remaining_rows": [
+    {
+     "n": 1
+    }
+   ],
+   "evil_db_created": false
+  }
+ },
+ {
+  "id": "P13",
+  "item": "C4",
+  "description": "open_drawing refuses .dxf before touching AutoCAD; import_dxf without allow_modify and with a missing file is refused",
+  "verdict": "pass",
+  "observed": {
+   "open_dxf": {
+    "success": false,
+    "message": "DXF requires import_dxf, not Documents.Open. Use import_dxf with allow_modify=True to create a separate drawing."
+   },
+   "import_no_allow": {
+    "success": false,
+    "message": "DXF import requires allow_modify=True."
+   },
+   "import_missing": {
+    "success": false,
+    "message": "Provide an existing .dxf file."
+   }
+  }
+ },
+ {
+  "id": "P14",
+  "item": "C4",
+  "description": "Arc without angle unit plus diameter line is not closed into a profile (incomplete data stays unresolved)",
+  "verdict": "pass",
+  "observed": {
+   "profile_count": 0
+  }
+ },
+ {
+  "id": "P15",
+  "item": "C2",
+  "description": "NEW DEFECT: with AutoCAD not connected, draw_line/draw_polyline-style tools report 'OK' with an empty handle and cache a phantom entity",
+  "verdict": "reproduced",
+  "observed": {
+   "controller_add_line_returned": {
+    "success": false,
+    "message": "Unable to connect to AutoCAD. Make sure AutoCAD is running."
+   },
+   "draw_line_text": "OK: 已绘制直线\n  handle: \n  layer: 0\n  length: 10.00",
+   "phantom_cached": false,
+   "draw_circle_same_condition": "raised AttributeError(\"'dict' object has no attribute 'Handle'\")"
+  }
+ },
+ {
+  "id": "P16",
+  "item": "C1",
+  "description": "NEW DEFECT: a real CADPlan draw_line step with AutoCAD not connected 'executes' successfully (real dispatch, no stubs)",
+  "verdict": "reproduced",
+  "observed": {
+   "ok": true,
+   "message": "Executed 1 CAD plan steps.",
+   "state": {
+    "l": "layer:"
+   },
+   "step_result": "\"OK: 已绘制直线\\n  handle: \\n  layer: 0\\n  length: 10.00\""
+  }
+ }
+]

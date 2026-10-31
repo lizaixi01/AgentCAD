@@ -1,0 +1,49 @@
+[
+ {
+  "probe": "stdio.initialize+list_tools",
+  "result": "PASS",
+  "detail": {
+   "server": "CAD MCP 服务器",
+   "tools": 35
+  }
+ },
+ {
+  "probe": "stdio.draw_circle_negative_radius",
+  "result": "PASS",
+  "detail": "Error executing tool draw_circle: 1 validation error for draw_circleArguments\nradius\n  Input should be greater than 0 [type=greater_than, input_value=-1, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/greater_than"
+ },
+ {
+  "probe": "stdio.draw_line_no_cad",
+  "result": "PASS",
+  "detail": {
+   "success": false,
+   "message": "CAD未运行且自动启动失败：无法连接或启动AutoCAD（候选ProgID: ['AutoCAD.Application']）；各ProgID尝试结果: AutoCAD.Application: HRESULT 0x800401F3",
+   "entity_handles": [],
+   "error": null
+  }
+ },
+ {
+  "probe": "http.initialize_without_credentials",
+  "result": "OBSERVED",
+  "detail": {
+   "status": 200,
+   "session": true
+  }
+ },
+ {
+  "probe": "http.unauthenticated_send_command",
+  "result": "REPRODUCED",
+  "detail": {
+   "status": 200,
+   "body": "event: message\r\ndata: {\"method\":\"notifications/message\",\"params\":{\"level\":\"info\",\"data\":\"CAD未运行，正在启动CAD（首次启动可能需要约20秒）...\"},\"jsonrpc\":\"2.0\"}\r\n\r\nevent: message\r\ndata: {\"jsonrpc\":\"2.0\",\"id\":2,\"result\":{\"content\":[{\"type\":\"text\",\"text\":\"{\\n  \\\"success\\\": true,\\n  \\\"message\\\": \\\"命令已提交: (command \\\\\\\"_.SHELL\\\\\\\" \\\\\\\"id\\\\\\\")\\\",\\n  \\\"entity_handles\\\": [],\\n  \\\"error\\\": null\\n}\"}],\"structuredContent\":{\"succ"
+  }
+ },
+ {
+  "probe": "http.foreign_host_header",
+  "result": "OBSERVED",
+  "detail": {
+   "status": 421,
+   "body": "Invalid Host header"
+  }
+ }
+]

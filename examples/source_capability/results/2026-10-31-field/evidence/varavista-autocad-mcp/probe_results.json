@@ -1,0 +1,507 @@
+[
+ {
+  "id": "F1-ordinary",
+  "item": "F1",
+  "expect": "primitives+hatch saved and reopened with same geometry; length 50, rect area 200, circle area 25pi, arc len 5pi",
+  "observed": {
+   "types": [
+    "ARC",
+    "CIRCLE",
+    "ELLIPSE",
+    "HATCH",
+    "LINE",
+    "LWPOLYLINE"
+   ],
+   "line_len": {
+    "entity_type": "LINE",
+    "length": 50.0
+   },
+   "poly_area": {
+    "entity_type": "LWPOLYLINE",
+    "area": 200.0
+   },
+   "circle_area": {
+    "entity_type": "CIRCLE",
+    "area": 78.5398163397
+   },
+   "arc_len": {
+    "entity_type": "ARC",
+    "length": 15.7079632679
+   }
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "F1-hatch-circle",
+  "item": "F1",
+  "expect": "hatch a circle boundary or refuse",
+  "observed": {
+   "ok": false,
+   "error": "'Circle' object has no attribute 'get_points'"
+  },
+  "verdict": "INFO"
+ },
+ {
+  "id": "F1-bad-handle",
+  "item": "F1",
+  "expect": "ok=false for unknown handle",
+  "observed": {
+   "ok": false,
+   "error": "Entity FFFFF not found"
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "F2-transforms",
+  "item": "F2",
+  "expect": "move/rotate/scale -> (5,5)-(5,25); mirror about x=0 -> (-5,5)-(-5,25); 2x3 array -> 5 copies",
+  "observed": {
+   "start": [
+    5.0,
+    5.0
+   ],
+   "end": [
+    5.000000000000002,
+    25.0
+   ],
+   "mirror": [
+    [
+     -4.999999999999999,
+     5.000000000000001
+    ],
+    [
+     -4.999999999999999,
+     25.0
+    ]
+   ],
+   "array_copies": 5,
+   "lines_in_file": 7
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "F2-trim",
+  "item": "F2",
+  "expect": "line trimmed at boundary x=7",
+  "observed": {
+   "ok": true,
+   "payload": {
+    "handle": "39",
+    "trimmed_end": "end",
+    "trim_point": [
+     7.0,
+     100.0
+    ]
+   },
+   "now": [
+    [
+     0.0,
+     100.0
+    ],
+    [
+     7.0,
+     100.0
+    ]
+   ]
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "F2-unsupported",
+  "item": "F2",
+  "expect": "offset/fillet/chamfer on ezdxf (report claims supported)",
+  "observed": [
+   {
+    "ok": false,
+    "error": "Offset not supported on ezdxf backend"
+   },
+   {
+    "ok": false,
+    "error": "Fillet not supported on ezdxf backend"
+   },
+   {
+    "ok": false,
+    "error": "Chamfer not supported on ezdxf backend"
+   }
+  ],
+  "verdict": "INFO"
+ },
+ {
+  "id": "F2-bad-handle",
+  "item": "F2",
+  "expect": "ok=false on unknown handle",
+  "observed": {
+   "ok": false,
+   "error": "Entity NOPE not found"
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "F3-dims",
+  "item": "F3",
+  "expect": "4 dimensions + leader + text saved; rendered blocks show 25.4, 50, 90deg, R7.5",
+  "observed": {
+   "oks": [
+    true,
+    true,
+    true,
+    true,
+    true,
+    true
+   ],
+   "measurements": [
+    25.4,
+    50.0,
+    90.0,
+    7.5
+   ],
+   "rendered_texts": [
+    [
+     "25,4"
+    ],
+    [
+     "50"
+    ],
+    [
+     "90\u00b0"
+    ],
+    [
+     "R7,5"
+    ]
+   ],
+   "handles_returned": [
+    false,
+    false,
+    false,
+    false
+   ]
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "F4-layers-blocks",
+  "item": "F4",
+  "expect": "layer WALLS red/frozen/locked; INSERT TAG with ID=P-101 after reopen",
+  "observed": {
+   "layer": [
+    1,
+    true,
+    true
+   ],
+   "insert_ok": true,
+   "attrs": {
+    "ID": "P-101"
+   },
+   "layouts": [
+    "Model",
+    "Layout1",
+    "SHEET2"
+   ]
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "F4-page-setup-noop",
+  "item": "F4/C2",
+  "expect": "page_setup either applies A4 portrait (210x297) or refuses; layout default is 420x297",
+  "observed": {
+   "ok": true,
+   "payload": {
+    "layout": "SHEET2"
+   },
+   "saved_paper": [
+    420.0,
+    297.0,
+    0
+   ]
+  },
+  "verdict": "FAIL"
+ },
+ {
+  "id": "F4-viewport-noop",
+  "item": "F4/C2",
+  "expect": "viewport scale/lock either applied or refused; batch_plot produces a file or refuses",
+  "observed": {
+   "vp_create": [
+    false,
+    "Paperspace.add_viewport() missing 2 required positional arguments: 'view_center_point' and 'view_height'"
+   ],
+   "set_scale": [
+    true,
+    {
+     "note": "viewport_set_scale limited in ezdxf"
+    }
+   ],
+   "lock": [
+    true,
+    {
+     "note": "viewport_lock limited in ezdxf"
+    }
+   ],
+   "batch_plot": [
+    true,
+    {
+     "status": "batch_plot not supported in ezdxf backend"
+    }
+   ],
+   "plot_file_exists": false,
+   "saved_viewports": []
+  },
+  "verdict": "FAIL"
+ },
+ {
+  "id": "F4-wblock",
+  "item": "F4",
+  "expect": "wblock writes reopenable file",
+  "observed": {
+   "ok": true,
+   "exists": true
+  },
+  "verdict": "INFO"
+ },
+ {
+  "id": "C1-batch-empty-drawing",
+  "item": "C1/F1",
+  "expect": "batch on a fresh (empty) drawing creates the line",
+  "observed": {
+   "ok": false,
+   "error": "No drawing open",
+   "entities": 0
+  },
+  "verdict": "FAIL"
+ },
+ {
+  "id": "C1-batch-partial",
+  "item": "C1",
+  "expect": "batch with one invalid item fails as a whole or reports not-ok",
+  "observed": {
+   "ok": true,
+   "payload": {
+    "total": 2,
+    "created": 1,
+    "results": [
+     {
+      "index": 0,
+      "ok": true,
+      "handle": "30"
+     },
+     {
+      "index": 1,
+      "ok": false,
+      "error": "must be real number, not str"
+     }
+    ]
+   },
+   "entities_left": 1
+  },
+  "verdict": "FAIL"
+ },
+ {
+  "id": "C1-undo",
+  "item": "C1",
+  "expect": "undo refuses on ezdxf (can_undo=false)",
+  "observed": {
+   "ok": false,
+   "error": "Not supported on this backend"
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "C2-purge",
+  "item": "C2",
+  "expect": "purge removes unused layer/block or refuses",
+  "observed": {
+   "ok": true,
+   "payload": {
+    "purged": true
+   },
+   "still_present_after_reopen": [
+    true,
+    true
+   ]
+  },
+  "verdict": "FAIL"
+ },
+ {
+  "id": "C3-overwrite",
+  "item": "C3/S1",
+  "expect": "save refuses or warns before overwriting an existing non-DXF file",
+  "observed": {
+   "ok": true,
+   "file_head": "  0\nSECTION\n  2\nHEAD"
+  },
+  "verdict": "INFO"
+ },
+ {
+  "id": "C3-bad-dir",
+  "item": "C3",
+  "expect": "ok=false for unwritable path",
+  "observed": "raises FileNotFoundError (backend does not catch; server _safe wrapper converts)",
+  "verdict": "INFO"
+ },
+ {
+  "id": "C3-dwg-ext",
+  "item": "C3",
+  "expect": "saving to .dwg refuses or writes DWG",
+  "observed": {
+   "ok": true,
+   "head": "  0\nSE"
+  },
+  "verdict": "FAIL"
+ },
+ {
+  "id": "C4-open-errors",
+  "item": "C4",
+  "expect": "missing/corrupt files refused; previous document kept",
+  "observed": {
+   "missing": [
+    false,
+    "[Errno 2] No such file or directory: '/tmp/probe__k0ll51z/missing.dxf'"
+   ],
+   "corrupt": [
+    false,
+    "DXFStructureError: missing ENDSEC tag."
+   ],
+   "has_document_after": true
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "C4-audit",
+  "item": "C4",
+  "expect": "audit (fix=false and fix=true) returns issue list",
+  "observed": {
+   "fix_false": [
+    true,
+    {
+     "issues": [],
+     "issue_count": 0,
+     "fixed": false
+    },
+    null
+   ],
+   "fix_true": [
+    false,
+    null,
+    "'Auditor' object has no attribute 'fix_all'"
+   ]
+  },
+  "verdict": "FAIL"
+ },
+ {
+  "id": "C4-bad-units",
+  "item": "C4",
+  "expect": "invalid $LUNITS value 99 refused",
+  "observed": {
+   "ok": true,
+   "payload": {
+    "units": 99
+   },
+   "error": null
+  },
+  "verdict": "FAIL"
+ },
+ {
+  "id": "E1-vd-ordinary",
+  "item": "E1",
+  "expect": "12 AWG, 20 A, 100 ft, 120 V -> 7.92 V",
+  "observed": {
+   "voltage_drop": 7.92,
+   "voltage_drop_percent": 6.6,
+   "wire_gauge": "12",
+   "length_ft": 100,
+   "current_a": 20,
+   "voltage": 120,
+   "acceptable": false
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "E1-vd-unknown-gauge",
+  "item": "E1",
+  "expect": "unknown gauge refused",
+  "observed": {
+   "ok": true,
+   "payload": {
+    "voltage_drop": 4.0,
+    "voltage_drop_percent": 3.33,
+    "wire_gauge": "999",
+    "length_ft": 100,
+    "current_a": 20,
+    "voltage": 120,
+    "acceptable": false
+   }
+  },
+  "verdict": "FAIL"
+ },
+ {
+  "id": "E1-unknown-table",
+  "item": "E1",
+  "expect": "unknown table -> ok=false",
+  "observed": {
+   "ok": true,
+   "payload": {
+    "error": "Unknown table: bogus_table",
+    "available_tables": [
+     "wire_ampacity",
+     "wire_resistance",
+     "conduit_fill",
+     "wire_area"
+    ]
+   }
+  },
+  "verdict": "FAIL"
+ },
+ {
+  "id": "E1-unknown-size",
+  "item": "E1",
+  "expect": "unknown wire size refused",
+  "observed": {
+   "ok": false,
+   "error": "Wire gauge '999' not found in table",
+   "payload": null
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "E3-connectivity-bom",
+  "item": "E3",
+  "expect": "4 dangling endpoints (chain ends + isolated line); BOM PUMP=3",
+  "observed": {
+   "connectivity": {
+    "dangling_count": 4,
+    "total_endpoints": 6
+   },
+   "bom": {
+    "items": [
+     {
+      "block": "PUMP",
+      "count": 3,
+      "attributes": []
+     }
+    ]
+   }
+  },
+  "verdict": "PASS"
+ },
+ {
+  "id": "S1-execute-lisp-ezdxf",
+  "item": "S1",
+  "expect": "execute_lisp unavailable on ezdxf",
+  "observed": {
+   "ok": false,
+   "error": "Not supported on this backend"
+  },
+  "verdict": "INFO"
+ },
+ {
+  "id": "S1-path-scope",
+  "item": "S1",
+  "expect": "save outside a workspace refused (no scope configured)",
+  "observed": {
+   "ok": true,
+   "written": "/tmp/escaped.dxf"
+  },
+  "verdict": "FAIL"
+ }
+]

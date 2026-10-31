@@ -1,0 +1,434 @@
+[
+  {
+    "id": "P0",
+    "item": "B1",
+    "probe": "MCP in-memory list_tools on the product server",
+    "expected": "7 tools",
+    "observed": [
+      "draw_entities",
+      "export_data",
+      "manage_blocks",
+      "manage_entities",
+      "manage_files",
+      "manage_layers",
+      "manage_session"
+    ],
+    "verdict": "pass"
+  },
+  {
+    "id": "P1",
+    "item": "F1",
+    "probe": "draw line+circle, read fake model back",
+    "expected": "2 created with requested geometry/layer",
+    "observed": {
+      "tool": {
+        "total": 2,
+        "created": 2,
+        "results": [
+          {
+            "index": 0,
+            "type": "line",
+            "handle": "101",
+            "success": true
+          },
+          {
+            "index": 1,
+            "type": "circle",
+            "handle": "102",
+            "success": true
+          }
+        ]
+      },
+      "fake_model": {
+        "101": [
+          "AcDbLine",
+          {
+            "start": [
+              -4.999999999999999,
+              10.0,
+              0.0
+            ],
+            "end": [
+              -4.999999999999993,
+              110.0,
+              0.0
+            ]
+          },
+          "walls"
+        ],
+        "102": [
+          "AcDbCircle",
+          {
+            "center": [
+              100.0,
+              80.0,
+              0.0
+            ],
+            "radius": 20.0
+          },
+          "0"
+        ]
+      }
+    },
+    "verdict": "pass"
+  },
+  {
+    "id": "P2",
+    "item": "F1/C4",
+    "probe": "invalid radius, missing field, unknown type, bad coordinate",
+    "expected": "all 4 rejected, nothing added",
+    "observed": {
+      "tool": {
+        "total": 4,
+        "created": 0,
+        "results": [
+          {
+            "index": 0,
+            "type": "circle",
+            "success": false,
+            "error": "Validation error: Input should be greater than 0"
+          },
+          {
+            "index": 1,
+            "type": "circle",
+            "success": false,
+            "error": "circle requires fields: radius"
+          },
+          {
+            "index": 2,
+            "type": "blob",
+            "success": false,
+            "error": "Unknown type 'blob'. Supported: line, circle, arc, rectangle, polyline, text, spline, dimension, leader, mleader, table"
+          },
+          {
+            "index": 3,
+            "type": "line",
+            "success": false,
+            "error": "Invalid parameter 'coordinate': got str, expected format like '10,20' or '10,20,30'"
+          }
+        ]
+      },
+      "entity_count": 2
+    },
+    "verdict": "pass"
+  },
+  {
+    "id": "P3",
+    "item": "C1",
+    "probe": "batch with a failing middle op",
+    "expected": "documents behaviour (rollback or partial)",
+    "observed": {
+      "created": 2,
+      "entities_added": 2
+    },
+    "verdict": "observed: partial commit, no rollback"
+  },
+  {
+    "id": "P4",
+    "item": "F2",
+    "probe": "move [valid, nonexistent] handles by (10,5)",
+    "expected": "partial failure reported",
+    "observed": {
+      "tool": {
+        "index": 0,
+        "action": "move",
+        "success": true,
+        "count": 2,
+        "detail": "Moved by (10, 5)"
+      },
+      "line_start_before": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "line_start_after": [
+        10.0,
+        5.0,
+        0.0
+      ],
+      "actually_moved": 1
+    },
+    "verdict": "defect reproduced"
+  },
+  {
+    "id": "P5",
+    "item": "F2/C4",
+    "probe": "move nonexistent handle only",
+    "expected": "success false",
+    "observed": {
+      "index": 0,
+      "action": "move",
+      "success": false,
+      "count": 1,
+      "detail": "Moved by (1, 1)"
+    },
+    "verdict": "pass"
+  },
+  {
+    "id": "P6",
+    "item": "F2",
+    "probe": "rotate line 90deg about origin; scale circle x2",
+    "expected": "start (10,5)->(-5,10); radius 20",
+    "observed": {
+      "rotate": [
+        {
+          "index": 0,
+          "action": "rotate",
+          "success": true,
+          "count": 1,
+          "detail": "Rotated 90\u00b0 around (0, 0)"
+        }
+      ],
+      "start_after": [
+        -4.999999999999999,
+        10.0,
+        0.0
+      ],
+      "scale": [
+        {
+          "index": 0,
+          "action": "scale",
+          "success": true,
+          "count": 1,
+          "detail": "Scaled 2x around (0, 0)"
+        }
+      ],
+      "radius_after": 20.0
+    },
+    "verdict": "pass"
+  },
+  {
+    "id": "P7",
+    "item": "F2/C4",
+    "probe": "delete existing, then nonexistent handle",
+    "expected": "first true, second false",
+    "observed": {
+      "tool": [
+        [
+          true,
+          "Deleted 1 entities"
+        ],
+        [
+          false,
+          "Deleted 0 entities"
+        ]
+      ],
+      "circle_still_present": false
+    },
+    "verdict": "see observed"
+  },
+  {
+    "id": "P8",
+    "item": "F4/C4",
+    "probe": "create layer, delete '0', delete missing, list",
+    "expected": "create ok; '0' and missing refused",
+    "observed": {
+      "results": [
+        [
+          "create",
+          true
+        ],
+        [
+          "delete",
+          false
+        ],
+        [
+          "delete",
+          false
+        ],
+        [
+          "list",
+          true
+        ]
+      ],
+      "fake_layers": [
+        "0",
+        "walls2"
+      ]
+    },
+    "verdict": "see observed"
+  },
+  {
+    "id": "P9",
+    "item": "C3",
+    "probe": "save|plan.dwg (filename into output dir)",
+    "expected": "reported path == SaveAs path",
+    "observed": {
+      "reported": {
+        "index": 0,
+        "action": "save",
+        "success": true,
+        "detail": "Drawing saved",
+        "path": "/tmp/mcm_out_4fns167z/plan.dwg"
+      },
+      "SaveAs_args": [
+        "/tmp/mcm_out_4fns167z/drawings/plan.dwg"
+      ]
+    },
+    "verdict": "defect reproduced"
+  },
+  {
+    "id": "P10-dxf",
+    "item": "C3/F4",
+    "probe": "save|plan2|dxf",
+    "expected": "a format-specific SaveAs type or plot/export call",
+    "observed": {
+      "reported": {
+        "index": 0,
+        "action": "save",
+        "success": true,
+        "detail": "Drawing saved",
+        "path": "/tmp/mcm_out_4fns167z/plan2"
+      },
+      "SaveAs_args": [
+        "/tmp/mcm_out_4fns167z/drawings/plan2.dxf"
+      ],
+      "n_args": 1,
+      "reported_path_exists_on_disk": false
+    },
+    "verdict": "defect reproduced"
+  },
+  {
+    "id": "P10-pdf",
+    "item": "C3/F4",
+    "probe": "save|plan2|pdf",
+    "expected": "a format-specific SaveAs type or plot/export call",
+    "observed": {
+      "reported": {
+        "index": 0,
+        "action": "save",
+        "success": true,
+        "detail": "Drawing saved",
+        "path": "/tmp/mcm_out_4fns167z/plan2"
+      },
+      "SaveAs_args": [
+        "/tmp/mcm_out_4fns167z/drawings/plan2.pdf"
+      ],
+      "n_args": 1,
+      "reported_path_exists_on_disk": false
+    },
+    "verdict": "defect reproduced"
+  },
+  {
+    "id": "P11a",
+    "item": "S1/C3",
+    "probe": "save|../../../../tmp/escaped.dwg (relative traversal), shipped config",
+    "expected": "kept inside output dir; reported path equals written path",
+    "observed": {
+      "allow_arbitrary_paths": true,
+      "reported": {
+        "index": 0,
+        "action": "save",
+        "success": true,
+        "detail": "Drawing saved",
+        "path": "../../../../tmp/escaped.dwg"
+      },
+      "SaveAs_path": "/tmp/mcm_out_4fns167z/drawings/escaped.dwg"
+    },
+    "verdict": "traversal contained; reported path mismatch reproduced"
+  },
+  {
+    "id": "P11b",
+    "item": "S1",
+    "probe": "save|/etc/escaped_abs.dwg with shipped config",
+    "expected": "refused (outside output dir)",
+    "observed": {
+      "allow_arbitrary_paths": true,
+      "reported": {
+        "index": 0,
+        "action": "save",
+        "success": true,
+        "detail": "Drawing saved",
+        "path": "/etc/escaped_abs.dwg"
+      },
+      "SaveAs_path": "/etc/escaped_abs.dwg"
+    },
+    "verdict": "defect reproduced (write outside output dir accepted by default)"
+  },
+  {
+    "id": "P12",
+    "item": "S1/C3",
+    "probe": "same absolute path with allow_arbitrary_paths=false",
+    "expected": "refused, or redirected inside output dir and reported truthfully",
+    "observed": {
+      "reported": {
+        "index": 0,
+        "action": "save",
+        "success": true,
+        "detail": "Drawing saved",
+        "path": "/etc/escaped_abs2.dwg"
+      },
+      "SaveAs_path": "/tmp/mcm_out_4fns167z/drawings/escaped_abs2.dwg"
+    },
+    "verdict": "contained; reported path mismatch reproduced"
+  },
+  {
+    "id": "P13",
+    "item": "C4",
+    "probe": "unknown file action",
+    "expected": "structured error",
+    "observed": {
+      "total": 1,
+      "succeeded": 0,
+      "results": [
+        {
+          "index": 0,
+          "action": "explode",
+          "success": false,
+          "error": "Unknown action 'explode'. Supported: save, new, close, list, switch"
+        }
+      ]
+    },
+    "verdict": "see observed"
+  },
+  {
+    "id": "P14",
+    "item": "C1",
+    "probe": "undo|3",
+    "expected": "verified undo",
+    "observed": {
+      "tool": {
+        "total": 1,
+        "succeeded": 1,
+        "results": [
+          {
+            "index": 0,
+            "action": "undo",
+            "success": true,
+            "detail": "3 actions undone"
+          }
+        ]
+      },
+      "sent_commands": [
+        "_undo 3\n"
+      ]
+    },
+    "verdict": "observed: command string only, no verification"
+  },
+  {
+    "id": "P15",
+    "item": "C3/S1",
+    "probe": "dashboard POST /api/cad/switch_drawing to a nonexistent drawing (no credentials)",
+    "expected": "success false",
+    "observed": {
+      "status": 200,
+      "body": {
+        "success": true,
+        "message": "Switching to does_not_exist.dwg"
+      },
+      "active_doc": "Drawing1.dwg"
+    },
+    "verdict": "defect reproduced"
+  },
+  {
+    "id": "P16",
+    "item": "S1",
+    "probe": "HTTP-mode MCP initialize without credentials; then with foreign Host/Origin",
+    "expected": "401/403 for unauthenticated or foreign origin",
+    "observed": {
+      "no_auth_status": 200,
+      "foreign_origin_status": 200
+    },
+    "verdict": "defect reproduced"
+  }
+]

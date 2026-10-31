@@ -1,0 +1,908 @@
+{
+  "name": "puran-water/autocad-mcp",
+  "repository": "puran-water/autocad-mcp",
+  "product_sha": "95476a33a1c246308326eb4709d6379ef2efdbc1",
+  "source_url": "https://github.com/puran-water/autocad-mcp/tree/95476a33a1c246308326eb4709d6379ef2efdbc1",
+  "commit_date": "2026-02-20T17:36:06Z",
+  "license": "MIT",
+  "total_score": 24,
+  "max_score": 100,
+  "categories": [
+    {
+      "id": "F",
+      "name": "Functional CAD coverage",
+      "weight": 25,
+      "score": 9,
+      "item_ids": [
+        "F1",
+        "F2",
+        "F3",
+        "F4",
+        "F5"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Correctness and delivery",
+      "weight": 20,
+      "score": 5,
+      "item_ids": [
+        "C1",
+        "C2",
+        "C3",
+        "C4"
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Backends and platforms",
+      "weight": 15,
+      "score": 5,
+      "item_ids": [
+        "B1",
+        "B2",
+        "B3"
+      ]
+    },
+    {
+      "id": "E",
+      "name": "Engineering production",
+      "weight": 15,
+      "score": 1,
+      "item_ids": [
+        "E1",
+        "E2",
+        "E3"
+      ]
+    },
+    {
+      "id": "T",
+      "name": "Testing and maintenance",
+      "weight": 15,
+      "score": 3,
+      "item_ids": [
+        "T1",
+        "T2",
+        "T3"
+      ]
+    },
+    {
+      "id": "S",
+      "name": "Security and operations",
+      "weight": 10,
+      "score": 1,
+      "item_ids": [
+        "S1",
+        "S2"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "F1",
+      "name": "Geometry and measurement",
+      "score": 2,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 2] Executed headless primitives now have saved/reopened output evidence. P01: line/circle/arc/closed polyline/ellipse/MTEXT created through the entity tool, saved, and read back with ezdxf with matching coordinates, radius, angles, ratio and layer. P08: hatch on a closed rectangle reopens with one 4-vertex ANSI31 boundary.",
+      "scope_and_limits": "No length/area/topology measurement exists (P03: unknown operation). Boundary failures: create_circle radius=-5 and create_polyline with zero points return ok=true and the invalid entities are saved (P13). entity get returns no geometry for ARC (P02) and reports the raw OCS center [-100, 0] for a mirrored circle whose true WCS center is [100, 0] (probe_mirror_readback.json), so tool readback can misreport geometry. Hatch on a circle fails and leaves an empty HATCH (D-C1b). File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L140",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L140"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L345",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L345"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L826",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L826"
+        },
+        {
+          "path": "src/autocad_mcp/server.py#L88",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/server.py#L88"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_mirror_readback.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_mirror_readback.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: ordinary path works, but invalid input is accepted, readback misreports mirrored geometry and measurement is absent, so 3 is not met."
+      }
+    },
+    {
+      "id": "F2",
+      "name": "Editing",
+      "score": 2,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 2] Executed transforms now have saved/reopened output evidence; a destructive partial write was reproduced. P04 + probe_mirror.py: move, rotate, scale, copy, array (2x3 -> 5 copies) and mirror (circle/line/arc, verified in WCS) produce the requested geometry after save and reopen. Bad handles are refused (P13); offset/fillet/chamfer are refused honestly on ezdxf (P05).",
+      "scope_and_limits": "Reproduced D-C1a: a mirror call with a zero-length line returns ok=false but leaves a stray copy in the drawing and in the saved DXF (entities 1 -> 2). array rows=0/cols=0 returns ok with 0 copies; scale factor 0 is refused only by an internal 'float division' error. No trim/join. P04 initially showed mirror as FAIL; that was a probe error (OCS vs WCS) and probe_mirror.py confirms the mirror geometry is correct. File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L285",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L285"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L321",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L321"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L915",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L915"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L931",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L931"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_mirror_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_mirror_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: capped at 2 by the reproduced destructive partial write on a refused mirror call."
+      }
+    },
+    {
+      "id": "F3",
+      "name": "Annotation and styles",
+      "score": 2,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 2] Executed dimensions/text/leader now have saved/reopened output evidence. P09: linear, aligned, angular and radius dimensions are saved as DIMENSION entities whose rendered blocks display 42,5 / 50 / 90 deg / R12, matching the geometry; TEXT and LEADER(+MTEXT) are saved. radius=0 is refused (P10).",
+      "scope_and_limits": "Dimension calls return no handle, so they cannot be addressed later. The linear dimension displays '42,5' (comma decimal separator from ezdxf's default style) for 42.5; no style control exists to change it. No text/dimension styles, tolerances or fits; radius=0 refused only via an internal 'float division' message. IPC dimension handlers return ok unconditionally (source). File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L522",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L522"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1094",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1094"
+        },
+        {
+          "path": "src/autocad_mcp/server.py#L288",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/server.py#L288"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: ordinary path works; styles, tolerances/fits and addressable dimensions are absent and error handling is incidental."
+      }
+    },
+    {
+      "id": "F4",
+      "name": "Organization and exchange",
+      "score": 2,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 2] Executed layer/block/save paths now have output evidence; omitted-edit false success reproduced headless. P11: layer color, freeze, lock and linetype persist after save/reopen; set_current on a missing layer is refused. P12: block define with ATTDEF, insert_with_attributes, get_attributes and update_attribute persist (TAG=V-202 after reopen); a missing tag and a missing block are refused.",
+      "scope_and_limits": "Reproduced false successes: layer set_properties with lineweight=50 returns ok but the lineweight is not saved (P11); insert_with_attributes with a tag the block does not define returns ok and silently drops it (saved attribs {'TAG': ''}, P12). A duplicate block define surfaces a raw ezdxf error with an AutoCAD-oriented hint. No paper space, viewports, tables; PDF plot is refused on ezdxf. The IPC insert_with_attributes defect (attributes never applied) is source-only. File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/file_ipc.py#L413",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/file_ipc.py#L413"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1029",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1029"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1349",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1349"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L388",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L388"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1200",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1200"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: capped at 2 by reproduced omitted-edit false successes (lineweight, undefined attribute tag)."
+      }
+    },
+    {
+      "id": "F5",
+      "name": "Domain workflows",
+      "score": 1,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 1] Executed; the headless P&ID path produces placeholder geometry only. P14: setup_layers, insert_valve/insert_symbol, connect_equipment and list_symbols run and save. Symbols are LWPOLYLINE+TEXT placeholders, not blocks (0 INSERT entities, 0 attributes).",
+      "scope_and_limits": "insert_valve with rotation=45 and attributes={'TAG': 'V-1'} returns ok, but the saved diamond is unrotated and no attribute is stored; list_symbols for an unknown category returns ok with an empty list. The README states the ezdxf backend 'has built-in CTO library support'. IPC P&ID needs the uncommitted pid_tools.lsp. No other domain workflow. File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L617",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L617"
+        },
+        {
+          "path": "src/autocad_mcp/pid/cto_library.py",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/pid/cto_library.py"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L658",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L658"
+        },
+        {
+          "path": "README.md#L142",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/README.md#L142"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: the executable path drops requested rotation/attributes and offers only placeholders; real symbol insertion is absent."
+      }
+    },
+    {
+      "id": "C1",
+      "name": "Transactions",
+      "score": 1,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 1] Executed; partial writes on refused calls reproduced. Undo/redo exist only on File IPC (not executed); ezdxf refuses undo (P13).",
+      "scope_and_limits": "Reproduced D-C1a and D-C1b: a refused mirror leaves a stray copy and a refused hatch leaves an empty HATCH, both persisted in the saved DXF. No batches, preview, conflicts or checkpoints. File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L182",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L182"
+        },
+        {
+          "path": "src/autocad_mcp/backends/base.py#L92",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/base.py#L92"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L290",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L290"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L350",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L350"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no transaction mechanism on the executable path, and failed calls change the drawing."
+      }
+    },
+    {
+      "id": "C2",
+      "name": "Intent and geometry",
+      "score": 0,
+      "max_score": 5,
+      "basis": "[strict: 0 -> 0] Executed; no change. No intent/geometry verification entry point exists.",
+      "scope_and_limits": "Reproduced: purge returns purged=true while an unused layer and block remain after save (D-C2c); entity get reports a mirrored circle's center as [-100, 0] instead of [100, 0]; lineweight and undefined attribute tags dropped with ok=true. IPC entlast-handle defect is source-only. File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L826",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L826"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1029",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1029"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L110",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L110"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_mirror_readback.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_mirror_readback.json"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no verification capability; multiple reproduced false-success reports."
+      }
+    },
+    {
+      "id": "C3",
+      "name": "Delivery",
+      "score": 2,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 2] Executed save/reopen now has output evidence. Every probe saves through drawing.save and reopens the file independently with ezdxf; values match (P01, P04, P08, P09, P11, P12, stdio probe). Saving to a missing directory returns an error (P13).",
+      "scope_and_limits": "No gates, hashes, source version or parity report; the tool's own result is only the path. drawing.save writes any path and silently overwrote an existing non-DXF text file (S1a). IPC save/plot/open return ok unconditionally (source, not executed). File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L301",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L301"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1200",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1200"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L89",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L89"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_stdio_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_stdio_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: ordinary DXF delivery works but has no checks; IPC delivery handlers are demonstrated (source) unconditional successes."
+      }
+    },
+    {
+      "id": "C4",
+      "name": "Foreign and abnormal inputs",
+      "score": 2,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 2] Executed abnormal-input probes. P13: open of a missing file and of a truncated DXF return ok=false (DXFStructureError); bad handles for get/move/erase and unknown operations are refused; missing required keys are caught by _safe.",
+      "scope_and_limits": "Invalid inputs are accepted and saved: negative circle radius (-5) and a zero-vertex polyline return ok=true. Missing-key errors read \"'cy'\" with a generic AutoCAD hint. No unit detection, unknown-entity reporting, external-edit detection or recovery. File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L116",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L116"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L450",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L450"
+        },
+        {
+          "path": "src/autocad_mcp/backends/base.py#L81",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/base.py#L81"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: corrupt/missing files are refused, but invalid geometry input is accepted as success."
+      }
+    },
+    {
+      "id": "B1",
+      "name": "Backend contract",
+      "score": 2,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 2] Executed backend selection and capability refusals. B1a/B1b: on Linux 'auto' falls back to ezdxf and 'file_ipc' raises an explicit 'requires Windows' error. P15/P16/P13: status reports capabilities; zoom, plot_pdf, undo and execute_lisp are refused on ezdxf consistently with can_zoom/can_plot_pdf/can_undo=false; offset/fillet/chamfer refused.",
+      "scope_and_limits": "Postcondition parity between backends is not demonstrable here and differs by source (insert_with_attributes). 'auto' silently switches to an in-memory DXF when AutoCAD is absent. File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/config.py#L66",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/config.py#L66"
+        },
+        {
+          "path": "src/autocad_mcp/backends/base.py#L28",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/base.py#L28"
+        },
+        {
+          "path": "src/autocad_mcp/client.py#L27",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/client.py#L27"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: headless contract works; native side unverified and cross-backend postconditions inconsistent."
+      }
+    },
+    {
+      "id": "B2",
+      "name": "Native interoperability",
+      "score": 1,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 1] Not executable here; unchanged. The AutoCAD LT File IPC path exists in source only.",
+      "scope_and_limits": "AutoCAD/LT, pywin32 and the LISP dispatcher could not run on Linux and must not be launched per the brief. File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/file_ipc.py#L140",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/file_ipc.py#L140"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1272",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1272"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no native output evidence."
+      }
+    },
+    {
+      "id": "B3",
+      "name": "Platforms",
+      "score": 2,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 2] Executed on Linux. The locked environment (uv sync --frozen) installed on Linux/Python 3.12.16 without pywin32, and the test suite and probes ran headless (123 passed).",
+      "scope_and_limits": "One platform and one Python version only, run by this reviewer; no Windows/native run, no repository CI, no multiple-Python evidence.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/config.py#L35",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/config.py#L35"
+        },
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/pyproject.toml"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/pytest_summary.log",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/pytest_summary.log"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: single headless platform/version run; native Windows not evidenced."
+      }
+    },
+    {
+      "id": "E1",
+      "name": "Standard data",
+      "score": 0,
+      "max_score": 5,
+      "basis": "[strict: 0 -> 0] Executed list_symbols; no change. No engineering standard data. list_symbols returns hard-coded CTO file names (P14).",
+      "scope_and_limits": "Unknown category returns ok with an empty list rather than a refusal.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/pid/cto_library.py",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/pid/cto_library.py"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no standard-data implementation."
+      }
+    },
+    {
+      "id": "E2",
+      "name": "Drawing production",
+      "score": 1,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 1] Executed; no change in level. Dimensions render correctly headless (P09); PDF plot is refused on ezdxf.",
+      "scope_and_limits": "No frame/title block, views, sections or BOM; plotting exists only via AutoCAD (not executed). File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1200",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1200"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L522",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L522"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: most drawing-production elements absent."
+      }
+    },
+    {
+      "id": "E3",
+      "name": "Domain loop",
+      "score": 0,
+      "max_score": 5,
+      "basis": "[strict: 0 -> 0] Executed connect_equipment; no change. connect_equipment writes an orthogonal LWPOLYLINE [(0,0),(25,0),(25,20),(50,20)] with no link to equipment entities (P14).",
+      "scope_and_limits": "No connection, quantity or BOM readback.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L690",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L690"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no domain loop."
+      }
+    },
+    {
+      "id": "T1",
+      "name": "Behavioral regressions",
+      "score": 2,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 2] The repository's own suite was executed. python -m pytest tests/ -v: 123 passed, 0 failed, 0 errors, 0 skipped (Linux, Python 3.12.16, ezdxf 1.4.3).",
+      "scope_and_limits": "The suite exercises the ezdxf backend through its API and one save/reload; the IPC tests mostly assert on self-built dicts, constants and a hand-copied command list (interface-level, no LISP or AutoCAD). It did not catch the reproduced partial writes, dropped lineweight/attributes, accepted negative radius or purge false success. No adversarial tests.",
+      "source": [
+        {
+          "path": "tests/test_ezdxf_backend.py#L613",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/tests/test_ezdxf_backend.py#L613"
+        },
+        {
+          "path": "tests/test_ipc_protocol.py#L85",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/tests/test_ipc_protocol.py#L85"
+        },
+        {
+          "path": "tests/generate_golden.py",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/tests/generate_golden.py"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/pytest_summary.log",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/pytest_summary.log"
+        }
+      ],
+      "deduction": {
+        "points": 3,
+        "reason": "Withhold 3: tests pass but miss reproduced error/boundary defects and do not cover the native path."
+      }
+    },
+    {
+      "id": "T2",
+      "name": "Reproducibility",
+      "score": 1,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 1] Executed the locked install; the documented test command is not reproducible from the lock. uv sync --frozen installed the locked runtime dependencies (ezdxf 1.4.3, mcp, etc.) offline-reproducibly.",
+      "scope_and_limits": "pytest and pytest-asyncio are not in uv.lock (pyproject puts 'dev' as a non-standard key under [project]), so the README's 'uv run pytest' needs dependencies the lock does not pin; this reviewer chose pytest 8.3.4 / pytest-asyncio 0.24.0. No evaluator, environment or hash records.",
+      "source": [
+        {
+          "path": "uv.lock",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/uv.lock"
+        },
+        {
+          "path": "pyproject.toml",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/pyproject.toml"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/pytest_summary.log",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/pytest_summary.log"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: runtime lock only; the test environment is not reproducible from the repository."
+      }
+    },
+    {
+      "id": "T3",
+      "name": "Continuous verification",
+      "score": 0,
+      "max_score": 5,
+      "basis": "[strict: 0 -> 0] No change. No workflows or runs.",
+      "scope_and_limits": "Checked read-only.",
+      "source": [
+        {
+          "path": "README.md#L187",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/README.md#L187"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no continuous verification."
+      }
+    },
+    {
+      "id": "S1",
+      "name": "Security defaults",
+      "score": 0,
+      "max_score": 5,
+      "basis": "[strict: 0 -> 0] Executed; permission issues reproduced on the reachable surface. Over MCP stdio the 'system' tool, which contains execute_lisp, is advertised with readOnlyHint=true (probe_stdio_results.json). drawing.save wrote through a '..' path and overwrote an existing non-DXF text file with DXF content, returning ok (S1a).",
+      "scope_and_limits": "execute_lisp itself and SECURELOAD handling are File IPC only and were not executed; on ezdxf it is refused. stdio only, no HTTP surface.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/server.py#L461",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/server.py#L461"
+        },
+        {
+          "path": "src/autocad_mcp/server.py#L512",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/server.py#L512"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L621",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L621"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L9",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L9"
+        },
+        {
+          "path": "src/autocad_mcp/backends/ezdxf_backend.py#L89",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L89"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_stdio_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_stdio_results.json"
+        },
+        {
+          "path": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+          "url": "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json"
+        }
+      ],
+      "deduction": {
+        "points": 5,
+        "reason": "Withhold 5: no protective default; misleading read-only annotation and unrestricted overwriting writes reproduced."
+      }
+    },
+    {
+      "id": "S2",
+      "name": "Long tasks",
+      "score": 1,
+      "max_score": 5,
+      "basis": "[strict: 1 -> 1] Not executable here; unchanged. Locking, timeout and ESC-cancel logic exist only on the File IPC path (source).",
+      "scope_and_limits": "The headless backend has no long-task features; the IPC concurrency/timeout concerns are source-only. File IPC/AutoCAD LT paths were not executed (Windows/AutoCAD only) and stay at first-pass source evidence.",
+      "source": [
+        {
+          "path": "src/autocad_mcp/backends/file_ipc.py#L135",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/file_ipc.py#L135"
+        },
+        {
+          "path": "src/autocad_mcp/backends/file_ipc.py#L216",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/file_ipc.py#L216"
+        },
+        {
+          "path": "lisp-code/mcp_dispatch.lsp#L1272",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1272"
+        },
+        {
+          "path": "src/autocad_mcp/config.py#L20",
+          "url": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/config.py#L20"
+        }
+      ],
+      "deduction": {
+        "points": 4,
+        "reason": "Withhold 4: no executed evidence for long-task handling."
+      }
+    }
+  ],
+  "declared_contract": "MCP stdio server (v3.0.0 in pyproject, v3.1 in README/server) exposing 8 consolidated tools (drawing, entity, layer, block, annotation, pid, view, system) for AutoCAD LT 2024+ automation and headless DXF generation. Two backends: File IPC (Windows; Python writes JSON command files to C:/temp and posts '(c:mcp-dispatch)' keystrokes to AutoCAD LT, where mcp_dispatch.lsp runs AutoCAD commands and writes result files) and ezdxf (any platform, in-memory DXF, matplotlib screenshots). Declared scope: 2D primitives, basic transforms, layers, blocks/attributes, text/dimensions/leaders, P&ID symbols from the third-party CTO library, save/DXF/PDF, undo/redo and arbitrary AutoLISP via execute_lisp (File IPC).",
+  "evidence_used": [
+    "Pinned source tree at 95476a33a1c246308326eb4709d6379ef2efdbc1 (read only; nothing executed)",
+    "gh run list -R puran-water/autocad-mcp: no runs; gh api repos/puran-water/autocad-mcp/actions/workflows: total_count 0",
+    "tests/golden/*.dxf inspected and rejected as product evidence: produced by tests/generate_golden.py calling ezdxf directly and not referenced by any test",
+    "Executed: repository test suite and reviewer probes in an offline Docker container (see executed_evidence and evidence_paths)"
+  ],
+  "serious_defects": [
+    {
+      "item": "F4",
+      "description": "File IPC block insert_with_attributes never applies the attributes and returns ok=true. Not executable here (AutoCAD LISP); source-demonstrated. Headless analogue reproduced: ezdxf insert_with_attributes silently drops tags the block does not define, and layer set_properties drops lineweight, both with ok=true.",
+      "source": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L1029",
+      "reproduction": "not executable here (IPC); headless analogue reproduced"
+    },
+    {
+      "item": "C2",
+      "description": "File IPC create/copy/mirror/offset/hatch report the (entlast) handle without checking that a new entity was created.",
+      "source": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L826",
+      "reproduction": "not executable here"
+    },
+    {
+      "item": "C2",
+      "description": "ezdxf purge returns purged=true but removes nothing; entity get reports a mirrored circle's OCS center (-100,0) as its center while the true position is (100,0).",
+      "source": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L110",
+      "reproduction": "reproduced"
+    },
+    {
+      "item": "C3",
+      "description": "File IPC drawing-save, save-as-dxf, open and plot-pdf return ok=true unconditionally.",
+      "source": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/lisp-code/mcp_dispatch.lsp#L301",
+      "reproduction": "not executable here"
+    },
+    {
+      "item": "C1",
+      "description": "ezdxf entity_mirror leaves a stray copy when it rejects a zero-length mirror line, and create_hatch leaves an empty HATCH when the boundary lookup fails; both persist in the saved DXF.",
+      "source": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/backends/ezdxf_backend.py#L290",
+      "reproduction": "reproduced"
+    },
+    {
+      "item": "S1",
+      "description": "execute_lisp (arbitrary AutoLISP, SECURELOAD set to 0 while loading) is default-enabled in the 'system' tool advertised readOnlyHint=true; drawing.save overwrites arbitrary existing files.",
+      "source": "https://github.com/puran-water/autocad-mcp/blob/95476a33a1c246308326eb4709d6379ef2efdbc1/src/autocad_mcp/server.py#L461",
+      "reproduction": "annotation and unrestricted overwrite reproduced over stdio/tool calls; LISP execution not executable here"
+    }
+  ],
+  "limitations": [
+    "Executed evidence covers only the headless ezdxf backend on Linux/Python 3.12; the File IPC/AutoCAD LT path was read, not run, and keeps first-pass evidence levels.",
+    "Probes were written by this reviewer; two scripted checks (P04 mirror, P09 linear text) initially failed because of probe assumptions and were corrected by follow-up inspection, as recorded in executed_evidence.",
+    "Source-demonstrated IPC defects (C2 entlast, C3 unconditional save) are not reproduced; they still inform the cap but were not executed.",
+    "Scores are under the frozen local rubric v1 and are not comparable to any upstream or published score."
+  ],
+  "method": "strict: pinned source + committed evidence + executed headless tests and probes in an offline Docker container",
+  "first_pass_total": 15,
+  "executed_evidence": {
+    "image": "python@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159 (python:3.12-slim); committed as rescore/puran-water-autocad-mcp:1",
+    "run_limits": "docker --context desktop-linux run --rm --network none --memory 2g --cpus 2 --pids-limit 512; clone mounted read-only at /src and copied to /work; only /out writable",
+    "install_command": "cp -r /src /work && cd /work && pip install uv==0.5.11 && uv sync --frozen && uv pip install --python .venv/bin/python pytest==8.3.4 pytest-asyncio==0.24.0 (pywin32 skipped by its sys_platform marker)",
+    "test_command": "cd /work && .venv/bin/python -m pytest tests/ -v -p no:cacheprovider (README: uv run pytest tests/ -v)",
+    "test_counts": {
+      "passed": 123,
+      "failed": 0,
+      "errors": 0,
+      "skipped": 0,
+      "warnings": 7,
+      "failures": []
+    },
+    "probes": [
+      {
+        "id": "B1a",
+        "probe": "auto backend on Linux",
+        "result": "falls back to ezdxf"
+      },
+      {
+        "id": "B1b",
+        "probe": "file_ipc on Linux",
+        "result": "explicit RuntimeError (pass)"
+      },
+      {
+        "id": "P01",
+        "probe": "primitives saved/reopened",
+        "result": "pass"
+      },
+      {
+        "id": "P02",
+        "probe": "entity get readback",
+        "result": "LINE ok; ARC has no geometry"
+      },
+      {
+        "id": "P03",
+        "probe": "measurement op",
+        "result": "absent"
+      },
+      {
+        "id": "P04",
+        "probe": "transforms saved/reopened",
+        "result": "pass after correction (initial mirror FAIL was a probe OCS/WCS error, see probe_mirror.py)"
+      },
+      {
+        "id": "P05",
+        "probe": "offset/fillet/chamfer on ezdxf",
+        "result": "refused honestly"
+      },
+      {
+        "id": "P06",
+        "probe": "array rows=0 cols=0",
+        "result": "ok=true, 0 copies"
+      },
+      {
+        "id": "P07",
+        "probe": "scale factor 0",
+        "result": "refused ('float division')"
+      },
+      {
+        "id": "P08",
+        "probe": "hatch on rectangle",
+        "result": "pass"
+      },
+      {
+        "id": "P09",
+        "probe": "dimensions/text/leader",
+        "result": "pass (texts 42,5 / 50 / 90deg / R12; no dimension handles); scripted check flagged FAIL only because of the comma decimal"
+      },
+      {
+        "id": "P10",
+        "probe": "radius dim radius=0",
+        "result": "refused ('float division')"
+      },
+      {
+        "id": "P11",
+        "probe": "layer ops",
+        "result": "color/freeze/lock persist; lineweight silently dropped with ok=true"
+      },
+      {
+        "id": "P12",
+        "probe": "blocks/attributes",
+        "result": "pass; undefined tag silently dropped with ok=true"
+      },
+      {
+        "id": "P13",
+        "probe": "error/boundary cases",
+        "result": "missing/corrupt files and bad handles refused; negative radius and empty polyline accepted and saved"
+      },
+      {
+        "id": "P14",
+        "probe": "P&ID headless",
+        "result": "placeholders only; rotation and attributes ignored with ok=true"
+      },
+      {
+        "id": "S1a",
+        "probe": "save path scope",
+        "result": "'..' path written; existing non-DXF file overwritten"
+      },
+      {
+        "id": "P15",
+        "probe": "screenshot + status",
+        "result": "PNG returned; capabilities listed"
+      },
+      {
+        "id": "P16",
+        "probe": "zoom on ezdxf",
+        "result": "refused"
+      },
+      {
+        "id": "mirror",
+        "probe": "mirror geometry (probe_mirror.py)",
+        "result": "correct in WCS for circle/line/arc; entity get reports OCS center (-100,0) for true (100,0)"
+      },
+      {
+        "id": "stdio",
+        "probe": "python -m autocad_mcp over MCP stdio (probe_stdio.py)",
+        "result": "8 tools listed (view/system readOnlyHint=true); status, create_line, bad get, execute_lisp refusal, save, screenshot work; saved LINE reopens with end (3,4)"
+      }
+    ],
+    "defect_reproduction": [
+      {
+        "item": "F4",
+        "defect": "IPC insert_with_attributes drops attributes",
+        "status": "not executable here (COM/LISP); headless analogue reproduced (undefined tag, lineweight)"
+      },
+      {
+        "item": "C2",
+        "defect": "IPC entlast handle without creation check",
+        "status": "not executable here"
+      },
+      {
+        "item": "C2",
+        "defect": "ezdxf purge false success",
+        "status": "reproduced"
+      },
+      {
+        "item": "C3",
+        "defect": "IPC save/plot/open unconditional ok",
+        "status": "not executable here"
+      },
+      {
+        "item": "C1",
+        "defect": "ezdxf mirror stray copy / empty hatch on refused call",
+        "status": "reproduced (both)"
+      },
+      {
+        "item": "S1",
+        "defect": "execute_lisp default-enabled under readOnlyHint=true",
+        "status": "readOnlyHint reproduced over stdio; LISP execution not executable here"
+      }
+    ],
+    "not_executed": [
+      "File IPC backend, mcp_dispatch.lsp, attribute_tools.lsp, Win32 screenshot, execute_lisp, undo/redo, plot_pdf, offset/fillet/chamfer on AutoCAD: require Windows, pywin32 and AutoCAD LT (not installed, not launched).",
+      "P&ID IPC path (needs uncommitted pid_tools.lsp and the third-party CTO library).",
+      "Windows and other Python versions."
+    ]
+  },
+  "evidence_paths": [
+    "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/pytest_summary.log",
+    "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probes/probe_tools.py",
+    "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probes/probe_mirror.py",
+    "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probes/probe_stdio.py",
+    "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_output.txt",
+    "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_results.json",
+    "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_mirror_results.json",
+    "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_mirror_readback.json",
+    "examples/source_capability/results/2026-10-31-field/evidence/puran-water-autocad-mcp/probe_stdio_results.json"
+  ]
+}

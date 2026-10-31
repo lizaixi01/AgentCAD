@@ -1,0 +1,19 @@
+{
+ "entity_get_mirrored_circle": {
+  "ok": true,
+  "payload": {
+   "type": "CIRCLE",
+   "handle": "30",
+   "layer": "0",
+   "center": [
+    -100.0,
+    -5.329070518200751e-15
+   ],
+   "radius": 1.0
+  }
+ },
+ "true_wcs_center": [
+  100,
+  0
+ ]
+}
