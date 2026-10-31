@@ -247,7 +247,8 @@ class Workspace:
         for e in doc.modelspace():
             counts[e.dxf.layer] = counts.get(e.dxf.layer, 0) + 1
         return {"version": sha, "layers": [{"name": l.dxf.name, "entities": counts.get(l.dxf.name, 0),
-                                            "off": l.is_off() or l.is_frozen()} for l in doc.layers]}
+                                            "off": l.is_off() or l.is_frozen(), "color": _layer_color(l)}
+                                           for l in doc.layers]}
 
     def _change_sets(self, rel: str, sha: str, before: str | None) -> dict[str, Any] | None:
         if not before:
@@ -439,6 +440,18 @@ class Workspace:
         page = page.replace("<!--__LOGO__-->", (STATIC / "logo.svg").read_text("utf-8"))
         name = re.sub(r"[^\w.-]+", "_", Path(rel).stem)[:60].strip("._") or "drawing"
         return f"{name}-{sha[:8]}.html", page
+
+
+def _layer_color(layer) -> str | None:
+    """The layer's colour as #rrggbb for the layer chips; None for ACI 7 (black on paper, white on a dark canvas)."""
+    try:
+        if layer.rgb:
+            return "#%02x%02x%02x" % tuple(layer.rgb)
+        from ezdxf.colors import aci2rgb
+        aci = abs(layer.dxf.color)
+        return None if aci in (0, 7, 256) else "#%02x%02x%02x" % tuple(aci2rgb(aci))
+    except Exception:  # noqa: BLE001 - a colour is a nicety
+        return None
 
 
 def _inline_kit_css() -> str:

@@ -92,6 +92,8 @@
   -webkit-font-smoothing: antialiased;
 }
 .ff [hidden] { display: none !important; }
+/* the weight axis is set for the whole page, so bold text says it in the same terms */
+.ff b, .ff strong, .ff th, .ff h1, .ff h2, .ff h3, .ff h4 { font-variation-settings: var(--wght-semibold); }
 .ff :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
 .ff-display { font-size: var(--fs-display); line-height: var(--lh-display); font-variation-settings: var(--wght-bold); letter-spacing: -.01em; margin: 0; }
 .ff-title { font-size: var(--fs-title); line-height: var(--lh-title); font-variation-settings: var(--wght-semibold); margin: 0; }

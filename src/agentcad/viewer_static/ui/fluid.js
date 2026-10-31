@@ -39,6 +39,8 @@
     if (!hl) { hl = document.createElement("div"); hl.className = "ff-hl"; list.prepend(hl); }
     let current = null, entering = true;
     const place = (el) => {
+      if (hl.parentNode !== list) { list.prepend(hl); entering = true; }  // the list was re-rendered (innerHTML)
+      if (current && !current.isConnected) current = null;
       if (current) current.classList.remove("lit");
       current = el;
       if (!el) { hl.classList.remove("on"); return; }
