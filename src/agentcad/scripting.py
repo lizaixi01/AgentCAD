@@ -33,13 +33,14 @@ BANNED_NAMES = {"open", "exec", "eval", "compile", "__import__", "input", "break
 # modules allowed modules carry as plain attributes (fractions.sys.modules, dataclasses.builtins.getattr,
 # dataclasses.inspect.currentframe(), numpy.f2py.subprocess), also under private aliases (collections._sys,
 # statistics.random._os, numpy's _datasource._open) where the language allows private names; numpy.testing and gc
-# lead to the rest (gc.get_objects() holds the real builtins dict).
+# lead to the rest (gc.get_objects() holds the real builtins dict), pickle.loads(b'cbuiltins\n__import__\n.') to
+# __import__, linecache.getline to any text file, settrace to frames.
 _ESCAPE_ATTRS = {"gi_frame", "cr_frame", "ag_frame", "tb_frame", "f_back", "f_globals", "f_locals", "f_builtins",
                  "attrgetter", "methodcaller", "getattr", "setattr", "delattr", "eval", "exec", "globals", "locals",
                  "vars", "breakpoint", "sys", "modules", "os", "builtins", "bltns", "inspect", "currentframe",
                  "subprocess", "f2py", "_sys", "_os", "_open", "_builtin_open", "_getframe", "importlib",
                  "import_module", "io", "pathlib", "shutil", "testing", "gc", "get_objects", "get_referrers",
-                 "get_referents"}
+                 "get_referents", "pickle", "_pickle", "Unpickler", "linecache", "settrace", "setprofile"}
 # numpy file access and native code: numpy is importable in the part and image languages, and ezdxf carries it as
 # an attribute (ezdxf.npshapes.np). NpzFile(path) reads any zip; its .zip extracts files, and type(.zip)(path, 'w')
 # writes a zip.

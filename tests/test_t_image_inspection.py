@@ -276,6 +276,7 @@ def test_code_can_return_an_overlay_image(ws):
     ("import dataclasses\nf = dataclasses.inspect", "SCRIPT_REJECTED"),
     ("s = np.ma.core.inspect.stack()", "SCRIPT_REJECTED"),
     ("import collections\nf = collections._sys", "SCRIPT_REJECTED"),
+    ("def f(m):\n    return m.pickle.loads(data)", "SCRIPT_REJECTED"),
     ("def f(nz):\n    nz.zip.extractall('out')", "SCRIPT_REJECTED"),
     ("def f(nz):\n    nz.zip.extract('a', 'out')", "SCRIPT_REJECTED"),
     ("def f(nz):\n    type(nz.zip)('x.zip', 'w').writestr('a', 'b')", "SCRIPT_REJECTED"),

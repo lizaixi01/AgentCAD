@@ -127,6 +127,7 @@ def test_freecad_scripts_are_checked_before_running(srt, ws, code, why):
     ("import numpy as np\nf = np.lib._datasource._open", "'_open'"),
     ("import numpy as np\nm = np.testing", "'testing'"),
     ("def f(u):\n    return u.gc.get_objects()", "'get_objects'"),
+    ("import numpy as np\nimp = np._core._methods.pickle.loads(data)", "'pickle'"),
     ("def f(nz):\n    nz.zip.extractall('out')", "'extractall'"),
     ("def f(nz):\n    nz.zip.extract('a', 'out')", "'extract'"),
     ("def f(nz):\n    type(nz.zip)('x.zip', 'w').writestr('a', 'b')", "'writestr'"),

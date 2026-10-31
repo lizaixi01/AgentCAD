@@ -157,6 +157,8 @@ def test_script_is_a_transaction(srt, ws):
     # ezdxf carries numpy: its file functions and NpzFile are off here too
     ("nz = ezdxf.npshapes.np.lib.npyio.NpzFile('x.zip')", "'NpzFile'"),
     ("ezdxf.npshapes.np.savetxt('x.txt', [1])", "'savetxt'"),
+    ("imp = ezdxf.npshapes.np._core._methods.pickle", "'pickle'"),
+    ("def f(t):\n    return t.linecache.getline('x.txt', 1)", "'linecache'"),
     ("def f(nz):\n    nz.zip.extractall('out')", "'extractall'"),
     ("import operator\noperator.methodcaller('saveas', 'x.dxf')(doc)", "'methodcaller'"),
 ])
