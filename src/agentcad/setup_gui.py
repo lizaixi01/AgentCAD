@@ -17,6 +17,7 @@ token of the URL it opened (header X-AgentCAD-Token), so another web page cannot
 from __future__ import annotations
 
 import json
+import re
 import os
 import secrets
 import sys
@@ -28,7 +29,7 @@ from urllib.parse import urlparse
 
 from . import install
 from .errors import AgentCADError
-from .viewer import LOOPBACK, STATIC, _host_name, _server
+from .viewer import LOOPBACK, STATIC, UI_TYPES, _host_name, _server
 
 IDLE_EXIT = 3600.0  # nobody has asked anything for an hour: the page was closed, stop
 STATIC_FILES = {"/": ("setup.html", "text/html; charset=utf-8"), "/logo.svg": ("logo.svg", "image/svg+xml")}
@@ -177,6 +178,11 @@ def _handler(wiz: Wizard):
             if path in STATIC_FILES:
                 name, ctype = STATIC_FILES[path]
                 return self._send(200, (STATIC / name).read_bytes(), ctype)
+            if path.startswith("/ui/"):  # the UI kit, as the viewer serves it
+                name = path[4:]
+                f = STATIC / "ui" / name
+                if re.fullmatch(r"[A-Za-z0-9._-]+", name) and f.suffix in UI_TYPES and f.is_file():
+                    return self._send(200, f.read_bytes(), UI_TYPES[f.suffix])
             if path == "/api/info":
                 return self._json(wiz.info())
             if path == "/api/doctor":

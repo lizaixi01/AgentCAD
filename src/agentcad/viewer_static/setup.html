@@ -6,31 +6,19 @@
 <meta name="color-scheme" content="light dark">
 <title>AgentCAD Setup</title>
 <link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/ui/fluid.css">
 <style>
 :root {
-  --bg: #f3f5f8; --panel: #ffffff; --ink: #111827; --muted: #5b6474; --line: #e3e7ee; --soft: #eef2f7;
-  --accent: #1f6feb; --accent-ink: #ffffff; --accent-soft: #e6efff;
-  --ok: #15803d; --ok-soft: #e3f6e8; --warn: #b45309; --warn-soft: #fdf1dc; --bad: #c62828; --bad-soft: #fde8e8;
-  --shadow: 0 1px 2px rgba(16,24,40,.06), 0 8px 28px rgba(16,24,40,.08); --radius: 18px;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0e1116; --panel: #161b22; --ink: #eef2f7; --muted: #a3acb9; --line: #29303b; --soft: #1d232c;
-    --accent: #5b9cff; --accent-ink: #0b1220; --accent-soft: #1b2a44;
-    --ok: #4ade80; --ok-soft: #12291b; --warn: #fbbf24; --warn-soft: #2d230f; --bad: #f87171; --bad-soft: #321616;
-    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
-  }
-}
-:root[data-theme="dark"] {
-  --bg: #0e1116; --panel: #161b22; --ink: #eef2f7; --muted: #a3acb9; --line: #29303b; --soft: #1d232c;
-  --accent: #5b9cff; --accent-ink: #0b1220; --accent-soft: #1b2a44;
-  --ok: #4ade80; --ok-soft: #12291b; --warn: #fbbf24; --warn-soft: #2d230f; --bad: #f87171; --bad-soft: #321616;
-  --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 28px rgba(0,0,0,.35);
+  /* the page's names for the UI kit's tokens (ui/fluid.css): surfaces, ink, accent; --ok/--warn/--bad come from it */
+  --bg: var(--surface-1); --panel: var(--surface-3); --ink: var(--fg); --muted: var(--fg-muted); --line: var(--border); --soft: var(--active);
+  --accent: var(--ff-accent); --accent-ink: var(--ff-accent-ink); --accent-soft: var(--ff-accent-soft);
+  --shadow: var(--shadow-4); --radius: var(--radius-xl);
 }
 * { box-sizing: border-box; }
 [hidden] { display: none !important; }
 html, body { margin: 0; min-height: 100%; }
-body { background: var(--bg); color: var(--ink); font: 18px/1.55 system-ui, -apple-system, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", sans-serif; }
+body { background: var(--bg); color: var(--ink); font-size: 18px; line-height: 1.55;
+       font-family: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", sans-serif; -webkit-font-smoothing: antialiased; }
 button { font: inherit; color: inherit; }
 header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; max-width: 760px; margin: 0 auto; }
 .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; }
@@ -38,16 +26,18 @@ header { display: flex; align-items: center; gap: 12px; padding: 14px 20px; max-
 .spacer { flex: 1; }
 .lang { min-height: 44px; padding: 6px 16px; border-radius: 22px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; font-weight: 600; font-size: 16px; }
 main { max-width: 760px; margin: 0 auto; padding: 4px 16px 40px; }
-.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px 32px 28px; }
+.card { background: var(--panel); border: 0; border-radius: var(--radius); box-shadow: var(--shadow); padding: 32px 32px 28px; }
 h1 { font-size: 32px; line-height: 1.25; margin: 0 0 10px; }
 h2 { font-size: 22px; margin: 26px 0 12px; }
 p.lead { font-size: 20px; color: var(--muted); margin: 0 0 22px; }
-.btn { min-height: 56px; padding: 12px 26px; border-radius: 16px; border: 1px solid var(--line); background: var(--panel); cursor: pointer;
+.btn { min-height: 56px; padding: 12px 26px; border-radius: 16px; border: 0; background: var(--panel); cursor: pointer; box-shadow: var(--shadow-2);
+       transition: background-color var(--spring-fast), box-shadow var(--spring-fast), transform var(--spring-fast);
        display: inline-flex; align-items: center; justify-content: center; gap: 10px; font-weight: 700; font-size: 19px; }
-.btn:hover { background: var(--soft); }
+.btn:hover { background: var(--surface-4); box-shadow: var(--shadow-3); }
+.btn:active { transform: scale(.98); }
 .btn:focus-visible, .app:focus-within, .lang:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 .btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.btn.primary:hover:not(:disabled) { filter: brightness(1.08); }
+.btn.primary:hover:not(:disabled) { background: color-mix(in oklab, var(--accent) 88%, #000); }
 .btn:disabled { opacity: .45; cursor: default; }
 .btn svg { width: 24px; height: 24px; flex: none; }
 .btn.small { min-height: 44px; padding: 8px 16px; font-size: 16px; border-radius: 12px; }
@@ -77,7 +67,9 @@ p.lead { font-size: 20px; color: var(--muted); margin: 0 0 22px; }
 .apps { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
 .app { position: relative; display: grid; grid-template-columns: 56px 1fr 30px; gap: 14px; align-items: center; padding: 16px; border-radius: 16px;
        border: 2px solid var(--line); background: var(--panel); cursor: pointer; min-height: 88px; }
-.app:hover { background: var(--soft); }
+.app { transition: border-color var(--spring-moderate), background-color var(--spring-moderate); }
+.apps { position: relative; }
+.apps > .ff-hl { border-radius: 16px; z-index: 2; }  /* over the opaque cards, as a light tint (pointer-events: none) */
 .app.sel { border-color: var(--accent); background: var(--accent-soft); }
 .app input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .tile { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; font-weight: 800; font-size: 22px; color: #fff; }
@@ -163,6 +155,7 @@ canvas#confetti { position: fixed; inset: 0; pointer-events: none; z-index: 20; 
 <canvas id="confetti" hidden></canvas>
 <div class="toast" id="toast" role="status" hidden></div>
 
+<script src="/ui/fluid.js"></script>
 <script>
 "use strict";
 const TOKEN = new URLSearchParams(location.search).get("t") || "";
@@ -338,6 +331,7 @@ function render() {
       <div class="folder">${ICON.folder}<div><span>${esc(t("folderTitle"))}</span><code>${esc(info.workspace)}</code></div></div>
       <div class="actions"><button class="btn" id="back" type="button">${esc(t("back"))}</button>
       <button class="btn primary" id="install" type="button" ${picked.size ? "" : "disabled"}>${esc(picked.size ? t("install") : t("pickOne"))} ${ICON.arrow}</button></div>`;
+    if (window.Fluid) Fluid.fluidHover(card.querySelector(".apps"), { item: ".app" });  // the kit's gliding highlight
     card.querySelectorAll(".app input").forEach(inp => inp.onchange = () => {
       const id = inp.closest(".app").dataset.id;
       inp.checked ? picked.add(id) : picked.delete(id);

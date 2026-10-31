@@ -9,6 +9,7 @@ wrote, and each checkpoint the sha of the content it holds, so any committed ver
 Files are read into a content-addressed cache outside the workspace before they are parsed or handed to FreeCAD.
 
     GET /                         the page (viewer_static/index.html)
+    GET /ui/<file>                the UI kit (viewer_static/ui): fluid.css, fluid.js, Inter, gallery.html
     GET /api/drawings             drawings (.dxf) and parts (.FCStd) under the root
     GET /api/timeline?path=       journal records, each with the version it produced
     GET /api/svg?path=&v=&diff=1&hide=L1,L2    2D render (diff: added green, modified orange, rest grey)
@@ -57,6 +58,9 @@ ROUTES = {"/api/timeline", "/api/layers", "/api/diff", "/api/svg", "/api/mesh", 
           "/api/export"}
 STATIC_FILES = {"/friendly.js": ("friendly.js", "text/javascript; charset=utf-8"),
                 "/logo.svg": ("logo.svg", "image/svg+xml")}
+# the UI kit (viewer_static/ui): fluid.css, fluid.js, the Inter font and the component gallery; only these types
+UI_TYPES = {".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".html": "text/html; charset=utf-8",
+            ".woff2": "font/woff2", ".svg": "image/svg+xml", ".md": "text/markdown; charset=utf-8"}
 FREECAD_JOBS = threading.BoundedSemaphore(2)  # thumbnails of many parts must not start FreeCAD for each at once
 INFO_FILE = "viewer.json"  # <root>/.agentcad/viewer.json: where a running viewer listens (see viewer_url)
 LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})
@@ -243,7 +247,8 @@ class Workspace:
         for e in doc.modelspace():
             counts[e.dxf.layer] = counts.get(e.dxf.layer, 0) + 1
         return {"version": sha, "layers": [{"name": l.dxf.name, "entities": counts.get(l.dxf.name, 0),
-                                            "off": l.is_off() or l.is_frozen()} for l in doc.layers]}
+                                            "off": l.is_off() or l.is_frozen(), "color": _layer_color(l)}
+                                           for l in doc.layers]}
 
     def _change_sets(self, rel: str, sha: str, before: str | None) -> dict[str, Any] | None:
         if not before:
@@ -429,9 +434,37 @@ class Workspace:
         page = (STATIC / "snapshot.html").read_text("utf-8")
         friendly = (STATIC / "friendly.js").read_text("utf-8")
         payload = json.dumps(data, ensure_ascii=False).replace("<", "\\u003c")
-        page = page.replace("/*__FRIENDLY__*/", friendly.replace("</", "<\\/")).replace('"__DATA__"', payload)
+        # the page's own pieces first and the data last: a label or message that happens to hold a placeholder must
+        # stay text, never pull a script or style into the JSON
+        page = page.replace("/*__FLUID_CSS__*/", _inline_kit_css()).replace(
+            "/*__FLUID_JS__*/", (STATIC / "ui" / "fluid.js").read_text("utf-8").replace("</", "<\\/"))
+        page = page.replace("<!--__LOGO__-->", (STATIC / "logo.svg").read_text("utf-8"))
+        page = page.replace("/*__FRIENDLY__*/", friendly.replace("</", "<\\/"))
+        page = page.replace('"__DATA__"', payload)
         name = re.sub(r"[^\w.-]+", "_", Path(rel).stem)[:60].strip("._") or "drawing"
         return f"{name}-{sha[:8]}.html", page
+
+
+def _layer_color(layer) -> str | None:
+    """The layer's colour as #rrggbb for the layer chips; None for ACI 7 (black on paper, white on a dark canvas)."""
+    try:
+        if layer.rgb:
+            return "#%02x%02x%02x" % tuple(layer.rgb)
+        from ezdxf.colors import aci2rgb
+        aci = abs(layer.dxf.color)
+        return None if aci in (0, 7, 256) else "#%02x%02x%02x" % tuple(aci2rgb(aci))
+    except Exception:  # noqa: BLE001 - a colour is a nicety
+        return None
+
+
+def _inline_kit_css() -> str:
+    """The UI kit's CSS for a self-contained page: the Inter font goes in as a data URI, so nothing is fetched, and
+    the kit's MIT notice and the font's OFL go in as a comment, since this file is sent to other people."""
+    css = (STATIC / "ui" / "fluid.css").read_text("utf-8")
+    notice = (STATIC / "ui" / "NOTICE.md").read_text("utf-8").replace("*/", "* /")
+    font = base64.b64encode((STATIC / "ui" / "inter-latin-wght-normal.woff2").read_bytes()).decode()
+    css = css.replace('url("inter-latin-wght-normal.woff2")', f'url("data:font/woff2;base64,{font}")')
+    return ("/*\n" + notice + "\n*/\n" + css).replace("</", "<\\/")
 
 
 def _scrub_obj(obj: Any, root: Path) -> Any:
@@ -610,6 +643,12 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                 if u.path in STATIC_FILES:
                     name, ctype = STATIC_FILES[u.path]
                     return self._send(200, (STATIC / name).read_bytes(), ctype)
+                if u.path.startswith("/ui/"):
+                    name = u.path[4:]
+                    f = STATIC / "ui" / name
+                    if re.fullmatch(r"[A-Za-z0-9._-]+", name) and f.suffix in UI_TYPES and f.is_file():
+                        return self._send(200, f.read_bytes(), UI_TYPES[f.suffix], cache=f.suffix == ".woff2")
+                    return self._json({"ok": False, "error": {"code": "NOT_FOUND"}}, 404)
                 if u.path == "/api/activity":
                     return self._json({"ok": True, "events": list(feed.activity), "last_event": feed.last_id})
                 if u.path == "/api/sessions":
