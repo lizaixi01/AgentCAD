@@ -7,7 +7,9 @@ $zh = (Get-Culture).Name -like 'zh*'
 function L($z, $e) { if ($zh) { $z } else { $e } }
 $fast = __FAST__   # starts from what is already downloaded (no network), or $null
 $full = __FULL__   # may download first
-$log = Join-Path $env:TEMP ("agentcad-open-" + [guid]::NewGuid().ToString('N') + '.log')
+# logs of earlier starts: a running AgentCAD still holds its own (that delete fails quietly), the rest go
+Remove-Item -Path (Join-Path $PSScriptRoot 'open-*.log') -ErrorAction SilentlyContinue
+$log = Join-Path $PSScriptRoot ('open-' + [guid]::NewGuid().ToString('N') + '.log')
 
 $font = 'Microsoft YaHei UI'
 $form = New-Object Windows.Forms.Form
@@ -41,9 +43,10 @@ $script:usedFull = -not $fast
 $timer = New-Object Windows.Forms.Timer
 $timer.Interval = 250
 $timer.Add_Tick({
+  $exited = $script:proc.HasExited  # before reading: a quick start can print its link and exit in between
   $text = if (Test-Path $log) { Get-Content -LiteralPath $log -Raw -ErrorAction SilentlyContinue } else { '' }
   if ($text -match '"viewer":\s*"') { $timer.Stop(); $form.Close(); return }
-  if ($script:proc.HasExited) {
+  if ($exited) {
     if (-not $script:usedFull) {  # nothing downloaded yet, or the cache was cleaned: get it
       $script:usedFull = $true
       $sub.Text = (L '第一次打开，正在下载 AgentCAD（大约 1 分钟）…' 'First time: downloading AgentCAD (about a minute)...')
@@ -57,4 +60,3 @@ $timer.Add_Tick({
 })
 $form.Add_Shown({ $form.TopMost = $true; $form.Activate(); $form.TopMost = $false; $timer.Start() })
 [void]$form.ShowDialog()
-Remove-Item -LiteralPath $log -ErrorAction SilentlyContinue

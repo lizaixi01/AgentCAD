@@ -373,12 +373,19 @@ def _ps_quote(text: str) -> str:
 LAUNCH_TITLES = {VIEWER: ("正在打开 AgentCAD…", "Opening AgentCAD..."), DEMO: ("正在准备演示…", "Getting the demo ready...")}
 
 
+def _cmd_line(parts: list[str]) -> str:
+    """A command line for ``cmd /d /s /c``: every part in double quotes, so & ^ | < > and spaces in a path (an account
+    called R&D, a folder D:\\Drawings&Models) stay inside their argument. A trailing backslash is doubled so it
+    does not escape the closing quote."""
+    return " ".join('"' + (p + "\\" if p.endswith("\\") else p) + '"' for p in parts)
+
+
 def write_launcher(state: Path, command: str, args: list[str], launcher: str, action: tuple[str, ...]) -> Path:
     """<root>/.agentcad/launch-<action>.ps1 (Windows): a small "Opening AgentCAD..." window instead of a console.
     With uvx it first starts what is already downloaded (--offline, about a second) and downloads only if that fails;
     a new version comes with the next run of the installer."""
-    fast = subprocess.list2cmdline([command, "--offline", *args]) if launcher == "uvx" else None
-    full = subprocess.list2cmdline([command, *args])
+    fast = _cmd_line([command, "--offline", *args]) if launcher == "uvx" else None
+    full = _cmd_line([command, *args])
     zh, en = LAUNCH_TITLES.get(action, LAUNCH_TITLES[VIEWER])
     text = (STATIC / "launch.ps1").read_text("utf-8")
     for key, value in (("__FAST__", _ps_quote(fast) if fast else "$null"), ("__FULL__", _ps_quote(full)),
