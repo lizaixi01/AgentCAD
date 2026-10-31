@@ -13,7 +13,7 @@ reg query "HKCU\Software\Microsoft\Windows Script Host\Settings" /v Enabled 2>nu
 reg query "HKLM\Software\Microsoft\Windows Script Host\Settings" /v Enabled 2>nul | findstr /r /e /c:"0x0" /c:"REG_SZ *0" >nul && goto noscripthost
 set "AGENTCAD_SETUP_JS=%TEMP%\agentcad-setup.js"
 > "%AGENTCAD_SETUP_JS%" echo new ActiveXObject("WScript.Shell").Run("powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command \"$t = Get-Content -LiteralPath $env:AGENTCAD_SETUP_FILE -Raw -Encoding UTF8; iex ($t -split ('#PS' + '-START#'), 2)[1]\"", 0, false);
-start "" wscript.exe "%AGENTCAD_SETUP_JS%"
+start "" wscript.exe //E:JScript "%AGENTCAD_SETUP_JS%"
 exit /b 0
 :noscripthost
 start "" conhost.exe --headless powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "$t = Get-Content -LiteralPath $env:AGENTCAD_SETUP_FILE -Raw -Encoding UTF8; iex ($t -split ('#PS' + '-START#'), 2)[1]"

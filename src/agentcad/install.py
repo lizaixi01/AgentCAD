@@ -504,7 +504,9 @@ def create_shortcut(root: Path, launcher: str, source: str | None = None, *, pla
         ico = state / "agentcad.ico"
         system32 = Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32"
         if windows_script_host():  # any Windows: wscript runs launch-<action>.js (write_launcher)
-            target, target_args = str(system32 / "wscript.exe"), subprocess.list2cmdline([str(state / f"launch-{action[0]}.js")])
+            # //E:JScript: run it as JScript even where .js is associated with an editor or Node.js
+            target = str(system32 / "wscript.exe")
+            target_args = subprocess.list2cmdline(["//E:JScript", str(state / f"launch-{action[0]}.js")])
         else:  # Script Host switched off: conhost --headless (Windows 10 1809 and later)
             target = str(system32 / "conhost.exe")
             target_args = "--headless " + _powershell_file(state / f"launch-{action[0]}.ps1")

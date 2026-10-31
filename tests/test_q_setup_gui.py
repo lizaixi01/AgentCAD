@@ -216,7 +216,7 @@ def test_desktop_icon_windows_uses_powershell(home):
     script = run.calls[0][-1]
     assert "GetFolderPath('Desktop')" in script and "CreateShortcut" in script
     # no console on any Windows: the icon runs wscript, which starts launch-viewer.ps1 with window style 0
-    assert "wscript.exe" in script and "launch-viewer.js" in script and "conhost" not in script
+    assert "wscript.exe" in script and "//E:JScript" in script and "launch-viewer.js" in script and "conhost" not in script
     js = (root / ".agentcad" / "launch-viewer.js").read_text("utf-16")  # JScript: VBScript is being phased out
     assert js.startswith('new ActiveXObject("WScript.Shell").Run(') and ", 0, false);" in js
     assert "launch-viewer.ps1" in js and "-WindowStyle Hidden" in js
