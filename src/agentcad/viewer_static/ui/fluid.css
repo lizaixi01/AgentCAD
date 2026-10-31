@@ -2,7 +2,7 @@
    https://github.com/mickadesign/fluid-functionalism) ported to plain CSS and JS, with a larger type scale for people
    who are not designers. Tokens: surfaces, shadows, tints, three spring tiers. See ui/NOTICE.md.
 
-   Use: <link rel="stylesheet" href="/ui/fluid.css"><script src="/ui/fluid.js"></script>
+   Use: load ui/fluid.css as a stylesheet and ui/fluid.js as a script; put class "ff" on the body.
    Theme: follows the system; <html data-theme="light|dark"> forces one. */
 
 @font-face {

@@ -433,8 +433,18 @@ class Workspace:
         friendly = (STATIC / "friendly.js").read_text("utf-8")
         payload = json.dumps(data, ensure_ascii=False).replace("<", "\\u003c")
         page = page.replace("/*__FRIENDLY__*/", friendly.replace("</", "<\\/")).replace('"__DATA__"', payload)
+        page = page.replace("/*__FLUID_CSS__*/", _inline_kit_css()).replace(
+            "/*__FLUID_JS__*/", (STATIC / "ui" / "fluid.js").read_text("utf-8").replace("</", "<\\/"))
+        page = page.replace("<!--__LOGO__-->", (STATIC / "logo.svg").read_text("utf-8"))
         name = re.sub(r"[^\w.-]+", "_", Path(rel).stem)[:60].strip("._") or "drawing"
         return f"{name}-{sha[:8]}.html", page
+
+
+def _inline_kit_css() -> str:
+    """The UI kit's CSS for a self-contained page: the Inter font goes in as a data URI, so nothing is fetched."""
+    css = (STATIC / "ui" / "fluid.css").read_text("utf-8")
+    font = base64.b64encode((STATIC / "ui" / "inter-latin-wght-normal.woff2").read_bytes()).decode()
+    return css.replace('url("inter-latin-wght-normal.woff2")', f'url("data:font/woff2;base64,{font}")').replace("</", "<\\/")
 
 
 def _scrub_obj(obj: Any, root: Path) -> Any:

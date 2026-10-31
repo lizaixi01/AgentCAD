@@ -335,10 +335,10 @@ def test_markup_in_names_texts_notes_and_errors_is_escaped(rt, ws, viewer):
             break
         assert time.monotonic() < deadline, acts
         viewer.feed.wait(viewer.feed.last_id, 0.2, progress=True)
-    # the export: the payload appears only JSON-escaped, the page has exactly its own three scripts
+    # the export: the payload appears only JSON-escaped, the page has exactly its own four scripts
     page = get(viewer, "/api/export", path=name)[2].decode("utf-8")
     assert "<img src=x" not in page and "<script>window" not in page  # each "<" of the data is \u003c in JSON
-    assert page.count("<script") == 3 and page.count("</script>") == 3
+    assert page.count("<script") == 4 and page.count("</script>") == 4  # with the UI kit's own script
     data = json.loads(re.search(r'<script id="data" type="application/json">(.*?)</script>', page, re.S).group(1))
     assert data["name"] == name and any(h.get("label") == XSS for h in data["history"])
     assert any(not h["ok"] and "<img" in h["error"]["message"] for h in data["history"])
