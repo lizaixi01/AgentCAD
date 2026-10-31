@@ -154,6 +154,10 @@ def test_script_is_a_transaction(srt, ws):
     ("import collections\nf = collections._sys", "'_sys'"),
     ("import statistics\nr = statistics.random._os", "'_os'"),
     ("x = ezdxf.npshapes.np.testing.importlib", "'importlib'"),
+    # ezdxf carries numpy: its file functions and NpzFile are off here too
+    ("nz = ezdxf.npshapes.np.lib.npyio.NpzFile('x.zip')", "'NpzFile'"),
+    ("ezdxf.npshapes.np.savetxt('x.txt', [1])", "'savetxt'"),
+    ("def f(nz):\n    nz.zip.extractall('out')", "'extractall'"),
     ("import operator\noperator.methodcaller('saveas', 'x.dxf')(doc)", "'methodcaller'"),
 ])
 def test_scripts_are_checked_before_running(srt, ws, code, why):

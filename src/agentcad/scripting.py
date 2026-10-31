@@ -32,14 +32,22 @@ BANNED_NAMES = {"open", "exec", "eval", "compile", "__import__", "input", "break
 # helpers that read or call attributes by name (attrgetter('__globals__') gets past the dunder rule), and the
 # modules allowed modules carry as plain attributes (fractions.sys.modules, dataclasses.builtins.getattr,
 # dataclasses.inspect.currentframe(), numpy.f2py.subprocess), also under private aliases (collections._sys,
-# statistics.random._os, numpy's _datasource._open) where the language allows private names.
+# statistics.random._os, numpy's _datasource._open) where the language allows private names; numpy.testing and gc
+# lead to the rest (gc.get_objects() holds the real builtins dict).
 _ESCAPE_ATTRS = {"gi_frame", "cr_frame", "ag_frame", "tb_frame", "f_back", "f_globals", "f_locals", "f_builtins",
                  "attrgetter", "methodcaller", "getattr", "setattr", "delattr", "eval", "exec", "globals", "locals",
                  "vars", "breakpoint", "sys", "modules", "os", "builtins", "bltns", "inspect", "currentframe",
                  "subprocess", "f2py", "_sys", "_os", "_open", "_builtin_open", "_getframe", "importlib",
-                 "import_module", "io", "pathlib", "shutil"}
+                 "import_module", "io", "pathlib", "shutil", "testing", "gc", "get_objects", "get_referrers",
+                 "get_referents"}
+# numpy file access and native code: numpy is importable in the part and image languages, and ezdxf carries it as
+# an attribute (ezdxf.npshapes.np). NpzFile(path) reads any zip; its .zip extracts files, and type(.zip)(path, 'w')
+# writes a zip.
+_NUMPY_FILE_ATTRS = {"load", "dump", "loadtxt", "savetxt", "fromfile", "tofile", "savez", "savez_compressed",
+                     "genfromtxt", "fromregex", "memmap", "open_memmap", "DataSource", "Repository", "zipfile_factory",
+                     "ctypeslib", "ctypes", "load_library", "NpzFile", "extractall", "extract", "writestr"}
 BANNED_ATTRS = {"saveas", "save", "readfile", "readzip", "write", "write_text", "write_bytes", "unlink", "rmdir",
-                "system", "popen", "spawn", "odafc"} | _ESCAPE_ATTRS
+                "system", "popen", "spawn", "odafc"} | _ESCAPE_ATTRS | _NUMPY_FILE_ATTRS
 RUNNER = Path(__file__).with_name("_script_runner.py")
 CQ_RUNNER = Path(__file__).parent / "part" / "_cq_runner.py"
 IMAGE_RUNNER = Path(__file__).with_name("_image_runner.py")
@@ -56,18 +64,14 @@ _FILE_ATTRS = {"save", "saveas", "saveAs", "write", "write_text", "write_bytes",
                "rmdir", "mkdir", "system", "popen", "spawn", "export", "exporters", "importers", "exportStep",
                "exportStl", "exportBrep", "exportBin", "exportBinary", "exportSvg", "exportDXF", "exportIges",
                "importStep", "importBrep", "importStl", "importDXF", "importBin", "importBinary", "importSvg", "read",
-               "readfile", "open", "load", "dump", "loadtxt", "savetxt", "fromfile", "tofile",
-               # numpy and OCP file access and native code
-               "savez", "savez_compressed", "genfromtxt", "fromregex", "memmap", "open_memmap", "DataSource",
-               "Repository", "zipfile_factory", "ctypeslib", "ctypes",
-               "load_library", "Write", "Read", "Write_s", "Read_s",
-               # NpzFile(path) reads any zip; its .zip extracts files, and type(.zip)(path, 'w') writes a zip
-               "NpzFile", "extractall", "extract", "writestr",
+               "readfile", "open",
+               # OCP file access
+               "Write", "Read", "Write_s", "Read_s",
                # FreeCAD: documents and settings belong to the runtime, not to the script
                "openDocument", "newDocument", "closeDocument", "getDocument", "listDocuments", "ActiveDocument",
                "activeDocument", "setActiveDocument", "loadFile", "ParamGet",
                # cadquery.vis opens a window and would wait for it until the time limit
-               "vis"} | _ESCAPE_ATTRS
+               "vis"} | _ESCAPE_ATTRS | _NUMPY_FILE_ATTRS
 LANGUAGES: dict[str, dict] = {
     "ezdxf": {"imports": ALLOWED_IMPORTS, "attrs": BANNED_ATTRS,
               "hint": "Scripts get the drawing as `doc` (and `msp`); edit it in place, do not open, save or import "
@@ -82,7 +86,7 @@ LANGUAGES: dict[str, dict] = {
     # Image.core capture the screen and clipboard, ImageShow starts a viewer, plugins read and write files) and no
     # scipy (scipy.io and sparse read and write files). Private names are off too: numpy's private modules hold its
     # file and download helpers.
-    "image": {"imports": _DATA | {"numpy"}, "attrs": _FILE_ATTRS | {"testing", "f2py", "distutils"}, "private": True,
+    "image": {"imports": _DATA | {"numpy"}, "attrs": _FILE_ATTRS | {"distutils"}, "private": True,
               "hint": "Measure the pixels of `image` (numpy uint8, height x width x 3; source pixel = local + "
                       "`origin`) with numpy (`np`) and print the numbers; draw overlays with draw_line, draw_rect, "
                       "draw_ellipse and draw_text; optionally set `result` to an image array or a JSON value. "
