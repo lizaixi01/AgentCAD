@@ -67,6 +67,9 @@ Basics
   The tool checks witness projections and solves the supplied dimension graph; green/consistent means
   arithmetic and anchor alignment ONLY, not that OCR or the surface assignment is true. Correct any
   mismatched anchors, scale conflicts or contradictory cycles before trusting derived levels.
+- Measure pixels instead of estimating them: inspect_image(code=...) runs numpy on the region at source
+  resolution (`image`, `origin`; print the numbers). Find silhouette extents, line positions or fit an
+  ellipse to a circular edge to recover a view's camera; measure your own preview the same way to compare.
 - State a drawing-derived dimension ledger before building: callout id/value, source hash/view, both
   endpoint/surface coordinates, and the corresponding model surfaces. Use the connected graph's relative
   levels (source +x right, +y down) to derive gaps in ONE chosen CAD frame. Distinguish directly labelled
@@ -84,7 +87,10 @@ Basics
 - Sketch coordinates are [x, y] in the sketch plane, space coordinates [x, y, z], mm. Edge / face selectors
   ("top", {"type": "circle", "radius": 6}) are re-resolved after every edit; '=Params.w' drives dimensions: change them later with set_parameters or
   modify_feature and the part rebuilds.
-- The result's validation.shape gives size, volume and holes: check them against what you meant to build.
+- The result's validation.shape gives size, volume, holes and topology {bodies, genus, voids}: check them
+  against what you meant to build. genus counts through-holes and handles: count the drawing's through-holes
+  and closed loops; a genus one higher means a rib or boss closed a loop the drawing lacks (or a hole broke
+  through), one lower a missing through-hole. Neither shows in size or volume.
   Derive validation targets independently from explicit drawing callouts, not from the geometry you just
   created. Check that the signed face-level differences agree with those callouts before saving.
   A valid solid with matching overall size/hole count can still have wrong local geometry. Compare opposite
@@ -158,12 +164,23 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
                           "line=dimension/witness intersections; surfaces=corresponding boundary points, "
                           "all in source pixels inside the crop. Returns an unmarked+marked image, alignment "
                           "checks, raster crossing candidates/detail regions and relative levels from equations; "
-                          "does NOT recognize arrows/text or verify semantics.")] = None) -> Any:
+                          "does NOT recognize arrows/text or verify semantics.")] = None,
+                      code: Annotated[str | None, Field(description="Optional Python measuring the region's "
+                          "pixels at source resolution (needs AGENTCAD_ALLOW_SCRIPTS=1): `image` is a read-only "
+                          "numpy uint8 array (height, width, 3), `origin`=(left, top) so source pixel = local + "
+                          "origin; numpy as np, no PIL/scipy. Overlays: draw_line(canvas, start, end, color, width), "
+                          "draw_rect/draw_ellipse(canvas, box, color, width), draw_text(canvas, xy, text, color) "
+                          "return a new array. "
+                          "Print what you measure (edge positions, fitted circles/ellipses, line spacing); "
+                          "optionally set `result` to an image array (shown instead of the crop) or a JSON "
+                          "value. No files.")] = None) -> Any:
         """Look closely at a drawing's dimensions, leaders, hatching or section view before modeling.
         Returns source dimensions, crop coordinates and an inline image. Read-only; writes no files.
-        Pixel distances are not CAD dimensions: use the drawing's explicit callouts and datums."""
-        result = rt.inspect_image(path, region, max_size, rotate, dimensions)
-        if result.get("ok"):
+        Pixel distances are not CAD dimensions: use the drawing's explicit callouts and datums. With code it
+        measures instead of eyeballing: e.g. find a view's silhouette extents or fit an ellipse to a circular edge
+        to recover a camera direction, then compare your own preview measured the same way."""
+        result = rt.inspect_image(path, region, max_size, rotate, dimensions, code)
+        if result.get("ok") and "image_base64" in result:
             png = base64.b64decode(result.pop("image_base64"))
             return [result, Image(data=png, format="png")]
         return result
@@ -313,8 +330,9 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
         compared as displayed. Compact by default; detail=true for everything.
         3D part: FreeCAD re-opens and recomputes the file; checks feature errors, one Body with one valid solid,
         only editable PartDesign features (what CADBench requires), sketch constraints. Requirements: bbox {size},
-        volume/area {value, rel_tolerance}, hole {diameter, count}, hole_count, solid_count, parameter {name,
-        value}, center_of_mass, feature_count {feature_type, count|min}."""
+        volume/area {value, rel_tolerance}, hole {diameter, count}, hole_count, solid_count, topology {bodies,
+        genus, voids} (genus = through-holes and handles), parameter {name, value}, center_of_mass, feature_count
+        {feature_type, count|min}."""
         return rt.validate_drawing(path, requirements, True, bounds, tolerance, None, layout, detail)
 
     @mcp.tool()
