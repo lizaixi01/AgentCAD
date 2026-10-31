@@ -71,7 +71,7 @@ def draw(root: Path, pause: float = 1.0, sleep: Callable[[float], None] = time.s
     return results
 
 
-def run(workspace: Path, *, open_browser: bool = True, linger: float = 1800.0) -> int:
+def run(workspace: Path, *, open_browser: bool = True, linger: float = 600.0) -> int:
     """The whole demo: viewer up and open, then draw, then keep the viewer up for ``linger`` seconds."""
     from .viewer import Viewer
     root = demo_root(workspace)
@@ -97,7 +97,7 @@ def run(workspace: Path, *, open_browser: bool = True, linger: float = 1800.0) -
         print(json.dumps({"ok": ok, "steps": len(results)}), flush=True)
         if not ok:
             return 1
-        time.sleep(linger)  # people look around; closing the window ends it
+        time.sleep(linger)  # people look around; then the demo stops by itself
     except KeyboardInterrupt:
         pass
     finally:
