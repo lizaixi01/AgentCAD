@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AgentCAD 组件库</title>
+<link rel="icon" href="/logo.svg" type="image/svg+xml">
+<link rel="stylesheet" href="fluid.css">
+<style>
+  body { min-height: 100vh; }
+  .top { position: sticky; top: 0; z-index: 30; display: flex; align-items: center; gap: 12px; padding: 12px 24px;
+         background: color-mix(in oklab, var(--surface-1) 86%, transparent); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+  .top img { width: 34px; height: 34px; border-radius: 8px; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 28px 24px 80px; }
+  .lead { color: var(--fg-muted); margin: 8px 0 28px; max-width: 720px; }
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  .demo { padding: 20px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .demo > h3 { margin: 0; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--fg-muted); font-variation-settings: var(--wght-semibold); letter-spacing: .02em; }
+  .demo.wide { grid-column: 1 / -1; }
+  .row { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .thumb { width: 64px; height: 48px; border-radius: 8px; background: #fff; box-shadow: var(--shadow-1); flex: none; display: grid; place-items: center; }
+  .thumb svg { width: 52px; height: 36px; }
+  .who { width: 34px; height: 34px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-variation-settings: var(--wght-bold); font-size: 13px; flex: none; }
+  .ver-dot { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: var(--ok-soft); color: var(--ok); flex: none; }
+  .ver-dot svg { width: 15px; height: 15px; }
+  .count { margin-left: auto; font-size: var(--fs-caption); line-height: var(--lh-caption); font-variation-settings: var(--wght-semibold); padding: 2px 8px; border-radius: 6px; }
+  .count.add { background: var(--ok-soft); color: var(--ok); } .count.mod { background: var(--warn-soft); color: var(--warn); }
+  /* AutoCAD-style canvas: dark model space, crosshair, coordinates, a quiet toolbar */
+  .cad { position: relative; height: 340px; border-radius: var(--radius-l); overflow: hidden; background: #212830; cursor: crosshair; box-shadow: var(--shadow-3); }
+  .cad svg.draw { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .cad .bar { position: absolute; top: 12px; right: 12px; display: flex; gap: 2px; padding: 4px; border-radius: var(--radius-m);
+              background: rgb(20 24 30 / .82); backdrop-filter: blur(8px); box-shadow: 0 0 0 1px rgb(255 255 255 / .06); }
+  .cad .bar .ff-btn { --ink: #d7dde6; --bg-hover: rgb(255 255 255 / .08); min-height: 40px; width: 40px; padding: 0; }
+  .cad .coords { position: absolute; left: 12px; bottom: 10px; font-size: var(--fs-mono); line-height: var(--lh-mono); font-family: ui-monospace, Consolas, monospace; color: #8b96a5; }
+  .cad .ucs { position: absolute; left: 14px; bottom: 34px; width: 46px; height: 46px; }
+  .cad .xh { position: absolute; pointer-events: none; inset: 0; }
+  .cad .xh::before, .cad .xh::after { content: ""; position: absolute; background: rgb(255 255 255 / .55); }
+  .cad .xh::before { left: var(--x, -100px); top: 0; bottom: 0; width: 1px; }
+  .cad .xh::after { top: var(--y, -100px); left: 0; right: 0; height: 1px; }
+  .cad .legend { position: absolute; right: 12px; bottom: 10px; display: flex; gap: 12px; font-size: var(--fs-caption); line-height: var(--lh-caption); color: #b9c2cf; }
+  .cad .legend i { display: inline-block; width: 14px; height: 3px; border-radius: 2px; margin-right: 6px; vertical-align: middle; }
+  .top .ff-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } .wrap { padding: 20px 16px 60px; } .top { padding: 10px 16px; }
+                              .top .ff-badge { display: none; } }
+</style>
+</head>
+<body class="ff">
+<header class="top">
+  <img src="/logo.svg" alt=""><span class="ff-title">AgentCAD 组件库</span>
+  <span class="ff-badge info">预览</span>
+  <span style="flex:1"></span>
+  <div class="ff-seg" id="theme" role="group" aria-label="外观">
+    <button value="auto" aria-pressed="true">自动</button><button value="light">浅色</button><button value="dark">深色</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <h1 class="ff-display">流畅、好懂的界面</h1>
+  <p class="lead">设计语言来自 Fluid Functionalism（MIT 许可）：每个动画都有用意，鼠标还没点下去，目标就先亮起来；动的东西越大，弹簧越慢。字号比原版大一号，让不是设计师的人也看得轻松。把鼠标在下面的列表上划一划。</p>
+
+  <div class="grid ff-reveal">
+    <section class="ff-card demo">
+      <h3>状态卡 · 现在在做什么</h3>
+      <div class="ff-panel ff-status" id="status" data-state="working">
+        <span class="ico" id="stIco"></span>
+        <div class="ff-subtitle" id="stTitle">第 3 步，共 7 步：正在添加 4 个 Ø12 圆</div>
+        <span class="ff-caption">刚刚</span>
+        <div class="ff-caption" id="stText" style="grid-column: 2 / -1">plate.dxf · Claude Code</div>
+        <div class="ff-progress" id="stBar" style="--value: 43%"><i></i></div>
+      </div>
+      <div class="row">
+        <button class="ff-btn secondary small" data-st="working">进行中</button>
+        <button class="ff-btn secondary small" data-st="done">完成</button>
+        <button class="ff-btn secondary small" data-st="error">出了问题</button>
+      </div>
+    </section>
+
+    <section class="ff-card demo">
+      <h3>连接状态 · 谁在改图（点一下）</h3>
+      <div class="row" style="position: relative">
+        <button class="ff-btn secondary pill" id="connBtn"><span class="ff-badge ok live" style="height:auto;padding:0;background:none"><i></i></span>Claude Code 已连接 <span class="ff-caption">+1</span></button>
+        <div class="ff-pop ff-raised" id="connPop" style="top: 54px; left: 0; --origin: top left; width: 340px">
+          <ul class="ff-list" id="connList">
+            <li class="ff-item"><span class="who" style="background:#d97757">CC</span><span>Claude Code · 安装板设计<span class="sub">正在改 plate.dxf · 刚刚</span></span></li>
+            <li class="ff-item"><span class="who" style="background:#4b5563">Cx</span><span>Codex · 法兰零件<span class="sub">空闲 · 5 分钟前</span></span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="row">
+        <span class="ff-badge ok live"><i></i>已连接</span>
+        <span class="ff-badge warn"><i></i>连接中</span>
+        <span class="ff-badge"><i></i>还没有助手连接</span>
+        <span class="ff-badge bad"><i></i>出了问题</span>
+      </div>
+    </section>
+
+    <section class="ff-card demo">
+      <h3>我的图纸 · 流动的悬停高亮</h3>
+      <ul class="ff-list" id="files">
+        <li class="ff-item sel" tabindex="0"><span class="thumb"><svg viewBox="0 0 52 36"><rect x="4" y="6" width="44" height="24" rx="3" fill="none" stroke="#222"/><circle cx="26" cy="18" r="6" fill="none" stroke="#222"/></svg></span><span>plate.dxf<span class="sub">图纸 · 刚刚</span></span></li>
+        <li class="ff-item" tabindex="0"><span class="thumb"><svg viewBox="0 0 52 36"><circle cx="26" cy="18" r="13" fill="none" stroke="#222"/><circle cx="26" cy="18" r="5" fill="none" stroke="#222"/></svg></span><span>flange.FCStd<span class="sub">3D 零件 · 5 分钟前</span></span></li>
+        <li class="ff-item" tabindex="0"><span class="thumb"><svg viewBox="0 0 52 36"><path d="M6 30V8h40v22" fill="none" stroke="#222"/><path d="M6 18h40" stroke="#222"/></svg></span><span>sheet-A3.dxf<span class="sub">图纸 · 昨天</span></span></li>
+      </ul>
+    </section>
+
+    <section class="ff-card demo">
+      <h3>版本 · 每一次修改</h3>
+      <ul class="ff-list" id="versions">
+        <li class="ff-item sel"><span class="ver-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><circle cx="12" cy="12" r="4" fill="currentColor"/></svg></span><span>现在 · 最新版本</span></li>
+        <li class="ff-item"><span class="ver-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span>板子加宽到 240<span class="sub">Claude Code · 02:04</span></span><span class="count mod">~6</span></li>
+        <li class="ff-item"><span class="ver-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span>添加尺寸和标题<span class="sub">Claude Code · 02:04</span></span><span class="count add">+5</span></li>
+        <li class="ff-item"><span class="ver-dot"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg></span><span>添加 4 个 Ø12 孔和中心孔<span class="sub">Claude Code · 02:04</span></span><span class="count add">+7</span></li>
+      </ul>
+    </section>
+
+    <section class="ff-card demo wide">
+      <h3>画布 · 以 AutoCAD 为准：滚轮缩放到光标处，拖动平移，双击或“全图”复位</h3>
+      <div class="row">
+        <div class="ff-seg" id="mode" role="group" aria-label="显示">
+          <button value="hl" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 11-6 6v3h9l3-3"/><path d="m22 12-4.6 4.6a2 2 0 0 1-2.8 0l-5.2-5.2a2 2 0 0 1 0-2.8L14 4"/></svg>标出修改</button>
+          <button value="plain" aria-pressed="false">原样</button>
+          <button value="cmp" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M12 4v16"/></svg>前后对比</button>
+        </div>
+        <span style="flex:1"></span>
+        <button class="ff-chip" aria-pressed="true"><span class="sw" style="background:#fff"></span>OUTLINE</button>
+        <button class="ff-chip" aria-pressed="true"><span class="sw" style="background:#4fd1ff"></span>HOLES</button>
+        <button class="ff-chip" aria-pressed="true"><span class="sw" style="background:#ff5a5a"></span>CENTER</button>
+        <button class="ff-chip" aria-pressed="false"><span class="sw" style="background:#5ee26b"></span>DIM</button>
+      </div>
+      <div class="cad" id="cad">
+        <svg class="draw" viewBox="-40 -30 320 180" preserveAspectRatio="xMidYMid meet">
+          <rect x="0" y="0" width="240" height="100" rx="8" fill="none" stroke="#e6e9ee" stroke-width=".8"/>
+          <g fill="none" stroke="#4fd1ff" stroke-width=".8"><circle cx="15" cy="15" r="6"/><circle cx="225" cy="15" r="6"/><circle cx="15" cy="85" r="6"/><circle cx="225" cy="85" r="6"/></g>
+          <circle cx="120" cy="50" r="20" fill="none" stroke="#ff9a3d" stroke-width="1.1"/>
+          <g stroke="#ff5a5a" stroke-width=".5" stroke-dasharray="6 2 1 2"><path d="M90 50h60M120 20v60"/></g>
+          <g stroke="#ff9a3d" stroke-width=".5" fill="#ff9a3d" font-size="6" font-family="sans-serif"><path d="M0 114h240M0 104v14M240 104v14" fill="none"/><text x="112" y="111" stroke="none">240</text></g>
+        </svg>
+        <div class="xh" id="xh"></div>
+        <svg class="ucs" viewBox="0 0 46 46" fill="none" stroke-width="2"><path d="M6 40V8" stroke="#5ee26b"/><path d="M6 40h32" stroke="#ff5a5a"/><text x="10" y="10" fill="#5ee26b" font-size="9" stroke="none">Y</text><text x="34" y="36" fill="#ff5a5a" font-size="9" stroke="none">X</text></svg>
+        <div class="bar">
+          <button class="ff-btn" data-tip="全图（双击画布也可以）" aria-label="全图"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+          <button class="ff-btn" data-tip="放大" aria-label="放大"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M8 11h6M11 8v6"/></svg></button>
+          <button class="ff-btn" data-tip="缩小" aria-label="缩小"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M8 11h6"/></svg></button>
+          <button class="ff-btn" data-tip="保存成图片" aria-label="保存成图片"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m-5-5 5 5 5-5M5 21h14"/></svg></button>
+        </div>
+        <div class="coords" id="coords">X 0.00  Y 0.00</div>
+        <div class="legend"><span><i style="background:#5ee26b"></i>新增</span><span><i style="background:#ff9a3d"></i>修改</span><span><i style="background:#8b96a5"></i>未变</span></div>
+      </div>
+    </section>
+
+    <section class="ff-card demo">
+      <h3>按钮 · 鼠标靠近时字变重，按下微沉</h3>
+      <div class="row">
+        <button class="ff-btn primary">保存和分享</button>
+        <button class="ff-btn secondary">前后对比</button>
+        <button class="ff-btn">回到最新</button>
+        <button class="ff-btn danger">删除</button>
+      </div>
+      <div class="row">
+        <button class="ff-btn primary large">开始安装</button>
+        <button class="ff-btn secondary small">复制</button>
+        <button class="ff-btn secondary icon" data-tip="切换语言" aria-label="切换语言"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 0 1 0 18a14 14 0 0 1 0-18"/></svg></button>
+      </div>
+    </section>
+
+    <section class="ff-card demo">
+      <h3>开关 · 进度 · 小提示</h3>
+      <label class="ff-switch"><input type="checkbox" checked><span class="track"></span>跟随助手：它改哪张图就切到哪张</label>
+      <label class="ff-switch"><input type="checkbox"><span class="track"></span>标出修改</label>
+      <div class="ff-progress" id="p1" style="--value: 64%"><i></i></div>
+      <div class="ff-progress indeterminate"><i></i></div>
+      <div class="row"><button class="ff-btn secondary small" id="toastBtn">弹一条提示</button><button class="ff-btn secondary small" id="dlgBtn">打开对话框</button></div>
+    </section>
+
+    <section class="ff-card demo wide">
+      <h3>折叠 · 技术细节收起来，需要时再看</h3>
+      <details class="ff-acc"><summary>技术细节</summary><div class="body ff-mono ff-muted">apply_operations · 5 ops · 0.21 s · validation passed (0 issues)</div></details>
+      <details class="ff-acc"><summary>这个界面的设计来源</summary><div class="body ff-muted">动画、表面层次和悬停方式移植自 Fluid Functionalism（MIT，© 2026 Micka Touillaud）。字体 Inter（SIL OFL 1.1）。</div></details>
+    </section>
+  </div>
+</main>
+
+<div class="ff-scrim" id="dlg"><div class="ff-dialog ff-card">
+  <h2 class="ff-title">把这一版发给别人？</h2>
+  <p class="ff-muted">会存成一个网页文件，图和修改记录都在里面，任何浏览器都能打开。</p>
+  <div class="row" style="justify-content:flex-end; margin-top: 18px"><button class="ff-btn" data-close>取消</button><button class="ff-btn primary" data-close>保存网页</button></div>
+</div></div>
+
+<script src="fluid.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  ["files", "versions", "connList"].forEach((id) => Fluid.fluidHover($(id), { nearest: id !== "connList" }));
+  document.querySelectorAll("#files .ff-item, #versions .ff-item").forEach((li) => li.addEventListener("click", () => {
+    li.parentElement.querySelectorAll(".ff-item").forEach((x) => x.classList.toggle("sel", x === li));
+  }));
+  Fluid.segmented($("theme"), (v) => { if (v === "auto") document.documentElement.removeAttribute("data-theme"); else document.documentElement.dataset.theme = v; });
+  Fluid.segmented($("mode"));
+  Fluid.tooltips();
+  Fluid.popover($("connBtn"), $("connPop"));
+  const dlg = Fluid.dialog($("dlg")); $("dlgBtn").onclick = () => dlg.open();
+  $("toastBtn").onclick = () => Fluid.toast("已复制，粘贴给助手就行");
+  document.querySelectorAll(".ff-chip").forEach((c) => c.onclick = () => c.setAttribute("aria-pressed", String(c.getAttribute("aria-pressed") !== "true")));
+
+  const ICONS = {
+    working: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"><animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/></path></svg>',
+    done: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>',
+    error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 8v5"/><circle cx="12" cy="16.5" r=".6" fill="currentColor"/><path d="M10.3 3.9 2.6 17.3A2 2 0 0 0 4.3 20h15.4a2 2 0 0 0 1.7-2.7L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+  };
+  const ST = { working: ["第 3 步，共 7 步：正在添加 4 个 Ø12 圆", "plate.dxf · Claude Code", "43%", ""],
+               done: ["全部完成！添加了 5 个尺寸", "plate.dxf · 没有发现问题", "100%", "ok"],
+               error: ["没能完成：找不到要修改的圆", "文件没有被修改，助手可以再试一次", "100%", "bad"] };
+  function setState(s) {
+    $("status").dataset.state = s; $("stIco").innerHTML = ICONS[s];
+    const [a, b, v, cls] = ST[s]; $("stTitle").textContent = a; $("stText").textContent = b;
+    $("stBar").className = "ff-progress " + cls; $("stBar").style.setProperty("--value", v);
+  }
+  document.querySelectorAll("[data-st]").forEach((b) => b.onclick = () => setState(b.dataset.st));
+  setState("working");
+
+  // the canvas: crosshair and model coordinates follow the pointer, as in AutoCAD
+  const cad = $("cad"), draw = cad.querySelector("svg.draw");
+  cad.addEventListener("pointermove", (e) => {
+    const r = cad.getBoundingClientRect();
+    $("xh").style.setProperty("--x", (e.clientX - r.left) + "px"); $("xh").style.setProperty("--y", (e.clientY - r.top) + "px");
+    const p = draw.createSVGPoint(); p.x = e.clientX; p.y = e.clientY;
+    const m = p.matrixTransform(draw.getScreenCTM().inverse());
+    $("coords").textContent = `X ${m.x.toFixed(2)}  Y ${(100 - m.y).toFixed(2)}`;
+  });
+  cad.addEventListener("pointerleave", () => { $("xh").style.setProperty("--x", "-100px"); $("xh").style.setProperty("--y", "-100px"); });
+</script>
+</body>
+</html>

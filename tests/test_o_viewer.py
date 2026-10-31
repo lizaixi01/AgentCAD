@@ -434,3 +434,24 @@ def test_page_shows_only_the_layer_for_the_file_kind():
     page = (STATIC / "index.html").read_text("utf-8")
     assert '$("stage").hidden = isPart(S.path); $("three").hidden = !isPart(S.path);' in page
     assert '$("three").hidden = false' not in page
+
+
+def test_viewer_serves_the_ui_kit_and_nothing_else(tmp_path):
+    import urllib.error
+    import urllib.request
+    from agentcad.policy import Policy
+    from agentcad.viewer import Viewer
+    v = Viewer(Policy(root=tmp_path), port=0).start()
+    try:
+        for name, ctype in (("fluid.css", "text/css"), ("fluid.js", "text/javascript"), ("gallery.html", "text/html"),
+                            ("inter-latin-wght-normal.woff2", "font/woff2")):
+            with urllib.request.urlopen(v.url + "ui/" + name) as r:
+                assert r.status == 200 and r.headers["Content-Type"].startswith(ctype) and r.read()
+        for bad in ("../index.html", "..%2Fviewer.py", "%2e%2e/index.html", "nope.css", "NOTICE.exe"):
+            try:
+                urllib.request.urlopen(v.url + "ui/" + bad)
+                raise AssertionError(bad + " was served")
+            except urllib.error.HTTPError as e:
+                assert e.code == 404, bad
+    finally:
+        v.stop()

@@ -1,0 +1,256 @@
+/* AgentCAD UI kit: the design language of Fluid Functionalism (MIT, (c) 2026 Micka Touillaud,
+   https://github.com/mickadesign/fluid-functionalism) ported to plain CSS and JS, with a larger type scale for people
+   who are not designers. Tokens: surfaces, shadows, tints, three spring tiers. See ui/NOTICE.md.
+
+   Use: <link rel="stylesheet" href="/ui/fluid.css"><script src="/ui/fluid.js"></script>
+   Theme: follows the system; <html data-theme="light|dark"> forces one. */
+
+@font-face {
+  font-family: "Inter Variable";
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url("inter-latin-wght-normal.woff2") format("woff2-variations");
+}
+
+:root {
+  color-scheme: light dark;
+  --ff-accent: #4f7df5;
+  --ff-accent-ink: #ffffff;
+  --ff-accent-soft: light-dark(#eaf0ff, #1d2741);
+
+  --surface-1: light-dark(#f5f5f6, #141414);
+  --surface-2: light-dark(#fafafa, #1b1b1b);
+  --surface-3: light-dark(#ffffff, #222222);
+  --surface-4: light-dark(#ffffff, #292929);
+  --surface-5: light-dark(#ffffff, #303030);
+
+  --fg: light-dark(#171717, #f5f5f5);
+  --fg-muted: light-dark(#6b6b6f, #a3a3a3);
+  --fg-faint: light-dark(#9a9aa0, #737373);
+  --border: color-mix(in oklab, var(--fg) 11%, transparent);
+  --hover: light-dark(rgb(0 0 0 / .045), rgb(255 255 255 / .065));
+  --active: light-dark(rgb(0 0 0 / .075), rgb(255 255 255 / .1));
+  --selected: light-dark(rgb(0 0 0 / .085), rgb(255 255 255 / .13));
+  --focus-ring: var(--ff-accent);
+
+  --ok: light-dark(#16a34a, #4ade80);       --ok-soft: light-dark(#e8f7ee, #11281a);
+  --warn: light-dark(#c2780a, #fbbf24);     --warn-soft: light-dark(#fdf4e3, #2c2210);
+  --bad: light-dark(#dc2626, #f87171);      --bad-soft: light-dark(#fdecec, #301616);
+  --info: var(--ff-accent);                 --info-soft: var(--ff-accent-soft);
+
+  --shadow-color: rgb(0 0 0 / .07);
+  --shadow-1: 0 0 0 1px var(--shadow-color);
+  --shadow-2: 0 0 0 1px var(--shadow-color), 0 1px 1px -.5px var(--shadow-color);
+  --shadow-3: var(--shadow-2), 0 3px 3px -1.5px var(--shadow-color);
+  --shadow-4: var(--shadow-3), 0 6px 6px -3px var(--shadow-color);
+  --shadow-6: var(--shadow-4), 0 12px 12px -6px var(--shadow-color), 0 24px 24px -12px var(--shadow-color);
+
+  /* Six roles, one step up from the original (13px body) so the pages read easily. */
+  --fs-display: 30px; --lh-display: 38px;  --fs-title: 20px; --lh-title: 28px;  --fs-subtitle: 17px; --lh-subtitle: 24px;
+  --fs-body: 16px;    --lh-body: 24px;     --fs-caption: 14px; --lh-caption: 20px; --fs-mono: 14px; --lh-mono: 20px;
+  --wght-normal: "wght" 400, "opsz" 14;
+  --wght-semibold: "wght" 550, "opsz" 18;
+  --wght-bold: "wght" 700, "opsz" 25;
+
+  --radius-s: 8px; --radius-m: 12px; --radius-l: 16px; --radius-xl: 22px; --radius-pill: 999px;
+  --control-h: 44px;            /* a finger, and a hand that is not steady */
+  --control-h-s: 36px;
+
+  /* Spring tiers (fluid.js writes the measured curves): the bigger the thing that moves, the slower the spring.
+     Exits are plain tweens one tier quicker, so a dismissal reads as crisp. */
+  --spring-fast: 80ms ease-out;
+  --spring-moderate: 160ms cubic-bezier(.2, .8, .2, 1);
+  --spring-slow: 240ms cubic-bezier(.2, .9, .25, 1.08);
+  --exit-fast: 60ms ease-in; --exit-moderate: 120ms ease-in; --exit-slow: 160ms ease-in;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --shadow-1: inset 0 0 0 1px rgb(255 255 255 / .03);
+    --shadow-2: inset 0 1px 0 0 rgb(255 255 255 / .02), inset 0 0 0 1px rgb(255 255 255 / .03), 0 1px 1px -.5px rgb(0 0 0 / .2);
+    --shadow-3: inset 0 1px 0 0 rgb(255 255 255 / .03), inset 0 0 0 1px rgb(255 255 255 / .04), 0 0 0 1px rgb(0 0 0 / .14), 0 3px 3px -1.5px rgb(0 0 0 / .2);
+    --shadow-4: var(--shadow-3), 0 6px 6px -3px rgb(0 0 0 / .2);
+    --shadow-6: var(--shadow-4), 0 12px 12px -6px rgb(0 0 0 / .22), 0 24px 24px -12px rgb(0 0 0 / .22);
+  }
+}
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --shadow-1: inset 0 0 0 1px rgb(255 255 255 / .03);
+  --shadow-2: inset 0 1px 0 0 rgb(255 255 255 / .02), inset 0 0 0 1px rgb(255 255 255 / .03), 0 1px 1px -.5px rgb(0 0 0 / .2);
+  --shadow-3: inset 0 1px 0 0 rgb(255 255 255 / .03), inset 0 0 0 1px rgb(255 255 255 / .04), 0 0 0 1px rgb(0 0 0 / .14), 0 3px 3px -1.5px rgb(0 0 0 / .2);
+  --shadow-4: var(--shadow-3), 0 6px 6px -3px rgb(0 0 0 / .2);
+  --shadow-6: var(--shadow-4), 0 12px 12px -6px rgb(0 0 0 / .22), 0 24px 24px -12px rgb(0 0 0 / .22);
+}
+
+.ff, .ff * { box-sizing: border-box; }
+.ff {
+  margin: 0; background: var(--surface-1); color: var(--fg);
+  font-size: var(--fs-body); line-height: var(--lh-body);
+  font-family: "Inter Variable", "Inter", system-ui, -apple-system, "Segoe UI", "Microsoft YaHei UI", "PingFang SC", sans-serif;
+  font-variation-settings: var(--wght-normal);
+  -webkit-font-smoothing: antialiased;
+}
+.ff [hidden] { display: none !important; }
+.ff :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.ff-display { font-size: var(--fs-display); line-height: var(--lh-display); font-variation-settings: var(--wght-bold); letter-spacing: -.01em; margin: 0; }
+.ff-title { font-size: var(--fs-title); line-height: var(--lh-title); font-variation-settings: var(--wght-semibold); margin: 0; }
+.ff-subtitle { font-size: var(--fs-subtitle); line-height: var(--lh-subtitle); font-variation-settings: var(--wght-semibold); margin: 0; }
+.ff-caption { font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--fg-muted); }
+.ff-mono { font-size: var(--fs-mono); line-height: var(--lh-mono); font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; }
+.ff-muted { color: var(--fg-muted); }
+
+/* ---- surfaces ---------------------------------------------------------------------------------------- */
+.ff-card { background: var(--surface-3); border-radius: var(--radius-l); box-shadow: var(--shadow-3); }
+.ff-panel { background: var(--surface-2); border-radius: var(--radius-l); box-shadow: var(--shadow-1); }
+.ff-raised { background: var(--surface-4); border-radius: var(--radius-m); box-shadow: var(--shadow-6); }
+
+/* ---- buttons: weight rises as the pointer arrives; the press sinks a little ------------------------------ */
+.ff-btn {
+  --bg: transparent; --bg-hover: var(--hover); --ink: var(--fg);
+  appearance: none; border: 0; margin: 0; cursor: pointer; font: inherit; color: var(--ink);
+  min-height: var(--control-h); padding: 0 18px; border-radius: var(--radius-m); background: var(--bg);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
+  font-variation-settings: var(--wght-normal);
+  transition: background-color var(--spring-fast), box-shadow var(--spring-fast), transform var(--spring-fast),
+              font-variation-settings var(--spring-moderate), color var(--spring-fast);
+}
+.ff-btn:hover { background: var(--bg-hover); font-variation-settings: var(--wght-semibold); }
+.ff-btn:active { transform: scale(.98); }
+.ff-btn:disabled { opacity: .45; cursor: default; transform: none; }
+.ff-btn svg { width: 20px; height: 20px; flex: none; }
+.ff-btn.primary { --bg: var(--ff-accent); --bg-hover: color-mix(in oklab, var(--ff-accent) 88%, #000); --ink: var(--ff-accent-ink);
+                  font-variation-settings: var(--wght-semibold); box-shadow: 0 1px 2px rgb(0 0 0 / .12), inset 0 1px 0 rgb(255 255 255 / .16); }
+.ff-btn.secondary { --bg: var(--surface-3); --bg-hover: var(--surface-4); box-shadow: var(--shadow-2); }
+.ff-btn.secondary:hover { box-shadow: var(--shadow-3); }
+.ff-btn.danger { --ink: var(--bad); --bg-hover: var(--bad-soft); }
+.ff-btn.small { min-height: var(--control-h-s); padding: 0 12px; border-radius: var(--radius-s); font-size: var(--fs-caption); line-height: var(--lh-caption); }
+.ff-btn.large { min-height: 56px; padding: 0 26px; font-size: var(--fs-subtitle); line-height: var(--lh-subtitle); border-radius: var(--radius-l); }
+.ff-btn.icon { padding: 0; width: var(--control-h); }
+.ff-btn.pill { border-radius: var(--radius-pill); }
+
+/* ---- fluid list: one highlight glides to the row under the pointer (fluid.js) ---------------------------- */
+.ff-list { position: relative; display: flex; flex-direction: column; gap: 2px; padding: 4px; margin: 0; list-style: none; }
+.ff-list.row { flex-direction: row; }
+.ff-hl { position: absolute; left: 0; top: 0; border-radius: var(--radius-m); background: var(--hover); pointer-events: none;
+         opacity: 0; z-index: 0;
+         transition: transform var(--spring-moderate), width var(--spring-moderate), height var(--spring-moderate),
+                     opacity var(--exit-fast); }
+.ff-hl.on { opacity: 1; transition: transform var(--spring-moderate), width var(--spring-moderate), height var(--spring-moderate),
+                                    opacity var(--spring-fast); }
+.ff-hl.jump { transition: opacity var(--spring-fast); }
+.ff-item { position: relative; z-index: 1; display: flex; align-items: center; gap: 12px; min-height: var(--control-h);
+           padding: 8px 12px; border-radius: var(--radius-m); cursor: pointer; color: inherit; text-decoration: none;
+           font-variation-settings: var(--wght-normal); transition: font-variation-settings var(--spring-moderate); }
+.ff-item[aria-selected="true"], .ff-item.sel { background: var(--selected); font-variation-settings: var(--wght-semibold); }
+.ff-item.lit { font-variation-settings: var(--wght-semibold); }
+.ff-item .sub { display: block; font-size: var(--fs-caption); line-height: var(--lh-caption); color: var(--fg-muted); font-variation-settings: var(--wght-normal); }
+
+/* ---- segmented control / tabs: the indicator glides between options ------------------------------------- */
+.ff-seg { position: relative; display: inline-flex; padding: 3px; gap: 2px; border-radius: var(--radius-m); background: var(--active); }
+.ff-seg > button { position: relative; z-index: 1; appearance: none; border: 0; background: none; font: inherit; color: var(--fg-muted);
+                   min-height: calc(var(--control-h) - 6px); padding: 0 16px; border-radius: calc(var(--radius-m) - 3px); cursor: pointer;
+                   display: inline-flex; align-items: center; gap: 8px; white-space: nowrap;
+                   transition: color var(--spring-fast), font-variation-settings var(--spring-moderate); }
+@media (max-width: 480px) { .ff-seg > button { padding: 0 11px; } }
+.ff-seg > button:hover { color: var(--fg); }
+.ff-seg > button[aria-pressed="true"] { color: var(--fg); font-variation-settings: var(--wght-semibold); }
+.ff-seg > button svg { width: 18px; height: 18px; }
+.ff-seg-ind { position: absolute; top: 3px; left: 0; height: calc(100% - 6px); border-radius: calc(var(--radius-m) - 3px);
+              background: var(--surface-3); box-shadow: var(--shadow-2); z-index: 0;
+              transition: transform var(--spring-moderate), width var(--spring-moderate); }
+
+/* ---- switch ------------------------------------------------------------------------------------------- */
+.ff-switch { display: inline-flex; align-items: center; gap: 12px; cursor: pointer; user-select: none; min-height: var(--control-h); }
+.ff-switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.ff-switch .track { width: 44px; height: 26px; border-radius: 13px; background: var(--active); position: relative; flex: none;
+                    transition: background-color var(--spring-moderate); box-shadow: inset 0 0 0 1px var(--border); }
+.ff-switch .track::after { content: ""; position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%;
+                           background: #fff; box-shadow: 0 1px 2px rgb(0 0 0 / .2), 0 2px 6px rgb(0 0 0 / .1);
+                           transition: transform var(--spring-moderate), width var(--spring-fast); }
+.ff-switch:active .track::after { width: 24px; }
+.ff-switch input:checked + .track { background: var(--ff-accent); }
+.ff-switch input:checked + .track::after { transform: translateX(18px); }
+.ff-switch:active input:checked + .track::after { transform: translateX(14px); }
+.ff-switch input:focus-visible + .track { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* ---- badge, chip ---------------------------------------------------------------------------------------- */
+.ff-badge { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border-radius: var(--radius-pill);
+            font-size: var(--fs-caption); line-height: var(--lh-caption); font-variation-settings: var(--wght-semibold); background: var(--active); color: var(--fg-muted); white-space: nowrap; }
+.ff-badge i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; flex: none; }
+.ff-badge.ok { background: var(--ok-soft); color: var(--ok); }
+.ff-badge.warn { background: var(--warn-soft); color: var(--warn); }
+.ff-badge.bad { background: var(--bad-soft); color: var(--bad); }
+.ff-badge.info { background: var(--info-soft); color: var(--info); }
+.ff-badge.live i { animation: ff-breathe 1.8s ease-in-out infinite; }
+@keyframes ff-breathe { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in oklab, currentColor 45%, transparent); } 50% { box-shadow: 0 0 0 4px transparent; } }
+.ff-chip { appearance: none; border: 0; font-size: var(--fs-caption); line-height: var(--lh-caption); height: 34px; padding: 0 12px; border-radius: var(--radius-pill);
+           background: var(--surface-3); box-shadow: var(--shadow-2); color: var(--fg); cursor: pointer; display: inline-flex; align-items: center; gap: 8px;
+           transition: box-shadow var(--spring-fast), opacity var(--spring-fast), font-variation-settings var(--spring-moderate); }
+.ff-chip:hover { box-shadow: var(--shadow-3); font-variation-settings: var(--wght-semibold); }
+.ff-chip[aria-pressed="false"] { opacity: .5; }
+.ff-chip .sw { width: 10px; height: 10px; border-radius: 3px; flex: none; }
+
+/* ---- progress: a bar that eases toward its value; indeterminate glides ---------------------------------- */
+.ff-progress { height: 8px; border-radius: 4px; background: var(--active); overflow: hidden; }
+.ff-progress > i { display: block; height: 100%; width: var(--value, 0%); border-radius: inherit; background: var(--ff-accent);
+                   transition: width var(--spring-slow); }
+.ff-progress.ok > i { background: var(--ok); } .ff-progress.bad > i { background: var(--bad); } .ff-progress.warn > i { background: var(--warn); }
+.ff-progress.indeterminate > i { width: 30%; animation: ff-slide 1.3s cubic-bezier(.45, 0, .55, 1) infinite; }
+@keyframes ff-slide { from { transform: translateX(-110%); } to { transform: translateX(340%); } }
+
+/* ---- status card: what is happening now, in a sentence ------------------------------------------------- */
+.ff-status { display: grid; grid-template-columns: 48px 1fr auto; column-gap: 14px; row-gap: 2px; align-items: center; padding: 14px 16px; }
+.ff-status .ico { grid-row: span 2; width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: var(--active); color: var(--fg-muted);
+                  transition: background-color var(--spring-moderate), color var(--spring-moderate); }
+.ff-status .ico svg { width: 24px; height: 24px; }
+.ff-status[data-state="working"] .ico { background: var(--info-soft); color: var(--info); }
+.ff-status[data-state="done"] .ico { background: var(--ok-soft); color: var(--ok); }
+.ff-status[data-state="error"] .ico { background: var(--bad-soft); color: var(--bad); }
+.ff-status .ff-progress { grid-column: 1 / -1; margin-top: 10px; }
+
+/* ---- popover, tooltip, dialog: grow from where they come from, leave faster ------------------------------ */
+.ff-pop { position: absolute; z-index: 40; min-width: 260px; padding: 6px; transform-origin: var(--origin, top right);
+          opacity: 0; transform: scale(.96) translateY(-4px); pointer-events: none;
+          transition: opacity var(--exit-moderate), transform var(--exit-moderate); }
+.ff-pop.open { opacity: 1; transform: none; pointer-events: auto; transition: opacity var(--spring-moderate), transform var(--spring-moderate); }
+.ff-tip { position: fixed; z-index: 60; padding: 6px 10px; border-radius: var(--radius-s); background: var(--fg); color: var(--surface-1);
+          font-size: var(--fs-caption); line-height: var(--lh-caption); pointer-events: none; opacity: 0; transform: translateY(2px);
+          transition: opacity var(--exit-fast), transform var(--exit-fast); max-width: 280px; }
+.ff-tip.open { opacity: 1; transform: none; transition: opacity var(--spring-fast), transform var(--spring-fast); }
+.ff-scrim { position: fixed; inset: 0; z-index: 70; background: rgb(0 0 0 / .32); display: grid; place-items: center; padding: 16px;
+            opacity: 0; pointer-events: none; transition: opacity var(--exit-slow); }
+.ff-scrim.open { opacity: 1; pointer-events: auto; transition: opacity var(--spring-slow); }
+.ff-dialog { width: min(520px, 100%); padding: 24px; transform: scale(.97) translateY(8px); transition: transform var(--exit-slow); }
+.ff-scrim.open .ff-dialog { transform: none; transition: transform var(--spring-slow); }
+
+/* ---- toast ------------------------------------------------------------------------------------------- */
+.ff-toast { position: fixed; left: 50%; bottom: 24px; z-index: 80; display: flex; align-items: center; gap: 10px; padding: 12px 18px;
+            border-radius: var(--radius-pill); background: var(--fg); color: var(--surface-1); box-shadow: var(--shadow-6);
+            opacity: 0; transform: translate(-50%, 12px); transition: opacity var(--exit-moderate), transform var(--exit-moderate); }
+.ff-toast.open { opacity: 1; transform: translate(-50%, 0); transition: opacity var(--spring-slow), transform var(--spring-slow); }
+
+/* ---- accordion ---------------------------------------------------------------------------------------- */
+.ff-acc > summary { list-style: none; cursor: pointer; display: flex; align-items: center; gap: 10px; min-height: var(--control-h);
+                    padding: 0 12px; border-radius: var(--radius-m); transition: background-color var(--spring-fast); }
+.ff-acc > summary::-webkit-details-marker { display: none; }
+.ff-acc > summary:hover { background: var(--hover); }
+.ff-acc > summary::after { content: ""; margin-left: auto; width: 8px; height: 8px; border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+                           transform: rotate(45deg) translateY(-2px); transition: transform var(--spring-fast); opacity: .6; }
+.ff-acc[open] > summary::after { transform: rotate(225deg) translateY(-2px); }
+.ff-acc > .body { padding: 4px 12px 12px; }
+
+/* ---- reveal: blocks rise in once when a page appears ---------------------------------------------------- */
+.ff-reveal > * { animation: ff-rise var(--reveal, 320ms) cubic-bezier(.2, .9, .25, 1) both; }
+.ff-reveal > *:nth-child(2) { animation-delay: 40ms; } .ff-reveal > *:nth-child(3) { animation-delay: 80ms; }
+.ff-reveal > *:nth-child(4) { animation-delay: 120ms; } .ff-reveal > *:nth-child(n+5) { animation-delay: 160ms; }
+@keyframes ff-rise { from { opacity: 0; transform: translateY(8px); } }
+
+/* ---- scrollbars: thin, and only as visible as they need to be ------------------------------------------- */
+.ff ::-webkit-scrollbar { width: 10px; height: 10px; }
+.ff ::-webkit-scrollbar-thumb { background: color-mix(in oklab, var(--fg) 18%, transparent); border-radius: 5px; border: 3px solid transparent; background-clip: padding-box; }
+.ff ::-webkit-scrollbar-track { background: transparent; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ff *, .ff *::before, .ff *::after { transition-duration: 1ms !important; animation-duration: 1ms !important; animation-iteration-count: 1 !important; }
+}

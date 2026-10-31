@@ -9,6 +9,7 @@ wrote, and each checkpoint the sha of the content it holds, so any committed ver
 Files are read into a content-addressed cache outside the workspace before they are parsed or handed to FreeCAD.
 
     GET /                         the page (viewer_static/index.html)
+    GET /ui/<file>                the UI kit (viewer_static/ui): fluid.css, fluid.js, Inter, gallery.html
     GET /api/drawings             drawings (.dxf) and parts (.FCStd) under the root
     GET /api/timeline?path=       journal records, each with the version it produced
     GET /api/svg?path=&v=&diff=1&hide=L1,L2    2D render (diff: added green, modified orange, rest grey)
@@ -56,6 +57,9 @@ ROUTES = {"/api/timeline", "/api/layers", "/api/diff", "/api/svg", "/api/mesh", 
           "/api/export"}
 STATIC_FILES = {"/friendly.js": ("friendly.js", "text/javascript; charset=utf-8"),
                 "/logo.svg": ("logo.svg", "image/svg+xml")}
+# the UI kit (viewer_static/ui): fluid.css, fluid.js, the Inter font and the component gallery; only these types
+UI_TYPES = {".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".html": "text/html; charset=utf-8",
+            ".woff2": "font/woff2", ".svg": "image/svg+xml", ".md": "text/markdown; charset=utf-8"}
 FREECAD_JOBS = threading.BoundedSemaphore(2)  # thumbnails of many parts must not start FreeCAD for each at once
 INFO_FILE = "viewer.json"  # <root>/.agentcad/viewer.json: where a running viewer listens (see viewer_url)
 LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})
@@ -609,6 +613,12 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                 if u.path in STATIC_FILES:
                     name, ctype = STATIC_FILES[u.path]
                     return self._send(200, (STATIC / name).read_bytes(), ctype)
+                if u.path.startswith("/ui/"):
+                    name = u.path[4:]
+                    f = STATIC / "ui" / name
+                    if re.fullmatch(r"[A-Za-z0-9._-]+", name) and f.suffix in UI_TYPES and f.is_file():
+                        return self._send(200, f.read_bytes(), UI_TYPES[f.suffix], cache=f.suffix == ".woff2")
+                    return self._json({"ok": False, "error": {"code": "NOT_FOUND"}}, 404)
                 if u.path == "/api/activity":
                     return self._json({"ok": True, "events": list(feed.activity), "last_event": feed.last_id})
                 if u.path == "/api/ping":
