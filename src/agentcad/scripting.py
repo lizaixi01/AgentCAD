@@ -34,13 +34,16 @@ BANNED_NAMES = {"open", "exec", "eval", "compile", "__import__", "input", "break
 # dataclasses.inspect.currentframe(), numpy.f2py.subprocess), also under private aliases (collections._sys,
 # statistics.random._os, numpy's _datasource._open) where the language allows private names; numpy.testing and gc
 # lead to the rest (gc.get_objects() holds the real builtins dict), pickle.loads(b'cbuiltins\n__import__\n.') to
-# __import__, linecache.getline to any text file, settrace to frames.
+# __import__, linecache.getline to any text file, settrace to frames. The stdlib evaluates strings that this check
+# never sees: string annotations (singledispatch().register, get_type_hints) and dataclasses._create_fn.
 _ESCAPE_ATTRS = {"gi_frame", "cr_frame", "ag_frame", "tb_frame", "f_back", "f_globals", "f_locals", "f_builtins",
                  "attrgetter", "methodcaller", "getattr", "setattr", "delattr", "eval", "exec", "globals", "locals",
                  "vars", "breakpoint", "sys", "modules", "os", "builtins", "bltns", "inspect", "currentframe",
                  "subprocess", "f2py", "_sys", "_os", "_open", "_builtin_open", "_getframe", "importlib",
                  "import_module", "io", "pathlib", "shutil", "testing", "gc", "get_objects", "get_referrers",
-                 "get_referents", "pickle", "_pickle", "Unpickler", "linecache", "settrace", "setprofile"}
+                 "get_referents", "pickle", "_pickle", "Unpickler", "linecache", "settrace", "setprofile",
+                 "singledispatch", "singledispatchmethod", "get_type_hints", "ForwardRef", "_eval_type", "_evaluate",
+                 "_create_fn", "get_annotations"}
 # numpy file access and native code: numpy is importable in the part and image languages, and ezdxf carries it as
 # an attribute (ezdxf.npshapes.np). NpzFile(path) reads any zip; its .zip extracts files, and type(.zip)(path, 'w')
 # writes a zip.
@@ -139,6 +142,12 @@ def check_script(code: str, language: str = "ezdxf") -> None:
                 reject(node, f"attribute {node.attr!r} is not allowed")
         elif isinstance(node, (ast.Global, ast.Nonlocal)):
             reject(node, "global/nonlocal statements are not allowed")
+        elif isinstance(node, (ast.arg, ast.FunctionDef, ast.AsyncFunctionDef, ast.AnnAssign)):
+            # the stdlib evaluates string annotations (typing, functools.singledispatch) unchecked
+            ann = node.returns if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)) else node.annotation
+            if ann is not None and any(isinstance(n, ast.Constant) and isinstance(n.value, str)
+                                       for n in ast.walk(ann)):
+                reject(node, "string annotations are not allowed")
 
 
 def run(source: Path, code: str, job: Path, timeout: float) -> dict[str, Any]:

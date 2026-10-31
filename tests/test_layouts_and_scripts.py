@@ -159,6 +159,10 @@ def test_script_is_a_transaction(srt, ws):
     ("ezdxf.npshapes.np.savetxt('x.txt', [1])", "'savetxt'"),
     ("imp = ezdxf.npshapes.np._core._methods.pickle", "'pickle'"),
     ("def f(t):\n    return t.linecache.getline('x.txt', 1)", "'linecache'"),
+    # string annotations are evaluated unchecked (singledispatch().register, typing.get_type_hints)
+    ("import functools\ndef f(x: '(1, int)[1]'):\n    pass\nfunctools.singledispatch(len).register(f)", "string annotations"),
+    ("x: 'int' = 1", "string annotations"),
+    ("import functools\nr = functools.singledispatch", "'singledispatch'"),
     ("def f(nz):\n    nz.zip.extractall('out')", "'extractall'"),
     ("import operator\noperator.methodcaller('saveas', 'x.dxf')(doc)", "'methodcaller'"),
 ])
