@@ -103,9 +103,9 @@ def draw(theme, reviewed_at, rows, output, preview=None):
 
     fig.add_artist(plt.Line2D([.045, .955], [.15, .15], color=t["line"], transform=fig.transFigure))
     lines = [
-        "Independent AI reviewers, requested and published by AgentCAD. AgentCAD and Pro's reviewer also ran local headless checks;",
-        "the seven other servers were scored from source, committed results and CI, without running their code. Most record",
-        "no results, so their items stop at 1 (\"implemented, not evidenced\"). Not an official ranking.",
+        "Independent AI reviewers, requested and published by AgentCAD. All nine: pinned source and recorded evidence, plus",
+        "tests and headless probes run by the reviewers (for the seven, in offline containers). AutoCAD was not launched;",
+        "AutoCAD paths with no recorded runs stay at 1 (\"implemented, not evidenced\"). Not an official ranking.",
     ]
     for i, line in enumerate(lines):
         fig.text(.045, .115 - i * .03, line, color=t["muted"], fontsize=9)

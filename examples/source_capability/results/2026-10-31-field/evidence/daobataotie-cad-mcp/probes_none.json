@@ -1,0 +1,157 @@
+[
+ {
+  "probe": "no_cad.draw_line",
+  "expect": "success=false with diagnosable reason, no crash",
+  "result": "PASS",
+  "detail": {
+   "structured": {
+    "success": false,
+    "message": "CAD未运行且自动启动失败：无法连接或启动AutoCAD（候选ProgID: ['AutoCAD.Application']）；各ProgID尝试结果: AutoCAD.Application: HRESULT 0x800401F3",
+    "entity_handles": [],
+    "error": null
+   }
+  }
+ },
+ {
+  "probe": "no_cad.save_drawing",
+  "expect": "refuses without starting CAD, writes nothing",
+  "result": "PASS",
+  "detail": {
+   "structured": {
+    "success": false,
+    "message": "CAD未运行，请先调用 open_drawing 打开要保存的图纸",
+    "entity_handles": [],
+    "error": null
+   }
+  }
+ },
+ {
+  "probe": "no_cad.open_missing",
+  "expect": "success=false",
+  "result": "PASS",
+  "detail": {
+   "structured": {
+    "success": false,
+    "message": "CAD未运行且启动失败",
+    "entity_handles": [],
+    "error": null
+   }
+  }
+ },
+ {
+  "probe": "validation.draw_circle.{\"center\": [0, 0], \"radius\": -1}",
+  "expect": "tool error before any CAD call",
+  "result": "PASS",
+  "detail": {
+   "error": "Error executing tool draw_circle: 1 validation error for draw_circleArguments\nradius\n  Input should be greater than 0 [type=greater_than, input_value=-1, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/greater_than"
+  }
+ },
+ {
+  "probe": "validation.draw_circle.{\"center\": [0, 0], \"radius\": 0}",
+  "expect": "tool error before any CAD call",
+  "result": "PASS",
+  "detail": {
+   "error": "Error executing tool draw_circle: 1 validation error for draw_circleArguments\nradius\n  Input should be greater than 0 [type=greater_than, input_value=0, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/greater_than"
+  }
+ },
+ {
+  "probe": "validation.array_linear_entity.{\"handle\": \"1\", \"count\": 1, \"displacement\": [1, 0]}",
+  "expect": "tool error before any CAD call",
+  "result": "PASS",
+  "detail": {
+   "error": "Error executing tool array_linear_entity: 1 validation error for array_linear_entityArguments\ncount\n  Input should be greater than or equal to 2 [type=greater_than_equal, input_value=1, input_type=int]\n    For further information visit https://errors.pydantic.dev/2.14/v/greater_than_equal"
+  }
+ },
+ {
+  "probe": "validation.draw_hatch.{\"points\": [[0, 0], [1, 0]]}",
+  "expect": "tool error before any CAD call",
+  "result": "PASS",
+  "detail": {
+   "error": "Error executing tool draw_hatch: 1 validation error for draw_hatchArguments\npoints\n  List should have at least 3 items after validation, not 2 [type=too_short, input_value=[[0, 0], [1, 0]], input_type=list]\n    For further information visit https://errors.pydantic.dev/2.14/v/too_short"
+  }
+ },
+ {
+  "probe": "validation.draw_line.{\"start_point\": [0], \"end_point\": [1, 1]}",
+  "expect": "tool error before any CAD call",
+  "result": "PASS",
+  "detail": {
+   "error": "Error executing tool draw_line: 1 validation error for draw_lineArguments\nstart_point\n  List should have at least 2 items after validation, not 1 [type=too_short, input_value=[0], input_type=list]\n    For further information visit https://errors.pydantic.dev/2.14/v/too_short"
+  }
+ },
+ {
+  "probe": "list_tools",
+  "expect": "35 tools with annotations",
+  "result": "PASS",
+  "detail": {
+   "count": 35,
+   "destructive": [
+    "close_drawing",
+    "erase_entity",
+    "new_drawing",
+    "open_drawing",
+    "save_drawing",
+    "send_command"
+   ]
+  }
+ },
+ {
+  "probe": "nlp.parse.draw_line",
+  "expect": "command type draw_line",
+  "result": "PASS",
+  "detail": {
+   "type": "draw_line",
+   "start_point": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "end_point": [
+    100.0,
+    100.0,
+    0.0
+   ]
+  }
+ },
+ {
+  "probe": "nlp.parse.draw_circle",
+  "expect": "command type draw_circle",
+  "result": "PASS",
+  "detail": {
+   "type": "draw_circle",
+   "center": [
+    50.0,
+    50.0,
+    0.0
+   ],
+   "radius": 20.0
+  }
+ },
+ {
+  "probe": "nlp.parse.draw_rectangle",
+  "expect": "command type draw_rectangle",
+  "result": "PASS",
+  "detail": {
+   "type": "draw_rectangle",
+   "corner1": [
+    0.0,
+    0.0,
+    0.0
+   ],
+   "corner2": [
+    10.0,
+    5.0,
+    0.0
+   ]
+  }
+ },
+ {
+  "probe": "nlp.parse.draw_rectangle(english)",
+  "expect": "command type draw_rectangle",
+  "result": "FAIL",
+  "detail": {
+   "type": "unknown",
+   "error": "无法识别的命令类型",
+   "original_command": "draw a rectangle from (0,0) to (10,5)"
+  }
+ }
+]

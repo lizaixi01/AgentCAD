@@ -1,0 +1,322 @@
+[
+ {
+  "probe": "mem.draw_line",
+  "expect": "success with handle",
+  "result": "PASS",
+  "detail": {
+   "structured": {
+    "success": true,
+    "message": "直线已绘制",
+    "entity_handles": [
+     "101"
+    ],
+    "error": null
+   }
+  }
+ },
+ {
+  "probe": "mem.readback_line",
+  "expect": "layer WALL, color 1, endpoints passed through",
+  "result": "PASS",
+  "detail": {
+   "structured": {
+    "success": true,
+    "message": "查询成功",
+    "handle": "101",
+    "entity_type": "line",
+    "layer": "WALL",
+    "color": 1,
+    "linetype": null,
+    "lineweight": -1,
+    "properties": {
+     "start_point": [
+      0.0,
+      0.0,
+      0.0
+     ],
+     "end_point": [
+      30.0,
+      40.0,
+      0.0
+     ],
+     "length": 50.0
+    },
+    "error": null
+   }
+  }
+ },
+ {
+  "probe": "mem.move_bad_handle",
+  "expect": "success=false",
+  "result": "PASS",
+  "detail": {
+   "structured": {
+    "success": false,
+    "message": "移动句柄 DEAD 失败",
+    "entity_handles": [],
+    "error": null
+   }
+  }
+ },
+ {
+  "probe": "mem.props_bad_handle",
+  "expect": "success=false with error",
+  "result": "PASS",
+  "detail": {
+   "structured": {
+    "success": false,
+    "message": "查询句柄 DEAD 失败",
+    "handle": "",
+    "entity_type": "",
+    "layer": null,
+    "color": null,
+    "linetype": null,
+    "lineweight": null,
+    "properties": {},
+    "error": "Unknown handle"
+   }
+  }
+ },
+ {
+  "probe": "mem.rotate_radians",
+  "expect": "Rotate called with pi/2",
+  "result": "PASS",
+  "detail": {
+   "r": {
+    "structured": {
+     "success": true,
+     "message": "实体已旋转",
+     "entity_handles": [],
+     "error": null
+    }
+   },
+   "calls": [
+    [
+     "101",
+     "Rotate",
+     [
+      [
+       0.0,
+       0.0,
+       0.0
+      ],
+      1.5707963267948966
+     ]
+    ]
+   ]
+  }
+ },
+ {
+  "probe": "mem.array_linear",
+  "expect": "2 new entities",
+  "result": "PASS",
+  "detail": {
+   "structured": {
+    "success": true,
+    "message": "已完成3个的线性阵列",
+    "entity_handles": [
+     "102",
+     "103"
+    ],
+    "error": null
+   }
+  }
+ },
+ {
+  "probe": "defect.undo_false_success",
+  "expect": "REPRODUCE: success=true although drawing unchanged",
+  "result": "PASS",
+  "detail": {
+   "result": {
+    "structured": {
+     "success": true,
+     "message": "已撤销",
+     "entity_handles": [],
+     "error": null
+    }
+   },
+   "entities_before": 3,
+   "entities_after": 3,
+   "calls": [
+    [
+     "Doc",
+     "SaveAs",
+     [
+      "/out/tmp/sub/out.dxf"
+     ]
+    ],
+    [
+     "Doc",
+     "StartUndoMark",
+     []
+    ],
+    [
+     "Doc",
+     "StartUndoMark",
+     []
+    ],
+    [
+     "MS",
+     "Add:AcDb2dPolyline",
+     [
+      [
+       "Coordinates",
+       [
+        0.0,
+        0.0,
+        0,
+        1.0,
+        0.0,
+        0,
+        2.0,
+        0.0,
+        0
+       ]
+      ],
+      [
+       "Closed",
+       false
+      ]
+     ]
+    ],
+    [
+     "104",
+     "set:Closed",
+     [
+      true
+     ]
+    ],
+    [
+     "104",
+     "set:Layer",
+     [
+      "0"
+     ]
+    ],
+    [
+     "Doc",
+     "EndUndoMark",
+     []
+    ],
+    [
+     "MS",
+     "Add:AcDbHatch",
+     [
+      [
+       "PatternName",
+       "SOLID"
+      ]
+     ]
+    ],
+    [
+     "105",
+     "AppendOuterLoop",
+     [
+      1
+     ]
+    ],
+    [
+     "105",
+     "set:PatternScale",
+     [
+      1.0
+     ]
+    ],
+    [
+     "105",
+     "set:Layer",
+     [
+      "0"
+     ]
+    ],
+    [
+     "105",
+     "Evaluate",
+     []
+    ],
+    [
+     "Doc",
+     "EndUndoMark",
+     []
+    ]
+   ]
+  }
+ },
+ {
+  "probe": "defect.redo_false_success",
+  "expect": "REPRODUCE: success=true with no verification",
+  "result": "PASS",
+  "detail": {
+   "structured": {
+    "success": true,
+    "message": "已重做",
+    "entity_handles": [],
+    "error": null
+   }
+  }
+ },
+ {
+  "probe": "defect.send_command_unscoped",
+  "expect": "REPRODUCE: LISP/SHELL text forwarded verbatim, success=true",
+  "result": "PASS",
+  "detail": {
+   "r": {
+    "structured": {
+     "success": true,
+     "message": "命令已提交: (command \"_.SHELL\" \"echo pwned\")",
+     "entity_handles": [],
+     "error": null
+    }
+   },
+   "sent": [
+    [
+     "Doc",
+     "SendCommand",
+     [
+      "(command \"_.SHELL\" \"echo pwned\")\n"
+     ]
+    ]
+   ]
+  }
+ },
+ {
+  "probe": "save.dxf_no_type",
+  "expect": "observe: SaveAs args; tool reports saved without checking the file",
+  "result": "PASS",
+  "detail": {
+   "r": {
+    "structured": {
+     "success": true,
+     "message": "图纸已保存到 /out/tmp/sub/out.dxf",
+     "entity_handles": [],
+     "error": null
+    }
+   },
+   "saveas_args": [
+    [
+     "Doc",
+     "SaveAs",
+     [
+      "/out/tmp/sub/out.dxf"
+     ]
+    ]
+   ],
+   "file_exists_after": false
+  }
+ },
+ {
+  "probe": "hatch.degenerate",
+  "expect": "observe: collinear boundary accepted by the tool layer",
+  "result": "PASS",
+  "detail": {
+   "structured": {
+    "success": true,
+    "message": "填充已绘制",
+    "entity_handles": [
+     "105"
+    ],
+    "error": null
+   }
+  }
+ }
+]

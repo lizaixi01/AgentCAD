@@ -1,0 +1,28 @@
+### probe_autocad_server
+PASS tools_registered: ["copy_entity", "count_text_patterns", "create_layer", "create_new_drawing", "draw_circle", "draw_device_connection", "draw_line", "draw_polyline", "draw_rectangle", "draw_text", "execute_query", "get_all_tables", "get_table_schema", "highlight_entity", "highlight_text_matches", "move_entity", "quer
+PASS draw_line_registered_is_first_definition: true
+PASS draw_line_without_autocad_reports_failure_text: "创建直线失败: COM unavailable (reviewer stub: no AutoCAD on Linux)"
+PASS get_all_tables: ["cad_elements", "text_patterns"]
+PASS execute_query_insert_readback: [["A1"]]
+PASS execute_query_bad_sql_error_text: "执行查询失败: near \"SELEC\": syntax error"
+PASS get_table_schema_injection_multi_statement: {"reply": "获取表结构失败: You can only execute one statement at a time.", "tables_after": ["cad_elements", "text_patterns"]}
+PASS get_table_schema_unknown_table: "[]"
+PASS DEFECT_execute_query_drop_table: {"reply": "执行成功，影响了 -1 行", "tables_after": ["text_patterns"]}
+### probe_freecad_server
+PASS tools_registered: ["copy_entity", "count_text_patterns", "create_layer", "create_new_drawing", "draw_circle", "draw_device_connection", "draw_line", "draw_polyline", "draw_rectangle", "draw_text", "execute_query", "export_dxf", "get_all_tables", "get_table_schema", "highlight_entity", "highlight_text_matches", "move_
+PASS draw_line_bridge_down_reports_failure: "创建直线失败: 无法连接 FreeCAD bridge（127.0.0.1:8765），请先启动 bridge"
+PASS save_bridge_down_reports_failure: "保存图纸失败: 无法连接 FreeCAD bridge（127.0.0.1:8765），请先启动 bridge"
+PASS port_get_table_schema_rejects_bad_name: "获取表结构失败: 非法表名 x); DROP TABLE text_patterns; --"
+PASS device_connection_without_devices: "未找到标签为 P14 的设备"
+PASS DEFECT_port_execute_query_write_allowed: "执行成功，影响了 0 行"
+PASS DEFECT_highlight_text_matches_reports_count_not_coloured: {"tool_reply": "已高亮显示 2 个包含 'PMC-3M' 的文本实体", "bridge_reply": "已高亮 0 个文本"}
+PASS DEFECT_query_and_highlight_reports_len_handles: {"tool_reply": "已高亮显示 2 个实体（共 2 个结果）", "bridge_reply": "已高亮 0 个实体", "note": "'Nope' is not an object; bridge colours nothing headless"}
+PASS highlight_entity_headless_reply: "已高亮实体 Line，颜色码: 1"
+PASS unemulated_bridge_error_propagates: "移动实体失败: stub: command not emulated: move"
+### probe_stdio
+server_freecad_stdio {"tool_count": 21, "calls": [{"tool": "get_all_tables", "isError": false, "text": "[\n  \"cad_elements\",\n  \"text_patterns\"\n]"}, {"tool": "draw_circle", "isError": false, "text": "创建圆失败: 无法连接 FreeCAD bridge（127.0.0.1:8765），请先启动 bridge"}, {"tool": "execute_query", "isError": false, "text": "[\n  {\n    \"n\": 0\n  }\n]"}]}
+server_autocad_stdio_with_win32com_stub {"tool_count": 19, "calls": [{"tool": "get_all_tables", "isError": false, "text": "[\n  \"cad_elements\",\n  \"text_patterns\"\n]"}, {"tool": "draw_circle", "isError": false, "text": "创建圆失败: COM unavailable (reviewer stub: no AutoCAD on Linux)"}, {"tool": "move_entity", "isError": false, "text": "移动实体失败: COM unavailable (reviewer stub: no AutoCAD on Linux)"}]}
+### python /work/server.py without win32com
+    import win32com.client
+ModuleNotFoundError: No module named 'win32com'
+exit=0

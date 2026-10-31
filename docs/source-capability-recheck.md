@@ -65,7 +65,7 @@ Equal numbers do not make the two assessments interchangeable, and neither is
 combined with unreviewed upstream projects to claim an official overall first.
 The seven other public servers were later scored under this rubric in a separate
 [field review](../examples/source_capability/results/2026-10-31-field/README.md),
-from source, committed results and CI, without running their code.
+with their own tests and headless probes run in offline containers.
 
 ## M14 and manufacturing annotations
 

@@ -1,0 +1,42 @@
+{
+ "server_freecad_stdio": {
+  "tool_count": 21,
+  "calls": [
+   {
+    "tool": "get_all_tables",
+    "isError": false,
+    "text": "[\n  \"cad_elements\",\n  \"text_patterns\"\n]"
+   },
+   {
+    "tool": "draw_circle",
+    "isError": false,
+    "text": "创建圆失败: 无法连接 FreeCAD bridge（127.0.0.1:8765），请先启动 bridge"
+   },
+   {
+    "tool": "execute_query",
+    "isError": false,
+    "text": "[\n  {\n    \"n\": 0\n  }\n]"
+   }
+  ]
+ },
+ "server_autocad_stdio_with_win32com_stub": {
+  "tool_count": 19,
+  "calls": [
+   {
+    "tool": "get_all_tables",
+    "isError": false,
+    "text": "[\n  \"cad_elements\",\n  \"text_patterns\"\n]"
+   },
+   {
+    "tool": "draw_circle",
+    "isError": false,
+    "text": "创建圆失败: COM unavailable (reviewer stub: no AutoCAD on Linux)"
+   },
+   {
+    "tool": "move_entity",
+    "isError": false,
+    "text": "移动实体失败: COM unavailable (reviewer stub: no AutoCAD on Linux)"
+   }
+  ]
+ }
+}

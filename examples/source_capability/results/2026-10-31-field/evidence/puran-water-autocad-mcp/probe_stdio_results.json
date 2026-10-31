@@ -1,0 +1,40 @@
+{
+ "tools": {
+  "drawing": false,
+  "entity": false,
+  "layer": false,
+  "block": false,
+  "annotation": false,
+  "pid": false,
+  "view": true,
+  "system": true
+ },
+ "status": [
+  "{\"ok\":true,\"payload\":{\"backend\":\"ezdxf\",\"version\":\"1.4.3\",\"has_document\":true,\"entity_count\":0,\"save_path\":null,\"capabilities\":{\"can_read_drawing\":true,\"can_modify_entities\":true,\"can_create_entities\":true,\"can_screenshot\":true,\"can_save\":true,\"can_plot_pdf\":false,\"can_zoom\":false,\"can_query_entities\":true,\"can_file_operations\":true,\"can_undo\":false}}}"
+ ],
+ "line": [
+  "{\"ok\":true,\"payload\":{\"entity_type\":\"LINE\",\"handle\":\"2F\"}}"
+ ],
+ "bad_get": [
+  "{\"ok\":false,\"error\":\"Entity ZZZ not found\"}"
+ ],
+ "exec_lisp": [
+  "{\"ok\":false,\"error\":\"Not supported on this backend\"}"
+ ],
+ "save": [
+  "{\"ok\":true,\"payload\":{\"path\":\"/out/probe_artifacts/stdio.dxf\"}}"
+ ],
+ "shot": [
+  "{\"ok\":true,\"screenshot\":\"attached\"}",
+  "<image>"
+ ],
+ "reopened": [
+  [
+   "LINE",
+   [
+    3.0,
+    4.0
+   ]
+  ]
+ ]
+}

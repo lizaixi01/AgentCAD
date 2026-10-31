@@ -1,0 +1,13 @@
+# as shipped: python -m pytest -p no:cacheprovider -q -rfEs (Linux, python:3.12-slim, --network none)
+============================= test session starts ==============================
+==================================== ERRORS ====================================
+E   ImportError: AutoCAD adapter requires Windows OS with COM support
+E   ImportError: AutoCAD adapter requires Windows OS with COM support
+E   ImportError: AutoCAD adapter requires Windows OS with COM support
+E   ImportError: AutoCAD adapter requires Windows OS with COM support
+=========================== short test summary info ============================
+ERROR tests/unit/test_adapters.py
+ERROR tests/unit/test_security.py
+ERROR tests/unit/test_shorthand.py
+ERROR tests/unit/test_validator.py
+============================== 4 errors in 1.07s ===============================

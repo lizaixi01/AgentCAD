@@ -1,0 +1,31 @@
+daobataotie/CAD-MCP @ daf7502951175e01aba9126a702400186ba2d4f9 - strict pass, 2026-10-31
+
+Image: python:3.12-slim (python@sha256:aa943ce411423c7582288f18707ff66eddcbaeb510502d747a72aeb34f30d159)
+Install (network on, then committed as rescore/daobataotie-cad-mcp:1):
+  cp -r /src /work && grep -v pywin32 requirements.txt > /tmp/req.txt && pip install -r /tmp/req.txt && pip install ezdxf
+  resolved: mcp 1.30.0, pydantic 2.14.2, pillow 13.0.0 (pywin32 skipped: Windows-only; ezdxf installed but unused, no DXF is produced headlessly)
+Runs: docker --context desktop-linux run --rm --network none --memory 2g --cpus 2 --pids-limit 512
+      -v <clone>:/src:ro -v <scratch>/strict/daobataotie-cad-mcp:/out rescore/daobataotie-cad-mcp:1
+
+Repository test suite: none. No test files, no .github workflows, no test command in README/pyproject.
+  Counts: 0 passed / 0 failed / 0 errors / 0 skipped.
+
+P0 import src/server.py without pywin32 -> ModuleNotFoundError: No module named 'win32com' (no headless backend).
+
+Probes (COM replaced by reviewer stubs in probes/stubs; fakecad is NOT a CAD; CAD-side results are interface evidence only):
+  python /out/probes/probes.py none       -> 12 PASS, 1 FAIL (English "draw a rectangle ..." not recognised by legacy NLP parser)
+  python /out/probes/probes.py mem        -> 11 PASS
+  python /out/probes/probes.py faillayer  -> 1 PASS
+  python /out/probes/transports.py        -> stdio 3 PASS; HTTP: initialize 200 without credentials,
+                                             send_command over HTTP accepted (success=true), foreign Host header -> 421
+Tool calls in probes.py go through a real MCP client session (mcp.shared.memory in-memory transport);
+transports.py runs src/server.py as a subprocess over stdio and streamable-http on 127.0.0.1:8765.
+
+Defect reproduction:
+  C1 undo/redo false success          reproduced (mock COM): success=true, entity count 3 -> 3, only SendCommand queued
+  S1 send_command unscoped            reproduced: '(command "_.SHELL" ...)' forwarded verbatim, success=true, also over unauthenticated HTTP
+  S1 save_drawing arbitrary path      observed: save_drawing('/out/tmp/sub/out.dxf') created /out/tmp/sub and reported saved;
+                                      SaveAs received only the path (no DXF file-type argument); the tool never checks the file
+  C1 partial write on reported failure (new, reproduced with injected layer-write failure): success=false, line left in drawing
+Not executable here: everything that needs a real AutoCAD/GstarCAD/ZWCAD over COM (drawing, editing, save/open output,
+  screenshot, real undo behaviour, SaveAs format selection), Windows registry ProgID discovery.

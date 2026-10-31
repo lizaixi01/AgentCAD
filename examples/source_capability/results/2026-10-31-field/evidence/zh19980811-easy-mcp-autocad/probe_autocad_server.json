@@ -1,0 +1,76 @@
+{
+ "tools_registered": {
+  "result": [
+   "copy_entity",
+   "count_text_patterns",
+   "create_layer",
+   "create_new_drawing",
+   "draw_circle",
+   "draw_device_connection",
+   "draw_line",
+   "draw_polyline",
+   "draw_rectangle",
+   "draw_text",
+   "execute_query",
+   "get_all_tables",
+   "get_table_schema",
+   "highlight_entity",
+   "highlight_text_matches",
+   "move_entity",
+   "query_and_highlight",
+   "rotate_entity",
+   "scan_all_entities"
+  ],
+  "pass": true
+ },
+ "draw_line_registered_is_first_definition": {
+  "result": true,
+  "pass": true
+ },
+ "draw_line_without_autocad_reports_failure_text": {
+  "result": "创建直线失败: COM unavailable (reviewer stub: no AutoCAD on Linux)",
+  "pass": true
+ },
+ "get_all_tables": {
+  "result": [
+   "cad_elements",
+   "text_patterns"
+  ],
+  "pass": true
+ },
+ "execute_query_insert_readback": {
+  "result": [
+   [
+    "A1"
+   ]
+  ],
+  "pass": true
+ },
+ "execute_query_bad_sql_error_text": {
+  "result": "执行查询失败: near \"SELEC\": syntax error",
+  "pass": true
+ },
+ "get_table_schema_injection_multi_statement": {
+  "result": {
+   "reply": "获取表结构失败: You can only execute one statement at a time.",
+   "tables_after": [
+    "cad_elements",
+    "text_patterns"
+   ]
+  },
+  "pass": true
+ },
+ "get_table_schema_unknown_table": {
+  "result": "[]",
+  "pass": true
+ },
+ "DEFECT_execute_query_drop_table": {
+  "result": {
+   "reply": "执行成功，影响了 -1 行",
+   "tables_after": [
+    "text_patterns"
+   ]
+  },
+  "pass": true
+ }
+}

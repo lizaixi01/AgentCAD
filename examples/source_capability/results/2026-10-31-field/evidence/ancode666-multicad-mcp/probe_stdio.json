@@ -1,0 +1,16 @@
+{
+  "tools": [
+    "draw_entities",
+    "export_data",
+    "manage_blocks",
+    "manage_entities",
+    "manage_files",
+    "manage_layers",
+    "manage_session"
+  ],
+  "list_supported": "{\n  \"total\": 1,\n  \"succeeded\": 1,\n  \"results\": [\n    {\n      \"index\": 0,\n      \"action\": \"list_supported\",\n      \"success\": true,\n      \"supported\": [\n        \"autocad\",\n        \"zwcad\",\n        \"gcad\",\n        \"bricscad\"\n      ]\n    }\n  ]\n}",
+  "draw_without_cad": {
+    "is_error": true,
+    "text": "Error calling tool 'draw_entities': CAD operation 'draw_entities' failed: Failed to connect to cad: Could not connect to any supported CAD application"
+  }
+}

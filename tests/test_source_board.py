@@ -35,7 +35,10 @@ def test_scores_add_up_and_cite_the_pin(product):
     assert product["total_score"] == sum(c["score"] for c in categories.values())
     for item in items.values():
         assert item["basis"] and item["source"]
-        assert all(sha in s["url"] for s in item["source"] if "github.com" in s["url"])
+        urls = [s.get("url") or "" for s in item["source"]]
+        assert all(sha in url for url in urls if "github.com" in url)
+    for path in product.get("evidence_paths", []):
+        assert (ROOT / path).is_file() or (FIELD / path).is_file() or (FIELD / "evidence" / path).is_file(), path
 
 
 def test_field_readme_matches_json():

@@ -1,0 +1,29 @@
+# with reviewer win32 stub plugin: PYTHONPATH=/out/probes python -m pytest -p no:cacheprovider -p win32shim -q -rfEs
+=================================== FAILURES ===================================
+____ TestPathTraversal.test_validate_export_path_blocks_traversal_attempts _____
+
+self = <test_security.TestPathTraversal object at 0x7028a1fdde20>
+
+    def test_validate_export_path_blocks_traversal_attempts(self):
+        """Test that _validate_export_path rejects paths outside output directory."""
+        adapter = AutoCADAdapter("autocad")
+    
+        with tempfile.TemporaryDirectory() as tmpdir:
+            output_dir = Path(tmpdir).resolve()
+            drawings_dir = output_dir / "drawings"
+            drawings_dir.mkdir()
+    
+            # Path outside output dir should raise
+            parent_dir = output_dir.parent
+            traversal_path = (parent_dir / "dangerous.txt").resolve()
+    
+            # Use pytest.raises with exception type only
+>           with pytest.raises(Exception):  # Catch any exception
+                 ^^^^^^^^^^^^^^^^^^^^^^^^
+E           Failed: DID NOT RAISE <class 'Exception'>
+
+tests/unit/test_security.py:47: Failed
+=========================== short test summary info ============================
+FAILED tests/unit/test_security.py::TestPathTraversal::test_validate_export_path_blocks_traversal_attempts
+SKIPPED [1] tests/unit/test_adapters.py:71: COM only available on Windows
+=================== 1 failed, 179 passed, 1 skipped in 0.51s ===================

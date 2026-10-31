@@ -1,0 +1,26 @@
+[
+ {
+  "probe": "defect.partial_write_on_failure",
+  "expect": "REPRODUCE: tool reports failure but the line stays in the drawing",
+  "result": "PASS",
+  "detail": {
+   "draw": {
+    "structured": {
+     "success": false,
+     "message": "绘制直线失败",
+     "entity_handles": [],
+     "error": "CAD操作失败，详情见 cad_mcp.log"
+    }
+   },
+   "entities_total_after": 1,
+   "entities": [
+    {
+     "handle": "101",
+     "entity_type": "line",
+     "layer": "0",
+     "color": 256
+    }
+   ]
+  }
+ }
+]

@@ -1,0 +1,8 @@
+anyio==4.15.1
+CairoSVG==2.9.1
+ezdxf==1.4.5
+mcp==2.3.0
+pillow==13.0.0
+pydantic==2.14.2
+pytest==9.2.0
+ruff==0.17.3

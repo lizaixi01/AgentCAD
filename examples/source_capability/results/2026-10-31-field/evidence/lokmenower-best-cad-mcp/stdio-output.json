@@ -1,0 +1,83 @@
+[
+ {
+  "profile": "lean",
+  "protocol": "2026-07-28",
+  "tool_count": 116,
+  "send_command_exposed": true,
+  "execute_cad_plan_exposed": true,
+  "validate_cad_plan": {
+   "isError": false,
+   "structured": "{\"result\": {\"ok\": true, \"message\": \"CAD plan is valid.\", \"data\": {\"plan\": {\"plan_id\": \"stdio\", \"description\": \"\", \"units\": \"mm\", \"variables\": {}, \"steps\": [{\"step_id\": \"s1\", \"op\": \"draw_circle\", \"args\": {\"center_x\": 0, \"center_y\": 0, \"radius\": 5}}], \"constraints\": [], \"risk_level\": \"medium\", \"requires_confirmation\": true, \"allow_dangerous\": false}, \"errors\": [], \"warnings\": [], \"valid\": true}, \"ha"
+  },
+  "execute_without_allow": {
+   "isError": false,
+   "structured": "{\"result\": {\"ok\": false, \"message\": \"execute_cad_plan refused to modify the DWG because allow_modify is not true.\", \"data\": {\"plan_id\": \"stdio\"}, \"handles\": [], \"warnings\": [], \"next_tools\": [\"dry_run_cad_plan\"]}}"
+  },
+  "execute_query_insert": {
+   "isError": false,
+   "structured": "{\"result\": \"查询执行失败: Only read-only SELECT/WITH/PRAGMA/EXPLAIN SQL is allowed\"}"
+  },
+  "open_drawing_dxf": {
+   "isError": false,
+   "structured": "{\"result\": \"打开图纸失败: DXF requires import_dxf, not Documents.Open. Use import_dxf with allow_modify=True to create a separate drawing.\"}"
+  },
+  "draw_line_no_autocad": {
+   "isError": false,
+   "structured": "{\"result\": \"OK: 已绘制直线\\n  handle: \\n  layer: 0\\n  length: 1.00\"}"
+  }
+ },
+ {
+  "profile": "core",
+  "protocol": "2026-07-28",
+  "tool_count": 213,
+  "send_command_exposed": true,
+  "execute_cad_plan_exposed": true,
+  "validate_cad_plan": {
+   "isError": false,
+   "structured": "{\"result\": {\"ok\": true, \"message\": \"CAD plan is valid.\", \"data\": {\"plan\": {\"plan_id\": \"stdio\", \"description\": \"\", \"units\": \"mm\", \"variables\": {}, \"steps\": [{\"step_id\": \"s1\", \"op\": \"draw_circle\", \"args\": {\"center_x\": 0, \"center_y\": 0, \"radius\": 5}}], \"constraints\": [], \"risk_level\": \"medium\", \"requires_confirmation\": true, \"allow_dangerous\": false}, \"errors\": [], \"warnings\": [], \"valid\": true}, \"ha"
+  },
+  "execute_without_allow": {
+   "isError": false,
+   "structured": "{\"result\": {\"ok\": false, \"message\": \"execute_cad_plan refused to modify the DWG because allow_modify is not true.\", \"data\": {\"plan_id\": \"stdio\"}, \"handles\": [], \"warnings\": [], \"next_tools\": [\"dry_run_cad_plan\"]}}"
+  },
+  "execute_query_insert": {
+   "isError": false,
+   "structured": "{\"result\": \"查询执行失败: Only read-only SELECT/WITH/PRAGMA/EXPLAIN SQL is allowed\"}"
+  },
+  "open_drawing_dxf": {
+   "isError": false,
+   "structured": "{\"result\": \"打开图纸失败: DXF requires import_dxf, not Documents.Open. Use import_dxf with allow_modify=True to create a separate drawing.\"}"
+  },
+  "draw_line_no_autocad": {
+   "isError": false,
+   "structured": "{\"result\": \"OK: 已绘制直线\\n  handle: \\n  layer: 0\\n  length: 1.00\"}"
+  }
+ },
+ {
+  "profile": "full",
+  "protocol": "2026-07-28",
+  "tool_count": 324,
+  "send_command_exposed": true,
+  "execute_cad_plan_exposed": true,
+  "validate_cad_plan": {
+   "isError": false,
+   "structured": "{\"result\": {\"ok\": true, \"message\": \"CAD plan is valid.\", \"data\": {\"plan\": {\"plan_id\": \"stdio\", \"description\": \"\", \"units\": \"mm\", \"variables\": {}, \"steps\": [{\"step_id\": \"s1\", \"op\": \"draw_circle\", \"args\": {\"center_x\": 0, \"center_y\": 0, \"radius\": 5}}], \"constraints\": [], \"risk_level\": \"medium\", \"requires_confirmation\": true, \"allow_dangerous\": false}, \"errors\": [], \"warnings\": [], \"valid\": true}, \"ha"
+  },
+  "execute_without_allow": {
+   "isError": false,
+   "structured": "{\"result\": {\"ok\": false, \"message\": \"execute_cad_plan refused to modify the DWG because allow_modify is not true.\", \"data\": {\"plan_id\": \"stdio\"}, \"handles\": [], \"warnings\": [], \"next_tools\": [\"dry_run_cad_plan\"]}}"
+  },
+  "execute_query_insert": {
+   "isError": false,
+   "structured": "{\"result\": \"查询执行失败: Only read-only SELECT/WITH/PRAGMA/EXPLAIN SQL is allowed\"}"
+  },
+  "open_drawing_dxf": {
+   "isError": false,
+   "structured": "{\"result\": \"打开图纸失败: DXF requires import_dxf, not Documents.Open. Use import_dxf with allow_modify=True to create a separate drawing.\"}"
+  },
+  "draw_line_no_autocad": {
+   "isError": false,
+   "structured": "{\"result\": \"OK: 已绘制直线\\n  handle: \\n  layer: 0\\n  length: 1.00\"}"
+  }
+ }
+]
