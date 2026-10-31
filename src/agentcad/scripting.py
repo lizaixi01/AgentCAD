@@ -31,11 +31,13 @@ BANNED_NAMES = {"open", "exec", "eval", "compile", "__import__", "input", "break
 # Frames (a generator's gi_frame.f_back reaches the runner's frame, its real builtins and __import__), the
 # helpers that read or call attributes by name (attrgetter('__globals__') gets past the dunder rule), and the
 # modules allowed modules carry as plain attributes (fractions.sys.modules, dataclasses.builtins.getattr,
-# dataclasses.inspect.currentframe(), numpy.f2py.subprocess).
+# dataclasses.inspect.currentframe(), numpy.f2py.subprocess), also under private aliases (collections._sys,
+# statistics.random._os, numpy's _datasource._open) where the language allows private names.
 _ESCAPE_ATTRS = {"gi_frame", "cr_frame", "ag_frame", "tb_frame", "f_back", "f_globals", "f_locals", "f_builtins",
                  "attrgetter", "methodcaller", "getattr", "setattr", "delattr", "eval", "exec", "globals", "locals",
                  "vars", "breakpoint", "sys", "modules", "os", "builtins", "bltns", "inspect", "currentframe",
-                 "subprocess", "f2py"}
+                 "subprocess", "f2py", "_sys", "_os", "_open", "_builtin_open", "_getframe", "importlib",
+                 "import_module", "io", "pathlib", "shutil"}
 BANNED_ATTRS = {"saveas", "save", "readfile", "readzip", "write", "write_text", "write_bytes", "unlink", "rmdir",
                 "system", "popen", "spawn", "odafc"} | _ESCAPE_ATTRS
 RUNNER = Path(__file__).with_name("_script_runner.py")

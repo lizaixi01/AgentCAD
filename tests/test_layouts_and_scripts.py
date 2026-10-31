@@ -151,6 +151,9 @@ def test_script_is_a_transaction(srt, ws):
     ("import fractions\nb = fractions.sys.modules['builtins']", "'modules'"),
     ("import statistics\nos = statistics.sys", "'sys'"),
     ("import copy\ng = copy.builtins.getattr", "'getattr'"),
+    ("import collections\nf = collections._sys", "'_sys'"),
+    ("import statistics\nr = statistics.random._os", "'_os'"),
+    ("x = ezdxf.npshapes.np.testing.importlib", "'importlib'"),
     ("import operator\noperator.methodcaller('saveas', 'x.dxf')(doc)", "'methodcaller'"),
 ])
 def test_scripts_are_checked_before_running(srt, ws, code, why):
