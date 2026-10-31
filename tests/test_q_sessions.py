@@ -132,3 +132,22 @@ def test_setup_installs_the_agentcad_skill(home):
         assert not dry.exists()
     finally:
         del os.environ["CODEX_HOME"]
+
+
+def test_a_reused_pid_is_not_a_session(tmp_path, session):
+    """A server killed without removing its file: if the OS gives its pid to another program, that program's start
+    time differs, so the viewer does not show it as connected."""
+    assert sessions.CURRENT.get("created") is not None or os.name not in ("nt", "posix")
+    if sessions.CURRENT.get("created") is None:
+        pytest.skip("no process start time on this system")
+    assert sessions.alive(os.getpid(), sessions.CURRENT["created"])
+    assert not sessions.alive(os.getpid(), sessions.CURRENT["created"] + 1)
+    f = session.path
+    data = json.loads(f.read_text("utf-8"))
+    data["created"] += 1
+    f.write_text(json.dumps(data), "utf-8")
+    assert sessions.list_sessions(tmp_path) == [] and not f.exists()
+
+
+def test_skill_covers_the_short_tool_list():
+    assert 'call_tool(name="agentcad_status"' in install.SKILL

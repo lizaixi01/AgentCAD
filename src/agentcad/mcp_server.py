@@ -551,6 +551,8 @@ def build_server(policy: Policy | None = None, profile: str | None = None) -> Fa
     if profile != "discovery":
         raise ValueError("AGENTCAD_TOOL_PROFILE must be full or discovery")
     discovery = DiscoveryServer("agentcad", instructions="Search tools and operations, fetch their schema, then call a tool. "
+                        "To check the connection and name this conversation in the live viewer: "
+                        "call_tool('agentcad_status', {'label': '<your task in a few words>'}). "
                         "Operations execute through apply_operations. Paths are relative to the workspace.")
 
     @discovery.tool()

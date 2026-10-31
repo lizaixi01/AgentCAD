@@ -58,8 +58,8 @@ class Session:
         self.path = policy.root / STATE_DIR / DIR / f"{os.getpid()}.json"
         now = round(time.time(), 3)
         CURRENT.clear()
-        CURRENT.update(pid=os.getpid(), client=None, client_raw=None, version=None, label=None, started=now,
-                       last_seen=now, last_tool=None, drawing=None)
+        CURRENT.update(pid=os.getpid(), created=created(os.getpid()), client=None, client_raw=None, version=None,
+                       label=None, started=now, last_seen=now, last_tool=None, drawing=None)
         self._written = 0.0
         self.write(force=True)
         atexit.register(self.close)
@@ -100,9 +100,36 @@ class Session:
             pass
 
 
-def alive(pid: int) -> bool:
+def created(pid: int) -> int | None:
+    """When the process started, as the OS counts it (Windows: FILETIME; Linux: clock ticks since boot), or None.
+    With the pid it tells a session's server from an unrelated process that later got the same pid."""
+    try:
+        if os.name == "nt":
+            import ctypes
+            k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            h = k32.OpenProcess(0x1000, False, pid)
+            if not h:
+                return None
+            try:
+                times = [ctypes.c_ulonglong() for _ in range(4)]
+                ok = k32.GetProcessTimes(h, *[ctypes.byref(t) for t in times])
+                return int(times[0].value) if ok else None
+            finally:
+                k32.CloseHandle(h)
+        stat = Path(f"/proc/{pid}/stat").read_text()
+        return int(stat.rsplit(")", 1)[1].split()[19])  # field 22, starttime
+    except (OSError, ValueError, IndexError, AttributeError):
+        return None  # macOS has no /proc: the pid alone decides
+
+
+def alive(pid: int, started: int | None = None) -> bool:
+    """Is ``pid`` running, and (when ``started`` is known) still the process that wrote the session file?"""
     if pid <= 0:
         return False
+    if started is not None:
+        now = created(pid)
+        if now is not None and now != started:
+            return False  # the pid was reused after the server died without removing its file
     if os.name == "nt":
         import ctypes
         k32 = ctypes.WinDLL("kernel32", use_last_error=True)
@@ -133,7 +160,7 @@ def list_sessions(root: Path) -> list[dict[str, Any]]:
             pid = int(s.get("pid") or f.stem)
         except (OSError, ValueError, TypeError):
             continue
-        if alive(pid):
+        if alive(pid, s.get("created")):
             out.append({k: s.get(k) for k in ("pid", "client", "version", "label", "started", "last_seen",
                                               "last_tool", "drawing")})
         else:

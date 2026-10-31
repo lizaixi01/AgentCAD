@@ -572,7 +572,9 @@ description: Check that AgentCAD (CAD drawings and 3D parts) is connected, name 
    - where drawings are saved (`workspace`)
    - the live viewer link (`viewer_url`), where they can watch each change
    - one sentence they could try, such as "画一块 200×100 的安装板，四个角倒圆 R8，四个 Ø12 的孔离边 15 毫米。"
-3. If there is no `agentcad_status` tool, AgentCAD is not connected to this app. Say so plainly and how to fix it:
+   With only `search_tools`, `tool_schema` and `call_tool` (AgentCAD's short tool list), use
+   `call_tool(name="agentcad_status", arguments={"label": ...})`: that is connected too.
+3. If there is no AgentCAD tool at all, AgentCAD is not connected to this app. Say so plainly and how to fix it:
    run the AgentCAD installer (or open it again and tap "Already installed? Check it", then "Fix it for me"), then
    start a new conversation.
 """
