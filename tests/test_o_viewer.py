@@ -426,3 +426,11 @@ def test_mesh_skips_degenerate_edges(rt, workspace, extra):
         {"op": "primitive", "kind": "cylinder", "dims": {"radius": 3, "height": 40}}, extra]))
     m = json.loads(workspace.mesh("knob.FCStd", None).read_text("utf-8"))
     assert m["indices"] and all(len(e) >= 6 for e in m["edges"])
+
+
+def test_page_shows_only_the_layer_for_the_file_kind():
+    """The transparent 3D layer used to stay on top of a 2D drawing and took every wheel, drag and double-click."""
+    from agentcad.viewer import STATIC
+    page = (STATIC / "index.html").read_text("utf-8")
+    assert '$("stage").hidden = isPart(S.path); $("three").hidden = !isPart(S.path);' in page
+    assert '$("three").hidden = false' not in page
