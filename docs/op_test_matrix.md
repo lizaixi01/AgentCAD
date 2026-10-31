@@ -8,7 +8,7 @@
 | `add_angular_dim` | annotate | test_autocad_findings.py, test_h_operations.py |
 | `add_arc` | draw | test_autocad_findings.py, test_h_operations.py, test_i_common_ops.py, test_t_workflow_guards.py |
 | `add_center_mark` | annotate | test_i_common_ops.py |
-| `add_circle` | draw | test_autocad_findings.py, test_b_revision.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py, test_i_common_ops.py, test_j_compact_results.py, test_k_pdf.py, test_l_fewer_turns.py, test_l_live_session.py, test_m_library.py, test_native_delivery.py, test_p_busy_files.py, test_q_viewer_progress.py, test_t_workflow_guards.py, test_w_delivery.py, test_y_tolerances.py |
+| `add_circle` | draw | test_autocad_findings.py, test_b_revision.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_g_interfaces.py, test_h_operations.py, test_i_common_ops.py, test_j_compact_results.py, test_k_pdf.py, test_l_fewer_turns.py, test_l_live_session.py, test_m_library.py, test_native_delivery.py, test_p_busy_files.py, test_q_sessions.py, test_q_viewer_progress.py, test_t_workflow_guards.py, test_w_delivery.py, test_y_tolerances.py |
 | `add_datum_feature` | library | test_m_library.py |
 | `add_diameter_dim` | annotate | test_autocad_findings.py, test_h_operations.py, test_layouts_and_scripts.py, test_native_delivery.py, test_y_tolerances.py |
 | `add_donut` | draw | test_i_common_ops.py |
