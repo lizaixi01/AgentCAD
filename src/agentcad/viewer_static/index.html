@@ -596,7 +596,7 @@ function resetView() {
   S.view = null; S.baseVB = null;
   if (S.three) { S.three.dispose(); S.three = null; }
 }
-function updateHint() { $("hint").textContent = S.path ? t(isPart(S.path) ? "orbitHint" : "zoomHint") : ""; $("hint").hidden = !S.path || S.compare; }
+function updateHint() { $("hint").textContent = S.path ? t(isPart(S.path) ? "orbitHint" : "zoomHint") : ""; $("hint").hidden = !S.path || S.compare || !$("banner").hidden; }  // the earlier-version banner sits there
 
 async function refresh() {
   if (!S.path) return;
