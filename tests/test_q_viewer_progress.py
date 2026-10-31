@@ -342,3 +342,22 @@ def test_markup_in_names_texts_notes_and_errors_is_escaped(rt, ws, viewer):
     data = json.loads(re.search(r'<script id="data" type="application/json">(.*?)</script>', page, re.S).group(1))
     assert data["name"] == name and any(h.get("label") == XSS for h in data["history"])
     assert any(not h["ok"] and "<img" in h["error"]["message"] for h in data["history"])
+
+
+PLACEHOLDERS = 'note /*__FLUID_JS__*/ /*__FLUID_CSS__*/ /*__FRIENDLY__*/ <!--__LOGO__--> "__DATA__" end'
+
+
+def test_placeholders_in_the_data_stay_text_in_the_export(rt, ws, viewer):
+    """The export fills the page's own placeholders before the data: a label that holds one stays text."""
+    name = "marks.dxf"
+    ok(rt.apply_operations(name, [{"op": "add_line", "start": [0, 0], "end": [50, 0], "layer": "OUTLINE"}],
+                           create={"units": "mm"}, label=PLACEHOLDERS))
+    page = get(viewer, "/api/export", path=name)[2].decode("utf-8")
+    assert page.count("<script") == 4 and page.count("</script>") == 4
+    data = json.loads(re.search(r'<script id="data" type="application/json">(.*?)</script>', page, re.S).group(1))
+    assert any(h.get("label") == PLACEHOLDERS for h in data["history"])
+    # the kit, the wording and the logo each went in once, outside the data
+    assert page.count("global.Fluid =") == 1 and page.count("global.AgentCADFriendly =") == 1
+    assert "<!--__LOGO__-->" not in page and "/*__FLUID_CSS__*/" not in page.split('id="data"')[0]
+    # what is sent to other people carries the kit's and the font's licences
+    assert "Permission is hereby granted" in page and "SIL Open Font License" in page

@@ -116,7 +116,11 @@
         tip.classList.add("open");
       }, tip.classList.contains("open") ? 0 : 350);
     });
-    root.addEventListener("pointerout", (e) => { if (e.target.closest("[data-tip]")) { clearTimeout(tipTimer); tip.classList.remove("open"); } });
+    root.addEventListener("pointerout", (e) => {
+      const el = e.target.closest("[data-tip]");
+      if (!el || el.contains(e.relatedTarget)) return;  // onto the button's own icon: still on it
+      clearTimeout(tipTimer); tip.classList.remove("open");
+    });
   }
 
   // ---- popover: a button toggles a .ff-pop; Escape and an outside click close it --------------------------------

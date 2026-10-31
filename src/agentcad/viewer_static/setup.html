@@ -69,7 +69,7 @@ p.lead { font-size: 20px; color: var(--muted); margin: 0 0 22px; }
        border: 2px solid var(--line); background: var(--panel); cursor: pointer; min-height: 88px; }
 .app { transition: border-color var(--spring-moderate), background-color var(--spring-moderate); }
 .apps { position: relative; }
-.apps > .ff-hl { border-radius: 16px; }
+.apps > .ff-hl { border-radius: 16px; z-index: 2; }  /* over the opaque cards, as a light tint (pointer-events: none) */
 .app.sel { border-color: var(--accent); background: var(--accent-soft); }
 .app input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .tile { width: 56px; height: 56px; border-radius: 14px; display: grid; place-items: center; font-weight: 800; font-size: 22px; color: #fff; }
