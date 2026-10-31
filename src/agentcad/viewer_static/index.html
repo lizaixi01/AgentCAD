@@ -53,6 +53,18 @@ header { grid-column: 1 / -1; display: flex; align-items: center; gap: 14px; pad
 #conn i { width: 10px; height: 10px; border-radius: 50%; background: var(--muted); display: inline-block; }
 #conn.live i { background: var(--ok); box-shadow: 0 0 0 3px var(--ok-soft); }
 #conn.off i { background: var(--bad); }
+#conn.none i { background: var(--muted); }
+#conn { border: 0; cursor: pointer; font: inherit; font-size: 14px; min-height: 36px; }
+#conn:hover { filter: brightness(0.97); }
+#conn.live { color: var(--ink); font-weight: 600; }
+#connPop { left: 0; right: auto; width: 380px; }
+#connPop h4 { margin: 6px 10px 8px; font-size: 15px; color: var(--muted); }
+.sess { display: grid; grid-template-columns: 40px 1fr; gap: 12px; padding: 10px; border-radius: 10px; align-items: center; }
+.sess .tile { width: 40px; height: 40px; border-radius: 10px; display: grid; place-items: center; color: #fff; font-weight: 800; font-size: 15px; }
+.sess b { display: block; font-size: 16px; }
+.sess span { display: block; color: var(--muted); font-size: 14px; }
+.connHow { padding: 6px 10px 10px; color: var(--muted); font-size: 15px; line-height: 1.5; }
+.who { color: var(--accent); font-weight: 600; }
 .spacer { flex: 1; }
 .menu { position: relative; }
 .pop { position: absolute; right: 0; top: calc(100% + 8px); background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius);
@@ -219,7 +231,8 @@ summary { cursor: pointer; padding: 10px 14px; font-weight: 600; color: var(--mu
   #view { height: 58vh; flex: none; }
   #feedSec { max-height: none; }
   .pop { width: min(340px, calc(100vw - 32px)); }
-  #langLbl, #themeLbl, #conn > span { display: none; }
+  #langLbl, #themeLbl { display: none; }
+  #connPop { width: min(380px, calc(100vw - 32px)); }
   #list li { grid-template-columns: 56px 1fr; }
 }
 </style>
@@ -236,7 +249,10 @@ summary { cursor: pointer; padding: 10px 14px; font-weight: 600; color: var(--mu
 <body>
 <header>
   <div class="brand"><img src="/logo.svg" alt=""><span>AgentCAD</span></div>
-  <span id="conn" class="off"><i></i><span></span></span>
+  <div class="menu">
+    <button id="conn" class="off" type="button" aria-haspopup="true" aria-expanded="false"><i></i><span></span></button>
+    <div class="pop" id="connPop" hidden></div>
+  </div>
   <span class="spacer"></span>
   <div class="menu">
     <button class="btn primary" id="shareBtn" aria-haspopup="true" aria-expanded="false" disabled>
@@ -277,7 +293,7 @@ summary { cursor: pointer; padding: 10px 14px; font-weight: 600; color: var(--mu
   <div id="view">
     <div id="stage"></div><div id="three"></div><img id="png" alt="" hidden>
     <div id="compare" hidden></div>
-    <div id="empty"><div><img src="/logo.svg" alt=""><h3 data-t="waitingTitle"></h3><p data-t="waitingBody"></p><div id="tryList"></div></div></div>
+    <div id="empty"><div><img src="/logo.svg" alt=""><h3 id="emptyTitle"></h3><p id="emptyBody"></p><div id="tryList"></div></div></div>
     <div id="banner" hidden><span data-t="earlier"></span><button id="nowBtn" data-t="backToNow"></button></div>
     <div id="legend" hidden><span><i style="background:#16a34a"></i><span data-t="legendAdded"></span></span><span><i style="background:#ea580c"></i><span data-t="legendModified"></span></span><span><i style="background:#b8bcc4"></i><span data-t="legendOther"></span></span></div>
     <div id="hint" hidden></div>
@@ -352,7 +368,7 @@ function applyLang() {
   document.documentElement.lang = LANG === "zh" ? "zh-CN" : "en";
   document.title = t("title");
   document.querySelectorAll("[data-t]").forEach((el) => { el.textContent = t(el.dataset.t); });
-  renderTry();
+  renderTry(); renderConn();
   $("langLbl").textContent = t("language");
   $("followLbl").title = t("followHint");
   setConn(S.live);
@@ -370,7 +386,49 @@ function applyTheme(save) {
   if (save) try { localStorage.setItem("agentcad-theme", THEME); } catch (e) {}
 }
 $("themeBtn").onclick = () => { THEME = { auto: "light", light: "dark", dark: "auto" }[THEME]; applyTheme(true); };
-function setConn(on) { $("conn").className = on ? "live" : "off"; $("conn").lastElementChild.textContent = on ? t("connected") : t("disconnected"); }
+function setConn(on) { S.live = on; renderConn(); }
+
+// ---- who is connected (sessions.py via /api/sessions) -------------------------------------------------
+const APP_COLORS = { "Claude Code": "#d97757", "Codex": "#4b5563", "Claude Desktop": "#b8613f", "Cursor": "#2f6fdf" };
+function appName(s) { return (s && s.client) || t("someApp"); }
+function whoText(x) {  // a progress event or journal record -> "Claude Code · mounting plate"
+  if (!x || !x.client) return "";
+  return x.conversation ? `${x.client} · ${x.conversation}` : x.client;
+}
+async function loadSessions() {
+  try { S.sessions = (await api("/api/sessions")).sessions || []; } catch (e) { return; }
+  renderConn();
+}
+function renderConn() {
+  const el = $("conn"), list = S.sessions || [];
+  let cls, text;
+  if (!S.live) { cls = "off"; text = t("disconnected"); }
+  else if (!list.length) { cls = "none"; text = t("noAssistant"); }
+  else if (list.length === 1) { cls = "live"; text = t("oneConnected", { app: appName(list[0]) }); }
+  else { cls = "live"; text = t("manyConnected", { n: list.length }); }
+  el.className = cls; el.lastElementChild.textContent = text; el.title = text;
+  const pop = $("connPop");
+  const hm = (ts) => ts ? new Date(ts * 1000).toLocaleTimeString(LANG === "zh" ? "zh-CN" : undefined, { hour: "2-digit", minute: "2-digit" }) : "";
+  pop.innerHTML = `<h4>${esc(t("connTitle"))}</h4>` + (list.length ? list.map((s) => {
+    const name = appName(s), initials = name.split(/\s+/).map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+    const bits = [t("connStarted", { t: hm(s.started) })];
+    bits.push(s.drawing ? t("connWorking", { f: base(s.drawing) }) + " · " + t("connLast", { t: ago(s.last_seen) }) : t("connWaiting"));
+    return `<div class="sess"><span class="tile" style="background:${APP_COLORS[name] || "#1f6feb"}">${esc(initials)}</span>` +
+      `<div><b>${esc(name)}${s.label ? " · " + esc(s.label) : ""}</b><span>${esc(bits.join(" · "))}</span></div></div>`;
+  }).join("") : `<div class="connHow"><b>${esc(t("noAssistantTitle"))}</b><br>${esc(t("noAssistantBody"))}</div>`);
+  renderEmpty();
+}
+function renderEmpty() {
+  const list = S.sessions || [];
+  $("emptyTitle").textContent = list.length ? t("readyTitle", { app: appName(list[0]) }) : (S.sessions ? t("noAssistantTitle") : t("waitingTitle"));
+  $("emptyBody").textContent = list.length ? t("readyBody") : (S.sessions ? t("noAssistantBody") : t("waitingBody"));
+}
+$("conn").onclick = (e) => {
+  e.stopPropagation();
+  const pop = $("connPop"), open = pop.hidden;
+  pop.hidden = !open; $("conn").setAttribute("aria-expanded", String(open));
+};
+document.addEventListener("click", (e) => { if (!$("connPop").hidden && !e.target.closest("#connPop")) { $("connPop").hidden = true; $("conn").setAttribute("aria-expanded", "false"); } });
 
 function ago(ts) {
   if (!ts) return "";
@@ -445,6 +503,7 @@ function renderFeed() {
     else if (st === "checking") main = t("checkingNow");
     else main = F.toolText(r.tool, kind, LANG, "done");
     const sub = [esc(base(r.drawing)), esc(ago(ev.ts))];
+    if (whoText(ev)) sub.unshift(`<span class="who">${esc(t("by", { who: whoText(ev) }))}</span>`);
     const v = st === "done" ? F.verdict(ev, LANG) : "";
     if (v) sub.push(ev.passed === false ? `<span class="badbit">${esc(v)}</span>` : esc(v));
     if (st === "error" && ev.error) sub.push(`<span class="badbit">${esc(ev.error.message || ev.error.code)}</span>`);
@@ -479,6 +538,7 @@ function celebrate(r) {
 }
 function onActivity(ev) {
   addActivity(ev);
+  if (ev && ev.state === "done") loadSessions();
   renderStatus(); renderFeed();
   if (ev.drawing && ev.drawing !== S.path && ev.state === "working" && $("follow").checked && S.drawings.includes(ev.drawing))
     location.hash = encodeURIComponent(ev.drawing);
@@ -553,6 +613,7 @@ function renderTimeline() {
     const pills = r.ok ? [["a", "+", ch.added], ["m", "~", ch.modified], ["d", "−", ch.deleted]].filter((x) => x[2])
       .map((x) => `<span class="pill ${x[0]}">${x[1]}${esc(x[2])}</span>`).join("") : "";
     const sub = [`<span class="seq">#${esc(r.seq)}</span>`, esc(when)];
+    if (whoText(r)) sub.push(`<span class="who">${esc(whoText(r))}</span>`);
     if (!r.ok) sub.push(`<span class="badbit">${esc(t("failed"))}${r.error ? ": " + esc(r.error.message || r.error.code) : ""}</span>`);
     if (r.version && !r.available) sub.push(esc(t("notStored")));
     li.innerHTML = `<span class="fi ${r.ok ? "ok" : "bad"}">${r.ok ? ICON.done : ICON.error}</span><div><div class="ft">${esc(text)}` +
@@ -867,6 +928,7 @@ function connect() {
   };
 }
 setInterval(() => { renderStatus(); renderFeed(); renderFileList(); }, 30000);  // keep "2 min ago" current
+loadSessions(); setInterval(loadSessions, 5000);  // who is connected (an assistant may connect or leave any time)
 
 try { for (const ev of (await api("/api/activity")).events) addActivity(ev); } catch (e) { /* older viewer */ }
 applyLang();

@@ -27,6 +27,7 @@ from typing import Any, Callable
 import ezdxf
 from ezdxf.document import Drawing
 
+from . import sessions
 from . import __version__
 from .errors import AgentCADError, file_error, input_error
 from .policy import Policy
@@ -177,7 +178,7 @@ class DrawingStore:
         seq = max(head["seq"], self._last_journal_seq()) + 1
         head["seq"] = seq
         record = {"seq": seq, "ts": now(), "drawing": self.path.relative_to(self.policy.root).as_posix(),
-                  "versions": VERSIONS, **record}
+                  "versions": VERSIONS, **{k: v for k, v in sessions.tag().items() if k != "session"}, **record}
         with open(self.journal_path, "a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
         try:

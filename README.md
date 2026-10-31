@@ -14,7 +14,7 @@ Your coding agent creates, edits, checks and exports real engineering drawings a
 
 AgentCAD is an open-source program you install on your machine, the CAD engine your agent calls for **2D drawings** (DXF; DWG when AutoCAD is installed) and **parametric 3D parts** (FreeCAD `.FCStd`, exported to STEP and STL). It is not a GUI app and not a prompt or skill. The core runs on [ezdxf](https://ezdxf.mozman.de/), is MIT-licensed and needs no commercial software. It comes as:
 
-- **An MCP server** (the main way to use it). Claude Code, Codex or any MCP client gets 34 CAD tools in the full profile, or 3 discovery tools with schemas fetched on demand. You talk to your agent; the agent uses AgentCAD.
+- **An MCP server** (the main way to use it). Claude Code, Codex or any MCP client gets 35 CAD tools in the full profile, or 3 discovery tools with schemas fetched on demand. You talk to your agent; the agent uses AgentCAD.
 - **A CLI, a Python library and an HTTP API** with the same tools, for scripts and pipelines.
 
 <p align="center">
