@@ -191,13 +191,13 @@ AgentCAD's package name is `agentcad-runtime`. The `agentcad` package on PyPI is
 
 | App | Settings file |
 |---|---|
-| Claude Code | `claude mcp add --scope user` when the `claude` command exists; otherwise `.mcp.json` in your drawings folder (open Claude Code in that folder and approve `agentcad` when asked) |
+| Claude Code | `claude mcp add --scope user` when the `claude` command exists; otherwise the same user-wide entry written straight into `~/.claude.json` (`mcpServers.agentcad`), which is how it reaches the Claude app's Code tab when there is no `claude` command. Every Claude Code session sees it, whatever folder it is opened in. For a per-folder `.mcp.json` instead, run `agentcad --root <folder> mcp-config --write <folder>/.mcp.json` |
 | Codex | `~/.codex/config.toml` (`[mcp_servers.agentcad]`) |
 | Claude Desktop | Windows `%APPDATA%\Claude\claude_desktop_config.json`, macOS `~/Library/Application Support/Claude/claude_desktop_config.json`, Linux `~/.config/Claude/claude_desktop_config.json` |
 | Cursor | `~/.cursor/mcp.json` |
 
-To remove AgentCAD from an app, delete its `agentcad` entry from that file (`claude mcp remove agentcad --scope user`
-for Claude Code). Your drawings stay in their folder.
+To remove AgentCAD from an app, delete its `agentcad` entry from that file (for Claude Code,
+`claude mcp remove agentcad --scope user`, or delete `mcpServers.agentcad` from `~/.claude.json`). Your drawings stay in their folder.
 
 ## Troubleshooting
 

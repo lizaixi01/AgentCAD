@@ -192,7 +192,7 @@ def test_claude_code_uses_cli_when_present(home, monkeypatch):
 
 
 def test_claude_cmd_shim_never_gets_cmd_metacharacters(home, monkeypatch, tmp_path):
-    """npm's claude.cmd runs through cmd.exe: a root like R&D would be cut at '&'. Setup writes .mcp.json instead."""
+    """npm's claude.cmd runs through cmd.exe: a root like R&D would be cut at '&'. Setup writes ~/.claude.json instead."""
     monkeypatch.setattr(install.shutil, "which",
                         lambda name, *a, **k: "C:/npm/claude.cmd" if name == "claude" else None)
     calls, runner = _fake_claude([])
@@ -200,14 +200,51 @@ def test_claude_cmd_shim_never_gets_cmd_metacharacters(home, monkeypatch, tmp_pa
     res = install.setup(["claude-code"], root, runner=runner)
     rec = res.clients[0]
     assert calls == [] and rec["status"] == "added" and "cmd.exe" in rec["message"] and "commands" not in rec
-    entry = json.loads((root / ".mcp.json").read_text("utf-8"))["mcpServers"]["agentcad"]
-    assert entry["env"]["AGENTCAD_ROOT"] == root.resolve().as_posix()
-    assert "Open Claude Code in" in install.render_setup(res)
+    entry = json.loads((home / ".claude.json").read_text("utf-8"))["mcpServers"]["agentcad"]
+    assert entry["env"]["AGENTCAD_ROOT"] == root.resolve().as_posix() and not (root / ".mcp.json").exists()
     assert install.cmd_unsafe(["C:/npm/claude.CMD", "-e", "X=a^b"]) == "X=a^b"
     assert install.cmd_unsafe(["/bin/claude", "-e", "X=a&b"]) is None  # a real executable gets argv as is
     # a plain folder name goes through claude.cmd as usual
     safe = install.setup(["claude-code"], tmp_path / "plain", runner=runner)
     assert safe.clients[0]["status"] == "registered" and calls[0][0] == "C:/npm/claude.cmd"
+
+
+def test_claude_code_without_cli_writes_user_config(home):
+    """No claude CLI (only the desktop app's Code tab): the user-scope entry goes straight into ~/.claude.json, in the
+    shape `claude mcp add --scope user` writes, so every Claude Code session sees it."""
+    cfg = home / ".claude.json"
+    cfg.write_text(json.dumps({"numStartups": 7, "projects": {"D:/x": {"mcpServers": {}}},
+                               "mcpServers": {"other": {"type": "stdio", "command": "x", "args": [], "env": {}}}}), "utf-8")
+    res = install.setup(["claude-code"])
+    rec = res.clients[0]
+    assert rec["status"] == "added" and rec["target"] == str(cfg) and "commands" not in rec
+    data = json.loads(cfg.read_text("utf-8"))
+    assert data["numStartups"] == 7 and data["projects"] == {"D:/x": {"mcpServers": {}}}
+    assert set(data["mcpServers"]) == {"other", "agentcad"}
+    assert data["mcpServers"]["agentcad"] == {"type": "stdio", **res.entry}
+    assert not (res.root / ".mcp.json").exists()
+    assert "Code tab" in install.render_setup(res) and "approve" not in install.render_setup(res)
+    by = {c["name"]: c for c in install.doctor()["checks"]}
+    assert by["Claude Code config"]["status"] == "ok" and by["Claude Code config"]["detail"] == str(cfg)
+
+    before = cfg.read_bytes()
+    assert install.setup(["claude-code"]).clients[0]["status"] == "unchanged" and cfg.read_bytes() == before
+
+    cfg.write_text('{"numStartups": 7,', "utf-8")  # broken: reported, left alone
+    rec = install.setup(["claude-code"]).clients[0]
+    assert rec["status"] == "error" and rec["code"] == "BAD_CONFIG" and "not valid JSON" in rec["message"]
+    assert cfg.read_text("utf-8") == '{"numStartups": 7,'
+    by = {c["name"]: c for c in install.doctor()["checks"]}
+    assert by["Claude Code config"]["status"] == "missing" and "not valid JSON" in by["Claude Code config"]["detail"]
+
+
+def test_doctor_flags_project_only_claude_entry(home, tmp_path):
+    """An older setup's project .mcp.json still counts, but doctor says it only works in that folder."""
+    root = home / "AgentCAD"
+    root.mkdir()
+    (root / ".mcp.json").write_text(json.dumps({"mcpServers": {"agentcad": {"command": PY, "args": []}}}), "utf-8")
+    c = {c["name"]: c for c in install.doctor()["checks"]}["Claude Code config"]
+    assert c["status"] == "ok" and "only when Claude Code is opened in that folder" in c["detail"]
 
 
 @pytest.mark.parametrize("existing", [
