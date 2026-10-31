@@ -348,9 +348,7 @@ DEMO = ("demo",)                # the demo icon: the viewer, drawing a plate ste
 
 def demo_name() -> str:
     """The demo icon's name, in the language of the computer."""
-    import locale
-    lang = (locale.getlocale()[0] or os.environ.get("LANG") or "").lower()
-    return "AgentCAD 演示" if lang.startswith(("zh", "chinese")) else "AgentCAD Demo"
+    return "AgentCAD 演示" if _is_chinese() else "AgentCAD Demo"
 
 
 def viewer_command(root: Path, launcher: str, source: str | None = None,
@@ -386,14 +384,71 @@ def write_launcher(state: Path, command: str, args: list[str], launcher: str, ac
     a new version comes with the next run of the installer."""
     fast = _cmd_line([command, "--offline", *args]) if launcher == "uvx" else None
     full = _cmd_line([command, *args])
+    # uvx --offline keeps starting the copy it has; this refresh (daily, after the page is open) gets the next one
+    update = (_cmd_line([command, "--refresh-package", DIST, *args[:args.index("agentcad") + 1], "--help"])
+              if launcher == "uvx" and "agentcad" in args else None)
     zh, en = LAUNCH_TITLES.get(action, LAUNCH_TITLES[VIEWER])
     text = (STATIC / "launch.ps1").read_text("utf-8")
     for key, value in (("__FAST__", _ps_quote(fast) if fast else "$null"), ("__FULL__", _ps_quote(full)),
+                       ("__UPDATE__", _ps_quote(update) if update else "$null"),
                        ("'__ZH__'", _ps_quote(zh)), ("'__EN__'", _ps_quote(en))):
         text = text.replace(key, value)
     path = state / f"launch-{action[0]}.ps1"
     path.write_text(text, "utf-8-sig")  # Windows PowerShell reads a file without a BOM as ANSI: Chinese would break
+    # what the icon points at: wscript runs PowerShell with window style 0, so no console shows on any Windows, also
+    # where Windows Terminal is the default console (it ignores "minimized"); UTF-16 for a Chinese user folder
+    vbs = ('CreateObject("WScript.Shell").Run "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden '
+           f'-File ""{path}""", 0, False\r\n')
+    path.with_suffix(".vbs").write_text(vbs, "utf-16")
     return path
+
+
+def _is_chinese() -> bool:
+    import locale
+    lang = (locale.getlocale()[0] or os.environ.get("LANG") or "").lower()
+    return lang.startswith(("zh", "chinese"))
+
+
+def mac_app(path: Path, state: Path, command: str, args: list[str], launcher: str, action: tuple[str, ...],
+            name: str) -> None:
+    """<Desktop>/<name>.app (macOS): double-clicked, it starts AgentCAD with no Terminal window, says so in a
+    notification, and keeps no Dock icon (LSUIElement). Like the Windows launcher it first starts the copy it has
+    (uvx --offline) and refreshes in the background at most once a day."""
+    import shlex
+    q = lambda parts: " ".join(shlex.quote(p) for p in parts)
+    zh, en = LAUNCH_TITLES.get(action, LAUNCH_TITLES[VIEWER])
+    note = "display notification " + json.dumps(zh if _is_chinese() else en, ensure_ascii=False) + ' with title "AgentCAD"'
+    log, stamp = shlex.quote(str(state / f"open-{action[0]}.log")), shlex.quote(str(state / "last-update-check"))
+    lines = ["#!/bin/sh",
+             "# AgentCAD desktop icon (macOS), made by agentcad setup. No Terminal window: output goes to the log.",
+             'export PATH="$HOME/.local/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"',
+             "osascript -e " + shlex.quote(note) + " >/dev/null 2>&1"]
+    if launcher == "uvx":
+        update = [command, "--refresh-package", DIST, *args[:args.index("agentcad") + 1], "--help"]
+        lines += [f"if [ ! -f {stamp} ] || [ -n \"$(find {stamp} -mtime +0 2>/dev/null)\" ]; then",
+                  f"  touch {stamp}; (sleep 30; {q(update)} >/dev/null 2>&1) &",
+                  "fi",
+                  f"{q([command, '--offline', *args])} >{log} 2>&1 || exec {q([command, *args])} >{log} 2>&1"]
+    else:
+        lines.append(f"exec {q([command, *args])} >{log} 2>&1")
+    plist = f"""<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0"><dict>
+<key>CFBundleExecutable</key><string>agentcad</string>
+<key>CFBundleIdentifier</key><string>dev.agentcad.{action[0]}</string>
+<key>CFBundleName</key><string>{name}</string>
+<key>CFBundleIconFile</key><string>agentcad</string>
+<key>CFBundlePackageType</key><string>APPL</string>
+<key>LSUIElement</key><true/>
+</dict></plist>
+"""
+    (path / "Contents" / "MacOS").mkdir(parents=True, exist_ok=True)
+    (path / "Contents" / "Resources").mkdir(parents=True, exist_ok=True)
+    (path / "Contents" / "Info.plist").write_text(plist, "utf-8")
+    shutil.copyfile(STATIC / "logo.icns", path / "Contents" / "Resources" / "agentcad.icns")
+    exe = path / "Contents" / "MacOS" / "agentcad"
+    exe.write_text("\n".join(lines) + "\n", "utf-8")
+    exe.chmod(0o755)
 
 
 def _desktop_quote(arg: str) -> str:
@@ -416,11 +471,8 @@ def create_shortcut(root: Path, launcher: str, source: str | None = None, *, pla
     state = root / ".agentcad"
     if platform == "win32":
         ico = state / "agentcad.ico"
-        script_path = state / f"launch-{action[0]}.ps1"
-        # conhost --headless: no console window, also where Windows Terminal is the default (it ignores minimized)
-        target = str(Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32" / "conhost.exe")
-        target_args = subprocess.list2cmdline(["--headless", "powershell.exe", "-NoProfile", "-ExecutionPolicy",
-                                               "Bypass", "-WindowStyle", "Hidden", "-File", str(script_path)])
+        target = str(Path(os.environ.get("SystemRoot") or r"C:\Windows") / "System32" / "wscript.exe")
+        target_args = subprocess.list2cmdline([str(state / f"launch-{action[0]}.vbs")])  # see write_launcher
         script = ("[Console]::OutputEncoding = [Text.Encoding]::UTF8; "  # else a Chinese desktop path comes back as ????
                   "$d = [Environment]::GetFolderPath('Desktop'); $p = Join-Path $d " + _ps_quote(name + ".lnk") + "; "
                   "$had = Test-Path $p; "
@@ -443,9 +495,7 @@ def create_shortcut(root: Path, launcher: str, source: str | None = None, *, pla
     else:
         desk = Path.home() / "Desktop"
         if platform == "darwin":
-            import shlex
-            path = desk / f"{name}.command"
-            text = "#!/bin/sh\nexec " + " ".join(shlex.quote(a) for a in [command, *args]) + "\n"
+            path, text = desk / f"{name}.app", None  # an app bundle: no Terminal window (mac_app)
         else:
             path = desk / f"{name}.desktop"
             text = (f"[Desktop Entry]\nType=Application\nName={name}\nComment=AgentCAD, live\n"
@@ -456,8 +506,14 @@ def create_shortcut(root: Path, launcher: str, source: str | None = None, *, pla
             desk.mkdir(parents=True, exist_ok=True)
             state.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(STATIC / "logo.png", state / "agentcad.png")
-            path.write_text(text, "utf-8")
-            path.chmod(0o755)
+            if text is None:
+                mac_app(path, state, command, args, launcher, action, name)
+                old = desk / f"{name}.command"  # the icon earlier versions made opened Terminal
+                if old.is_file() and "agentcad" in old.read_text("utf-8", "replace"):
+                    old.unlink()
+            else:
+                path.write_text(text, "utf-8")
+                path.chmod(0o755)
     return {"status": ("would be " + status) if dry_run else status, "path": str(path)}
 
 

@@ -189,15 +189,21 @@ def test_desktop_icon_posix(home, platform):
     out = install.create_shortcut(root, "uvx", "https://example.org/a.zip", platform=platform)
     path = Path(out["path"])
     assert out["status"] == "added" and path.parent == home / "Desktop"
-    text = path.read_text("utf-8")
+    exe = path / "Contents" / "MacOS" / "agentcad" if platform == "darwin" else path
+    text = exe.read_text("utf-8")
     assert "https://example.org/a.zip" in text and "viewer" in text and "--open" in text
     assert str(root) in text and "agentcad-mcp" not in text
     if platform == "linux":
         assert text.startswith("[Desktop Entry]") and (root / ".agentcad" / "agentcad.png").is_file()
-    else:
-        assert text.startswith("#!/bin/sh")
+    else:  # an app bundle, so no Terminal window opens
+        assert path.name == "AgentCAD.app" and text.startswith("#!/bin/sh")
+        plist = (path / "Contents" / "Info.plist").read_text("utf-8")
+        assert "<string>agentcad</string>" in plist and "<key>LSUIElement</key><true/>" in plist
+        assert (path / "Contents" / "Resources" / "agentcad.icns").stat().st_size > 1000
+        assert "--offline" in text and "--refresh-package agentcad-runtime" in text and "osascript" in text
+        assert "\\u" not in text  # the notification text stays readable (no JSON escapes)
     if os.name != "nt":
-        assert path.stat().st_mode & 0o111
+        assert exe.stat().st_mode & 0o111
     assert install.create_shortcut(root, "uvx", platform=platform)["status"] == "updated"
 
 
@@ -208,8 +214,10 @@ def test_desktop_icon_windows_uses_powershell(home):
     assert out == {"status": "added", "path": "C:/fake/Desktop/AgentCAD.lnk"}
     script = run.calls[0][-1]
     assert "GetFolderPath('Desktop')" in script and "CreateShortcut" in script
-    # no console: the icon starts a small progress window (launch-viewer.ps1) through conhost --headless
-    assert "conhost.exe" in script and "--headless" in script and "launch-viewer.ps1" in script
+    # no console on any Windows: the icon runs wscript, which starts launch-viewer.ps1 with window style 0
+    assert "wscript.exe" in script and "launch-viewer.vbs" in script and "conhost" not in script
+    vbs = (root / ".agentcad" / "launch-viewer.vbs").read_text("utf-16")
+    assert ", 0, False" in vbs and "launch-viewer.ps1" in vbs and "-WindowStyle Hidden" in vbs
     assert "WindowStyle = 7" not in script and "agentcad.ico" in script
     assert (root / ".agentcad" / "agentcad.ico").is_file()
     launch = (root / ".agentcad" / "launch-viewer.ps1").read_bytes()
@@ -316,7 +324,7 @@ def test_setup_puts_both_icons(home):
     assert res.shortcut["status"] == "added" and res.demo_shortcut["status"] == "added"
     if os.name == "nt":  # through (fake) PowerShell, each with its own launcher
         scripts = [c[-1] for c in run.calls]
-        assert any("launch-viewer.ps1" in s for s in scripts) and any("launch-demo.ps1" in s for s in scripts)
+        assert any("launch-viewer.vbs" in s for s in scripts) and any("launch-demo.vbs" in s for s in scripts)
         assert '"demo"' in (home / "AgentCAD" / ".agentcad" / "launch-demo.ps1").read_text("utf-8-sig")
     else:
         assert {p.stem for p in (home / "Desktop").iterdir()} == {"AgentCAD", install.demo_name()}
@@ -332,6 +340,10 @@ def test_launcher_tries_the_download_it_has_first(tmp_path):
     fast = next(ln for ln in text.splitlines() if ln.startswith("$fast"))
     full = next(ln for ln in text.splitlines() if ln.startswith("$full"))
     assert '"--offline" "--from" "https://x/a.zip"' in fast and "--offline" not in full
+    # and once a day, after the page is open, the latest version is fetched for the next start
+    update = next(ln for ln in text.splitlines() if ln.startswith("$update"))
+    assert '"--refresh-package" "agentcad-runtime" "--from" "https://x/a.zip" "agentcad" "--help"' in update
+    assert "TotalHours -ge 24" in text
     assert '"C:/Users/me/My Drawings"' in full  # a folder with a space stays one argument
     assert "正在准备演示" in text and "Getting the demo ready" in text
     if os.name == "nt":  # PowerShell can parse what we wrote
@@ -356,3 +368,13 @@ def test_launcher_keeps_special_characters_in_their_argument(tmp_path):
         line = install._cmd_line([sys.executable, str(echo), "--root", root, "a b", "C:\\dir\\"])
         p = subprocess.run("cmd.exe /d /s /c \"" + line + "\"", capture_output=True, text=True)
         assert json.loads(p.stdout) == ["--root", root, "a b", "C:\\dir\\"], p.stdout + p.stderr
+
+
+def test_old_mac_command_icon_is_replaced(home):
+    desk = home / "Desktop"
+    desk.mkdir()
+    (desk / "AgentCAD.command").write_text("#!/bin/sh\nexec uvx agentcad viewer\n")
+    (desk / "Other.command").write_text("#!/bin/sh\necho mine\n")
+    install.create_shortcut(home / "AgentCAD", "uvx", "https://x/a.zip", platform="darwin")
+    assert (desk / "AgentCAD.app").is_dir() and not (desk / "AgentCAD.command").exists()
+    assert (desk / "Other.command").exists()  # not ours: left alone

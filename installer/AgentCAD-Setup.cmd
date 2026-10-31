@@ -6,8 +6,11 @@ set "AGENTCAD_SETUP_FILE=%~f0"
 if not "%AGENTCAD_SOURCE%"=="" goto start
 set "AGENTCAD_SOURCE=https://github.com/lizaixi01/AgentCAD/archive/refs/heads/main.zip"
 :start
-rem conhost --headless: Windows Terminal ignores -WindowStyle Hidden and would show a console
-start "" conhost.exe --headless powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command "$t = Get-Content -LiteralPath $env:AGENTCAD_SETUP_FILE -Raw -Encoding UTF8; iex ($t -split ('#PS' + '-START#'), 2)[1]"
+rem wscript runs PowerShell with window style 0: no console on any Windows, also where Windows Terminal is the
+rem default console (it ignores -WindowStyle Hidden)
+set "AGENTCAD_SETUP_VBS=%TEMP%\agentcad-setup.vbs"
+> "%AGENTCAD_SETUP_VBS%" echo CreateObject("WScript.Shell").Run "powershell.exe -NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -Command ""$t = Get-Content -LiteralPath $env:AGENTCAD_SETUP_FILE -Raw -Encoding UTF8; iex ($t -split ('#PS' + '-START#'), 2)[1]""", 0, False
+start "" wscript.exe "%AGENTCAD_SETUP_VBS%"
 exit /b 0
 #PS-START#
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing

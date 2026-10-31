@@ -27,6 +27,11 @@ English or Chinese.
    viewer opens and a mounting plate is drawn and then widened, step by step, in `AgentCAD\demo`. No AI needed. From a
    terminal: `agentcad demo`, or `agentcad demo --shortcut` to put that icon on the desktop.
 
+   The icons open no terminal window. On Windows a small "Opening AgentCAD..." window shows until the page is open; on
+   macOS the icons are apps (`AgentCAD.app`) and a notification says it is opening. An icon starts the copy of AgentCAD
+   already on the computer, in a few seconds, and fetches the latest version in the background at most once a day, so
+   the next double-click has it. No need to run the installer again for updates.
+
 Already installed, or something stopped working? Run the installer again and tap **Already installed? Check it**.
 Every part gets a green tick or a sentence saying what to do, and **Fix it for me** reconnects the apps that need
 it. Without FreeCAD, the page has a button to its free download; 2D drawings work without it.
