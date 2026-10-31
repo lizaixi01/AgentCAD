@@ -227,7 +227,7 @@
       ],
       "deduction": {
         "points": 4,
-        "reason": "Withhold 4: exchange/save, blocks with attributes and paper space have no output evidence; demonstrated ok=true no-op layout/viewport/plot operations (false success, would cap at 2)."
+        "reason": "Withhold 4: exchange/save, blocks with attributes and paper space have no output evidence; source reading shows ok=true no-op layout/viewport/plot operations (false success, would cap at 2)."
       }
     },
     {
@@ -317,7 +317,7 @@
       ],
       "deduction": {
         "points": 5,
-        "reason": "Withhold 5: no verified implementation of intent/geometry checking; several demonstrated false-success paths."
+        "reason": "Withhold 5: no verified implementation of intent/geometry checking; source reading shows several false-success paths."
       }
     },
     {
@@ -481,7 +481,7 @@
       ],
       "deduction": {
         "points": 4,
-        "reason": "Withhold 4: no editions/sources or behavioral evidence; demonstrated silent default for unknown values with a pass/fail verdict (would cap at 2)."
+        "reason": "Withhold 4: no editions/sources or behavioral evidence; source reading shows a silent default for unknown values with a pass/fail verdict (would cap at 2)."
       }
     },
     {

@@ -27,6 +27,7 @@ ASSESSMENT = RESULTS / "2026-10-31-recheck/assessment.json"
 FIELD = RESULTS / "2026-10-31-field"
 UPSTREAM = ROOT / "docs/assets/mcp-benchmark/data.json"
 PRO_REPO = "U-C4N/Autocad-MCP"
+WEIGHTS = {"F": 25, "C": 20, "B": 15, "E": 15, "T": 15, "S": 10}
 UNAVAILABLE = {"NCO-1986/AutoCAD_mcp": "not scored: repository returns 404"}
 THEMES = {
     "light": {"bg": "#ffffff", "ink": "#1f2328", "muted": "#59636e", "line": "#dce2e8", "us": "#2274ce", "pro": "#6e7781", "other": "#afb8c1"},
@@ -38,6 +39,8 @@ def checked_total(product):
     categories = {c["id"]: c for c in product["categories"]}
     items = {i["id"]: i["score"] for i in product["items"]}
     assert len(items) == 20 and all(0 <= s <= 5 for s in items.values())
+    assert {k: c["weight"] for k, c in categories.items()} == WEIGHTS
+    assert sorted(i for c in categories.values() for i in c["item_ids"]) == sorted(items)
     for c in categories.values():
         assert c["score"] == sum(items[i] for i in c["item_ids"])
     assert sum(c["score"] for c in categories.values()) == product["total_score"] and product["max_score"] == 100
@@ -100,9 +103,9 @@ def draw(theme, reviewed_at, rows, output, preview=None):
 
     fig.add_artist(plt.Line2D([.045, .955], [.15, .15], color=t["line"], transform=fig.transFigure))
     lines = [
-        "Independent AI reviewers: one for AgentCAD and Pro, one for each other server. AgentCAD requested and publishes them.",
-        "The seven other servers were scored from source, committed results and CI, without running their code;",
-        "most record no results, so their items stop at 1 (\"implemented, not evidenced\"). Not an official ranking.",
+        "Independent AI reviewers, requested and published by AgentCAD. AgentCAD and Pro's reviewer also ran local headless checks;",
+        "the seven other servers were scored from source, committed results and CI, without running their code. Most record",
+        "no results, so their items stop at 1 (\"implemented, not evidenced\"). Not an official ranking.",
     ]
     for i, line in enumerate(lines):
         fig.text(.045, .115 - i * .03, line, color=t["muted"], fontsize=9)
