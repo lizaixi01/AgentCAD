@@ -76,7 +76,7 @@ was invalidated; its original record is retained below.
 <p align="center">
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/source-capability/board-dark.svg">
-    <img src="assets/source-capability/board-light.svg" alt="Source-capability board, 2026-10-31, six weighted categories out of 100. AgentCAD 100 and U-C4N/Autocad-MCP (AutoCAD MCP Pro) 93 under the same local rubric v1 and one independent AI reviewer; Pro's own self-review also gives 93. Other rows are U-C4N's published review of July 2026 snapshots, not re-scored: varavista 84, beiming183-cloud 83, LokmenoWer 74, AnCode666 73, puran-water 70, NCO-1986 68, daobataotie 35, zh19980811 30. Not an upstream listing or an official ranking." width="860">
+    <img src="assets/source-capability/board-light.svg" alt="Source capability, 2026-10-31: two separate reviews on the same six weighted categories, out of 100, not one ranking. Our local recheck, same rubric v1 for both, one independent AI reviewer: AgentCAD 100, AutoCAD MCP Pro 93 (its own self-review of v1.6.0 also gave 93; different assessments of different versions). U-C4N's published review of July 2026 snapshots, by Pro's author, not re-scored: varavista 84, beiming183-cloud 83, LokmenoWer 74, AnCode666 73, puran-water 70, NCO-1986 68, daobataotie 35, zh19980811 30. Not an upstream listing or an official ranking." width="860">
   </picture>
 </p>
 
