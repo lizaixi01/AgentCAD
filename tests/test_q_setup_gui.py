@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import http.client
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -189,15 +190,21 @@ def test_desktop_icon_posix(home, platform):
     out = install.create_shortcut(root, "uvx", "https://example.org/a.zip", platform=platform)
     path = Path(out["path"])
     assert out["status"] == "added" and path.parent == home / "Desktop"
-    text = path.read_text("utf-8")
+    exe = path / "Contents" / "MacOS" / "agentcad" if platform == "darwin" else path
+    text = exe.read_text("utf-8")
     assert "https://example.org/a.zip" in text and "viewer" in text and "--open" in text
     assert str(root) in text and "agentcad-mcp" not in text
     if platform == "linux":
         assert text.startswith("[Desktop Entry]") and (root / ".agentcad" / "agentcad.png").is_file()
-    else:
-        assert text.startswith("#!/bin/sh")
+    else:  # an app bundle, so no Terminal window opens
+        assert path.name == "AgentCAD.app" and text.startswith("#!/bin/sh")
+        plist = (path / "Contents" / "Info.plist").read_text("utf-8")
+        assert "<string>agentcad</string>" in plist and "<key>LSUIElement</key><true/>" in plist
+        assert (path / "Contents" / "Resources" / "agentcad.icns").stat().st_size > 1000
+        assert "--offline" in text and "--refresh-package agentcad-runtime" in text and "osascript" in text
+        assert "\\u" not in text  # the notification text stays readable (no JSON escapes)
     if os.name != "nt":
-        assert path.stat().st_mode & 0o111
+        assert exe.stat().st_mode & 0o111
     assert install.create_shortcut(root, "uvx", platform=platform)["status"] == "updated"
 
 
@@ -208,8 +215,11 @@ def test_desktop_icon_windows_uses_powershell(home):
     assert out == {"status": "added", "path": "C:/fake/Desktop/AgentCAD.lnk"}
     script = run.calls[0][-1]
     assert "GetFolderPath('Desktop')" in script and "CreateShortcut" in script
-    # no console: the icon starts a small progress window (launch-viewer.ps1) through conhost --headless
-    assert "conhost.exe" in script and "--headless" in script and "launch-viewer.ps1" in script
+    # no console on any Windows: the icon runs wscript, which starts launch-viewer.ps1 with window style 0
+    assert "wscript.exe" in script and "//E:JScript" in script and "launch-viewer.js" in script and "conhost" not in script
+    js = (root / ".agentcad" / "launch-viewer.js").read_text("utf-16")  # JScript: VBScript is being phased out
+    assert js.startswith('new ActiveXObject("WScript.Shell").Run(') and ", 0, false);" in js
+    assert "launch-viewer.ps1" in js and "-WindowStyle Hidden" in js
     assert "WindowStyle = 7" not in script and "agentcad.ico" in script
     assert (root / ".agentcad" / "agentcad.ico").is_file()
     launch = (root / ".agentcad" / "launch-viewer.ps1").read_bytes()
@@ -316,7 +326,7 @@ def test_setup_puts_both_icons(home):
     assert res.shortcut["status"] == "added" and res.demo_shortcut["status"] == "added"
     if os.name == "nt":  # through (fake) PowerShell, each with its own launcher
         scripts = [c[-1] for c in run.calls]
-        assert any("launch-viewer.ps1" in s for s in scripts) and any("launch-demo.ps1" in s for s in scripts)
+        assert any("launch-viewer.js" in s for s in scripts) and any("launch-demo.js" in s for s in scripts)
         assert '"demo"' in (home / "AgentCAD" / ".agentcad" / "launch-demo.ps1").read_text("utf-8-sig")
     else:
         assert {p.stem for p in (home / "Desktop").iterdir()} == {"AgentCAD", install.demo_name()}
@@ -332,6 +342,10 @@ def test_launcher_tries_the_download_it_has_first(tmp_path):
     fast = next(ln for ln in text.splitlines() if ln.startswith("$fast"))
     full = next(ln for ln in text.splitlines() if ln.startswith("$full"))
     assert '"--offline" "--from" "https://x/a.zip"' in fast and "--offline" not in full
+    # and once a day, after the page is open, the latest version is fetched for the next start
+    update = next(ln for ln in text.splitlines() if ln.startswith("$update"))
+    assert '"--refresh-package" "agentcad-runtime" "--from" "https://x/a.zip" "agentcad" "--help"' in update
+    assert "TotalHours -ge 24" in text
     assert '"C:/Users/me/My Drawings"' in full  # a folder with a space stays one argument
     assert "正在准备演示" in text and "Getting the demo ready" in text
     if os.name == "nt":  # PowerShell can parse what we wrote
@@ -356,3 +370,40 @@ def test_launcher_keeps_special_characters_in_their_argument(tmp_path):
         line = install._cmd_line([sys.executable, str(echo), "--root", root, "a b", "C:\\dir\\"])
         p = subprocess.run("cmd.exe /d /s /c \"" + line + "\"", capture_output=True, text=True)
         assert json.loads(p.stdout) == ["--root", root, "a b", "C:\\dir\\"], p.stdout + p.stderr
+
+
+def test_old_mac_command_icon_is_replaced(home):
+    desk = home / "Desktop"
+    desk.mkdir()
+    (desk / "AgentCAD.command").write_text("#!/bin/sh\nexec uvx agentcad viewer\n")
+    (desk / "Other.command").write_text("#!/bin/sh\necho mine\n")
+    install.create_shortcut(home / "AgentCAD", "uvx", "https://x/a.zip", platform="darwin")
+    assert (desk / "AgentCAD.app").is_dir() and not (desk / "AgentCAD.command").exists()
+    assert (desk / "Other.command").exists()  # not ours: left alone
+
+
+def test_icon_without_windows_script_host_uses_conhost(home, monkeypatch):
+    monkeypatch.setattr(install, "windows_script_host", lambda: False)
+    run = FakeRunner()
+    install.create_shortcut(home / "AgentCAD", "python", platform="win32", runner=run)
+    script = run.calls[0][-1]
+    assert "conhost.exe" in script and "--headless powershell.exe" in script and "launch-viewer.ps1" in script
+
+
+def test_mac_app_starts_in_the_background_and_quits(tmp_path):
+    """macOS does not start an app that is still running: the app must hand AgentCAD to the background and quit,
+    or the next double-click would do nothing."""
+    cmd, args = install.viewer_command(Path("/Users/o'brien/My Drawings"), "uvx", "https://x/a.zip")
+    app = tmp_path / "AgentCAD.app"
+    install.mac_app(app, tmp_path / "state dir", "/Users/o'brien/.local/bin/uvx", args, "uvx", install.VIEWER, "AgentCAD")
+    text = (app / "Contents" / "MacOS" / "agentcad").read_text("utf-8")
+    lines = [ln for ln in text.splitlines() if ln and not ln.lstrip().startswith("#")]
+    assert lines[-1] == "exit 0"
+    starts = [ln for ln in lines if "--from" in ln and "--refresh-package" not in ln]
+    assert len(starts) == 2 and all(ln.strip().startswith("nohup ") and ln.rstrip().endswith("&") for ln in starts)
+    assert "--offline" in starts[0] and "--offline" not in starts[1]  # download only when the copy here fails
+    assert not any(ln.lstrip().startswith("exec") or "||" in ln for ln in starts)  # nothing waits in the foreground
+    sh = shutil.which("sh")
+    if sh:
+        p = subprocess.run([sh, "-n", str(app / "Contents" / "MacOS" / "agentcad")], capture_output=True, text=True)
+        assert p.returncode == 0, p.stderr
