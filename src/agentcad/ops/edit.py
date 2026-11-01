@@ -10,7 +10,7 @@ from ezdxf.math import Matrix44, Vec3
 from .. import geom as G
 from ..errors import geometry_error, input_error, policy_error
 from ..model import circle_wcs, get_tag, lwpoly_wcs, select, set_tag
-from .registry import Ctx, Param, op
+from .registry import Ctx, Param, guard_main_viewport, op
 
 P = Param
 TARGET = P("selector", True, description="Entities to operate on")
@@ -314,6 +314,7 @@ def _budget(ctx: Ctx, n: int) -> None:
     {"target": TARGET, "confirm_large": P("bool", default=False, description="Confirm a large deletion")})
 def delete(ctx: Ctx, target, confirm_large):
     ents = select(ctx.doc, target, ctx.refs)
+    guard_main_viewport(ents, "deleted")
     if len(ents) > ctx.policy.delete_confirm_threshold and not confirm_large:
         raise policy_error("CONFIRMATION_REQUIRED", f"Refusing to delete {len(ents)} entities without confirm_large=true",
                            entities=[e.dxf.handle for e in ents[:20]])

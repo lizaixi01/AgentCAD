@@ -264,3 +264,58 @@ def test_printed_text_height(rt, ws):
                            + [{"op": "modify", "target": {"type": "TEXT"}, "set": {"height": 2.5}, "layout": "A3"}]))
     v = ok(rt.validate_drawing(name, layout="A3"))["validation"]
     assert not [i for i in v["issues"] if i["code"] == "PRINTED_TEXT_TOO_SMALL"]
+
+
+def sheet_with_view(rt, ws):
+    """plate() plus an A3 layout: its main viewport (id 1, made by create_layout) and one 1:2 view of the model."""
+    name = plate(ws)
+    r = ok(rt.apply_operations(name, [{"op": "create_layout", "name": "A3"},
+                                      {"op": "add_viewport", "center": [220, 160], "scale": 0.5, "layout": "A3"}]))
+    vps = ok(rt.inspect_entities(name, layout="A3", detail=True))["entities"]
+    main = next(v["id"] for v in vps if v.get("main"))
+    return name, main, r["results"][1]["created"][0]
+
+
+def test_main_viewport_is_not_deleted(rt, ws):
+    """The H6 rerun deleted every VIEWPORT on the new sheet, the main one too: validation passed, AUDIT found
+    nothing, and AutoCAD stopped with an internal error when it opened the layout."""
+    name, main, view = sheet_with_view(rt, ws)
+    vps = {v["id"]: v for v in ok(rt.inspect_entities(name, layout="A3", detail=True))["entities"]}
+    assert vps[main]["viewport_id"] == 1 and "scale" not in vps[main]
+    assert vps[view]["scale"] == A(0.5) and "main" not in vps[view]
+    before = (ws / name).read_bytes()
+    e = rt.apply_operations(name, [{"op": "delete", "target": {"type": "VIEWPORT"}, "layout": "A3"}])["error"]
+    assert e["code"] == "MAIN_VIEWPORT_REQUIRED" and e["entities"] == [main] and view in e["hint"]
+    for op in ({"op": "delete", "target": main}, {"op": "change_space", "target": main, "destination": "Model"}):
+        e = rt.apply_operations(name, [op])["error"]
+        assert e["code"] == "MAIN_VIEWPORT_REQUIRED" and e["entities"] == [main]
+    assert (ws / name).read_bytes() == before
+    r = ok(rt.apply_operations(name, [{"op": "delete", "target": view}]))
+    assert r["changes"]["deleted"] == [view] and r["validation"]["passed"]
+    lay = reread(ws, name).layouts.get("A3")
+    assert lay.main_viewport().dxf.handle == main
+
+
+def test_main_viewport_is_the_one_the_layout_points_at(rt, ws):
+    """AutoCAD follows the layout's handle, not the id: drawings from other tools need not number it 1."""
+    name, main, view = sheet_with_view(rt, ws)
+    doc = reread(ws, name)
+    doc.entitydb[main].dxf.id, doc.entitydb[view].dxf.id = 5, 1
+    doc.saveas(ws / name)
+    assert rt.apply_operations(name, [{"op": "delete", "target": main}])["error"]["code"] == "MAIN_VIEWPORT_REQUIRED"
+    assert ok(rt.apply_operations(name, [{"op": "delete", "target": view}]))["changes"]["deleted"] == [view]
+
+
+def test_layout_pointing_at_a_deleted_viewport_fails_validation(srt, ws):
+    """Every path that can erase it (here a script) is caught by the validator, not only delete."""
+    name, main, _ = sheet_with_view(srt, ws)
+    code = "lay = doc.layouts.get('A3')\nlay.delete_entity(lay.main_viewport())"
+    e = srt.run_script(name, code, strict=True)["error"]
+    assert e["code"] == "VALIDATION_FAILED"
+    v = ok(srt.run_script(name, code))["validation"]
+    issue = next(i for i in v["issues"] if i["code"] == "LAYOUT_VIEWPORT_MISSING")
+    assert not v["passed"] and issue["severity"] == "error" and main in issue["message"]
+    # a layout that never had a main viewport (ezdxf's empty Layout1, an unopened AutoCAD sheet) is fine
+    ok(srt.rollback(name))
+    assert not [i for i in ok(srt.validate_drawing(name))["validation"]["issues"]
+                if i["code"] == "LAYOUT_VIEWPORT_MISSING"]
