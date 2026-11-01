@@ -19,6 +19,11 @@ from .records import drawing_conventions, get, number, operations, point, put
 WALL, SEAL = "ARCH_WALL", "ARCH_THRESHOLD"
 
 
+def _room_label(number, name, area):
+    # AutoCAD's gbenor.shx draws "²" in plain TEXT (checked with its own plot); an MTEXT stack does not
+    return f"{number} {name} {area / 1e6:.2f} m²"
+
+
 def _rect(space, box, layer):
     a, b, c, d = box
     return space.add_lwpolyline([(a, b), (c, b), (c, d), (a, d)], close=True, dxfattribs={"layer": layer})
@@ -308,7 +313,7 @@ def draw(ctx, spec):
         if "area" in room and abs(number(room["area"], "room.area") - area) > area * 0.001:
             raise input_error("ROOM_AREA_MISMATCH", "Stated room area disagrees with wall geometry")
         e = ctx.layout.add_text(
-            f"{room['number']} {room['name']} {area / 1e6:.2f} m2",
+            _room_label(room["number"], room["name"], area),
             height=3 * scale,
             dxfattribs={"insert": at, "layer": "ARCH_ROOM"},
         )
@@ -374,7 +379,7 @@ def draw(ctx, spec):
         if rows is None:
             raise input_error("INVALID_SCHEDULE", kind)
         table = (
-            [["ROOM", "AREA m2"]] + [[r["number"], f"{r['area'] / 1e6:.2f}"] for r in rows]
+            [["ROOM", "AREA m²"]] + [[r["number"], f"{r['area'] / 1e6:.2f}"] for r in rows]
             if kind == "rooms"
             else [["TAG", "WIDTH"]] + [[r["tag"], f"{r['width']:g}"] for r in rows]
         )
@@ -410,8 +415,10 @@ def read(doc):
             rooms.append(row)
             if area is None or abs(area - record["area"]) > max(1e-6, record["area"] * 0.001):
                 issues.append({"code": "ROOM_AREA_MISMATCH", "handle": e.dxf.handle})
-            expected_label = f"{record['number']} {record['name']} {record['area'] / 1e6:.2f} m2"
-            if " ".join(e.dxf.text.split()) != " ".join(expected_label.split()):
+            expected_label = _room_label(record["number"], record["name"], record["area"])
+            # labels saved before m² was written as "m2" are still correct
+            if " ".join(e.dxf.text.split()) not in {" ".join(s.split()) for s in
+                                                    (expected_label, expected_label[:-1] + "2")}:
                 issues.append(
                     {
                         "code": "ROOM_LABEL_MISMATCH",

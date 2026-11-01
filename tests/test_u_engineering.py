@@ -130,6 +130,23 @@ def test_changed_visible_room_label_cannot_keep_clean_quality(rt, blank, ws):
     assert report["quality_score"] < 90
 
 
+def test_room_label_writes_square_metres_and_accepts_older_m2(rt, blank, ws):
+    spec = {"walls": [{"id": "outer", "axis": [[0, 0], [5000, 0], [5000, 4000], [0, 4000]], "closed": True,
+                       "thickness": 200}],
+            "rooms": [{"id": "k", "number": "1", "name": "客厅", "at": [2000, 2000]}],
+            "schedules": [{"kind": "rooms", "at": [6000, 4000]}]}
+    assert rt.apply_operations(blank, [{"op": "draw_arch_plan", "spec": spec}])["ok"]
+    report = rt.read_engineering(blank, "architecture")
+    assert report["rooms"][0]["label"] == "1 客厅 18.24 m²" and report["critique"] == []
+    doc = ezdxf.readfile(ws / blank)
+    assert "AREA m²" in {e.dxf.text for e in doc.modelspace().query("TEXT")}
+    # a drawing saved before this change says "m2": still the right label, not a mismatch
+    doc.entitydb[report["rooms"][0]["handle"]].dxf.text = "1 客厅 18.24 m2"
+    doc.saveas(ws / blank)
+    report = Runtime(rt.policy).read_engineering(blank, "architecture")
+    assert "ROOM_LABEL_MISMATCH" not in {i["code"] for i in report["critique"]}
+
+
 def test_deleted_last_part_invalidates_retained_bom_and_balloon(rt, blank, ws):
     spec = {"fasteners": [{"part": "hex_bolt", "size": "M8", "length": 30, "insert": [60, 90]}]}
     assert rt.apply_operations(blank, [{"op": "draw_mechanical_assembly", "spec": spec}])["ok"]
