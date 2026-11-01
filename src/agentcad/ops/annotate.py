@@ -330,7 +330,8 @@ def add_leader(ctx: Ctx, points, text, text_height, **p):
 
 
 @op("add_table", "annotate", "Simple table drawn as grid lines + TEXT. 'insert' is the top-left corner. "
-    "Cell texts get tags '<tag>.r<row>c<col>' when 'tag' is given.",
+    "With 'tag', cell texts are tagged '<tag>.r<row>c<col>' and grid lines '<tag>.h<i>' / '<tag>.v<j>', so "
+    "{tag_prefix: '<tag>.'} selects the whole table.",
     {"insert": P("point", True), "rows": P("list", True, description="List of rows, each a list of cell strings"),
      "col_widths": P("list", True, description="Column widths"), "row_height": P("length", default=8.0, gt=0),
      "text_height": P("length", default=2.5, gt=0)}, common_draw=True)
@@ -348,16 +349,20 @@ def add_table(ctx: Ctx, insert, rows, col_widths, row_height, text_height, **p):
     attrs = ctx.attribs(p)
     tag = p.get("tag")
     created = []
+    from ..model import set_tag
 
-    def line(a, b):
-        created.append(ctx.created(ctx.msp.add_line(a, b, dxfattribs=attrs)))
+    def line(a, b, name):
+        e = ctx.msp.add_line(a, b, dxfattribs=attrs)
+        if tag:  # untagged grid lines stayed behind when the table was deleted by its tag prefix
+            set_tag(ctx.doc, e, f"{tag}.{name}")
+        created.append(ctx.created(e))
 
     for i in range(len(rows) + 1):
-        line((x0, y0 - i * row_height), (x0 + W, y0 - i * row_height))
+        line((x0, y0 - i * row_height), (x0 + W, y0 - i * row_height), f"h{i}")
     x = x0
-    for w in [0.0] + widths:
+    for j, w in enumerate([0.0] + widths):
         x += w
-        line((x, y0), (x, y0 - H))
+        line((x, y0), (x, y0 - H), f"v{j}")
     from ezdxf.enums import TextEntityAlignment
     for i, row in enumerate(rows):
         x = x0
@@ -366,7 +371,6 @@ def add_table(ctx: Ctx, insert, rows, col_widths, row_height, text_height, **p):
                 t = ctx.msp.add_text(str(cell), height=text_height, dxfattribs=attrs)
                 t.set_placement((x + widths[j] / 2, y0 - (i + 0.5) * row_height), align=TextEntityAlignment.MIDDLE_CENTER)
                 if tag:
-                    from ..model import set_tag
                     set_tag(ctx.doc, t, f"{tag}.r{i}c{j}")
                 created.append(ctx.created(t))
             x += widths[j]
