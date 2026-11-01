@@ -1,0 +1,69 @@
+{
+ "ok": true,
+ "tool": "validate_drawing",
+ "drawing": "iphone18.FCStd",
+ "validation": {
+  "passed": true,
+  "issues": [
+   {
+    "code": "SCRIPT_BASE_SOLID",
+    "severity": "warning",
+    "message": "Body starts from a solid built by run_script (ScriptSolid), not from editable PartDesign features",
+    "hint": "Fine for STEP/mesh deliverables; a grader that requires a native feature tree (CADBench) rejects it",
+    "entities": [
+     "ScriptSolid"
+    ]
+   }
+  ],
+  "shape": {
+   "valid": true,
+   "solids": 1,
+   "volume": 114294.565229,
+   "size": [
+    78.5,
+    163.4,
+    11.75
+   ],
+   "bbox": [
+    [
+     -0.25,
+     0.0,
+     -3.0
+    ],
+    [
+     78.25,
+     163.4,
+     8.75
+    ]
+   ],
+   "holes": [
+    {
+     "diameter": 5.0,
+     "count": 1
+    },
+    {
+     "diameter": 6.0,
+     "count": 1
+    },
+    {
+     "diameter": 11.1,
+     "count": 3
+    },
+    {
+     "diameter": 18.4,
+     "count": 4
+    }
+   ],
+   "topology": {
+    "bodies": 1,
+    "genus": 0,
+    "voids": 0
+   }
+  }
+ },
+ "metrics": {
+  "duration_ms": 1019.39,
+  "input_bytes": 162,
+  "output_bytes": 753
+ }
+}

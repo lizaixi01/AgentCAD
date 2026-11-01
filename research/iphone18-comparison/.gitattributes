@@ -1,0 +1,2 @@
+models/agentcad/*.step -text -diff
+models/native/*.step -text -diff

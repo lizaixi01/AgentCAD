@@ -1,0 +1,11 @@
+{
+  "a_valid": true,
+  "b_valid": true,
+  "a_solids": 1,
+  "b_solids": 1,
+  "a_volume_mm3": 114294.56522854861,
+  "b_volume_mm3": 114294.56522854864,
+  "a_minus_b_mm3": 0.0,
+  "b_minus_a_mm3": 0.0,
+  "note": "A/B inter-model difference only; same author and shared specification, not an independent benchmark or ground-truth accuracy."
+}
