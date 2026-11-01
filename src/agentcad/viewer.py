@@ -47,7 +47,6 @@ import threading
 import time
 import uuid
 from collections import OrderedDict, deque
-from contextlib import nullcontext
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -96,15 +95,16 @@ def _host_name(host: str | None) -> str | None:
 
 
 def _retry(fn):
-    """Windows refuses to open a file while the store is replacing it (PermissionError); that lasts milliseconds,
-    so the viewer's reads try again instead of failing the request."""
+    """Windows refuses to open a file while the store is replacing it (PermissionError; read_dxf reports it as
+    FILE_READ_ERROR); that lasts milliseconds, so the viewer's reads try again instead of failing the request."""
     def wrapper(*args, **kwargs):
         deadline = time.monotonic() + 2.0
         while True:
             try:
                 return fn(*args, **kwargs)
-            except PermissionError:
-                if time.monotonic() >= deadline:
+            except (PermissionError, AgentCADError) as exc:
+                busy = isinstance(exc, PermissionError) or exc.code == "FILE_READ_ERROR"
+                if not busy or time.monotonic() >= deadline:
                     raise
                 time.sleep(0.01)
     return wrapper
@@ -123,6 +123,7 @@ class Workspace:
         self.cache = cache_dir or Path(tempfile.gettempdir()) / "agentcad-viewer" / root_key
         self.cache.mkdir(parents=True, exist_ok=True)
         self._sha_memo: dict[str, tuple[tuple[int, int], str]] = {}
+        self._ready: set[Path] = set()  # cached copies whose os.replace has returned
         self._results: OrderedDict[tuple, Any] = OrderedDict()
         self._locks: dict[tuple, threading.Lock] = {}
         self._guard = threading.Lock()
@@ -260,15 +261,19 @@ class Workspace:
             raise input_error("VERSION_NOT_FOUND", f"{rel} has no stored version {version[:12]}",
                               hint="Older versions exist only as checkpoints")
         dst = self.cache / f"{version}{st.ext}"
-        with self._guard if not dst.is_file() else nullcontext():  # created once: a cached copy is never replaced
-            if not dst.is_file():
-                data = have[version].read_bytes()  # one short read: the store may replace the file next
-                if hashlib.sha256(data).hexdigest() != version:
-                    raise AgentCADError("VERSION_CHANGED", f"{rel} changed while it was read", category="file",
-                                        retryable=True)
-                tmp = dst.with_name(f"{dst.name}.{uuid.uuid4().hex[:8]}.tmp")
-                tmp.write_bytes(data)
-                os.replace(tmp, dst)
+        # The new name is visible before os.replace (MoveFileEx) closes its DELETE handle, and opening it then fails
+        # with a sharing violation: hand out a copy only once this process has seen it finished.
+        if dst not in self._ready or not dst.is_file():
+            with self._guard:  # created once: a cached copy is never replaced
+                if not dst.is_file():
+                    data = have[version].read_bytes()  # one short read: the store may replace the file next
+                    if hashlib.sha256(data).hexdigest() != version:
+                        raise AgentCADError("VERSION_CHANGED", f"{rel} changed while it was read", category="file",
+                                            retryable=True)
+                    tmp = dst.with_name(f"{dst.name}.{uuid.uuid4().hex[:8]}.tmp")
+                    tmp.write_bytes(data)
+                    os.replace(tmp, dst)
+                self._ready.add(dst)
         return version, dst
 
     def _memo(self, key: tuple, fn):
