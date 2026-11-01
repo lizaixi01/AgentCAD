@@ -290,6 +290,59 @@ def test_part_mesh_covers_every_face(rt, viewer):
     assert area == pytest.approx(2 * face + side * t, rel=2e-3)
 
 
+TESSELLATE_STUBS = r'''
+import importlib.util, json
+spec = importlib.util.spec_from_file_location("fc_runner", RUNNER)
+runner = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(runner)
+
+class Face:
+    """first: triangles of the first meshing; again: of a copy meshed from scratch"""
+    def __init__(self, first, again):
+        self.first, self.again, self.calls = first, again, []
+    def tessellate(self, d):
+        self.calls.append(d)
+        return [f"p{i}" for i in range(3 * len(self.first))], self.first
+    def copy(self):
+        return Face(self.again, self.again)
+
+class Shape:
+    def __init__(self, faces):
+        self.Faces = faces
+    def tessellate(self, d):
+        return [], []
+
+ok, dropped, lost = Face([(0, 1, 2)], []), Face([], [(0, 1, 2), (2, 1, 0)]), Face([], [])
+pts, tris, missing = runner.tessellate(Shape([ok, dropped, lost]), 0.4)
+json.dump({"points": len(pts), "tris": tris, "missing": missing}, open(OUT, "w"))
+'''
+
+
+@needs_freecad
+def test_tessellate_meshes_a_dropped_face_again(tmp_path):
+    """A face Shape.tessellate left without triangles is meshed again on its own; one that still has none is named."""
+    import subprocess
+    cmd, env = freecad.find_freecad()
+    out = tmp_path / "out.json"
+    script = tmp_path / "stubs.py"
+    script.write_text(f"RUNNER = {str(freecad.RUNNER)!r}\nOUT = {str(out)!r}\n" + TESSELLATE_STUBS, "utf-8")
+    env = {**os.environ, **env}
+    env.pop("AGENTCAD_FC_JOB", None)
+    p = subprocess.run(cmd + [str(script)], env=env, cwd=tmp_path, capture_output=True, text=True, timeout=120)
+    assert out.is_file(), f"the FreeCAD script failed (exit {p.returncode}):\n{p.stdout[-2000:]}\n{p.stderr[-2000:]}"
+    r = json.loads(out.read_text("utf-8"))
+    assert r["missing"] == ["Face3"]
+    assert r["points"] == 3 + 6  # Face1's points, then the re-meshed Face2's
+    assert r["tris"] == [[0, 1, 2], [3, 4, 5], [5, 4, 3]]  # Face2's indices shifted past Face1's points
+
+
+@needs_freecad
+def test_part_mesh_reports_no_missing_faces(rt, viewer):
+    ok(rt.apply_operations("plate.FCStd", PLATE, create={"units": "mm"}))
+    code, m = get_json(viewer, "/api/mesh", path="plate.FCStd")
+    assert code == 200 and m["missing_faces"] == []
+
+
 # --- commits are never blocked by the viewer -------------------------------------------------------------------
 
 @pytest.mark.skipif(os.name != "nt", reason="POSIX rename never fails on an open target")
