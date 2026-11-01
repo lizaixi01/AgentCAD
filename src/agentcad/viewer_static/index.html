@@ -470,7 +470,7 @@ let dragDepth = 0;
 const hasFiles = (e) => !!e.dataTransfer && [...e.dataTransfer.types].includes("Files");
 addEventListener("dragenter", (e) => { if (!hasFiles(e) || !S.canAdd) return; e.preventDefault(); dragDepth++; $("drop").hidden = false; });
 // files dragged over the page never open in the browser: a read-only page says why it cannot take them
-addEventListener("dragover", (e) => { if (hasFiles(e)) { e.preventDefault(); e.dataTransfer.dropEffect = S.canAdd ? "copy" : "none"; } });
+addEventListener("dragover", (e) => { if (hasFiles(e)) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; } });  // "none" would skip the drop, and its note
 addEventListener("dragleave", (e) => { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; $("drop").hidden = true; } });
 addEventListener("drop", (e) => {
   if (!hasFiles(e)) return;
