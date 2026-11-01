@@ -1,0 +1,41 @@
+{
+  "model": "D:\\Projects\\AgentCAD-wt\\shahe-benchmark\\research\\shahe-benchmark\\models\\native\\shahe-native-b.FCStd",
+  "units": "mm",
+  "compound_objects": 8,
+  "component_counts": {
+    "Walls": 4,
+    "Plinth": 2,
+    "Bands": 10,
+    "Roof": 4,
+    "Glass": 472,
+    "Frames": 1024,
+    "Entrance": 8,
+    "Trim": 11
+  },
+  "bounding_box_mm": {
+    "x": 223000.0,
+    "y": 77700.0,
+    "z": 21800.0
+  },
+  "shape_validity": {
+    "Walls": true,
+    "Plinth": true,
+    "Bands": true,
+    "Roof": true,
+    "Glass": true,
+    "Frames": true,
+    "Entrance": true,
+    "Trim": true
+  },
+  "elapsed_build_seconds": 13.567,
+  "freecad_version": [
+    "1",
+    "1",
+    "4",
+    "20260928 (Git shallow)",
+    "Unknown",
+    "2026/09/28 13:46:34",
+    "(HEAD detached at 4fd3bf320)",
+    "4fd3bf320d9566a27e60069fc8387448aaa3a094"
+  ]
+}

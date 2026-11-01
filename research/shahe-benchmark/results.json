@@ -1,0 +1,123 @@
+{
+  "status": "exploratory_models_completed_no_reference",
+  "date": "2026-11-02",
+  "reference": {
+    "used": false,
+    "downloaded": false,
+    "reason": "User elected to compare outputs themselves."
+  },
+  "protocol": {
+    "planned_budget_minutes_each": 20,
+    "hard_enforced": false,
+    "independent_sessions": true,
+    "os_level_isolation": false,
+    "frozen_evidence_snapshot": false,
+    "model_and_reasoning_settings_verified": false,
+    "repetitions_each": 1
+  },
+  "groups": {
+    "agentcad": {
+      "model": "models/agentcad/shahe.FCStd",
+      "stl": "models/agentcad/shahe.stl",
+      "valid_solid_count": 1,
+      "approx_elapsed_seconds": 456,
+      "elapsed_is_estimate": true,
+      "successful_script_seconds": 25.613,
+      "tool_calls": null,
+      "token_usage": null,
+      "failure_count": null
+    },
+    "native": {
+      "model": "models/native/shahe-native-b.FCStd",
+      "stl": "models/native/shahe-native-b.stl",
+      "valid_shape_objects": 8,
+      "approx_elapsed_seconds": 180,
+      "elapsed_is_estimate": true,
+      "successful_script_seconds": null,
+      "tool_calls": null,
+      "token_usage": null,
+      "failure_count": null,
+      "recorded_validation_elapsed_seconds": 13.567,
+      "timing_attribution": "Best available recorded duration; overlapping runs prevent certain attribution to final file; includes output and validation."
+    }
+  },
+  "between_model_comparison": {
+    "first": "agentcad",
+    "second": "native",
+    "not_accuracy_against_building": true,
+    "normalization": "center each bounding box; divide all axes by its longest extent; no rotation",
+    "transforms": {
+      "first": {
+        "center": [
+          0.0,
+          35550.0,
+          10150.0
+        ],
+        "scale": 224000.0
+      },
+      "second": {
+        "center": [
+          0.0,
+          35975.0,
+          11800.0
+        ],
+        "scale": 223600.0
+      }
+    },
+    "quality": {
+      "first": {
+        "vertices": 10260,
+        "faces": 3420,
+        "watertight_after_vertex_merge": true,
+        "winding_consistent_after_vertex_merge": true,
+        "bounds": [
+          [
+            -112000.0,
+            -3900.0,
+            0.0
+          ],
+          [
+            112000.0,
+            75000.0,
+            20300.0
+          ]
+        ]
+      },
+      "second": {
+        "vertices": 63180,
+        "faces": 21060,
+        "watertight_after_vertex_merge": false,
+        "winding_consistent_after_vertex_merge": true,
+        "bounds": [
+          [
+            -111800.0,
+            -3280.0,
+            0.0
+          ],
+          [
+            111800.0,
+            75230.0,
+            23600.0
+          ]
+        ]
+      }
+    },
+    "surface_samples_each": 20000,
+    "seed": 41017,
+    "chamfer_mean_symmetric_unsquared": 0.005233737020483683,
+    "silhouette_iou": {
+      "front_back": 0.880677546327009,
+      "left_right": 0.8584059618542377,
+      "top": 0.9476146882311057
+    },
+    "pixel_size": 512,
+    "volume_iou": null,
+    "volume_iou_reason": "not implemented; watertightness alone is insufficient to establish valid volumes"
+  },
+  "accuracy_against_building": {
+    "volume_iou": null,
+    "chamfer": null,
+    "silhouette_iou": null,
+    "reason": "No independent reference geometry."
+  }
+}

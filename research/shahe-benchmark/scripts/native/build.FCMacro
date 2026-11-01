@@ -1,0 +1,100 @@
+import FreeCAD as App, FreeCADGui as Gui, Part, json, os, time, traceback
+from FreeCAD import Vector
+
+# In metres for readability; convert to FreeCAD's millimetres.
+S=1000.0
+def v(x,y,z): return Vector(x*S,y*S,z*S)
+def box(x,y,z,dx,dy,dz): return Part.makeBox(dx*S,dy*S,dz*S,v(x,y,z))
+def prism(points, direction):
+    wire=Part.makePolygon([v(*p) for p in points+[points[0]]])
+    return Part.Face(wire).extrude(v(*direction))
+def arch(x,y,z,w,h,depth):
+    # A rectangular lower opening capped by a semicircular upper opening.
+    r=w/2
+    return box(x,y,z,w,depth,h-r).fuse(Part.makeCylinder(r*S,depth*S,v(x+r,y,z+h-r),Vector(0,1,0))).common(box(x,y,z,w,depth,h))
+
+base=os.environ['SHAHE_NATIVE_OUT']
+start=time.time(); doc=App.newDocument('ShaheNativeB')
+groups={k:[] for k in ['Walls','Plinth','Bands','Roof','Glass','Frames','Entrance','Trim']}
+def add(g,shape): groups[g].append(shape)
+
+# Estimated symmetric U footprint: documentary dimensions have unspecified scope.
+add('Walls',box(-111.5,0,0,223,18,20.5))
+for x in (-111.5,93.5): add('Walls',box(x,18,0,18,57,20.5))
+# central pavilion projects forward and above the side wings
+add('Walls',box(-23,-2.7,0,46,22.7,21.8))
+add('Plinth',box(-111.8,-0.28,0,223.6,.35,1.15))
+add('Plinth',box(-23.4,-3.02,0,46.8,.35,1.15))
+# Shallow string courses and eaves: retain readable facade layering.
+for z in (4.05,8.1,12.15,16.2,20.15):
+    add('Bands',box(-111.6,-.18,z,223.2,.22,.18))
+    add('Bands',box(-23.1,-2.88,z,46.2,.22,.20))
+for z in (20.6,21.6): add('Trim',box(-23.4,-3.05,z,46.8,.5,.30))
+add('Trim',box(-111.8,-.35,20.25,223.6,.55,.35))
+
+# Low pitched roof volumes; elevation and shape are estimates from the aerial photograph.
+def gable(x,length,y,width,eave,rise):
+    return prism([(x,y,eave),(x,y+width/2,eave+rise),(x,y+width,eave)],(length,0,0))
+add('Roof',gable(-111.5,223,0,18,20.5,2.1))
+for x in (-111.5,93.5):
+    add('Roof',prism([(x,18,20.5),(x+9,18,22.6),(x+18,18,20.5)],(0,57,0)))
+add('Roof',gable(-23,46,-2.7,22.7,21.8,1.8))
+
+# Front facade: five visible storeys with consistent vertical rhythm.
+for x0,x1 in [(-109,-24.8),(24.8,109)]:
+    n=24; pitch=(x1-x0)/n
+    for i in range(n):
+        x=x0+(i+.5)*pitch
+        for floor in range(5):
+            z=1.25+4.05*floor; w=1.55; h=2.45
+            add('Frames',box(x-w/2-.13,-.31,z-.13,w+.26,.16,h+.26))
+            add('Glass',box(x-w/2,-.40,z,w,.12,h))
+            add('Frames',box(x-.035,-.53,z,.07,.08,h))
+            add('Frames',box(x-w/2,-.54,z+h*.48,w,.08,.07))
+
+# Central pavilion: eight tall arches at the entrance, rectangular windows above.
+for i in range(8):
+    x=-18.5+i*5.3
+    outer=arch(x-1.35,-3.18,.75,2.7,4.55,.18)
+    inner=arch(x-1.06,-3.25,.83,2.12,4.2,.35)
+    add('Trim',outer.cut(inner)); add('Entrance',inner)
+    add('Frames',box(x-.035,-3.28,.83,.07,.06,3.08))
+    for floor in range(1,5):
+        z=1.25+4.05*floor
+        add('Frames',box(x-.94,-2.98,z-.13,1.88,.16,2.71))
+        add('Glass',box(x-.81,-3.07,z,1.62,.12,2.45))
+        add('Frames',box(x-.035,-3.16,z,.07,.08,2.45))
+        add('Frames',box(x-.81,-3.16,z+1.18,1.62,.08,.07))
+
+# Windows on side-return outside surfaces and their rear elevations.
+for x,sign in [(-111.5,-1),(111.5,1)]:
+    for i in range(15):
+        y=19.6+i*3.55
+        for floor in range(5):
+            z=1.25+floor*4.05
+            add('Frames',box(x-.10 if sign<0 else x-.06,y-.89,z-.12,.16,1.78,2.69))
+            add('Glass',box(x-.19 if sign<0 else x+.06,y-.76,z,.12,1.52,2.45))
+for x in (-111.5,93.5):
+    for i in range(5):
+        xx=x+1.3+i*3.1
+        for floor in range(5):
+            z=1.25+4.05*floor
+            add('Frames',box(xx-.1,75,z-.1,1.7,.15,2.65))
+            add('Glass',box(xx,75.13,z,1.5,.1,2.45))
+
+colors={'Walls':(0.86,0.79,0.67),'Plinth':(0.55,0.48,0.43),'Bands':(0.95,0.91,0.82),'Roof':(0.48,0.29,0.25),'Glass':(0.18,0.25,0.29),'Frames':(0.90,0.88,0.82),'Entrance':(0.16,0.20,0.21),'Trim':(0.94,0.91,0.84)}
+for name,shapes in groups.items():
+    obj=doc.addObject('PartDesign::Feature',name)
+    obj.Label=name; obj.Shape=Part.makeCompound(shapes)
+    obj.ViewObject.ShapeColor=colors[name]; obj.ViewObject.LineColor=colors[name]
+    obj.ViewObject.DisplayMode='Flat Lines'
+doc.recompute()
+out=os.path.join(base,'shahe-native-b.FCStd'); doc.saveAs(out)
+view=Gui.activeDocument().activeView(); view.viewAxonometric(); view.fitAll()
+Gui.updateGui(); view.saveImage(os.path.join(base,'preview-axon.png'),1600,1000,'White')
+view.viewFront(); view.fitAll(); Gui.updateGui(); view.saveImage(os.path.join(base,'preview-front.png'),1800,650,'White')
+stats={'model':out,'units':'mm','compound_objects':len(groups),'component_counts':{k:len(s) for k,s in groups.items()},'bounding_box_mm':{'x':doc.getObject('Walls').Shape.BoundBox.XLength,'y':doc.getObject('Walls').Shape.BoundBox.YLength,'z':doc.getObject('Walls').Shape.BoundBox.ZLength},'shape_validity':{k:all(x.isValid() for x in shapes) for k,shapes in groups.items()},'elapsed_build_seconds':round(time.time()-start,3),'freecad_version':App.Version()}
+with open(os.path.join(base,'validation.json'),'w',encoding='utf-8') as f: json.dump(stats,f,ensure_ascii=False,indent=2)
+print('MODEL_COMPLETE',json.dumps(stats))
+App.closeDocument(doc.Name)
+Gui.getMainWindow().close()
