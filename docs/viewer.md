@@ -52,6 +52,16 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。三维零
 
 ## 页面
 
+**我的图纸**下面显示图纸文件夹的位置，带“打开”（在资源管理器或 Finder 里打开）和“复制路径”。鼠标停在一张图纸上时有
+“在文件夹中显示”按钮。往里加文件有三种办法：点“添加文件…”选文件，把文件拖进页面（拖进来时整页提示“松开，放进我的
+图纸”），或者在资源管理器里复制文件后按 Ctrl+V。DXF 和 FCStd 加进来就打开；DWG、STEP、STL、PNG/JPG/PDF 放进文件夹，
+页面说明下一步让助手做什么。加文件只放在文件夹顶层，从不覆盖：同名的变成“plate (2).dxf”；单个文件最大 100 MB。
+
+这是查看器唯一写入、唯一启动外部程序的地方（`POST /api/import`、`POST /api/reveal`）。它们只回应页面本身：Host 是
+本机，带 Origin 时也必须是本机，还要带请求头 `X-AgentCAD-Viewer: 1`（别的网站要带它必须先过 CORS 预检，查看器不回应
+预检）。AgentCAD 设成只读（`AGENTCAD_READ_ONLY=1`）时不能加文件；`--allow-remote` 时这两个功能都关闭。打开文件夹用
+`desktop.py`：固定的程序（explorer.exe、open、xdg-open），不经过 shell，路径必须在工作区里。
+
 界面用的是 AgentCAD 自己的组件库（`viewer_static/ui`：`fluid.css`、`fluid.js`），设计语言移植自 Fluid Functionalism
 （MIT，见 `ui/NOTICE.md`）：列表里一块高亮跟着鼠标滑动，动画分快、中、慢三档弹簧，按钮在鼠标靠近时字变重，字号比原版
 大一号。组件一览在 `/ui/gallery.html`。看图以 AutoCAD 为准：滚轮在光标处缩放，左键或中键拖动平移，双击（或双击中键、
