@@ -70,6 +70,13 @@ def is_model(name: str | None) -> bool:
     return not name or name.lower() == "model"
 
 
+def is_main_viewport(e: DXFGraphic) -> bool:
+    """The paper-space viewport with id 1 is the sheet itself, not a view of the model. The layout keeps a handle to
+    it, and AutoCAD stops with an internal error (ePermanentlyErased) when it opens a layout whose handle points at
+    a deleted viewport (H6 rerun, 2026-11-02)."""
+    return e.dxftype() == "VIEWPORT" and e.dxf.get("id", 0) == 1
+
+
 def layout_spaces(doc: Drawing, name: str | None) -> list:
     """Entity spaces for a layout name: None/'Model' = model space, '*' = model space and every paper layout."""
     if is_model(name):
@@ -198,6 +205,13 @@ def geometry_of(e: DXFGraphic) -> dict[str, Any]:
         return {"point": pt(x.start), "direction": pt(x.unit_vector)}
     if t == "HATCH":
         return hatch_info(e)
+    if t == "VIEWPORT":
+        info = {"center": pt(x.center), "width": r(x.width), "height": r(x.height), "viewport_id": x.get("id", 0)}
+        if is_main_viewport(e):
+            info["main"] = "the sheet itself: shows no model, is not printed, cannot be deleted"
+        elif x.get("view_height"):
+            info["scale"] = r(x.height / x.view_height)
+        return info
     return {}
 
 

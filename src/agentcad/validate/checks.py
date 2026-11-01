@@ -373,6 +373,26 @@ def printed_text_issues(doc: Drawing) -> list[dict[str, Any]]:
     return out
 
 
+def layout_viewport_issues(doc: Drawing) -> list[dict[str, Any]]:
+    """A layout that still points at its deleted main viewport: AUDIT reports nothing, but AutoCAD stops with an
+    internal error when the layout is opened (H6 rerun, 2026-11-02)."""
+    from ..model import is_model
+    out = []
+    for name in doc.layouts.names_in_taborder():
+        if is_model(name):
+            continue
+        h = doc.layouts.get(name).dxf_layout.dxf.get("viewport_handle")
+        vp = doc.entitydb.get(h) if h else None
+        if h and (vp is None or not vp.is_alive or vp.dxftype() != "VIEWPORT"):
+            d = issue("LAYOUT_VIEWPORT_MISSING", "error",
+                      f"Layout {name!r} refers to main viewport {h}, which no longer exists: AutoCAD stops with an "
+                      "internal error when the layout is opened", layout=name,
+                      hint="Roll back the change that deleted it; viewport id 1 is the sheet itself")
+            d["category"] = "file"
+            out.append(d)
+    return out
+
+
 def _ratio(s: float) -> str:
     return f"1:{1 / s:g}" if s < 1 else f"{s:g}:1"
 
@@ -435,6 +455,7 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
     out.extend(annotation_issues(doc, layout))
     out.extend(plot_text_issues(doc, layout))
     out.extend(printed_text_issues(doc))
+    out.extend(layout_viewport_issues(doc))
 
     # Tolerance declarations are document integrity, including nested/unreferenced
     # blocks. Walk stored entities once, not virtual INSERT copies (which can be

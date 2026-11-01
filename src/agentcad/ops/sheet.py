@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from ..errors import input_error
 from ..model import is_model
-from .registry import Ctx, Param, check_tag, op
+from .registry import Ctx, Param, check_tag, guard_main_viewport, op
 
 P = Param
 
@@ -59,6 +59,7 @@ def change_space(ctx: Ctx, target, destination, scale, delta):
         raise input_error("LAYOUT_NOT_FOUND", f"No layout {destination!r}")
     dest = ctx.doc.layouts.get(destination)
     ents = select(ctx.doc, target, ctx.refs)
+    guard_main_viewport(ents, "moved")
     matrix = Matrix44.scale(scale, scale, 1) @ Matrix44.translate(*delta, 0)
     for e in ents:
         e.transform(matrix)

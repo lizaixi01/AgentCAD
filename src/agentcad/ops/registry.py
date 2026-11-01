@@ -14,7 +14,7 @@ from ezdxf.document import Drawing
 from ezdxf.entities import DXFGraphic
 
 from ..errors import input_error
-from ..model import set_tag, tag_index
+from ..model import is_main_viewport, set_tag, tag_index
 from ..units import parse_length
 
 
@@ -169,6 +169,7 @@ class Ctx:
             self.modified.append(h)
 
     def removed(self, e: DXFGraphic) -> None:
+        guard_main_viewport([e], "deleted")  # any op that erases, not just delete
         h = e.dxf.handle
         if h in self.added:
             self.added.remove(h)
@@ -213,6 +214,19 @@ class Ctx:
             set_tag(self.doc, e, tag)
             self.tags().setdefault(tag, []).append(e)
         return self.created(e)
+
+
+def guard_main_viewport(ents, action: str) -> None:
+    """Refuse to delete or move a layout's main viewport: AutoCAD cannot open the layout afterwards."""
+    main = [e.dxf.handle for e in ents if is_main_viewport(e)]
+    if not main:
+        return
+    views = [e.dxf.handle for e in ents if e.dxftype() == "VIEWPORT" and not is_main_viewport(e)]
+    raise input_error("MAIN_VIEWPORT_REQUIRED", f"The layout's main viewport cannot be {action}: AutoCAD cannot "
+                      "open a layout without it", entities=main,
+                      hint="Viewport id 1 is the sheet itself; it shows no model and is not printed. "
+                           + (f"Target only the viewports onto the model: {views}" if views else
+                              "Leave it; add_viewport adds the views of the model"))
 
 
 def check_tag(ctx: Ctx, p: dict[str, Any]) -> list[str] | None:
