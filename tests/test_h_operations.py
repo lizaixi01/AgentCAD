@@ -235,6 +235,33 @@ def test_array_polar_unrotated_moves_the_selection_as_one_item(rt, ws, blank):
         assert abs(h[0][0].distance(h[0][1]) - 24) < 1e-6 and abs(v[0][0].distance(v[0][1]) - 24) < 1e-6
 
 
+def test_array_polar_unrotated_anchors_on_the_hole(rt, ws, blank):
+    # a label beside the hole must not pull the hole off the bolt circle
+    ok(apply(rt, blank, [{"op": "add_text", "text": "A", "insert": [87, 0], "height": 3, "tag": "lbl"},
+                         {"op": "add_circle", "center": [75, 0], "diameter": 18, "tag": "bolt"},
+                         {"op": "array_polar", "target": ["tag:lbl", "tag:bolt"], "center": [0, 0],
+                          "count": 4, "rotate_items": False}]))
+    msp = reread(ws, blank).modelspace()
+    assert sorted(round(Vec3(e.dxf.center).magnitude, 6) for e in msp.query("CIRCLE")) == [75] * 4
+    for t in msp.query("TEXT"):                                # each label keeps its 12 mm offset from a hole
+        assert any((Vec3(t.dxf.insert) - Vec3(c.dxf.center)).isclose(Vec3(12, 0, 0), abs_tol=1e-6)
+                   for c in msp.query("CIRCLE"))
+
+
+def test_array_polar_unrotated_single_entities(rt, ws, blank):
+    # a lone arc pivots on its center; a lone XLINE (no bounding box) still moves
+    ok(apply(rt, blank, [{"op": "add_arc", "center": [50, 0], "radius": 5, "start_angle": 0, "end_angle": 90},
+                         {"op": "array_polar", "target": "$0", "center": [0, 0], "count": 3, "total_angle": -90,
+                          "rotate_items": False},
+                         {"op": "add_xline", "point": [30, 0], "angle": 90},
+                         {"op": "array_polar", "target": "$2", "center": [0, 0], "count": 2, "total_angle": 180,
+                          "rotate_items": False}]))
+    msp = reread(ws, blank).modelspace()
+    centers = sorted((round(e.dxf.center.x, 6), round(e.dxf.center.y, 6)) for e in msp.query("ARC"))
+    assert centers == sorted([(50, 0), (35.355339, -35.355339), (0, -50)])
+    assert sorted(round(e.dxf.start.x, 6) for e in msp.query("XLINE")) == [-30, 30]
+
+
 def test_delete_and_large_delete_guard(rt, ws, blank):
     ok(apply(rt, blank, [{"op": "add_point", "location": [i, 0], "layer": "PTS"} for i in range(60)]))
     e = err(apply(rt, blank, [{"op": "delete", "target": {"layer": "PTS"}}]))

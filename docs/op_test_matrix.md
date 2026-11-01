@@ -36,7 +36,7 @@
 | `add_text` | annotate | test_autocad_findings.py, test_b_revision.py, test_h_operations.py, test_i_common_ops.py, test_k_pdf.py, test_l_fewer_turns.py, test_layouts_and_scripts.py, test_q_viewer_progress.py, test_w_delivery.py |
 | `add_title_block` | annotate | test_autocad_findings.py, test_h_operations.py, test_k_pdf.py |
 | `add_viewport` | layout | test_k_pdf.py, test_l_fewer_turns.py, test_layouts_and_scripts.py |
-| `add_xline` | draw | test_i_common_ops.py |
+| `add_xline` | draw | test_h_operations.py, test_i_common_ops.py |
 | `array_polar` | edit | test_h_operations.py, test_l_fewer_turns.py |
 | `array_rect` | edit | test_h_operations.py, test_security.py |
 | `block_from_entities` | block | test_t_workflow_guards.py |

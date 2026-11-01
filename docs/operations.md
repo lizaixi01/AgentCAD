@@ -562,7 +562,7 @@ BPOLY / BOUNDARY: trace a simple closed LINE/ARC/open-polyline chain around an i
 
 ### `array_polar`
 
-Polar array about a center: 'count' items (including the original) over 'total_angle'. The selection is one item: with rotate_items=false every copy is moved as a whole, its bounding-box center following the circle, so a hole keeps its center lines.
+Polar array about a center: 'count' items (including the original) over 'total_angle'. The selection is one item: with rotate_items=false every copy is moved as a whole, so a hole keeps its center lines and labels. Its base point is the center of the first selected CIRCLE/ARC/ELLIPSE, else the insertion point of the first INSERT, else the first entity's center/insert/location/start.
 
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
