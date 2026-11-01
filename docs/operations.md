@@ -172,7 +172,7 @@ Radius dimension of a circle/arc.
 
 ### `add_table`
 
-Simple table drawn as grid lines + TEXT. 'insert' is the top-left corner. Cell texts get tags '<tag>.r<row>c<col>' when 'tag' is given.
+Simple table drawn as grid lines + TEXT. 'insert' is the top-left corner. With 'tag', cell texts are tagged '<tag>.r<row>c<col>' and grid lines '<tag>.h<i>' / '<tag>.v<j>', so {tag_prefix: '<tag>.'} selects the whole table.
 
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|

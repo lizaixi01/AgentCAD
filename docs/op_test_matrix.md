@@ -14,11 +14,11 @@
 | `add_donut` | draw | test_i_common_ops.py |
 | `add_ellipse` | draw | test_h_operations.py |
 | `add_feature_control_frame` | library | test_m_library.py |
-| `add_hatch` | draw | test_i_common_ops.py, test_t_workflow_guards.py |
+| `add_hatch` | draw | test_i_common_ops.py, test_k_pdf.py, test_t_workflow_guards.py |
 | `add_leader` | annotate | test_h_operations.py |
-| `add_line` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_h_operations.py, test_i_common_ops.py, test_j_compact_results.py, test_layouts_and_scripts.py, test_m_library.py, test_o_viewer.py, test_p_busy_files.py, test_q_viewer_progress.py, test_security.py, test_t_workflow_guards.py, test_y_tolerances.py, test_z_locking.py |
+| `add_line` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_h_operations.py, test_i_common_ops.py, test_j_compact_results.py, test_k_pdf.py, test_layouts_and_scripts.py, test_m_library.py, test_o_viewer.py, test_p_busy_files.py, test_q_viewer_progress.py, test_security.py, test_t_workflow_guards.py, test_y_tolerances.py, test_z_locking.py |
 | `add_linear_dim` | annotate | test_autocad_findings.py, test_b_revision.py, test_f_repro_recovery.py, test_h_operations.py, test_t_workflow_guards.py, test_y_tolerances.py |
-| `add_mtext` | annotate | test_h_operations.py, test_i_common_ops.py |
+| `add_mtext` | annotate | test_h_operations.py, test_i_common_ops.py, test_k_pdf.py |
 | `add_ordinate_dim` | annotate | test_i_common_ops.py |
 | `add_pid_symbol` | library | test_m_library.py |
 | `add_point` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_f_repro_recovery.py, test_h_operations.py, test_l_fewer_turns.py, test_l_live_session.py, test_layouts_and_scripts.py, test_security.py |
@@ -34,7 +34,7 @@
 | `add_surface_finish` | library | test_m_library.py |
 | `add_table` | annotate | test_h_operations.py |
 | `add_text` | annotate | test_autocad_findings.py, test_b_revision.py, test_h_operations.py, test_i_common_ops.py, test_k_pdf.py, test_l_fewer_turns.py, test_layouts_and_scripts.py, test_q_viewer_progress.py, test_w_delivery.py |
-| `add_title_block` | annotate | test_autocad_findings.py, test_h_operations.py |
+| `add_title_block` | annotate | test_autocad_findings.py, test_h_operations.py, test_k_pdf.py |
 | `add_viewport` | layout | test_k_pdf.py, test_l_fewer_turns.py, test_layouts_and_scripts.py |
 | `add_xline` | draw | test_i_common_ops.py |
 | `array_polar` | edit | test_h_operations.py, test_l_fewer_turns.py |
@@ -46,7 +46,7 @@
 | `copy` | edit | test_h_operations.py, test_layouts_and_scripts.py |
 | `create_layer` | layer | test_f_repro_recovery.py, test_h_operations.py, test_q_viewer_progress.py |
 | `create_layout` | layout | test_k_pdf.py, test_l_fewer_turns.py, test_layouts_and_scripts.py |
-| `create_text_style` | annotate | test_i_common_ops.py |
+| `create_text_style` | annotate | test_i_common_ops.py, test_k_pdf.py |
 | `define_block` | block | test_autocad_findings.py, test_h_operations.py, test_i_common_ops.py, test_t_workflow_guards.py |
 | `delete` | edit | test_f_repro_recovery.py, test_h_operations.py, test_layouts_and_scripts.py, test_m_library.py, test_security.py |
 | `delete_layer` | layer | test_h_operations.py |
