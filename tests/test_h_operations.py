@@ -147,7 +147,8 @@ def test_leader_table_title_block(rt, ws, blank):
     assert by_tag(doc, "bom.r1c0").dxf.text == "Bolt M6"
     # grid lines carry the tag too, so the whole table goes with its tag prefix
     ok(apply(rt, blank, [{"op": "delete", "target": {"tag_prefix": "bom."}}]))
-    assert not reread(ws, blank).modelspace().query("LINE TEXT")
+    msp = reread(ws, blank).modelspace()
+    assert not [e for e in msp if (get_tag(e) or "").startswith("bom.")] and not msp.query("LINE")
     tb = by_tag(doc, "tb")
     assert tb.get_attrib_text("TITLE") == "PLATE" and tb.get_attrib_text("UNITS") == "mm"
     assert err(apply(rt, blank, [{"op": "add_title_block", "insert": [0, 0], "fields": {"COLOR": "x"}}]))["code"] == "UNKNOWN_FIELD"

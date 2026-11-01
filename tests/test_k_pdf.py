@@ -4,7 +4,7 @@ from __future__ import annotations
 import pypdf
 import pytest
 
-from conftest import ok
+from conftest import by_tag, ok, reread
 
 MM = 72 / 25.4
 
@@ -95,9 +95,27 @@ def test_png_preview_of_a_2d_drawing(rt, ws, blank):
         hole = im.getpixel((w // 2, round(h * 0.4)))  # the hole is in the upper part: the line is below the square
         ring = im.getpixel((round(w * 0.15), round(h * 0.4)))
     assert hole == (255, 255, 255) and ring[0] > 200 and ring[1] < 60
+    ok(rt.export_drawing(blank, "mono.png", "png", monochrome=True))
+    with Image.open(ws / "mono.png") as im:
+        r_, g_, b_ = im.getpixel((round(w * 0.15), round(h * 0.4)))
+    assert r_ == g_ == b_ < 80  # black, not red
     assert max(ok(rt.export_drawing(blank, "s.png", "png", image_size=300))["pixels"]) == 300
+    for bad in (10, 5000, "800", True):  # the MCP schema bounds it; the runtime and HTTP API must too
+        assert rt.export_drawing(blank, "b.png", "png", image_size=bad)["error"]["code"] == "OUT_OF_RANGE"
     assert rt.export_drawing(blank, "v.pdf", "pdf", image_size=300)["error"]["code"] == "UNKNOWN_PARAM"
     assert rt.export_drawing(blank, "v.png", "png")["error"]["code"] == "FILE_EXISTS"
+
+
+def test_png_shows_one_layout(rt, ws, plate):
+    ok(rt.apply_operations(plate, [
+        {"op": "create_layout", "name": "A3 sheet", "paper": "A3"},
+        {"op": "add_viewport", "layout": "A3 sheet", "center": [210, 148], "scale": 2, "width": 300, "height": 200},
+        {"op": "create_layout", "name": "A4 sheet", "paper": "A4", "orientation": "portrait"},
+        {"op": "add_text", "layout": "A4 sheet", "text": "NOTES", "insert": [20, 270], "height": 5}]))
+    assert ok(rt.export_drawing(plate, "d.png", "png"))["layout"] == "A3 sheet"  # the pdf's first page
+    assert ok(rt.export_drawing(plate, "a4.png", "png", layout="A4 sheet"))["layout"] == "A4 sheet"
+    assert ok(rt.export_drawing(plate, "m.png", "png", layout="Model"))["layout"] == "Model"
+    assert rt.export_drawing(plate, "all.png", "png", layout="*")["error"]["code"] == "MULTIPLE_LAYOUTS"
 
 
 def test_text_that_does_not_plot_as_written_is_reported(rt, ws, blank):
@@ -109,12 +127,63 @@ def test_text_that_does_not_plot_as_written_is_reported(rt, ws, blank):
         {"op": "create_text_style", "name": "TT", "font": "arial.ttf"},
         {"op": "add_text", "text": f"20 {nowhere}s", "insert": [0, 0], "height": 5, "style": "TT", "tag": "box"},
         {"op": "add_text", "text": "e^(-jx)", "insert": [0, 10], "height": 5, "tag": "caret"},
-        {"op": "add_text", "text": "a^ b", "insert": [0, 20], "height": 5}]))  # '^ ' is a literal caret
+        {"op": "add_text", "text": "a^ b", "insert": [0, 20], "height": 5},  # '^ ' is a literal caret
+        {"op": "add_mtext", "text": "e^(-jx)", "insert": [0, 30], "char_height": 5, "tag": "mcaret"},  # MTEXT too
+        {"op": "add_mtext", "text": "\\S1^2;", "insert": [0, 40], "char_height": 5},  # a stacked fraction
+        # an inline font change: the run is not drawn with the style's font, so it is not checked
+        {"op": "add_mtext", "text": f"\\fArial|b0|i0;{nowhere}", "insert": [0, 50], "char_height": 5,
+         "style": "TT"}]))
     issues = {i["code"]: i for i in r["validation"]["issues"]}
+    doc = reread(ws, blank)
     boxes = issues["TEXT_PLOTS_AS_BOXES"]
-    assert boxes["details"]["characters"] == [nowhere] and len(boxes["entities"]) == 1
-    assert len(issues["TEXT_CARET_CODE"]["entities"]) == 1
+    assert boxes["details"]["characters"] == [nowhere] and boxes["entities"] == [by_tag(doc, "box").dxf.handle]
+    assert set(issues["TEXT_CARET_CODE"]["entities"]) == {by_tag(doc, t).dxf.handle for t in ("caret", "mcaret")}
     warned = {w["code"] for w in ok(rt.export_drawing(blank, "t.pdf", "pdf"))["warnings"]}
     assert {"TEXT_PLOTS_AS_BOXES", "TEXT_CARET_CODE"} <= warned
     warned = {w["code"] for w in ok(rt.export_drawing(blank, "t.png", "png"))["warnings"]}
     assert {"TEXT_PLOTS_AS_BOXES", "TEXT_CARET_CODE"} <= warned
+
+
+def test_glyph_check_uses_the_font_the_plot_uses(rt, ws, blank):
+    from ezdxf.fonts import fonts
+    from agentcad.plot import CJK_FONTS
+    face = next((f for f in CJK_FONTS if fonts.font_manager.has_font(f)), None)
+    if face is None:
+        pytest.skip("no CJK font installed")
+    nowhere = chr(0x10FFFD)
+    r = ok(rt.apply_operations(blank, [
+        {"op": "add_text", "text": f"安装板{nowhere}", "insert": [0, 0], "height": 5},
+        {"op": "add_title_block", "insert": [287, 10], "fields": {"TITLE": f"底板{nowhere}"}}]))
+    boxes = [i for i in r["validation"]["issues"] if i["code"] == "TEXT_PLOTS_AS_BOXES"]
+    # SHX styles plot with the CJK font: it has the Chinese characters, not the private-use one
+    assert len(boxes) == 1 and boxes[0]["details"]["font"] == face
+    assert boxes[0]["details"]["characters"] == [nowhere] and len(boxes[0]["entities"]) == 2  # TEXT and ATTRIB
+
+
+def test_export_checks_the_text_on_the_plotted_sheet(rt, ws, blank):
+    from agentcad.plot import font_cmap
+    if font_cmap("arial.ttf") is None:
+        pytest.skip("no TrueType font to check against")
+    r = ok(rt.apply_operations(blank, [
+        {"op": "create_text_style", "name": "TT", "font": "arial.ttf"},
+        {"op": "create_layout", "name": "A3", "paper": "A3"},
+        {"op": "add_text", "layout": "A3", "text": chr(0x10FFFD), "insert": [20, 20], "height": 5, "style": "TT"},
+        {"op": "add_mtext", "layout": "A3", "text": "e^(-jx)", "insert": [20, 40], "char_height": 5}]))
+    # validation checks model space; exporting the sheet checks what the sheet prints
+    assert not {"TEXT_PLOTS_AS_BOXES", "TEXT_CARET_CODE"} & {i["code"] for i in r["validation"]["issues"]}
+    for fmt in ("pdf", "png"):
+        got = {w["code"]: w for w in ok(rt.export_drawing(blank, f"a3.{fmt}", fmt, layout="A3"))["warnings"]}
+        assert got["TEXT_PLOTS_AS_BOXES"]["details"]["layout"] == "A3" and "TEXT_CARET_CODE" in got
+
+
+def test_many_missing_characters_are_capped(rt, ws, blank):
+    from agentcad.plot import font_cmap
+    if font_cmap("arial.ttf") is None:
+        pytest.skip("no TrueType font to check against")
+    many = "".join(chr(0x10FF00 + i) for i in range(60))  # private use: in no font
+    r = ok(rt.apply_operations(blank, [
+        {"op": "create_text_style", "name": "TT", "font": "arial.ttf"},
+        {"op": "add_text", "text": many, "insert": [0, 0], "height": 5, "style": "TT"}]))
+    boxes = {i["code"]: i for i in r["validation"]["issues"]}["TEXT_PLOTS_AS_BOXES"]
+    assert len(boxes["details"]["characters"]) == 20 and boxes["details"]["missing_count"] == 60
+    assert "and 40 more" in boxes["message"]

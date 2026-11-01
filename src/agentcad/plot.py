@@ -254,10 +254,11 @@ def _cjk_styles(doc) -> str | None:
     return face
 
 
-def plot_fonts(doc) -> dict[str, str]:
-    """Text style name (lower case) -> the font file the plot draws it with, without changing the drawing."""
+def plot_fonts(doc) -> dict[str, str | None]:
+    """Text style name (lower case) -> the font file the plot draws it with, without changing the drawing. None
+    when the style names no font file (AutoCAD then keeps the TrueType family in the style's XDATA)."""
     face = _cjk_face(doc)
-    return {st.dxf.name.lower(): face if face and _plotted_with_cjk(st) else str(st.dxf.get("font", "") or "txt")
+    return {st.dxf.name.lower(): face if face and _plotted_with_cjk(st) else (str(st.dxf.get("font", "")) or None)
             for st in doc.styles}
 
 
@@ -377,15 +378,21 @@ class _PngCanvas(BackendInterface):
         if x1 <= x0 or y1 <= y0:
             return
         mask = Image.new("1", (x1 - x0, y1 - y0), 0)
-        for p in polys:
-            one = Image.new("1", mask.size, 0)
-            ImageDraw.Draw(one).polygon([(x - x0, y - y0) for x, y in p], fill=1)
-            mask = ImageChops.logical_xor(mask, one)
+        for p in polys:  # XOR each contour over its own box only: a hatch can have thousands of small islands
+            bx0, by0 = max(int(min(x for x, _ in p)) - 1, x0), max(int(min(y for _, y in p)) - 1, y0)
+            bx1, by1 = min(int(max(x for x, _ in p)) + 2, x1), min(int(max(y for _, y in p)) + 2, y1)
+            if bx1 <= bx0 or by1 <= by0:
+                continue
+            box = (bx0 - x0, by0 - y0, bx1 - x0, by1 - y0)
+            one = Image.new("1", (bx1 - bx0, by1 - by0), 0)
+            ImageDraw.Draw(one).polygon([(x - bx0, y - by0) for x, y in p], fill=1)
+            mask.paste(ImageChops.logical_xor(mask.crop(box), one), box)
         self.image.paste(rgb, (x0, y0, x1, y1), mask)
 
     def draw_point(self, pos, properties) -> None:
         if rgb := self._rgb(properties.color):
-            self.draw.point((pos.x, pos.y), fill=rgb)
+            r = SUPERSAMPLE
+            self.draw.ellipse((pos.x - r, pos.y - r, pos.x + r, pos.y + r), fill=rgb)
 
     def draw_line(self, start, end, properties) -> None:
         self._lines([(start.x, start.y), (end.x, end.y)], properties)
@@ -444,7 +451,6 @@ def plot_png(doc, out: Path, layout: str, *, size: int = 1600, monochrome: bool 
                                         Matrix44.scale(s, -s, 1), Matrix44.translate(margin, margin, 0)))
     else:
         w = h = big
-        s = 0.0
     image = Image.new("RGB", (w, h), (255, 255, 255))
     if box.has_data:
         player.replay(_PngCanvas(image))

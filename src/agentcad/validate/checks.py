@@ -200,14 +200,19 @@ def _text_items(msp):
 
 
 PLOT_TEXT_CODES = ("TEXT_PLOTS_AS_BOXES", "TEXT_CARET_CODE")
-CARET_RE = re.compile(r"\^[^ ]")
+CARET_RE = re.compile(r"\^[^ ]")  # '^ ' is the literal caret
+MTEXT_STACK_RE = re.compile(r"\\S[^;]*;")  # stacked fractions (\S1^2;) use '^' as a separator
+MTEXT_FONT_RE = re.compile(r"\\[fF]")  # an inline font change: the run is not drawn with the style's font
+MAX_LISTED_CHARS = 20
 
 
 def plot_text_issues(doc: Drawing, layout: str | None = None) -> list[dict[str, Any]]:
     """Text the PDF / PNG plot does not show as written: characters the plotted font has no glyph for come out as
-    boxes (simhei.ttf has no µ U+00B5 or − U+2212), and '^' + character in TEXT is AutoCAD caret notation
-    for a control character ('e^(-jθ)' plotted as 'ef-jθ)'). Both were found only by looking at the plot."""
-    from ezdxf.tools.text import caret_decode
+    boxes (simhei.ttf has no µ U+00B5 or − U+2212), and '^' + character is AutoCAD caret notation for a control
+    character, in TEXT and MTEXT alike ('e^(-jθ)' plotted as 'ef-jθ)'). Both were found only by looking at the
+    plot. Text whose font cannot be told (an inline MTEXT font change, a style naming no font file) is not
+    checked for glyphs."""
+    from ezdxf.tools.text import plain_text
     from ..model import layout_spaces
     from ..plot import font_cmap, plot_fonts
     msp = layout_spaces(doc, layout)[0]
@@ -215,38 +220,46 @@ def plot_text_issues(doc: Drawing, layout: str | None = None) -> list[dict[str, 
     missing: dict[str, dict[str, list[str]]] = {}  # font -> char -> handles
     caret = []
     for e, style, text in _text_items(msp):
-        if not text:
+        mtext = e.dxftype() == "MTEXT"
+        raw = e.text if mtext else text
+        if not raw:
             continue
-        if e.dxftype() != "MTEXT" and "^" in text:
-            if CARET_RE.search(text):  # '^ ' is the literal caret
-                caret.append(e.dxf.handle)
-            text = caret_decode(text)
-        if text.isascii():
+        if "^" in raw and CARET_RE.search(MTEXT_STACK_RE.sub("", raw) if mtext else raw):
+            caret.append(e.dxf.handle)
+        if mtext and MTEXT_FONT_RE.search(raw):
+            continue
+        shown = text if mtext else plain_text(raw)  # as plotted: %%c -> Ø, carets decoded
+        if shown.isascii():
             continue
         font = fonts.get(str(style).lower())
-        if font is None:
+        if not font:
             continue
         if font not in cmaps:
             cmaps[font] = font_cmap(font)
         if cmaps[font] is None:
             continue
-        for ch in dict.fromkeys(text):
+        for ch in dict.fromkeys(shown):
             if not ch.isspace() and ord(ch) >= 32 and ord(ch) not in cmaps[font]:
                 missing.setdefault(font, {}).setdefault(ch, []).append(e.dxf.handle)
+    where = {"layout": layout} if layout else {}
     out = []
     for font, chars in missing.items():
         hs = list(dict.fromkeys(h for v in chars.values() for h in v))
-        listed = ", ".join(f"'{c}' U+{ord(c):04X}" for c in chars)
+        shown_chars = list(chars)[:MAX_LISTED_CHARS]
+        listed = ", ".join(f"'{c}' U+{ord(c):04X}" for c in shown_chars)
+        if len(chars) > len(shown_chars):
+            listed += f" and {len(chars) - len(shown_chars)} more"
         out.append(issue("TEXT_PLOTS_AS_BOXES", "warning",
                          f"{len(hs)} text(s) use characters that {font} has no glyph for ({listed}); the PDF / PNG "
-                         "plot shows them as boxes", hs[:50], font=font, characters=list(chars),
+                         "plot shows them as boxes", hs[:50], font=font, characters=shown_chars,
+                         missing_count=len(chars), **where,
                          hint="Use a character the font has (μ U+03BC for micro, '-' for minus, no combining "
                               "accents), or a text style with another font"))
     if caret:
         out.append(issue("TEXT_CARET_CODE", "warning",
-                         f"{len(caret)} TEXT(s) contain '^' followed by a character: AutoCAD reads that as a "
-                         "control character, so the '^' and the next character do not print", caret[:50],
-                         hint="Write '^ ' (caret, space) for a literal '^', or use MTEXT"))
+                         f"{len(caret)} text(s) contain '^' followed by a character: AutoCAD reads that as a "
+                         "control character, so the '^' and the next character do not print", caret[:50], **where,
+                         hint="Write '^ ' (caret, space) for a literal '^'"))
     return out
 
 

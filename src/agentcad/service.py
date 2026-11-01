@@ -32,7 +32,7 @@ from .policy import Policy
 from .store import DrawingStore, busy_error, finalize, read_dxf, now, sha256_file
 from .units import UNITS, normalize_unit, unit_from_insunits
 from .validate import validate_file
-from .validate.checks import MIN_PRINTED_TEXT, PLOT_TEXT_CODES
+from .validate.checks import MIN_PRINTED_TEXT, plot_text_issues
 
 DXF_VERSIONS = {"R12": "AC1009", "R2000": "AC1015", "R2004": "AC1018", "R2007": "AC1021", "R2010": "AC1024",
                 "R2013": "AC1027", "R2018": "AC1032"}
@@ -1002,6 +1002,9 @@ class Runtime:
             raise input_error("UNKNOWN_PARAM", "views, fit and reference apply to png previews of 3D parts")
         if image_size and format.lower() != "png":
             raise input_error("UNKNOWN_PARAM", "image_size applies to png export")
+        if image_size is not None and (isinstance(image_size, bool) or not isinstance(image_size, int)
+                                       or not 64 <= image_size <= 2048):
+            raise input_error("OUT_OF_RANGE", "image_size must be 64..2048 pixels")
         self.policy.check_write()
         p, store = self._drawing(path)
         fmt = format.lower()
@@ -1040,10 +1043,11 @@ class Runtime:
                 raise input_error("INVALID_VALUE", "scale must be > 0", hint="paper mm per drawing unit, 0.5 = 1:2")
             if orientation not in ("auto", "landscape", "portrait"):
                 raise input_error("INVALID_ENUM", "orientation must be auto | landscape | portrait")
-            res = plot.plot_pdf(doc, out, _plot_layouts(doc, layout), paper=paper, orientation=orientation,
+            names = _plot_layouts(doc, layout)
+            text_warn = _plot_text_warnings(doc, names)  # before plotting, which swaps the SHX styles' fonts
+            res = plot.plot_pdf(doc, out, names, paper=paper, orientation=orientation,
                                 scale=scale, monochrome=monochrome, title=p.stem)
-            warn = [i for i in validate_file(p)["issues"]
-                    if i["code"] == "PRINTED_TEXT_TOO_SMALL" or i["code"] in PLOT_TEXT_CODES]
+            warn = [i for i in validate_file(p)["issues"] if i["code"] == "PRINTED_TEXT_TOO_SMALL"] + text_warn
             small = _min_model_text(doc) if any(pg["layout"] == "Model" for pg in res["pages"]) else None
             for pg in res["pages"]:
                 if small and pg["layout"] == "Model" and small * pg["scale"] < MIN_PRINTED_TEXT - 1e-9:
@@ -1059,8 +1063,8 @@ class Runtime:
             names = _plot_layouts(doc, layout)
             if layout == "*" and len(names) > 1:
                 raise input_error("MULTIPLE_LAYOUTS", "A png shows one layout", hint=f"layout = one of {names}")
+            warn = _plot_text_warnings(doc, names[:1])
             res = plot.plot_png(doc, out, names[0], size=image_size or 1600, monochrome=monochrome)
-            warn = [i for i in validate_file(p)["issues"] if i["code"] in PLOT_TEXT_CODES]
             store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": "png"})
             return {"drawing": self._rel(p), "output": self._rel(out), "format": "png", **res,
                     **({"warnings": warn[:20]} if warn else {})}
@@ -1479,6 +1483,22 @@ def _plot_layouts(doc, layout: str | None) -> list[str]:
     if layout not in doc.layouts:
         raise input_error("LAYOUT_NOT_FOUND", f"No layout named {layout!r}", hint=f"Layouts: {['Model', *paper]}")
     return [layout]
+
+
+def _plot_text_warnings(doc, layouts: list[str]) -> list[dict[str, Any]]:
+    """TEXT_PLOTS_AS_BOXES / TEXT_CARET_CODE for what these layouts print: a sheet's own text, plus model space
+    when the sheet shows it through a viewport. Validation checks one layout (model space by default), so text on
+    the plotted sheet went unreported."""
+    spaces: list[str | None] = []
+    for name in layouts:
+        if is_model(name):
+            spaces.append(None)
+            continue
+        spaces.append(name)
+        if any(vp.dxf.get("id", 0) != 1 and vp.dxf.get("status", 1) != 0
+               for vp in doc.layouts.get(name).query("VIEWPORT")):
+            spaces.append(None)
+    return [i for space in dict.fromkeys(spaces) for i in plot_text_issues(doc, space)]
 
 
 def _min_model_text(doc) -> float | None:
