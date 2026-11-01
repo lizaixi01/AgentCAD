@@ -66,7 +66,9 @@ MAX_FILES = 2000
 IMPORT_SHOWN = (".dxf", ".fcstd")
 IMPORT_KEPT = (".dwg", ".step", ".stp", ".stl", ".pdf", ".png", ".jpg", ".jpeg", ".webp")
 MAX_IMPORT = 100 * 1024 * 1024
-WINDOWS_RESERVED = {"con", "prn", "aux", "nul", *(f"com{i}" for i in range(1, 10)), *(f"lpt{i}" for i in range(1, 10))}
+# Windows device names; they count before the first dot ("nul.x.dxf"), and older Windows also takes ¹²³
+WINDOWS_RESERVED = {"con", "prn", "aux", "nul", "conin$", "conout$",
+                    *(f"{d}{i}" for d in ("com", "lpt") for i in (*range(10), "¹", "²", "³"))}
 ROUTES = {"/api/timeline", "/api/layers", "/api/diff", "/api/svg", "/api/mesh", "/api/png", "/api/thumb",
           "/api/export"}
 STATIC_FILES = {"/friendly.js": ("friendly.js", "text/javascript; charset=utf-8"),
@@ -139,7 +141,7 @@ class Workspace:
         if len(data) > MAX_IMPORT:
             raise input_error("FILE_TOO_LARGE", f"{base} is larger than {MAX_IMPORT // (1024 * 1024)} MB")
         stem = (stem.strip(" .") or "drawing")[:120]
-        if stem.lower() in WINDOWS_RESERVED:
+        if stem.split(".")[0].rstrip(" ").lower() in WINDOWS_RESERVED:
             stem = "_" + stem
         root = self.policy.root
         root.mkdir(parents=True, exist_ok=True)
@@ -671,6 +673,9 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
             self.send_response(code)
             self.send_header("Content-Type", ctype)
             self.send_header("X-Content-Type-Options", "nosniff")
+            # no other site may show this page inside its own (and get a drop or a click on it)
+            self.send_header("X-Frame-Options", "DENY")
+            self.send_header("Content-Security-Policy", "frame-ancestors 'none'")
             if download:  # an ASCII name for old clients, the real one (UTF-8, e.g. Chinese) for the rest
                 from urllib.parse import quote
                 ascii_name = re.sub(r"[^A-Za-z0-9._-]+", "_", download)
@@ -767,7 +772,12 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                                                           "message": "Only the viewer page itself may do this"}}, 403)
             u = urlparse(self.path)
             try:
-                n = int(self.headers.get("Content-Length") or 0)
+                if self.headers.get("Content-Length") is None:  # chunked or unsized: the cap needs a size
+                    return self._json({"ok": False, "error": {"code": "LENGTH_REQUIRED", "category": "input",
+                                                              "message": "Content-Length is required"}}, 411)
+                n = int(self.headers["Content-Length"])
+                if n < 0:
+                    raise ValueError("Content-Length must not be negative")
                 if u.path == "/api/import":
                     if not can_add():
                         raise AgentCADError("READ_ONLY", "AgentCAD is read-only here: files cannot be added",

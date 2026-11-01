@@ -556,3 +556,34 @@ def test_a_large_file_is_refused_before_it_is_read(page_viewer, tmp_path, monkey
     monkeypatch.setattr(viewer, "MAX_IMPORT", 10)
     code, r = _post(page_viewer.url, "/api/import", b"x" * 11, {"X-AgentCAD-Filename": "big.dxf"})
     assert code == 413 and r["error"]["code"] == "FILE_TOO_LARGE" and not (tmp_path / "big.dxf").exists()
+
+
+def test_import_needs_a_sane_length_and_the_page_is_not_framed(page_viewer, tmp_path):
+    import http.client
+    from urllib.parse import quote, urlparse
+    u = urlparse(page_viewer.url)
+
+    def raw(headers, body=b""):
+        c = http.client.HTTPConnection(u.hostname, u.port, timeout=10)
+        c.putrequest("POST", "/api/import")
+        for k, v in {"X-AgentCAD-Viewer": "1", "X-AgentCAD-Filename": "len.dxf", **headers}.items():
+            c.putheader(k, v)
+        c.endheaders()
+        if body:
+            c.send(body)
+        r = c.getresponse()
+        out = (r.status, json.loads(r.read()))
+        c.close()
+        return out
+
+    code, r = raw({"Transfer-Encoding": "chunked"}, b"1\r\nx\r\n0\r\n\r\n")
+    assert code == 411 and r["error"]["code"] == "LENGTH_REQUIRED"
+    code, r = raw({"Content-Length": "-1"}, b"xyz")
+    assert code == 400
+    assert not (tmp_path / "len.dxf").exists()
+    # device names count before the first dot
+    for name in ("nul.x.dxf", "CONIN$.dxf", "com¹.png"):
+        code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": quote(name)})
+        assert code == 200 and r["path"].startswith("_"), (name, r)
+    with urllib.request.urlopen(page_viewer.url) as resp:
+        assert resp.headers["X-Frame-Options"] == "DENY" and "frame-ancestors 'none'" in resp.headers["Content-Security-Policy"]
