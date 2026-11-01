@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 
 import pytest
+from ezdxf.math import Vec3
 
 from agentcad.model import get_tag
 from conftest import by_tag, ok, reread
@@ -210,6 +211,55 @@ def test_arrays(rt, ws, blank):
     assert {(0, 0), (20, 0), (40, 0), (0, 10), (20, 10), (40, 10)} <= centers
     e = err(apply(rt, blank, [{"op": "array_rect", "target": "tag:c", "rows": 1000, "cols": 1000}]))
     assert e["code"] == "OUT_OF_RANGE" or e["code"] == "BUDGET_EXCEEDED"
+
+
+def test_array_polar_unrotated_moves_the_selection_as_one_item(rt, ws, blank):
+    # a bolt hole with its center mark: every copy's center lines must still cross at the copy's center
+    ok(apply(rt, blank, [{"op": "add_circle", "center": [75, 0], "diameter": 18, "tag": "bolt"},
+                         {"op": "add_center_mark", "target": "tag:bolt", "extension": 3, "tag": "cm"},
+                         {"op": "array_polar", "target": ["tag:bolt", "tag:cm.h", "tag:cm.v"], "center": [0, 0],
+                          "count": 8, "rotate_items": False}]))
+    doc = reread(ws, blank)
+    msp = doc.modelspace()
+    lines = [(e.dxf.start, e.dxf.end) for e in msp.query("LINE")]
+    circles = list(msp.query("CIRCLE"))
+    assert len(circles) == 8 and len(lines) == 16
+    for i in range(8):
+        a = math.radians(45 * i)
+        c = Vec3(75 * math.cos(a), 75 * math.sin(a), 0)
+        assert any(e.dxf.center.isclose(c, abs_tol=1e-6) for e in circles)
+        # unrotated: one horizontal and one vertical line, 24 long, centred on the hole
+        h = [(s, t) for s, t in lines if abs(s.y - t.y) < 1e-9 and (s + t).isclose(c * 2, abs_tol=1e-6)]
+        v = [(s, t) for s, t in lines if abs(s.x - t.x) < 1e-9 and (s + t).isclose(c * 2, abs_tol=1e-6)]
+        assert len(h) == 1 and len(v) == 1, i
+        assert abs(h[0][0].distance(h[0][1]) - 24) < 1e-6 and abs(v[0][0].distance(v[0][1]) - 24) < 1e-6
+
+
+def test_array_polar_unrotated_anchors_on_the_hole(rt, ws, blank):
+    # a label beside the hole must not pull the hole off the bolt circle
+    ok(apply(rt, blank, [{"op": "add_text", "text": "A", "insert": [87, 0], "height": 3, "tag": "lbl"},
+                         {"op": "add_circle", "center": [75, 0], "diameter": 18, "tag": "bolt"},
+                         {"op": "array_polar", "target": ["tag:lbl", "tag:bolt"], "center": [0, 0],
+                          "count": 4, "rotate_items": False}]))
+    msp = reread(ws, blank).modelspace()
+    assert sorted(round(Vec3(e.dxf.center).magnitude, 6) for e in msp.query("CIRCLE")) == [75] * 4
+    for t in msp.query("TEXT"):                                # each label keeps its 12 mm offset from a hole
+        assert any((Vec3(t.dxf.insert) - Vec3(c.dxf.center)).isclose(Vec3(12, 0, 0), abs_tol=1e-6)
+                   for c in msp.query("CIRCLE"))
+
+
+def test_array_polar_unrotated_single_entities(rt, ws, blank):
+    # a lone arc pivots on its center; a lone XLINE (no bounding box) still moves
+    ok(apply(rt, blank, [{"op": "add_arc", "center": [50, 0], "radius": 5, "start_angle": 0, "end_angle": 90},
+                         {"op": "array_polar", "target": "$0", "center": [0, 0], "count": 3, "total_angle": -90,
+                          "rotate_items": False},
+                         {"op": "add_xline", "point": [30, 0], "angle": 90},
+                         {"op": "array_polar", "target": "$2", "center": [0, 0], "count": 2, "total_angle": 180,
+                          "rotate_items": False}]))
+    msp = reread(ws, blank).modelspace()
+    centers = sorted((round(e.dxf.center.x, 6), round(e.dxf.center.y, 6)) for e in msp.query("ARC"))
+    assert centers == sorted([(50, 0), (35.355339, -35.355339), (0, -50)])
+    assert sorted(round(e.dxf.start.x, 6) for e in msp.query("XLINE")) == [-30, 30]
 
 
 def test_delete_and_large_delete_guard(rt, ws, blank):

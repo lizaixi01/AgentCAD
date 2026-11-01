@@ -252,7 +252,10 @@ def array_rect(ctx: Ctx, target, rows, cols, row_spacing, col_spacing):
     return {"created": created}
 
 
-@op("array_polar", "edit", "Polar array about a center: 'count' items (including the original) over 'total_angle'.",
+@op("array_polar", "edit", "Polar array about a center: 'count' items (including the original) over 'total_angle'. "
+    "The selection is one item: with rotate_items=false every copy is moved as a whole, so a hole keeps its "
+    "center lines and labels. Its base point is the center of the first selected CIRCLE/ARC/ELLIPSE, else the "
+    "insertion point of the first INSERT, else the first entity's center/insert/location/start.",
     {"target": TARGET, "center": P("point", True, description="Array center"),
      "count": P("int", True, ge=2, le=10000, description="Total number of items including the original"),
      "total_angle": P("angle", default=360.0, description="Angle to fill"),
@@ -262,20 +265,33 @@ def array_polar(ctx: Ctx, target, center, count, total_angle, rotate_items):
     _budget(ctx, len(ents) * (count - 1))
     full = abs(abs(total_angle) - 360.0) < 1e-9
     step = total_angle / (count if full else count - 1)
+    if not rotate_items:
+        # one base point for the whole selection: moving each entity by its own point (a line's start,
+        # a circle's center) would pull a hole and its center lines apart
+        ref = _ref_point(_base_entity(ents))
     created = []
     for k in range(1, count):
         a = math.radians(step * k)
+        if not rotate_items:
+            rx = center[0] + (ref[0] - center[0]) * math.cos(a) - (ref[1] - center[1]) * math.sin(a)
+            ry = center[1] + (ref[0] - center[0]) * math.sin(a) + (ref[1] - center[1]) * math.cos(a)
         for e in ents:
             c = _copy_into_msp(ctx, e)
             if rotate_items:
                 transform(ctx, c, _about(center, Matrix44.z_rotate(a)))
             else:
-                ref = _ref_point(e)
-                rx = center[0] + (ref[0] - center[0]) * math.cos(a) - (ref[1] - center[1]) * math.sin(a)
-                ry = center[1] + (ref[0] - center[0]) * math.sin(a) + (ref[1] - center[1]) * math.cos(a)
                 transform(ctx, c, Matrix44.translate(rx - ref[0], ry - ref[1], 0))
             created.append(c.dxf.handle)
     return {"created": created}
+
+
+def _base_entity(ents):
+    """the entity whose reference point anchors an unrotated polar array: a hole before its marks and labels"""
+    for kinds in (("CIRCLE", "ARC", "ELLIPSE"), ("INSERT",)):
+        for e in ents:
+            if e.dxftype() in kinds:
+                return e
+    return ents[0]
 
 
 def _ref_point(e) -> G.Vec:
