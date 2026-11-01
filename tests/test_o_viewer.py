@@ -671,6 +671,40 @@ def test_read_only_and_remote_viewers_take_no_files(tmp_path, monkeypatch):
         v.stop()
 
 
+def test_a_refused_request_still_gets_its_answer(tmp_path):
+    """A refusal used to close with the body unread: Windows then reset the connection and the client could lose the
+    403 (WinError 10053). Here the body arrives after the answer, which made that happen every time."""
+    import select
+    import socket
+    import time
+    from urllib.parse import urlparse
+    from agentcad.policy import Policy
+    from agentcad.viewer import Viewer
+    v = Viewer(Policy(root=tmp_path, read_only=True), port=0).start()
+    u = urlparse(v.url)
+    head = b"POST /api/import HTTP/1.1\r\nHost: localhost\r\nX-AgentCAD-Viewer: 1\r\nX-AgentCAD-Filename: a.dxf\r\n"
+
+    def ask(length, body=None):
+        with socket.create_connection((u.hostname, u.port), timeout=10) as s:
+            s.sendall(head + b"Content-Length: %d\r\n\r\n" % length)
+            assert select.select([s], [], [], 10)[0]  # answered before the body came
+            if body is not None:
+                time.sleep(0.3)
+                s.sendall(body)
+            data = b""
+            while chunk := s.recv(65536):
+                data += chunk
+            return data
+    try:
+        data = ask(1, b"x")
+        assert data.startswith(b"HTTP/1.1 403") and b'"READ_ONLY"' in data
+        # a large body is never read: the answer comes and the connection closes without waiting for it
+        t = time.monotonic()
+        assert ask(10 ** 9).startswith(b"HTTP/1.1 403") and time.monotonic() - t < 1.5
+    finally:
+        v.stop()
+
+
 def test_a_large_file_is_refused_before_it_is_read(page_viewer, tmp_path, monkeypatch):
     from agentcad import viewer
     monkeypatch.setattr(viewer, "MAX_IMPORT", 10)
