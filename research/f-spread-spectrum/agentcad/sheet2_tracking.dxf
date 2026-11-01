@@ -489,7 +489,7 @@ $SKPOLY
   9
 $TDCREATE
  40
-2461346.399050926
+2461346.400497685
   9
 $TDUCREATE
  40
@@ -497,7 +497,7 @@ $TDUCREATE
   9
 $TDUPDATE
  40
-2461346.399050926
+2461346.400497685
   9
 $TDUUPDATE
  40
@@ -549,7 +549,7 @@ $SPLINESEGS
   9
 $HANDSEED
   5
-1E2
+1FC
   9
 $SURFTAB1
  70
@@ -933,7 +933,7 @@ $FINGERPRINTGUID
   9
 $VERSIONGUID
   2
-{D50431B5-9C4E-4309-91B0-7CA1DA85FF18}
+{F2F1705D-822D-42DE-8ABE-C0B40FAF7F3A}
   9
 $EXTNAMES
 290
@@ -10331,9 +10331,9 @@ AcDbMText
  71
 1
   3
-B′ 同步误差预算（要求 ±200 ns）\P· 码环误差（100 次）：锁定后收敛期最坏 76 ns，稳态均值 < 1 ns\P· 40 MS/s 输出量化：±12.5 ns（已含在上一项）\P· 1 m / 2 m 电缆差：±2.5 ns（按 1.5 m 标定）\P· AFE / DAC 固定延迟：一次标定后仅剩温漂\P\P变频模型：f_A(t) = 4 MHz + 5 kHz·sin(0.2 t)\Pθ(t) = 2π∫f_A du，周期 31.4 s，max|df/dt| = 1000 
+B′ 同步误差预算（要求 ±200 ns）\P· 码环误差（100 次）：锁定后收敛期最坏 76 ns\P· 稳态均值（抽查几个种子）：60 dB-Hz ≤ 5 ns，45 dB-Hz 最大 +16 ns\P· 40 MS/s 输出量化：±12.5 ns（已含在码环误差中）\P· 1 m / 2 m 电缆差：±2.5 ns（按 1.5 m 标定）\P· AFE / DAC 固定延迟：一次标定后仅剩温漂\P\P变频模型：f_A(t) = 4 MHz + 5 kHz·sin(0.2 t)\Pθ(t)
   1
-Hz/s
+ = 2π∫f_A du，周期 31.4 s，max|df/dt| = 1000 Hz/s
   7
 CN
 1001
@@ -12489,7 +12489,7 @@ DictionaryVariables
 280
 0
   1
-1.4.5 @ 2026-11-01T01:34:38.852573+00:00
+1.4.5 @ 2026-11-01T01:36:43.360566+00:00
   0
 DICTIONARY
   5
