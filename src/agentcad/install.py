@@ -331,11 +331,8 @@ def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
 
 def open_folder(path: Path) -> None:
     """Show a folder in Explorer / Finder / the desktop's file manager (the setup wizard's button)."""
-    path.mkdir(parents=True, exist_ok=True)
-    if os.name == "nt":
-        os.startfile(str(path))  # noqa: S606
-    else:
-        subprocess.Popen(["open" if sys.platform == "darwin" else "xdg-open", str(path)], shell=False)
+    from .desktop import open_folder as show
+    show(path)
 
 
 # --- desktop icon -------------------------------------------------------------------------------------------------

@@ -1,6 +1,8 @@
 """Execution safety: sandboxed paths, overwrite protection, read-only, op allow-list, budgets, locking."""
 from __future__ import annotations
 
+import re
+
 from agentcad.policy import Policy
 from agentcad.service import Runtime
 from conftest import ok
@@ -119,7 +121,7 @@ def test_no_shell_or_arbitrary_execution_surface():
     from pathlib import Path
     pkg = Path(agentcad.__file__).parent
     launchers = {pkg / "backends" / "autocad.py", pkg / "backends" / "freecad.py", pkg / "scripting.py",
-                 pkg / "install.py"}
+                 pkg / "install.py", pkg / "desktop.py"}
     # the script runners execute an agent's script (run_script and inspect_image code, opt-in), each in exactly
     # one place
     exec_sites = {pkg / "_script_runner.py": ["main"], pkg / "part" / "_cq_runner.py": ["main"],
@@ -148,6 +150,10 @@ def test_no_shell_or_arbitrary_execution_surface():
     assert scripting.count("timeout=timeout") == 3 and scripting.count("subprocess.run(") == 3
     # install.py runs only the user's own 'claude mcp' CLI and the file manager, from 'agentcad setup' (and its
     # --gui wizard). Modules that serve tools may import nothing from it but ensure_workspace, nor the wizard.
+    # desktop.py opens the file manager (the viewer's "Show in folder"): fixed programs, no shell
+    desk = (pkg / "desktop.py").read_text("utf-8")
+    assert "shell=True" not in desk and desk.count("subprocess.Popen([") == desk.count("subprocess.Popen(") ==         desk.count("shell=False)")
+    assert set(re.findall(r'subprocess\.Popen\(\["([\w.]+)"', desk)) <= {"open", "xdg-open", "explorer.exe"}
     inst = (pkg / "install.py").read_text("utf-8")
     assert "shell=False" in inst and "shell=True" not in inst and "cmd_unsafe(" in inst
     for f in pkg.rglob("*.py"):

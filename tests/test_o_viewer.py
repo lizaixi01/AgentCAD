@@ -455,3 +455,135 @@ def test_viewer_serves_the_ui_kit_and_nothing_else(tmp_path):
                 assert e.code == 404, bad
     finally:
         v.stop()
+
+
+# --- adding files from the page, and showing the folder -----------------------------------------------------------
+
+def _post(url, path, body=b"", headers=None):
+    import urllib.error
+    import urllib.request
+    h = {"X-AgentCAD-Viewer": "1", **(headers or {})}
+    req = urllib.request.Request(url + path.lstrip("/"), data=body, headers=h, method="POST")
+    try:
+        with urllib.request.urlopen(req) as r:
+            return r.status, json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read())
+
+
+@pytest.fixture
+def page_viewer(tmp_path, monkeypatch):
+    from agentcad import desktop
+    from agentcad.policy import Policy
+    from agentcad.viewer import Viewer
+    opened = []
+    monkeypatch.setattr(desktop, "open_folder", lambda p: opened.append(("folder", p)))
+    monkeypatch.setattr(desktop, "reveal", lambda p: opened.append(("reveal", p)))
+    v = Viewer(Policy(root=tmp_path, read_only=False), port=0).start()
+    v.opened = opened
+    yield v
+    v.stop()
+
+
+def test_page_adds_files_without_overwriting(page_viewer, tmp_path):
+    from urllib.parse import quote
+    dxf = (tmp_path / "src.dxf")
+    import ezdxf
+    ezdxf.new().saveas(dxf)
+    data = dxf.read_bytes()
+    dxf.unlink()
+    code, r = _post(page_viewer.url, "/api/import", data, {"X-AgentCAD-Filename": quote("板 plate.dxf")})
+    assert code == 200 and r["path"] == "板 plate.dxf" and r["shown"] and not r["renamed"]
+    code, r = _post(page_viewer.url, "/api/import", b"other", {"X-AgentCAD-Filename": quote("板 plate.dxf")})
+    assert r["path"] == "板 plate (2).dxf" and r["renamed"]
+    assert (tmp_path / "板 plate.dxf").read_bytes() == data  # the first one is untouched
+    # a name is only its last part: nothing lands outside the workspace
+    for name, want in (("../../evil.dxf", "evil.dxf"), (r"..\..\x\evil2.png", "evil2.png"), ("C:/Windows/w.pdf", "w.pdf"),
+                       ("con.dxf", "_con.dxf"), ("a<b>c|d?.STEP", "a_b_c_d_.step")):
+        code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": quote(name)})
+        assert code == 200 and r["path"] == want and (tmp_path / want).is_file(), (name, r)
+        assert r["shown"] == want.endswith(".dxf")  # a drawing opens; the rest wait for the assistant
+    assert not (tmp_path.parent / "evil.dxf").exists()
+    code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": "virus.exe"})
+    assert code == 400 and r["error"]["code"] == "UNSUPPORTED_FILE"
+    # the page learns where the drawings are and that it may add files; the new drawing is listed
+    with __import__("urllib.request").request.urlopen(page_viewer.url + "api/drawings") as resp:
+        d = json.loads(resp.read())
+    assert d["root"] == str(tmp_path) and d["can_add"] is True and "板 plate.dxf" in [x["path"] for x in d["drawings"]]
+
+
+def test_only_the_page_itself_may_add_or_open(page_viewer, tmp_path):
+    from urllib.parse import quote
+    name = {"X-AgentCAD-Filename": quote("a.dxf")}
+    # another site: no special header (it cannot send one without a CORS preflight), or a foreign Origin
+    code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Viewer": "0", **name})
+    assert code == 403 and r["error"]["code"] == "NOT_FROM_THE_PAGE"
+    code, _ = _post(page_viewer.url, "/api/import", b"x", {"Origin": "https://evil.example", **name})
+    assert code == 403
+    code, _ = _post(page_viewer.url, "/api/reveal", b"{}", {"Host": "evil.example"})
+    assert code == 403
+    assert not (tmp_path / "a.dxf").exists() and not page_viewer.opened
+    # the page: the folder, a file in it; nothing outside
+    (tmp_path / "in.dxf").write_text("x")
+    assert _post(page_viewer.url, "/api/reveal", b"{}")[0] == 200
+    assert _post(page_viewer.url, "/api/reveal", json.dumps({"path": "in.dxf"}).encode())[0] == 200
+    code, r = _post(page_viewer.url, "/api/reveal", json.dumps({"path": "../../Windows"}).encode())
+    assert code == 403 and r["error"]["code"] == "OUTSIDE_WORKSPACE"
+    assert page_viewer.opened == [("folder", tmp_path), ("reveal", (tmp_path / "in.dxf").resolve())]
+
+
+def test_read_only_and_remote_viewers_take_no_files(tmp_path, monkeypatch):
+    from agentcad import desktop
+    from agentcad.policy import Policy
+    from agentcad.viewer import Viewer
+    monkeypatch.setattr(desktop, "open_folder", lambda p: None)
+    v = Viewer(Policy(root=tmp_path, read_only=True), port=0).start()
+    try:
+        code, r = _post(v.url, "/api/import", b"x", {"X-AgentCAD-Filename": "a.dxf"})
+        assert code == 403 and r["error"]["code"] == "READ_ONLY" and not (tmp_path / "a.dxf").exists()
+    finally:
+        v.stop()
+    v = Viewer(Policy(root=tmp_path, read_only=False), port=0, allow_remote=True).start()
+    try:
+        assert _post(v.url, "/api/import", b"x", {"X-AgentCAD-Filename": "a.dxf"})[0] == 403
+        assert _post(v.url, "/api/reveal", b"{}")[0] == 403
+    finally:
+        v.stop()
+
+
+def test_a_large_file_is_refused_before_it_is_read(page_viewer, tmp_path, monkeypatch):
+    from agentcad import viewer
+    monkeypatch.setattr(viewer, "MAX_IMPORT", 10)
+    code, r = _post(page_viewer.url, "/api/import", b"x" * 11, {"X-AgentCAD-Filename": "big.dxf"})
+    assert code == 413 and r["error"]["code"] == "FILE_TOO_LARGE" and not (tmp_path / "big.dxf").exists()
+
+
+def test_import_needs_a_sane_length_and_the_page_is_not_framed(page_viewer, tmp_path):
+    import http.client
+    from urllib.parse import quote, urlparse
+    u = urlparse(page_viewer.url)
+
+    def raw(headers, body=b""):
+        c = http.client.HTTPConnection(u.hostname, u.port, timeout=10)
+        c.putrequest("POST", "/api/import")
+        for k, v in {"X-AgentCAD-Viewer": "1", "X-AgentCAD-Filename": "len.dxf", **headers}.items():
+            c.putheader(k, v)
+        c.endheaders()
+        if body:
+            c.send(body)
+        r = c.getresponse()
+        out = (r.status, json.loads(r.read()))
+        c.close()
+        return out
+
+    code, r = raw({"Transfer-Encoding": "chunked"}, b"1\r\nx\r\n0\r\n\r\n")
+    assert code == 411 and r["error"]["code"] == "LENGTH_REQUIRED"
+    code, r = raw({"Content-Length": "-1"}, b"xyz")
+    assert code == 400
+    assert not (tmp_path / "len.dxf").exists()
+    # device names count before the first dot
+    for name in ("nul.x.dxf", "CONIN$.dxf", "com¹.png"):
+        code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": quote(name)})
+        assert code == 200 and r["path"].startswith("_"), (name, r)
+    with urllib.request.urlopen(page_viewer.url) as resp:
+        assert resp.headers["X-Frame-Options"] == "DENY" and "frame-ancestors 'none'" in resp.headers["Content-Security-Policy"]
