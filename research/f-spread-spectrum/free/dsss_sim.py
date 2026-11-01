@@ -295,7 +295,7 @@ def summarize(log, ev, berr):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--code")
-    ap.add_argument("--trials", type=int, default=12)
+    ap.add_argument("--trials", type=int, default=20)
     ap.add_argument("--long", type=float, default=32.0, help="变频长时跟踪仿真时长（s）")
     a = ap.parse_args()
     OUT.mkdir(exist_ok=True)

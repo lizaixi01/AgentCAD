@@ -489,7 +489,7 @@ $SKPOLY
   9
 $TDCREATE
  40
-2461346.043414352
+2461346.395983796
   9
 $TDUCREATE
  40
@@ -497,7 +497,7 @@ $TDUCREATE
   9
 $TDUPDATE
  40
-2461346.043414352
+2461346.395983796
   9
 $TDUUPDATE
  40
@@ -549,7 +549,7 @@ $SPLINESEGS
   9
 $HANDSEED
   5
-1CA
+1E0
   9
 $SURFTAB1
  70
@@ -933,7 +933,7 @@ $FINGERPRINTGUID
   9
 $VERSIONGUID
   2
-{FD029452-F210-4F05-9A81-37DF482F39B7}
+{A2493EFB-4400-4ADC-9476-4FC4F509CFB6}
   9
 $EXTNAMES
 290
@@ -5479,7 +5479,7 @@ AcDbBlockTableRecord
   0
 BLOCK_RECORD
   5
-147
+1D2
 330
 9
 100
@@ -6909,9 +6909,9 @@ AcDbBlockEnd
   0
 BLOCK
   5
-148
+1D3
 330
-147
+1D2
 100
 AcDbEntity
   8
@@ -6935,9 +6935,9 @@ AcDbBlockBegin
   0
 LINE
   5
-14A
+1D5
 330
-147
+1D2
 100
 AcDbEntity
   8
@@ -6955,15 +6955,15 @@ AcDbLine
  11
 100.0
  21
-44.75
+33.75
  31
 0.0
   0
 LINE
   5
-14B
+1D6
 330
-147
+1D2
 100
 AcDbEntity
   8
@@ -6981,15 +6981,15 @@ AcDbLine
  11
 107.6
  21
-44.75
+33.75
  31
 0.0
   0
 INSERT
   5
-14C
+1D7
 330
-147
+1D2
 100
 AcDbEntity
   8
@@ -7003,7 +7003,7 @@ _CLOSEDFILLED
  10
 100.0
  20
-46.0
+35.0
  30
 0.0
  41
@@ -7015,9 +7015,9 @@ _CLOSEDFILLED
   0
 INSERT
   5
-14E
+1D9
 330
-147
+1D2
 100
 AcDbEntity
   8
@@ -7031,7 +7031,7 @@ _CLOSEDFILLED
  10
 107.6
  20
-46.0
+35.0
  30
 0.0
  41
@@ -7041,9 +7041,9 @@ _CLOSEDFILLED
   0
 LINE
   5
-150
+1DB
 330
-147
+1D2
 100
 AcDbEntity
   8
@@ -7055,21 +7055,21 @@ AcDbLine
  10
 102.5
  20
-46.0
+35.0
  30
 0.0
  11
 105.1
  21
-46.0
+35.0
  31
 0.0
   0
 MTEXT
   5
-151
+1DC
 330
-147
+1D2
 100
 AcDbEntity
   8
@@ -7081,7 +7081,7 @@ AcDbMText
  10
 103.8
  20
-49.625
+38.625
  30
 0.0
  40
@@ -7093,9 +7093,9 @@ AcDbMText
   0
 POINT
   5
-152
+1DD
 330
-147
+1D2
 100
 AcDbEntity
   8
@@ -7105,15 +7105,15 @@ AcDbPoint
  10
 100.0
  20
-46.0
+35.0
  30
 0.0
   0
 POINT
   5
-153
+1DE
 330
-147
+1D2
 100
 AcDbEntity
   8
@@ -7129,9 +7129,9 @@ AcDbPoint
   0
 POINT
   5
-154
+1DF
 330
-147
+1D2
 100
 AcDbEntity
   8
@@ -7147,9 +7147,9 @@ AcDbPoint
   0
 ENDBLK
   5
-149
+1D4
 330
-147
+1D2
 100
 AcDbEntity
   8
@@ -9557,7 +9557,7 @@ AcDbText
  40
 5.0
   1
-捕获时序与同步精度
+捕获时序与码同步精度
  11
 232.0
  21
@@ -10433,74 +10433,6 @@ DSTYLE
 1002
 }
   0
-DIMENSION
-  5
-146
-330
-17
-100
-AcDbEntity
-  8
-DIM
-100
-AcDbDimension
-280
-0
-  2
-*D3
-  3
-AGENTCAD
- 10
-100.0
- 20
-46.0
- 30
-0.0
- 11
-103.8
- 21
-49.625
- 31
-0.0
- 70
-32
- 71
-5
- 42
-7.599999999999994
-  1
-<> ns
-100
-AcDbAlignedDimension
- 13
-100.0
- 23
-53.0
- 33
-0.0
- 14
-107.6
- 24
-53.0
- 34
-0.0
- 50
-0.0
-100
-AcDbRotatedDimension
-1001
-ACAD
-1000
-DSTYLE
-1002
-{
-1070
-144
-1040
-10.0
-1002
-}
-  0
 TEXT
   5
 155
@@ -10517,7 +10449,7 @@ AcDbText
  10
 35.0
  20
-32.0
+26.0
  30
 0.0
  40
@@ -12146,6 +12078,74 @@ AcDbText
 AGENTCAD
 1000
 tag=results.r7c3
+  0
+DIMENSION
+  5
+1D1
+330
+17
+100
+AcDbEntity
+  8
+DIM
+100
+AcDbDimension
+280
+0
+  2
+*D3
+  3
+AGENTCAD
+ 10
+100.0
+ 20
+35.0
+ 30
+0.0
+ 11
+103.8
+ 21
+38.625
+ 31
+0.0
+ 70
+32
+ 71
+5
+ 42
+7.599999999999994
+  1
+<> ns
+100
+AcDbAlignedDimension
+ 13
+100.0
+ 23
+53.0
+ 33
+0.0
+ 14
+107.6
+ 24
+53.0
+ 34
+0.0
+ 50
+0.0
+100
+AcDbRotatedDimension
+1001
+ACAD
+1000
+DSTYLE
+1002
+{
+1070
+144
+1040
+10.0
+1002
+}
   0
 ENDSEC
   0
@@ -13991,7 +13991,7 @@ DictionaryVariables
 280
 0
   1
-1.4.5 @ 2026-10-31T17:02:31.635437+00:00
+1.4.5 @ 2026-11-01T01:30:13.659135+00:00
   0
 DICTIONARY
   5
