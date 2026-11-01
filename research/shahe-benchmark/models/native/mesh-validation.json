@@ -1,0 +1,14 @@
+{
+  "file": "D:\\Projects\\AgentCAD-wt\\shahe-benchmark\\research\\shahe-benchmark\\models\\native\\shahe-native-b.stl",
+  "format": "STL",
+  "units_assumed": "mm",
+  "facets": 21060,
+  "points": 13564,
+  "bbox_mm": {
+    "x": 223600.0,
+    "y": 78510.0,
+    "z": 23600.0
+  },
+  "is_solid": false,
+  "elapsed_seconds": 3.817
+}

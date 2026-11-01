@@ -1,0 +1,52 @@
+{
+ "ok": true,
+ "tool": "validate_drawing",
+ "drawing": "shahe.FCStd",
+ "validation": {
+  "passed": true,
+  "issues": [
+   {
+    "code": "SCRIPT_BASE_SOLID",
+    "severity": "warning",
+    "message": "Body starts from a solid built by run_script (ScriptSolid), not from editable PartDesign features",
+    "hint": "Fine for STEP/mesh deliverables; a grader that requires a native feature tree (CADBench) rejects it",
+    "entities": [
+     "ScriptSolid"
+    ]
+   }
+  ],
+  "shape": {
+   "valid": true,
+   "solids": 1,
+   "volume": 122975065999999.9,
+   "size": [
+    224000.0,
+    78900.0,
+    20300.0
+   ],
+   "bbox": [
+    [
+     -112000.0,
+     -3900.0,
+     0.0
+    ],
+    [
+     112000.0,
+     75000.0,
+     20300.0
+    ]
+   ],
+   "holes": [],
+   "topology": {
+    "bodies": 1,
+    "genus": 0,
+    "voids": 0
+   }
+  }
+ },
+ "metrics": {
+  "duration_ms": 5243.04,
+  "input_bytes": 159,
+  "output_bytes": 653
+ }
+}

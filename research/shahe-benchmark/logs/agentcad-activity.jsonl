@@ -1,0 +1,16 @@
+{"run":"28d20613","n":1,"ts":1793550077.388,"tool":"create_drawing","drawing":"shahe.FCStd","state":"working","step":0,"total":null}
+{"run":"28d20613","n":2,"ts":1793550077.429,"tool":"create_drawing","drawing":"shahe.FCStd","state":"error","seconds":0.04,"error":{"code":"DEPENDENCY_MISSING","message":"FreeCAD is not available; 3D parts (.FCStd) need it"}}
+{"run":"a84c1a31","n":1,"ts":1793550078.761,"tool":"run_script","drawing":"shahe.FCStd","state":"working","step":0,"total":null}
+{"run":"a84c1a31","n":2,"ts":1793550078.808,"tool":"run_script","drawing":"shahe.FCStd","state":"error","seconds":0.05,"error":{"code":"DEPENDENCY_MISSING","message":"FreeCAD is not available; 3D parts (.FCStd) need it"}}
+{"run":"466e93aa","n":1,"ts":1793550092.843,"tool":"create_drawing","drawing":"shahe.FCStd","state":"working","step":0,"total":null}
+{"run":"466e93aa","n":2,"ts":1793550093.492,"tool":"create_drawing","drawing":"shahe.FCStd","state":"done","seconds":0.65}
+{"run":"f5328d3c","n":1,"ts":1793550094.858,"tool":"run_script","drawing":"shahe.FCStd","state":"working","step":0,"total":null}
+{"run":"f5328d3c","n":2,"ts":1793550095.365,"tool":"run_script","drawing":"shahe.FCStd","state":"error","seconds":0.51,"error":{"code":"SCRIPT_FAILED","message":"The script raised RuntimeError: FreeCAD exception thrown (Access violation)"}}
+{"run":"9dd4d528","n":1,"ts":1793550109.477,"tool":"run_script","drawing":"shahe.FCStd","state":"working","step":0,"total":null}
+{"run":"9dd4d528","n":2,"ts":1793550170.123,"tool":"run_script","drawing":"shahe.FCStd","state":"error","seconds":60.65,"error":{"code":"SCRIPT_TIMEOUT","message":"The script ran longer than 60 s (FreeCAD's start included) and was stopped"}}
+{"run":"5af90f6a","n":1,"ts":1793550190.379,"tool":"run_script","drawing":"shahe.FCStd","state":"working","step":0,"total":null}
+{"run":"3c3df6f2","n":1,"ts":1793550244.578,"tool":"run_script","drawing":"shahe.FCStd","state":"working","step":0,"total":null}
+{"run":"23b47d70","n":1,"ts":1793550263.06,"tool":"run_script","drawing":"shahe.FCStd","state":"working","step":0,"total":null}
+{"run":"23b47d70","n":2,"ts":1793550294.125,"tool":"run_script","drawing":"shahe.FCStd","state":"done","seconds":31.06,"changes":{"added":3,"modified":0,"deleted":0},"passed":true,"issues":1}
+{"run":"d8e44a5a","n":1,"ts":1793550313.987,"tool":"validate_drawing","drawing":"shahe.FCStd","state":"checking","step":0,"total":null}
+{"run":"d8e44a5a","n":2,"ts":1793550319.229,"tool":"validate_drawing","drawing":"shahe.FCStd","state":"done","seconds":5.24,"passed":true,"issues":1}
