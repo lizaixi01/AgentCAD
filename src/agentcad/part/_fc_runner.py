@@ -2222,6 +2222,22 @@ FACE_RGB = (176, 188, 206)
 EDGE_RGB = (35, 38, 45)
 
 
+def tessellate(sh, deflection):
+    """Points and triangles of every face of ``sh``. Shape.tessellate silently leaves out a face OCC's mesher failed
+    on (seen on a phone body: one filleted corner, 2048 triangles, missing from the viewer, which then showed a dark
+    hole), so faces are collected one by one and a face left without triangles is meshed again on its own, finer."""
+    sh.tessellate(deflection)  # one pass over the whole shape: neighbouring faces share their edges' points
+    pts, tris = [], []
+    for f in sh.Faces:
+        p, t = f.tessellate(deflection)
+        if not t:
+            p, t = f.copy().tessellate(deflection / 4)  # a copy carries no triangulation: meshed from scratch
+        base = len(pts)
+        pts += p
+        tris += [(a + base, b + base, c + base) for a, b, c in t]
+    return pts, tris
+
+
 def _view(v, name):
     if isinstance(v, str):
         if v not in NAMED_VIEWS:
@@ -2266,7 +2282,7 @@ def render_view(sh, d, size, fit, ss=2, with_mask=False):
         R = P - centre
         return R @ right * k + n / 2, n / 2 - R @ up * k, R @ fwd
 
-    pts, tris = sh.tessellate(max(span, 1e-9) / 400)
+    pts, tris = tessellate(sh, max(span, 1e-9) / 400)
     P = np.array([[p.x, p.y, p.z] for p in pts], float)
     T = np.array(tris, int).reshape(-1, 3)
     X, Y, Z = project(P)
@@ -2457,7 +2473,7 @@ def action_mesh(job):
         raise OpError("NO_SOLID", "Nothing to show: the part has no solid", category="geometry")
     sh = body.Shape
     span = max(tight_box(sh).DiagonalLength, 1e-9)
-    pts, tris = sh.tessellate(span / 600)
+    pts, tris = tessellate(sh, span / 600)
     edges = []
     for e in sh.Edges:
         if not (e.Degenerated or _is_seam(sh, e)):  # no seams, no sphere or cone poles
