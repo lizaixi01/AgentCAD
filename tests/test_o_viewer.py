@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import socket
 import threading
@@ -264,6 +265,84 @@ def test_part_mesh_png_and_diff(rt, ws, viewer):
     assert files_state(ws) == before
 
 
+@needs_freecad
+def test_part_mesh_covers_every_face(rt, viewer):
+    """The viewer once lost one filleted corner of a phone body (Shape.tessellate dropped a face it failed to mesh):
+    the triangles must add up to the whole surface of a part with rounded corners."""
+    w, h, r, t = 78.0, 160.0, 12.0, 8.0
+    b = math.tan(math.radians(22.5))  # bulge of a 90-degree arc
+    x0, x1, y0, y1 = -w / 2, w / 2, -h / 2, h / 2
+    outline = [[x0 + r, y0], [x1 - r, y0, b], [x1, y0 + r], [x1, y1 - r, b],
+               [x1 - r, y1], [x0 + r, y1, b], [x0, y1 - r], [x0, y0 + r, b]]
+    ok(rt.apply_operations("phone.FCStd", [{"op": "add_sketch", "plane": "XY",
+                                            "shapes": [{"type": "polygon", "points": outline}]},
+                                           {"op": "pad", "sketch": "$0", "length": t}], create={"units": "mm"}))
+    code, m = get_json(viewer, "/api/mesh", path="phone.FCStd")
+    assert code == 200
+    p, ix = m["positions"], m["indices"]
+    area = 0.0
+    for i in range(0, len(ix), 3):
+        a, c, d = (p[3 * ix[i + k]:3 * ix[i + k] + 3] for k in range(3))
+        u, v = [c[j] - a[j] for j in range(3)], [d[j] - a[j] for j in range(3)]
+        area += math.hypot(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]) / 2
+    face = w * h - (4 - math.pi) * r * r
+    side = 2 * (w + h) - 8 * r + 2 * math.pi * r
+    assert area == pytest.approx(2 * face + side * t, rel=2e-3)
+
+
+TESSELLATE_STUBS = r'''
+import importlib.util, json
+spec = importlib.util.spec_from_file_location("fc_runner", RUNNER)
+runner = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(runner)
+
+class Face:
+    """first: triangles of the first meshing; again: of a copy meshed from scratch"""
+    def __init__(self, first, again):
+        self.first, self.again, self.calls = first, again, []
+    def tessellate(self, d):
+        self.calls.append(d)
+        return [f"p{i}" for i in range(3 * len(self.first))], self.first
+    def copy(self):
+        return Face(self.again, self.again)
+
+class Shape:
+    def __init__(self, faces):
+        self.Faces = faces
+    def tessellate(self, d):
+        return [], []
+
+ok, dropped, lost = Face([(0, 1, 2)], []), Face([], [(0, 1, 2), (2, 1, 0)]), Face([], [])
+pts, tris, missing = runner.tessellate(Shape([ok, dropped, lost]), 0.4)
+json.dump({"points": len(pts), "tris": tris, "missing": missing}, open(OUT, "w"))
+'''
+
+
+@needs_freecad
+def test_tessellate_meshes_a_dropped_face_again(tmp_path):
+    """A face Shape.tessellate left without triangles is meshed again on its own; one that still has none is named."""
+    import subprocess
+    cmd, env = freecad.find_freecad()
+    out = tmp_path / "out.json"
+    script = tmp_path / "stubs.py"
+    script.write_text(f"RUNNER = {str(freecad.RUNNER)!r}\nOUT = {str(out)!r}\n" + TESSELLATE_STUBS, "utf-8")
+    env = {**os.environ, **env}
+    env.pop("AGENTCAD_FC_JOB", None)
+    p = subprocess.run(cmd + [str(script)], env=env, cwd=tmp_path, capture_output=True, text=True, timeout=120)
+    assert out.is_file(), f"the FreeCAD script failed (exit {p.returncode}):\n{p.stdout[-2000:]}\n{p.stderr[-2000:]}"
+    r = json.loads(out.read_text("utf-8"))
+    assert r["missing"] == ["Face3"]
+    assert r["points"] == 3 + 6  # Face1's points, then the re-meshed Face2's
+    assert r["tris"] == [[0, 1, 2], [3, 4, 5], [5, 4, 3]]  # Face2's indices shifted past Face1's points
+
+
+@needs_freecad
+def test_part_mesh_reports_no_missing_faces(rt, viewer):
+    ok(rt.apply_operations("plate.FCStd", PLATE, create={"units": "mm"}))
+    code, m = get_json(viewer, "/api/mesh", path="plate.FCStd")
+    assert code == 200 and m["missing_faces"] == []
+
+
 # --- commits are never blocked by the viewer -------------------------------------------------------------------
 
 @pytest.mark.skipif(os.name != "nt", reason="POSIX rename never fails on an open target")
@@ -455,3 +534,135 @@ def test_viewer_serves_the_ui_kit_and_nothing_else(tmp_path):
                 assert e.code == 404, bad
     finally:
         v.stop()
+
+
+# --- adding files from the page, and showing the folder -----------------------------------------------------------
+
+def _post(url, path, body=b"", headers=None):
+    import urllib.error
+    import urllib.request
+    h = {"X-AgentCAD-Viewer": "1", **(headers or {})}
+    req = urllib.request.Request(url + path.lstrip("/"), data=body, headers=h, method="POST")
+    try:
+        with urllib.request.urlopen(req) as r:
+            return r.status, json.loads(r.read())
+    except urllib.error.HTTPError as e:
+        return e.code, json.loads(e.read())
+
+
+@pytest.fixture
+def page_viewer(tmp_path, monkeypatch):
+    from agentcad import desktop
+    from agentcad.policy import Policy
+    from agentcad.viewer import Viewer
+    opened = []
+    monkeypatch.setattr(desktop, "open_folder", lambda p: opened.append(("folder", p)))
+    monkeypatch.setattr(desktop, "reveal", lambda p: opened.append(("reveal", p)))
+    v = Viewer(Policy(root=tmp_path, read_only=False), port=0).start()
+    v.opened = opened
+    yield v
+    v.stop()
+
+
+def test_page_adds_files_without_overwriting(page_viewer, tmp_path):
+    from urllib.parse import quote
+    dxf = (tmp_path / "src.dxf")
+    import ezdxf
+    ezdxf.new().saveas(dxf)
+    data = dxf.read_bytes()
+    dxf.unlink()
+    code, r = _post(page_viewer.url, "/api/import", data, {"X-AgentCAD-Filename": quote("板 plate.dxf")})
+    assert code == 200 and r["path"] == "板 plate.dxf" and r["shown"] and not r["renamed"]
+    code, r = _post(page_viewer.url, "/api/import", b"other", {"X-AgentCAD-Filename": quote("板 plate.dxf")})
+    assert r["path"] == "板 plate (2).dxf" and r["renamed"]
+    assert (tmp_path / "板 plate.dxf").read_bytes() == data  # the first one is untouched
+    # a name is only its last part: nothing lands outside the workspace
+    for name, want in (("../../evil.dxf", "evil.dxf"), (r"..\..\x\evil2.png", "evil2.png"), ("C:/Windows/w.pdf", "w.pdf"),
+                       ("con.dxf", "_con.dxf"), ("a<b>c|d?.STEP", "a_b_c_d_.step")):
+        code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": quote(name)})
+        assert code == 200 and r["path"] == want and (tmp_path / want).is_file(), (name, r)
+        assert r["shown"] == want.endswith(".dxf")  # a drawing opens; the rest wait for the assistant
+    assert not (tmp_path.parent / "evil.dxf").exists()
+    code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": "virus.exe"})
+    assert code == 400 and r["error"]["code"] == "UNSUPPORTED_FILE"
+    # the page learns where the drawings are and that it may add files; the new drawing is listed
+    with __import__("urllib.request").request.urlopen(page_viewer.url + "api/drawings") as resp:
+        d = json.loads(resp.read())
+    assert d["root"] == str(tmp_path) and d["can_add"] is True and "板 plate.dxf" in [x["path"] for x in d["drawings"]]
+
+
+def test_only_the_page_itself_may_add_or_open(page_viewer, tmp_path):
+    from urllib.parse import quote
+    name = {"X-AgentCAD-Filename": quote("a.dxf")}
+    # another site: no special header (it cannot send one without a CORS preflight), or a foreign Origin
+    code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Viewer": "0", **name})
+    assert code == 403 and r["error"]["code"] == "NOT_FROM_THE_PAGE"
+    code, _ = _post(page_viewer.url, "/api/import", b"x", {"Origin": "https://evil.example", **name})
+    assert code == 403
+    code, _ = _post(page_viewer.url, "/api/reveal", b"{}", {"Host": "evil.example"})
+    assert code == 403
+    assert not (tmp_path / "a.dxf").exists() and not page_viewer.opened
+    # the page: the folder, a file in it; nothing outside
+    (tmp_path / "in.dxf").write_text("x")
+    assert _post(page_viewer.url, "/api/reveal", b"{}")[0] == 200
+    assert _post(page_viewer.url, "/api/reveal", json.dumps({"path": "in.dxf"}).encode())[0] == 200
+    code, r = _post(page_viewer.url, "/api/reveal", json.dumps({"path": "../../Windows"}).encode())
+    assert code == 403 and r["error"]["code"] == "OUTSIDE_WORKSPACE"
+    assert page_viewer.opened == [("folder", tmp_path), ("reveal", (tmp_path / "in.dxf").resolve())]
+
+
+def test_read_only_and_remote_viewers_take_no_files(tmp_path, monkeypatch):
+    from agentcad import desktop
+    from agentcad.policy import Policy
+    from agentcad.viewer import Viewer
+    monkeypatch.setattr(desktop, "open_folder", lambda p: None)
+    v = Viewer(Policy(root=tmp_path, read_only=True), port=0).start()
+    try:
+        code, r = _post(v.url, "/api/import", b"x", {"X-AgentCAD-Filename": "a.dxf"})
+        assert code == 403 and r["error"]["code"] == "READ_ONLY" and not (tmp_path / "a.dxf").exists()
+    finally:
+        v.stop()
+    v = Viewer(Policy(root=tmp_path, read_only=False), port=0, allow_remote=True).start()
+    try:
+        assert _post(v.url, "/api/import", b"x", {"X-AgentCAD-Filename": "a.dxf"})[0] == 403
+        assert _post(v.url, "/api/reveal", b"{}")[0] == 403
+    finally:
+        v.stop()
+
+
+def test_a_large_file_is_refused_before_it_is_read(page_viewer, tmp_path, monkeypatch):
+    from agentcad import viewer
+    monkeypatch.setattr(viewer, "MAX_IMPORT", 10)
+    code, r = _post(page_viewer.url, "/api/import", b"x" * 11, {"X-AgentCAD-Filename": "big.dxf"})
+    assert code == 413 and r["error"]["code"] == "FILE_TOO_LARGE" and not (tmp_path / "big.dxf").exists()
+
+
+def test_import_needs_a_sane_length_and_the_page_is_not_framed(page_viewer, tmp_path):
+    import http.client
+    from urllib.parse import quote, urlparse
+    u = urlparse(page_viewer.url)
+
+    def raw(headers, body=b""):
+        c = http.client.HTTPConnection(u.hostname, u.port, timeout=10)
+        c.putrequest("POST", "/api/import")
+        for k, v in {"X-AgentCAD-Viewer": "1", "X-AgentCAD-Filename": "len.dxf", **headers}.items():
+            c.putheader(k, v)
+        c.endheaders()
+        if body:
+            c.send(body)
+        r = c.getresponse()
+        out = (r.status, json.loads(r.read()))
+        c.close()
+        return out
+
+    code, r = raw({"Transfer-Encoding": "chunked"}, b"1\r\nx\r\n0\r\n\r\n")
+    assert code == 411 and r["error"]["code"] == "LENGTH_REQUIRED"
+    code, r = raw({"Content-Length": "-1"}, b"xyz")
+    assert code == 400
+    assert not (tmp_path / "len.dxf").exists()
+    # device names count before the first dot
+    for name in ("nul.x.dxf", "CONIN$.dxf", "com¹.png"):
+        code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": quote(name)})
+        assert code == 200 and r["path"].startswith("_"), (name, r)
+    with urllib.request.urlopen(page_viewer.url) as resp:
+        assert resp.headers["X-Frame-Options"] == "DENY" and "frame-ancestors 'none'" in resp.headers["Content-Security-Policy"]

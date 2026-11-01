@@ -88,6 +88,39 @@ ul { list-style: none; margin: 0; padding: 0; }
 .follow input:checked { background: var(--ff-accent); }
 .follow input:checked::after { transform: translateX(18px); }
 
+/* where the drawings live, and adding files: a button, drag and drop, paste */
+#where { margin: 0 12px 10px; padding: 10px 12px; border-radius: var(--radius-m); background: var(--surface-3); box-shadow: var(--shadow-1);
+         display: grid; grid-template-columns: 32px 1fr; gap: 2px 10px; align-items: center; }
+#where > svg { width: 24px; height: 24px; color: var(--ff-accent); grid-row: span 2; justify-self: center; }
+#whereLbl { font-size: 13px; color: var(--fg-muted); }
+#wherePath { font: 13px/18px ui-monospace, "Cascadia Mono", Consolas, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+             direction: rtl; text-align: left; }  /* long paths keep their end (the folder's own name) visible */
+#whereBtns { grid-column: 1 / -1; display: flex; gap: 6px; margin-top: 8px; }
+.mini { appearance: none; border: 0; font: inherit; font-size: var(--fs-caption); min-height: 34px; padding: 0 12px; border-radius: 9px; cursor: pointer;
+        background: var(--active); color: var(--fg); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+        transition: background-color var(--spring-fast), font-variation-settings var(--spring-moderate), transform var(--spring-fast); }
+.mini:hover { background: var(--selected); font-variation-settings: var(--wght-semibold); }
+.mini:active { transform: scale(.97); }
+.mini svg { width: 16px; height: 16px; }
+#addBtn { margin: 4px 12px 0; width: calc(100% - 24px); justify-content: center; min-height: var(--control-h); border-radius: var(--radius-m);
+          background: transparent; border: 1.5px dashed color-mix(in oklab, var(--fg) 22%, transparent); color: var(--fg-muted); }
+#addBtn:hover { background: var(--hover); color: var(--fg); border-color: var(--ff-accent); }
+#addHint { margin: 6px 16px 0; font-size: 13px; color: var(--fg-faint); text-align: center; }
+#list li { position: relative; }
+#list li .reveal { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); opacity: 0; width: 34px; height: 34px; padding: 0;
+                   justify-content: center; background: var(--surface-4); box-shadow: var(--shadow-2); }
+#list li:hover .reveal, #list li:focus-within .reveal, #list li.lit .reveal { opacity: 1; }
+@media (hover: none) { #list li .reveal { opacity: 1; } }
+#drop { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; padding: 24px;
+        background: color-mix(in oklab, var(--ff-accent) 16%, transparent); backdrop-filter: blur(3px);
+        animation: pop-in var(--spring-moderate) both; }
+#drop > div { pointer-events: none; display: grid; justify-items: center; gap: 10px; padding: 34px 40px; border-radius: var(--radius-xl);
+              width: min(560px, 100%); overflow-wrap: anywhere;
+              background: var(--surface-4); box-shadow: var(--shadow-6); outline: 2.5px dashed var(--ff-accent); outline-offset: -12px; text-align: center; }
+#drop svg { width: 46px; height: 46px; color: var(--ff-accent); }
+#drop b { font-size: var(--fs-title); line-height: var(--lh-title); font-variation-settings: var(--wght-bold); font-weight: normal; }
+#drop span { color: var(--fg-muted); }
+
 /* main */
 main { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; min-width: 0; min-height: 0; overflow: hidden; }
 #status { display: grid; grid-template-columns: 48px 1fr auto; gap: 2px 14px; align-items: center; background: var(--surface-3);
@@ -174,8 +207,9 @@ main { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; min
 #legend i { display: inline-block; width: 14px; height: 4px; border-radius: 2px; vertical-align: middle; margin-right: 6px; }
 #hint { position: absolute; left: 12px; top: 12px; color: var(--fg-muted); font-size: 13px; z-index: 2; background: color-mix(in oklab, var(--surface-4) 85%, transparent);
         backdrop-filter: blur(8px); padding: 4px 10px; border-radius: 8px; }
-#busy { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--fg); z-index: 2;
-        background: var(--surface-4); padding: 10px 16px; border-radius: var(--radius-m); box-shadow: var(--shadow-4); }
+#busy { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); color: var(--fg); z-index: 2; text-align: center;
+        width: max-content; max-width: min(460px, calc(100% - 32px)); overflow-wrap: anywhere;
+        background: var(--surface-4); padding: 12px 18px; border-radius: var(--radius-m); box-shadow: var(--shadow-4); }
 #busy:empty { display: none; }
 #compare .pane { position: absolute; inset: 0; }
 #compare img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
@@ -300,8 +334,20 @@ details[open] > summary::after { transform: rotate(225deg) translateY(-2px); }
 
 <aside id="files">
   <h2 data-t="files"></h2>
+  <div id="where" hidden>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    <div id="whereLbl" data-t="folderLbl"></div>
+    <div id="wherePath"></div>
+    <div id="whereBtns">
+      <button class="mini" id="openFolder" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span data-t="openFolder"></span></button>
+      <button class="mini" id="copyPath" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span data-t="copyPath"></span></button>
+    </div>
+  </div>
   <ul id="list"></ul>
   <div class="emptyNote" id="listEmpty" data-t="filesEmpty" hidden></div>
+  <button class="mini" id="addBtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-t="addFiles"></span></button>
+  <div id="addHint" data-t="addHint" hidden></div>
+  <input type="file" id="pick" multiple hidden accept=".dxf,.dwg,.fcstd,.FCStd,.step,.stp,.stl,.pdf,.png,.jpg,.jpeg,.webp">
   <label class="follow" id="followLbl"><input type="checkbox" id="follow" checked><span data-t="follow"></span></label>
 </aside>
 
@@ -349,6 +395,7 @@ details[open] > summary::after { transform: rotate(225deg) translateY(-2px); }
   </div>
 </aside>
 <div id="toast" role="status" aria-live="polite"></div>
+<div id="drop" hidden><div><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 15V3m-5 5 5-5 5 5"/><path d="M5 14v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5"/></svg><b data-t="dropTitle"></b><span data-t="dropBody"></span></div></div>
 
 <script type="module">
 // The live viewer page: EventSource for changes and progress, the API in viewer.py, wording in friendly.js.
@@ -411,6 +458,31 @@ function applyLang() {
   renderStatus(); renderFeed(); renderFileList(); updateTitle(); updateHint();
   if (S.tl) renderTimeline();
 }
+// the folder card, the add button, drag and drop, paste
+$("openFolder").onclick = () => reveal("");
+$("copyPath").onclick = async () => {
+  try { await navigator.clipboard.writeText(S.root || ""); toast(t("pathCopied")); }
+  catch (e) { toast(S.root || ""); }
+};
+$("addBtn").onclick = () => $("pick").click();
+$("pick").onchange = () => { importFiles($("pick").files); $("pick").value = ""; };
+let dragDepth = 0;
+const hasFiles = (e) => !!e.dataTransfer && [...e.dataTransfer.types].includes("Files");
+addEventListener("dragenter", (e) => { if (!hasFiles(e) || !S.canAdd) return; e.preventDefault(); dragDepth++; $("drop").hidden = false; });
+// files dragged over the page never open in the browser: a read-only page says why it cannot take them
+addEventListener("dragover", (e) => { if (hasFiles(e)) { e.preventDefault(); e.dataTransfer.dropEffect = "copy"; } });  // "none" would skip the drop, and its note
+addEventListener("dragleave", (e) => { if (!hasFiles(e)) return; if (--dragDepth <= 0) { dragDepth = 0; $("drop").hidden = true; } });
+addEventListener("drop", (e) => {
+  if (!hasFiles(e)) return;
+  e.preventDefault(); dragDepth = 0; $("drop").hidden = true;
+  importFiles(e.dataTransfer.files);
+});
+addEventListener("paste", (e) => {  // a file copied in Explorer or Finder, then Ctrl+V here
+  if (e.target.closest && e.target.closest("input, textarea, [contenteditable]")) return;
+  const files = e.clipboardData && e.clipboardData.files;
+  if (files && files.length) { e.preventDefault(); importFiles(files); }
+});
+
 // the canvas toolbar (AutoCAD: Zoom Extents, zoom in, zoom out) and the kit's gliding list highlight and tooltips
 $("zoomAll").onclick = () => zoomAll(); $("zoomIn").onclick = () => zoomBy(1 / 1.5); $("zoomOut").onclick = () => zoomBy(1.5);
 for (const id of ["list", "feed", "timeline"]) Fluid.fluidHover($(id), { item: "li" });
@@ -476,6 +548,40 @@ function ago(ts) {
   if (s < 3600) return t("minAgo", { n: Math.floor(s / 60) });
   if (s < 86400) return t("hAgo", { n: Math.floor(s / 3600) });
   return new Date(ts * 1000).toLocaleDateString(LANG === "zh" ? "zh-CN" : undefined);
+}
+const FOLDER_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+// The page's only writes: add a file, show the folder. The header proves the request comes from this page.
+const post = (p, body, headers = {}) => fetch(p, { method: "POST", body, headers: { "X-AgentCAD-Viewer": "1", ...headers } })
+  .then((r) => r.json()).catch((e) => ({ ok: false, error: { message: e.message } }));
+// why a file cannot be shown, in a sentence (the server's message names cache paths and parser details)
+function cannotShow(e) {
+  const code = (e && e.code) || "";
+  return F.UI[LANG]["show_" + code] ? t("show_" + code) : t("show_other", { c: code || (e && e.message) || "" });
+}
+async function reveal(path) {
+  const r = await post("/api/reveal", JSON.stringify({ path: path || "" }), { "Content-Type": "application/json" });
+  if (!r.ok) toast(t("cannotOpen", { m: (r.error && r.error.message) || "" }));
+}
+async function importFiles(files) {
+  files = [...files || []];
+  if (!files.length) return;
+  if (!S.canAdd) { toast(t("readOnlyAdd")); return; }
+  let last = null, added = 0;
+  for (const f of files) {
+    toast(t("adding", { f: f.name }));
+    const r = await post("/api/import", f, { "X-AgentCAD-Filename": encodeURIComponent(f.name), "Content-Type": "application/octet-stream" });
+    if (!r.ok) {  // in plain words for the known reasons, the server's message otherwise
+      const why = r.error && F.UI[LANG]["why_" + r.error.code] ? t("why_" + r.error.code) : ((r.error && r.error.message) || "");
+      toast(t("addFailed", { f: f.name, m: why })); await new Promise((ok) => setTimeout(ok, 2400)); continue;
+    }
+    added++; last = r;
+  }
+  if (!last) return;
+  // what the person sees next: a drawing opens; other files wait in the folder for the assistant
+  const msg = added > 1 ? t("addedMany", { n: added }) : last.shown ? t("addedShown", { f: base(last.path) }) :
+    last.kind === "dwg" ? t("addedDwg", { f: base(last.path) }) : t("addedKept", { f: base(last.path) });
+  toast(msg + (last.renamed ? " " + t("renamed") : ""));
+  if (last.shown) { await loadList(); location.hash = encodeURIComponent(last.path); }
 }
 function toast(msg) { const el = $("toast"); el.textContent = msg; el.classList.add("on"); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove("on"), 2600); }
 
@@ -588,6 +694,9 @@ function onActivity(ev) {
 async function loadList() {
   const r = await api("/api/drawings");
   S.drawings = r.drawings.map((d) => d.path);
+  S.root = r.root; S.canAdd = !!r.can_add;
+  $("where").hidden = !S.root; $("wherePath").textContent = S.root || ""; $("wherePath").title = S.root || "";
+  $("addBtn").hidden = $("addHint").hidden = !S.canAdd;
   renderFileList();
   if (!S.path && S.drawings.length && !location.hash) location.hash = encodeURIComponent(S.drawings[0]);
 }
@@ -601,14 +710,20 @@ function renderFileList() {
     let li = S.items.get(p);
     if (!li) {
       li = document.createElement("li"); li.tabIndex = 0;
-      li.innerHTML = '<img class="thumb" alt="" loading="lazy"><div><div class="fname"></div><div class="fmeta"></div></div>';
+      li.innerHTML = '<img class="thumb" alt="" loading="lazy"><div><div class="fname"></div><div class="fmeta"></div></div>' +
+        `<button class="mini reveal" type="button">${FOLDER_ICON}</button>`;
       li.onclick = () => { location.hash = encodeURIComponent(p); };
-      li.onkeydown = (e) => { if (e.key === "Enter") li.onclick(); };
+      const rv = li.querySelector(".reveal");
+      rv.onclick = (e) => { e.stopPropagation(); reveal(p); };
+      rv.dataset.tip = t("showInFolder"); rv.setAttribute("aria-label", t("showInFolder"));
+      li.onkeydown = (e) => { if (e.key === "Enter" && e.target === li) li.onclick(); };  // not Enter on its buttons
       S.items.set(p, li);
     }
-    if (ul.children[i] !== li) ul.insertBefore(li, ul.children[i] || null);
+    const rows = ul.querySelectorAll(":scope > li");  // the list also holds the hover highlight: count rows only
+    if (rows[i] !== li) ul.insertBefore(li, rows[i] || null);
     li.className = p === S.path ? "sel" : "";
     li.querySelector(".fname").textContent = base(p);
+    const rvb = li.querySelector(".reveal"); rvb.dataset.tip = t("showInFolder"); rvb.setAttribute("aria-label", t("showInFolder"));
     li.title = p;
     const ts = lastChange(p);
     li.querySelector(".fmeta").innerHTML = `<span>${esc(isPart(p) ? t("part") : t("drawing"))}</span>` +
@@ -732,7 +847,7 @@ async function render2d(v, seq) {
   if (!$("stage").firstChild) busy(t("loading"));
   let text;
   try { text = await api("/api/svg", { path: S.path, v: v || "current", diff: hl ? 1 : 0, hide: [...S.hidden].join(",") }); }
-  catch (e) { busy(e.message); return; }
+  catch (e) { busy(cannotShow(e)); return; }
   if (seq !== S.renderSeq) return;
   busy("");
   const doc = new DOMParser().parseFromString(text, "image/svg+xml");
@@ -855,7 +970,7 @@ async function render3d(v, seq) {
   }
   let m;
   try { m = await api("/api/mesh", { path: S.path, v: v || S.tl.current }); }
-  catch (e) { busy(e.message); return; }
+  catch (e) { busy(cannotShow(e)); return; }
   if (seq !== S.renderSeq) return;
   busy("");
   if (!S.three) S.three = makeScene(T);

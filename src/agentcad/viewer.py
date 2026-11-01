@@ -23,6 +23,13 @@ Files are read into a content-addressed cache outside the workspace before they 
     GET /api/export?path=&v=      a self-contained HTML snapshot (picture + change history) to send to someone
     GET /api/events?progress=1    SSE: {"drawing", "kind": changed|added|removed, "id"}; progress=1 adds
                                   {"kind": "activity", "activity": <progress event>}
+    POST /api/import              add a file to the workspace (body: its bytes; X-AgentCAD-Filename: its name,
+                                  URL-encoded): never overwrites, "plate (2).dxf" instead; refused when read-only
+    POST /api/reveal              {"path": ""} opens the workspace folder; {"path": "<drawing>"} shows that file in it
+
+The two POSTs are the only writes and the only programs it starts. They answer only the page itself: a loopback
+Host, a loopback Origin when one is sent, and the header X-AgentCAD-Viewer: 1, which another site cannot send
+without a CORS preflight this server never answers. With --allow-remote they are off.
 
 The MCP server starts one in the background on the first change (``start_background``), so a user only has to
 open the ``viewer_url`` its results carry.
@@ -54,6 +61,14 @@ STATIC = Path(__file__).resolve().parent / "viewer_static"
 SUFFIXES = (".dxf", ".fcstd")
 SKIP_DIRS = {STATE_DIR, ".git", ".venv", "venv", "node_modules", "__pycache__", ".claude"}
 MAX_FILES = 2000
+# files a person can add from the page (drag, paste, "Add files"): drawings and parts the viewer shows, and files kept
+# for the assistant to use (DWG to convert, STEP/STL, reference pictures and PDFs)
+IMPORT_SHOWN = (".dxf", ".fcstd")
+IMPORT_KEPT = (".dwg", ".step", ".stp", ".stl", ".pdf", ".png", ".jpg", ".jpeg", ".webp")
+MAX_IMPORT = 100 * 1024 * 1024
+# Windows device names; they count before the first dot ("nul.x.dxf"), and older Windows also takes ¹²³
+WINDOWS_RESERVED = {"con", "prn", "aux", "nul", "conin$", "conout$",
+                    *(f"{d}{i}" for d in ("com", "lpt") for i in (*range(10), "¹", "²", "³"))}
 ROUTES = {"/api/timeline", "/api/layers", "/api/diff", "/api/svg", "/api/mesh", "/api/png", "/api/thumb",
           "/api/export"}
 STATIC_FILES = {"/friendly.js": ("friendly.js", "text/javascript; charset=utf-8"),
@@ -111,6 +126,46 @@ class Workspace:
         self._results: OrderedDict[tuple, Any] = OrderedDict()
         self._locks: dict[tuple, threading.Lock] = {}
         self._guard = threading.Lock()
+
+    # --- adding files (the page's drag and drop, paste and "Add files") -----------------------------
+    def import_file(self, name: str, data: bytes) -> dict[str, Any]:
+        """Write ``data`` as a new file at the top of the workspace. Only the last part of ``name`` counts, odd
+        characters become "_", and an existing file is never replaced: "plate.dxf" becomes "plate (2).dxf"."""
+        base = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "_", str(name).replace("\\", "/").split("/")[-1]).strip(" .")
+        stem, dot, suffix = base.rpartition(".")
+        suffix = ("." + suffix).lower() if dot else ""
+        if suffix not in IMPORT_SHOWN + IMPORT_KEPT:
+            raise input_error("UNSUPPORTED_FILE", f"{base or name!r}: not a file AgentCAD uses",
+                              hint="Drawings (.dxf, .dwg), parts (.FCStd, .step, .stl) or reference pictures "
+                                   "(.png, .jpg, .pdf)")
+        if len(data) > MAX_IMPORT:
+            raise input_error("FILE_TOO_LARGE", f"{base} is larger than {MAX_IMPORT // (1024 * 1024)} MB")
+        stem = (stem.strip(" .") or "drawing")[:120]
+        if stem.split(".")[0].rstrip(" ").lower() in WINDOWS_RESERVED:
+            stem = "_" + stem
+        root = self.policy.root
+        root.mkdir(parents=True, exist_ok=True)
+        for n in range(1, 1000):
+            target = root / (f"{stem}{suffix}" if n == 1 else f"{stem} ({n}){suffix}")
+            try:
+                with open(target, "xb") as f:  # exclusive: two drops of the same name never overwrite each other
+                    f.write(data)
+            except FileExistsError:
+                continue
+            rel = target.relative_to(root).as_posix()
+            return {"path": rel, "kind": "part" if _is_part(rel) else "drawing" if suffix == ".dxf" else
+                    suffix.lstrip("."), "shown": suffix in IMPORT_SHOWN, "renamed": n > 1, "bytes": len(data)}
+        raise input_error("FILE_EXISTS", f"Too many files named {stem}{suffix}")
+
+    def inside(self, rel: str) -> Path:
+        """The workspace file ``rel`` names; never a path outside the workspace."""
+        root = self.policy.root.resolve()
+        target = (root / rel).resolve()
+        if target != root and root not in target.parents:
+            raise AgentCADError("OUTSIDE_WORKSPACE", f"{rel} is outside the workspace", category="policy")
+        if not target.exists():
+            raise input_error("FILE_NOT_FOUND", f"{rel} does not exist")
+        return target
 
     # --- discovery ----------------------------------------------------------------------------
     @_retry
@@ -602,10 +657,14 @@ class ChangeFeed:
         self._stop.set()
 
 
-def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] | None = LOOPBACK):
+def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] | None = LOOPBACK,
+                 writable: bool = False):
     """``allowed_hosts``: host names the Host header may carry (None = any). A page on another site can point its
     own name at 127.0.0.1 (DNS rebinding); its requests then carry that name, and are refused."""
     from http.server import BaseHTTPRequestHandler
+
+    def can_add() -> bool:  # the page may add files: not read-only, and only on this computer
+        return writable and allowed_hosts is not None
 
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"
@@ -614,6 +673,9 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
             self.send_response(code)
             self.send_header("Content-Type", ctype)
             self.send_header("X-Content-Type-Options", "nosniff")
+            # no other site may show this page inside its own (and get a drop or a click on it)
+            self.send_header("X-Frame-Options", "DENY")
+            self.send_header("Content-Security-Policy", "frame-ancestors 'none'")
             if download:  # an ASCII name for old clients, the real one (UTF-8, e.g. Chinese) for the rest
                 from urllib.parse import quote
                 ascii_name = re.sub(r"[^A-Za-z0-9._-]+", "_", download)
@@ -657,7 +719,7 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                 if u.path == "/api/ping":
                     return self._json({"ok": True, "root": str(ws.policy.root)})
                 if u.path == "/api/drawings":
-                    return self._json({"ok": True, "root": str(ws.policy.root), "drawings": [
+                    return self._json({"ok": True, "root": str(ws.policy.root), "can_add": can_add(), "drawings": [
                         {"path": r, "kind": "part" if _is_part(r) else "drawing"} for r in ws.list_drawings()],
                         "last_event": feed.last_id})
                 if u.path == "/api/events":
@@ -698,6 +760,51 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
             except Exception as exc:  # noqa: BLE001
                 self._json({"ok": False, "error": {"code": "INTERNAL_ERROR", "category": "internal",
                                                    "message": f"{type(exc).__name__}: {exc}"}}, 500)
+
+        def do_POST(self):  # noqa: N802
+            """Add a file, or show the folder: only for the page itself (see the module notes)."""
+            self.close_connection = True  # a refused request may leave its body unread
+            origin = self.headers.get("Origin")
+            if allowed_hosts is None or _host_name(self.headers.get("Host")) not in allowed_hosts or \
+                    (origin and _host_name(urlparse(origin).netloc) not in LOOPBACK) or \
+                    self.headers.get("X-AgentCAD-Viewer") != "1":
+                return self._json({"ok": False, "error": {"code": "NOT_FROM_THE_PAGE", "category": "policy",
+                                                          "message": "Only the viewer page itself may do this"}}, 403)
+            u = urlparse(self.path)
+            try:
+                if self.headers.get("Content-Length") is None:  # chunked or unsized: the cap needs a size
+                    return self._json({"ok": False, "error": {"code": "LENGTH_REQUIRED", "category": "input",
+                                                              "message": "Content-Length is required"}}, 411)
+                n = int(self.headers["Content-Length"])
+                if n < 0:
+                    raise ValueError("Content-Length must not be negative")
+                if u.path == "/api/import":
+                    if not can_add():
+                        raise AgentCADError("READ_ONLY", "AgentCAD is read-only here: files cannot be added",
+                                            category="policy")
+                    if n > MAX_IMPORT:
+                        raise input_error("FILE_TOO_LARGE", f"Larger than {MAX_IMPORT // (1024 * 1024)} MB")
+                    from urllib.parse import unquote
+                    name = unquote(self.headers.get("X-AgentCAD-Filename") or "")
+                    return self._json({"ok": True, **ws.import_file(name, self.rfile.read(n))})
+                if u.path == "/api/reveal":
+                    body = json.loads(self.rfile.read(min(n, 65536)) or b"{}")
+                    rel = str(body.get("path") or "") if isinstance(body, dict) else ""
+                    from . import desktop
+                    if rel:
+                        desktop.reveal(ws.inside(rel))
+                    else:
+                        desktop.open_folder(ws.policy.root)
+                    return self._json({"ok": True})
+                return self._json({"ok": False, "error": {"code": "NOT_FOUND", "category": "input",
+                                                          "message": u.path}}, 404)
+            except AgentCADError as exc:
+                self._json({"ok": False, "error": exc.to_dict()},
+                           413 if exc.code == "FILE_TOO_LARGE" else 403 if exc.category == "policy" else
+                           404 if exc.code == "FILE_NOT_FOUND" else 400)
+            except (ValueError, OSError) as exc:
+                self._json({"ok": False, "error": {"code": "BAD_REQUEST", "category": "input", "message": str(exc)}},
+                           400)
 
         def _events(self, last: int, progress: bool = False) -> None:
             self.send_response(200)
@@ -758,6 +865,7 @@ class Viewer:
     def __init__(self, policy: Policy, host: str = "127.0.0.1", port: int = 8770, interval: float = 0.3,
                  allow_remote: bool = False,
                  cache_dir: Path | None = None) -> None:
+        self.writable = not policy.read_only  # the page may add new files (never change one) unless read-only
         policy.read_only = True  # the viewer never writes a drawing
         self.ws = Workspace(policy, cache_dir)
         self.feed = ChangeFeed(self.ws, interval)
@@ -766,7 +874,8 @@ class Viewer:
                                 category="policy", hint="The page has no authentication. Pass --allow-remote if "
                                                         "you mean it")
         self.httpd = _server(host)((host, port), make_handler(self.ws, self.feed,
-                                                              None if allow_remote else LOOPBACK))
+                                                              None if allow_remote else LOOPBACK,
+                                                              writable=self.writable))
         self.httpd.daemon_threads = True
         h, p = self.httpd.server_address[:2]
         h = "127.0.0.1" if h in ("0.0.0.0", "") else "::1" if h == "::" else h
@@ -818,7 +927,8 @@ def start_background(policy: Policy) -> Viewer | None:
     import atexit
     env_port = os.environ.get("AGENTCAD_VIEWER_PORT", "").strip()
     ports = [int(env_port)] if env_port.isdigit() else [*range(8770, 8780), 0]
-    view_policy = Policy(root=policy.root, read_only=True)  # its own: Viewer makes the policy read-only
+    # its own (Viewer makes it read-only); the original read-only setting decides whether the page may add files
+    view_policy = Policy(root=policy.root, read_only=policy.read_only)
     for port in ports:
         try:
             v = Viewer(view_policy, port=port).start()
