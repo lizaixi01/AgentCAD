@@ -401,6 +401,47 @@ def test_commits_succeed_while_the_viewer_reads(rt, ws, blank, workspace):
     assert not errors, errors[:3]
 
 
+@pytest.mark.skipif(os.name != "nt", reason="Windows sharing semantics")
+def test_a_cached_version_is_not_read_while_its_rename_is_in_flight(rt, ws, blank, workspace, monkeypatch):
+    """os.replace (MoveFileEx) still holds a DELETE handle on the file it just renamed; opening the new name then
+    fails with a sharing violation. A second reader must not be handed the cached copy before os.replace returns
+    (the 1-in-16 failure of the test above)."""
+    import ctypes
+    from ctypes import wintypes
+    k32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    k32.CreateFileW.restype = wintypes.HANDLE
+    k32.CreateFileW.argtypes = [wintypes.LPCWSTR, wintypes.DWORD, wintypes.DWORD, wintypes.LPVOID,
+                                wintypes.DWORD, wintypes.DWORD, wintypes.HANDLE]
+    line(rt, blank, [0, 0], [100, 0])
+    version = sha256_file(ws / blank)
+    real_replace, errors, raced = os.replace, [], []
+
+    def read():
+        try:
+            workspace.layers(blank, version)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(repr(exc))
+
+    def replace(src, dst):
+        real_replace(src, dst)
+        if Path(dst).parent != workspace.cache or raced:
+            return
+        h = k32.CreateFileW(str(dst), 0x00010000, 7, None, 3, 0, None)  # DELETE, share all, OPEN_EXISTING
+        assert h != wintypes.HANDLE(-1).value, ctypes.get_last_error()
+        try:
+            t = threading.Thread(target=read)
+            raced.append(t)
+            t.start()
+            t.join(0.5)  # a reader that waits for the copy to be finished is still waiting here
+        finally:
+            k32.CloseHandle(h)
+
+    monkeypatch.setattr(os, "replace", replace)
+    workspace.layers(blank, version)
+    raced[0].join(10)
+    assert raced and not errors, errors
+
+
 # --- reachable only from this machine -----------------------------------------------------------------------------
 
 def raw_get(srv: Viewer, route: str, host: str) -> int:
