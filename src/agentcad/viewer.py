@@ -65,6 +65,8 @@ MAX_FILES = 2000
 IMPORT_SHOWN = (".dxf", ".fcstd")
 IMPORT_KEPT = (".dwg", ".step", ".stp", ".stl", ".pdf", ".png", ".jpg", ".jpeg", ".webp")
 MAX_IMPORT = 100 * 1024 * 1024
+# a refused request's body up to this size is read before the connection closes (see Handler.do_POST)
+MAX_DRAIN = 64 * 1024
 # Windows device names; they count before the first dot ("nul.x.dxf"), and older Windows also takes ¹²³
 WINDOWS_RESERVED = {"con", "prn", "aux", "nul", "conin$", "conout$",
                     *(f"{d}{i}" for d in ("com", "lpt") for i in (*range(10), "¹", "²", "³"))}
@@ -769,6 +771,29 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
         def do_POST(self):  # noqa: N802
             """Add a file, or show the folder: only for the page itself (see the module notes)."""
             self.close_connection = True  # a refused request may leave its body unread
+            try:
+                self._unread = max(int(self.headers.get("Content-Length") or 0), 0)
+            except ValueError:
+                self._unread = 0
+            try:
+                self._post()
+            finally:
+                # Closing a socket with received data still unread makes Windows reset the connection, and the
+                # reset can throw away the answer before the client reads it (WinError 10053). So a refused
+                # request's small body is read before the connection closes; a large one is never read.
+                if 0 < self._unread <= MAX_DRAIN:
+                    try:
+                        self.connection.settimeout(2)
+                        self._read(self._unread)
+                    except OSError:
+                        pass
+
+        def _read(self, n: int) -> bytes:
+            data = self.rfile.read(n)
+            self._unread -= len(data)
+            return data
+
+        def _post(self) -> None:
             origin = self.headers.get("Origin")
             if allowed_hosts is None or _host_name(self.headers.get("Host")) not in allowed_hosts or \
                     (origin and _host_name(urlparse(origin).netloc) not in LOOPBACK) or \
@@ -791,9 +816,9 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                         raise input_error("FILE_TOO_LARGE", f"Larger than {MAX_IMPORT // (1024 * 1024)} MB")
                     from urllib.parse import unquote
                     name = unquote(self.headers.get("X-AgentCAD-Filename") or "")
-                    return self._json({"ok": True, **ws.import_file(name, self.rfile.read(n))})
+                    return self._json({"ok": True, **ws.import_file(name, self._read(n))})
                 if u.path == "/api/reveal":
-                    body = json.loads(self.rfile.read(min(n, 65536)) or b"{}")
+                    body = json.loads(self._read(min(n, 65536)) or b"{}")
                     rel = str(body.get("path") or "") if isinstance(body, dict) else ""
                     from . import desktop
                     if rel:
