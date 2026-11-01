@@ -132,6 +132,21 @@ def test_title_block_labels_do_not_overlap_values(rt, ws):
     assert labels["Material"] >= y_val + h_val  # label baseline above the value's cap height
 
 
+def test_title_block_labels_follow_the_language(rt, ws):
+    """A Chinese drawing had English cell labels (Material, Scale) next to Chinese values."""
+    ok(rt.create_drawing("t.dxf", units="mm"))
+    ok(rt.apply_operations("t.dxf", [
+        {"op": "add_title_block", "insert": [200, 10], "fields": {"TITLE": "安装板", "MATERIAL": "Q235"}},
+        {"op": "add_title_block", "insert": [400, 10], "fields": {"TITLE": "Plate"}},
+        {"op": "add_title_block", "insert": [600, 10], "fields": {"TITLE": "法兰"}, "lang": "en"}]))
+    doc = reread(ws, "t.dxf")
+    zh = {t.dxf.text for t in doc.blocks.get("AGENTCAD_TITLE_ZH").query("TEXT")}
+    en = {t.dxf.text for t in doc.blocks.get("AGENTCAD_TITLE").query("TEXT")}
+    assert {"材料", "比例", "单位", "制图", "日期"} <= zh and {"Material", "Scale", "Drawn By"} <= en
+    assert [i.dxf.name for i in doc.modelspace().query("INSERT")] == ["AGENTCAD_TITLE_ZH", "AGENTCAD_TITLE",
+                                                                       "AGENTCAD_TITLE"]
+
+
 def test_chinese_text_gets_a_big_font(rt, ws):
     """AutoCAD showed '???' for Chinese text in an SHX style without a big font."""
     ok(rt.create_drawing("cn.dxf", units="mm"))

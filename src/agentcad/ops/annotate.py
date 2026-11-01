@@ -395,14 +395,22 @@ def set_annotation_scale(ctx: Ctx, scale):
 
 TITLE_FIELDS = ["TITLE", "DWG_NO", "MATERIAL", "SCALE", "UNITS", "DRAWN_BY", "DATE", "SHEET"]
 TITLE_BLOCK = "AGENTCAD_TITLE"
+# GB-style cell labels; the Standard style's gbcbig.shx big font draws them in AutoCAD
+TITLE_LABELS_ZH = {"MATERIAL": "材料", "SCALE": "比例", "UNITS": "单位", "SHEET": "张次", "DRAWN_BY": "制图",
+                   "DATE": "日期"}
 
 
-def ensure_title_block(ctx: Ctx, k: float) -> None:
-    """Block definition 180x32 (scaled by k), base point = lower-right corner."""
+def _has_cjk(s: str) -> bool:
+    return any("㐀" <= ch <= "鿿" or "豈" <= ch <= "﫿" for ch in s)
+
+
+def ensure_title_block(ctx: Ctx, k: float, lang: str = "en") -> str:
+    """Block definition 180x32 (scaled by k), base point = lower-right corner; returns the block name."""
     from ezdxf.enums import TextEntityAlignment
-    if TITLE_BLOCK in ctx.doc.blocks:
-        return
-    blk = ctx.doc.blocks.new(TITLE_BLOCK, base_point=(0, 0))
+    name = TITLE_BLOCK if lang == "en" else TITLE_BLOCK + "_ZH"
+    if name in ctx.doc.blocks:
+        return name
+    blk = ctx.doc.blocks.new(name, base_point=(0, 0))
     W, H = 180 * k, 32 * k
     x0, y0 = -W, 0.0
     a = {"layer": "0"}
@@ -417,18 +425,24 @@ def ensure_title_block(ctx: Ctx, k: float) -> None:
     # Small label in the top of each 8 mm cell, value below it: no overlap whatever the font width.
     for f, (xx, yy) in labels.items():
         cells[f] = (x0 + xx * k + 1.5 * k, yy * k + 1.2 * k, 2.5 * k)
-        t = blk.add_text(f.replace("_", " ").title(), height=1.5 * k, dxfattribs=a)
+        label = TITLE_LABELS_ZH[f] if lang == "zh" else f.replace("_", " ").title()
+        # Chinese needs more height than Latin to stay legible; 2 mm still clears the 8 mm cell's top
+        t = blk.add_text(label, height=(2.0 if lang == "zh" else 1.5) * k, dxfattribs=a)
         t.set_placement((x0 + xx * k + 1 * k, yy * k + 5.6 * k), align=TextEntityAlignment.LEFT)
     for f in TITLE_FIELDS:
         x, y, h = cells[f]
         blk.add_attdef(f, insert=(x, y), height=h, text="", dxfattribs=a)
+    return name
 
 
 @op("add_title_block", "annotate", "Insert the standard 180x32 mm title block (ISO-like) with attributes "
     f"{TITLE_FIELDS}. 'insert' is the lower-right corner (usually the inner border corner).",
     {"insert": P("point", True), "fields": P("object", default=None, description="Attribute values, e.g. {TITLE: 'Plate'}"),
-     "size_factor": P("number", default=1.0, gt=0, description="Scale relative to the mm size")}, common_draw=True)
-def add_title_block(ctx: Ctx, insert, fields, size_factor, **p):
+     "size_factor": P("number", default=1.0, gt=0, description="Scale relative to the mm size"),
+     "lang": P("enum", default="auto", enum=["auto", "en", "zh"],
+               description="Cell labels: en (Material, Scale...), zh (材料, 比例...); auto = zh when a field value "
+                           "contains Chinese")}, common_draw=True)
+def add_title_block(ctx: Ctx, insert, fields, size_factor, lang, **p):
     if (s := check_tag(ctx, p)) is not None:
         return {"created": [], "skipped": True, "existing": s}
     fields = fields or {}
@@ -437,13 +451,15 @@ def add_title_block(ctx: Ctx, insert, fields, size_factor, **p):
         raise input_error("UNKNOWN_FIELD", f"Unknown title block field(s) {bad}", hint=f"Fields: {TITLE_FIELDS}")
     from ..units import UNITS
     k = (1.0 / UNITS[ctx.unit][1] if ctx.unit else 1.0)  # 1 mm in drawing units
-    ensure_title_block(ctx, 1.0)
+    if lang == "auto":
+        lang = "zh" if any(_has_cjk(str(v)) for v in fields.values()) else "en"
+    block = ensure_title_block(ctx, 1.0, lang)
     vals = {f: "" for f in TITLE_FIELDS}
     vals["UNITS"] = ctx.unit or ""
     vals.update({k_: str(v) for k_, v in fields.items()})
     attrs = ctx.attribs(p)
     sf = k * size_factor
     attrs.update(xscale=sf, yscale=sf)
-    ref = ctx.msp.add_blockref(TITLE_BLOCK, insert, dxfattribs=attrs)
+    ref = ctx.msp.add_blockref(block, insert, dxfattribs=attrs)
     ref.add_auto_attribs(vals)
     return {"created": [ctx.finish(ref, p)]}
