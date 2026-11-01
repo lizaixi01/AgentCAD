@@ -1,0 +1,66 @@
+{
+ "ok": true,
+ "tool": "export_drawing",
+ "drawing": "iphone18.FCStd",
+ "output": "iphone18.stl",
+ "format": "stl",
+ "bytes": 111084,
+ "shape": {
+  "valid": true,
+  "solids": 1,
+  "faces": 83,
+  "edges": 192,
+  "volume": 114294.565229,
+  "area": 30049.549044,
+  "bbox": [
+   [
+    -0.25,
+    0.0,
+    -3.0
+   ],
+   [
+    78.25,
+    163.4,
+    8.75
+   ]
+  ],
+  "size": [
+   78.5,
+   163.4,
+   11.75
+  ],
+  "center_of_mass": [
+   39.075657,
+   84.704416,
+   4.039884
+  ],
+  "holes": [
+   {
+    "diameter": 5.0,
+    "count": 1
+   },
+   {
+    "diameter": 6.0,
+    "count": 1
+   },
+   {
+    "diameter": 11.1,
+    "count": 3
+   },
+   {
+    "diameter": 18.4,
+    "count": 4
+   }
+  ],
+  "topology": {
+   "bodies": 1,
+   "genus": 0,
+   "voids": 0
+  }
+ },
+ "metrics": {
+  "duration_ms": 908.48,
+  "input_bytes": 92,
+  "output_bytes": 562
+ }
+}
