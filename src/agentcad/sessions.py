@@ -8,7 +8,9 @@ agentcad_status(label=...).
     <root>/.agentcad/sessions/<pid>.json   {"pid", "client", "client_raw", "version", "label", "started",
                                             "last_seen", "last_tool", "drawing"}
 
-A file is removed when its server exits; one left by a crash is ignored once its process is gone.
+A file is removed when its server exits; one left by a crash is ignored once its process is gone. Some apps (Codex)
+start a server for every conversation whether or not it uses AgentCAD, so the viewer lists only the ones that did:
+named themselves through agentcad_status (the /agentcad skill) or called a tool.
 """
 from __future__ import annotations
 
@@ -75,6 +77,7 @@ class Session:
             CURRENT["label"] = label.strip()[:60] or None
             changed = True
         if tool:
+            changed = changed or not CURRENT.get("last_tool")  # the first call puts it in the viewer's list
             CURRENT["last_tool"] = tool
         if drawing:
             CURRENT["drawing"] = drawing
@@ -151,7 +154,8 @@ def alive(pid: int, started: int | None = None) -> bool:
 
 
 def list_sessions(root: Path) -> list[dict[str, Any]]:
-    """The sessions whose server is still running, most recently active first; stale files are removed."""
+    """The sessions whose server is still running and that used AgentCAD (a label or a tool call), most recently
+    active first; stale files are removed."""
     out = []
     folder = root / STATE_DIR / DIR
     for f in folder.glob("*.json") if folder.is_dir() else []:
@@ -161,6 +165,8 @@ def list_sessions(root: Path) -> list[dict[str, Any]]:
         except (OSError, ValueError, TypeError):
             continue
         if alive(pid, s.get("created")):
+            if not (s.get("label") or s.get("last_tool")):
+                continue  # connected but idle: an app that starts a server for every conversation
             out.append({k: s.get(k) for k in ("pid", "client", "version", "label", "started", "last_seen",
                                               "last_tool", "drawing")})
         else:
