@@ -328,7 +328,8 @@ def test_tessellate_meshes_a_dropped_face_again(tmp_path):
     script.write_text(f"RUNNER = {str(freecad.RUNNER)!r}\nOUT = {str(out)!r}\n" + TESSELLATE_STUBS, "utf-8")
     env = {**os.environ, **env}
     env.pop("AGENTCAD_FC_JOB", None)
-    subprocess.run(cmd + [str(script)], env=env, cwd=tmp_path, capture_output=True, timeout=120)
+    p = subprocess.run(cmd + [str(script)], env=env, cwd=tmp_path, capture_output=True, text=True, timeout=120)
+    assert out.is_file(), f"the FreeCAD script failed (exit {p.returncode}):\n{p.stdout[-2000:]}\n{p.stderr[-2000:]}"
     r = json.loads(out.read_text("utf-8"))
     assert r["missing"] == ["Face3"]
     assert r["points"] == 3 + 6  # Face1's points, then the re-meshed Face2's
