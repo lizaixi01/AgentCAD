@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import math
 import os
 import socket
 import threading
@@ -262,6 +263,31 @@ def test_part_mesh_png_and_diff(rt, ws, viewer):
     code, ctype, png = get(viewer, "/api/png", path="plate.FCStd")
     assert code == 200 and png[:8] == b"\x89PNG\r\n\x1a\n"
     assert files_state(ws) == before
+
+
+@needs_freecad
+def test_part_mesh_covers_every_face(rt, viewer):
+    """The viewer once lost one filleted corner of a phone body (Shape.tessellate dropped a face it failed to mesh):
+    the triangles must add up to the whole surface of a part with rounded corners."""
+    w, h, r, t = 78.0, 160.0, 12.0, 8.0
+    b = math.tan(math.radians(22.5))  # bulge of a 90-degree arc
+    x0, x1, y0, y1 = -w / 2, w / 2, -h / 2, h / 2
+    outline = [[x0 + r, y0], [x1 - r, y0, b], [x1, y0 + r], [x1, y1 - r, b],
+               [x1 - r, y1], [x0 + r, y1, b], [x0, y1 - r], [x0, y0 + r, b]]
+    ok(rt.apply_operations("phone.FCStd", [{"op": "add_sketch", "plane": "XY",
+                                            "shapes": [{"type": "polygon", "points": outline}]},
+                                           {"op": "pad", "sketch": "$0", "length": t}], create={"units": "mm"}))
+    code, m = get_json(viewer, "/api/mesh", path="phone.FCStd")
+    assert code == 200
+    p, ix = m["positions"], m["indices"]
+    area = 0.0
+    for i in range(0, len(ix), 3):
+        a, c, d = (p[3 * ix[i + k]:3 * ix[i + k] + 3] for k in range(3))
+        u, v = [c[j] - a[j] for j in range(3)], [d[j] - a[j] for j in range(3)]
+        area += math.hypot(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]) / 2
+    face = w * h - (4 - math.pi) * r * r
+    side = 2 * (w + h) - 8 * r + 2 * math.pi * r
+    assert area == pytest.approx(2 * face + side * t, rel=2e-3)
 
 
 # --- commits are never blocked by the viewer -------------------------------------------------------------------
