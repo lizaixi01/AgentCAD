@@ -199,9 +199,8 @@ def _text_items(msp):
             yield a, a.dxf.get("style", "Standard"), a.dxf.text
 
 
-PLOT_TEXT_CODES = ("TEXT_PLOTS_AS_BOXES", "TEXT_CARET_CODE")
-CARET_RE = re.compile(r"\^[^ ]")  # '^ ' is the literal caret
-MTEXT_STACK_RE = re.compile(r"\\S[^;]*;")  # stacked fractions (\S1^2;) use '^' as a separator
+# '^ ' is the literal caret (also in a stacked tolerance, \S+0.1^ -0.2;); ^I, ^J, ^M are tab and line breaks
+CARET_RE = re.compile(r"\^[^ IJM]")
 MTEXT_FONT_RE = re.compile(r"\\[fF]")  # an inline font change: the run is not drawn with the style's font
 MAX_LISTED_CHARS = 20
 
@@ -224,7 +223,7 @@ def plot_text_issues(doc: Drawing, layout: str | None = None) -> list[dict[str, 
         raw = e.text if mtext else text
         if not raw:
             continue
-        if "^" in raw and CARET_RE.search(MTEXT_STACK_RE.sub("", raw) if mtext else raw):
+        if "^" in raw and CARET_RE.search(raw):
             caret.append(e.dxf.handle)
         if mtext and MTEXT_FONT_RE.search(raw):
             continue
@@ -259,7 +258,8 @@ def plot_text_issues(doc: Drawing, layout: str | None = None) -> list[dict[str, 
         out.append(issue("TEXT_CARET_CODE", "warning",
                          f"{len(caret)} text(s) contain '^' followed by a character: AutoCAD reads that as a "
                          "control character, so the '^' and the next character do not print", caret[:50], **where,
-                         hint="Write '^ ' (caret, space) for a literal '^'"))
+                         hint="Write '^ ' (caret, space) for a literal '^', also in a stacked tolerance "
+                              "(\\S+0.1^ -0.2;)"))
     return out
 
 

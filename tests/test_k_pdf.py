@@ -129,7 +129,8 @@ def test_text_that_does_not_plot_as_written_is_reported(rt, ws, blank):
         {"op": "add_text", "text": "e^(-jx)", "insert": [0, 10], "height": 5, "tag": "caret"},
         {"op": "add_text", "text": "a^ b", "insert": [0, 20], "height": 5},  # '^ ' is a literal caret
         {"op": "add_mtext", "text": "e^(-jx)", "insert": [0, 30], "char_height": 5, "tag": "mcaret"},  # MTEXT too
-        {"op": "add_mtext", "text": "\\S1^2;", "insert": [0, 40], "char_height": 5},  # a stacked fraction
+        {"op": "add_mtext", "text": "\\S1^2;", "insert": [0, 40], "char_height": 5, "tag": "stack"},  # plots "1p"
+        {"op": "add_mtext", "text": "\\S1^ 2;\\P1.^I2.", "insert": [0, 45], "char_height": 5},  # a real stack, a tab
         # an inline font change: the run is not drawn with the style's font, so it is not checked
         {"op": "add_mtext", "text": f"\\fArial|b0|i0;{nowhere}", "insert": [0, 50], "char_height": 5,
          "style": "TT"}]))
@@ -137,7 +138,7 @@ def test_text_that_does_not_plot_as_written_is_reported(rt, ws, blank):
     doc = reread(ws, blank)
     boxes = issues["TEXT_PLOTS_AS_BOXES"]
     assert boxes["details"]["characters"] == [nowhere] and boxes["entities"] == [by_tag(doc, "box").dxf.handle]
-    assert set(issues["TEXT_CARET_CODE"]["entities"]) == {by_tag(doc, t).dxf.handle for t in ("caret", "mcaret")}
+    assert set(issues["TEXT_CARET_CODE"]["entities"]) == {by_tag(doc, t).dxf.handle for t in ("caret", "mcaret", "stack")}
     warned = {w["code"] for w in ok(rt.export_drawing(blank, "t.pdf", "pdf"))["warnings"]}
     assert {"TEXT_PLOTS_AS_BOXES", "TEXT_CARET_CODE"} <= warned
     warned = {w["code"] for w in ok(rt.export_drawing(blank, "t.png", "png"))["warnings"]}
