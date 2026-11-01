@@ -33,9 +33,10 @@ def draw_pid(ctx: Ctx, spec):
         "walls}]; the label reads '<number> <name> <area> m²'. "
         "stairs: [{id, start: [x,y], width, going, risers, riser_height, direction_deg?}]. "
         "chains: {sides: [bottom|top|left|right]}: a chain through every wall and opening corner on that "
-        "exterior face plus an overall dimension. "
+        "exterior face, plus an overall dimension when the chain has more than one segment. "
         "schedules: [{kind: rooms|doors|windows, at: [x,y]}]. "
         "sheet: {scale: N} for 1:N (text and dimension sizes, default 50). poche: fill walls (default true). "
+        "lang: 'en' only (schedule headings). "
         "Example: {walls: [{id: 'ext', axis: [[120,120],[8880,120],[8880,5880],[120,5880]], closed: true, "
         "thickness: 240}], openings: [{id: 'M1', kind: 'door', wall: 'ext', offset: 1080, width: 1000}], "
         "rooms: [{id: 'r1', number: '1', name: 'Living', at: [4500,3000]}], chains: {sides: ['bottom']}}"))},
