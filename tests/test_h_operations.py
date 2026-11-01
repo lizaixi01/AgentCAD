@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 
 import pytest
+from ezdxf.math import Vec3
 
 from agentcad.model import get_tag
 from conftest import by_tag, ok, reread
@@ -210,6 +211,28 @@ def test_arrays(rt, ws, blank):
     assert {(0, 0), (20, 0), (40, 0), (0, 10), (20, 10), (40, 10)} <= centers
     e = err(apply(rt, blank, [{"op": "array_rect", "target": "tag:c", "rows": 1000, "cols": 1000}]))
     assert e["code"] == "OUT_OF_RANGE" or e["code"] == "BUDGET_EXCEEDED"
+
+
+def test_array_polar_unrotated_moves_the_selection_as_one_item(rt, ws, blank):
+    # a bolt hole with its center mark: every copy's center lines must still cross at the copy's center
+    ok(apply(rt, blank, [{"op": "add_circle", "center": [75, 0], "diameter": 18, "tag": "bolt"},
+                         {"op": "add_center_mark", "target": "tag:bolt", "extension": 3, "tag": "cm"},
+                         {"op": "array_polar", "target": ["tag:bolt", "tag:cm.h", "tag:cm.v"], "center": [0, 0],
+                          "count": 8, "rotate_items": False}]))
+    doc = reread(ws, blank)
+    msp = doc.modelspace()
+    lines = [(e.dxf.start, e.dxf.end) for e in msp.query("LINE")]
+    circles = list(msp.query("CIRCLE"))
+    assert len(circles) == 8 and len(lines) == 16
+    for i in range(8):
+        a = math.radians(45 * i)
+        c = Vec3(75 * math.cos(a), 75 * math.sin(a), 0)
+        assert any(e.dxf.center.isclose(c, abs_tol=1e-6) for e in circles)
+        # unrotated: one horizontal and one vertical line, 24 long, centred on the hole
+        h = [(s, t) for s, t in lines if abs(s.y - t.y) < 1e-9 and (s + t).isclose(c * 2, abs_tol=1e-6)]
+        v = [(s, t) for s, t in lines if abs(s.x - t.x) < 1e-9 and (s + t).isclose(c * 2, abs_tol=1e-6)]
+        assert len(h) == 1 and len(v) == 1, i
+        assert abs(h[0][0].distance(h[0][1]) - 24) < 1e-6 and abs(v[0][0].distance(v[0][1]) - 24) < 1e-6
 
 
 def test_delete_and_large_delete_guard(rt, ws, blank):

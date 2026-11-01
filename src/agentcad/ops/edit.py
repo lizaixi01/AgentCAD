@@ -5,6 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
+from ezdxf import bbox
 from ezdxf.math import Matrix44, Vec3
 
 from .. import geom as G
@@ -252,7 +253,9 @@ def array_rect(ctx: Ctx, target, rows, cols, row_spacing, col_spacing):
     return {"created": created}
 
 
-@op("array_polar", "edit", "Polar array about a center: 'count' items (including the original) over 'total_angle'.",
+@op("array_polar", "edit", "Polar array about a center: 'count' items (including the original) over 'total_angle'. "
+    "The selection is one item: with rotate_items=false every copy is moved as a whole, its bounding-box center "
+    "following the circle, so a hole keeps its center lines.",
     {"target": TARGET, "center": P("point", True, description="Array center"),
      "count": P("int", True, ge=2, le=10000, description="Total number of items including the original"),
      "total_angle": P("angle", default=360.0, description="Angle to fill"),
@@ -262,30 +265,25 @@ def array_polar(ctx: Ctx, target, center, count, total_angle, rotate_items):
     _budget(ctx, len(ents) * (count - 1))
     full = abs(abs(total_angle) - 360.0) < 1e-9
     step = total_angle / (count if full else count - 1)
+    if not rotate_items:
+        # one reference point for the whole selection: moving each entity by its own point (a line's start,
+        # a circle's center) would pull a hole and its center lines apart
+        ext = bbox.extents(ents)
+        ref = (ext.center.x, ext.center.y) if ext.has_data else tuple(center)
     created = []
     for k in range(1, count):
         a = math.radians(step * k)
+        if not rotate_items:
+            rx = center[0] + (ref[0] - center[0]) * math.cos(a) - (ref[1] - center[1]) * math.sin(a)
+            ry = center[1] + (ref[0] - center[0]) * math.sin(a) + (ref[1] - center[1]) * math.cos(a)
         for e in ents:
             c = _copy_into_msp(ctx, e)
             if rotate_items:
                 transform(ctx, c, _about(center, Matrix44.z_rotate(a)))
             else:
-                ref = _ref_point(e)
-                rx = center[0] + (ref[0] - center[0]) * math.cos(a) - (ref[1] - center[1]) * math.sin(a)
-                ry = center[1] + (ref[0] - center[0]) * math.sin(a) + (ref[1] - center[1]) * math.cos(a)
                 transform(ctx, c, Matrix44.translate(rx - ref[0], ry - ref[1], 0))
             created.append(c.dxf.handle)
     return {"created": created}
-
-
-def _ref_point(e) -> G.Vec:
-    x = e.dxf
-    for name in ("center", "insert", "location", "start"):
-        if x.hasattr(name):
-            return _vec(x.get(name))
-    if e.dxftype() == "LWPOLYLINE":
-        return _vec(e.get_points("xy")[0])
-    return (0.0, 0.0)
 
 
 def _budget(ctx: Ctx, n: int) -> None:
