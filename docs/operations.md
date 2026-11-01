@@ -218,6 +218,7 @@ Insert the standard 180x32 mm title block (ISO-like) with attributes ['TITLE', '
 | `insert` | point | 是 |  |  |
 | `fields` | object |  |  | Attribute values, e.g. {TITLE: 'Plate'} |
 | `size_factor` | number >0 |  | 1.0 | Scale relative to the mm size |
+| `lang` | enum ['auto', 'en', 'zh'] |  | auto | Cell labels: en (Material, Scale...), zh (材料, 比例...); auto = zh when a field value contains Chinese |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
 | `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
 | `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
@@ -841,7 +842,7 @@ Draw an orthogonal wall plan with hosted doors/windows, stairs, measured room la
 
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|
-| `spec` | object | 是 |  |  |
+| `spec` | object | 是 |  | Millimetres, model space. walls: [{id, axis: [[x,y],...] axis-aligned centre-line points, thickness, closed: true for a loop (exterior wall), material?}]. openings: [{id, kind: door\|window, wall: wall id, offset: distance along that wall's axis from its first point (cumulative over its segments, closed loops include the closing segment) to the opening's start, width, hand?: left\|right (door hinge side), tag? (mark shown, default id), height?, sill?}]; an opening must lie on one segment. rooms: [{id, number, name, at: [x,y] inside the room, area? in mm2, refused if it disagrees with the walls}]; the label reads '<number> <name> <area> m²'. stairs: [{id, start: [x,y], width, going, risers, riser_height, direction_deg?}]. chains: {sides: [bottom\|top\|left\|right]}: a chain through every wall and opening corner on that exterior face, plus an overall dimension when the chain has more than one segment. schedules: [{kind: rooms\|doors\|windows, at: [x,y]}]. sheet: {scale: N} for 1:N (text and dimension sizes, default 50). poche: fill walls (default true). lang: 'en' only (schedule headings). Example: {walls: [{id: 'ext', axis: [[120,120],[8880,120],[8880,5880],[120,5880]], closed: true, thickness: 240}], openings: [{id: 'M1', kind: 'door', wall: 'ext', offset: 1080, width: 1000}], rooms: [{id: 'r1', number: '1', name: 'Living', at: [4500,3000]}], chains: {sides: ['bottom']}} |
 | `layout` | string |  |  | Layout to work in: 'Model' (default) or a paper-space layout name from read_drawing. New entities go there and filter selectors search it; edits that derive entities from an existing one (copy, offset, trim, fillet) keep them in that entity's layout |
 
 ### `draw_mechanical_assembly`
