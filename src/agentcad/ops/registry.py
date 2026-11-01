@@ -224,9 +224,9 @@ def guard_main_viewport(ents, action: str) -> None:
     views = [e.dxf.handle for e in ents if e.dxftype() == "VIEWPORT" and not is_main_viewport(e)]
     raise input_error("MAIN_VIEWPORT_REQUIRED", f"The layout's main viewport cannot be {action}: AutoCAD cannot "
                       "open a layout without it", entities=main,
-                      hint="Viewport id 1 is the sheet itself; it shows no model and is not printed. "
-                           + (f"Target only the viewports onto the model: {views}" if views else
-                              "Leave it; add_viewport adds the views of the model"))
+                      hint="The main viewport is the sheet itself; it shows no model and is not printed. Leave it "
+                           "out" + (f"; the viewports onto the model here: {views}" if views else
+                                    "; add_viewport adds the views of the model"))
 
 
 def check_tag(ctx: Ctx, p: dict[str, Any]) -> list[str] | None:

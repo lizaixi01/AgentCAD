@@ -73,8 +73,12 @@ def is_model(name: str | None) -> bool:
 def is_main_viewport(e: DXFGraphic) -> bool:
     """The paper-space viewport with id 1 is the sheet itself, not a view of the model. The layout keeps a handle to
     it, and AutoCAD stops with an internal error (ePermanentlyErased) when it opens a layout whose handle points at
-    a deleted viewport (H6 rerun, 2026-11-02)."""
-    return e.dxftype() == "VIEWPORT" and e.dxf.get("id", 0) == 1
+    a deleted viewport (H6 rerun, 2026-11-02). That handle decides; the id only when the layout keeps none."""
+    if e.dxftype() != "VIEWPORT":
+        return False
+    lay = e.get_layout()
+    vh = lay.dxf_layout.dxf.get("viewport_handle") if lay is not None and hasattr(lay, "dxf_layout") else None
+    return e.dxf.handle == vh if vh else e.dxf.get("id", 0) == 1
 
 
 def layout_spaces(doc: Drawing, name: str | None) -> list:

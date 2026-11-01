@@ -296,6 +296,16 @@ def test_main_viewport_is_not_deleted(rt, ws):
     assert lay.main_viewport().dxf.handle == main
 
 
+def test_main_viewport_is_the_one_the_layout_points_at(rt, ws):
+    """AutoCAD follows the layout's handle, not the id: drawings from other tools need not number it 1."""
+    name, main, view = sheet_with_view(rt, ws)
+    doc = reread(ws, name)
+    doc.entitydb[main].dxf.id, doc.entitydb[view].dxf.id = 5, 1
+    doc.saveas(ws / name)
+    assert rt.apply_operations(name, [{"op": "delete", "target": main}])["error"]["code"] == "MAIN_VIEWPORT_REQUIRED"
+    assert ok(rt.apply_operations(name, [{"op": "delete", "target": view}]))["changes"]["deleted"] == [view]
+
+
 def test_layout_pointing_at_a_deleted_viewport_fails_validation(srt, ws):
     """Every path that can erase it (here a script) is caught by the validator, not only delete."""
     name, main, _ = sheet_with_view(srt, ws)
