@@ -39,8 +39,11 @@ def test_friendly_names():
 
 def test_session_file_tag_and_list(tmp_path, session):
     assert sessions.tag() == {}  # nothing known about the client yet
-    listed = sessions.list_sessions(tmp_path)
-    assert [s["pid"] for s in listed] == [os.getpid()] and listed[0]["client"] is None  # connected, not named yet
+    assert sessions.list_sessions(tmp_path) == []  # connected but unused: not listed
+    session.note("codex-mcp-client", "0.163")  # tools/list at startup: still not listed
+    assert sessions.list_sessions(tmp_path) == []
+    session.note(tool="read_drawing")  # a tool call is using AgentCAD
+    assert [s["pid"] for s in sessions.list_sessions(tmp_path)] == [os.getpid()]
     session.note("claude-code", "2.1.0", tool="apply_operations", drawing="plate.dxf", label="mounting plate")
     assert sessions.tag() == {"client": "Claude Code", "conversation": "mounting plate", "session": os.getpid()}
     s = sessions.list_sessions(tmp_path)[0]
