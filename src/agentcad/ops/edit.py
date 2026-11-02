@@ -25,17 +25,27 @@ def _vec(v) -> G.Vec:
 def rerender_dimension(ctx: Ctx, dim) -> None:
     from ..tolerances import check_dimension_tolerance
     check_dimension_tolerance(dim, ctx.unit)
-    old = dim.dxf.get("geometry")
     from .annotate import render_dimension
-    render_dimension(dim.override())
+    blocks = [dim.dxf.get("geometry")]
+    keep = dim.dxf.text_midpoint if dim.dxf.dimtype & 128 and dim.dxf.hasattr("text_midpoint") else None
+    loc = keep
+    for _ in range(2 if keep is not None else 1):
+        ov = dim.override()
+        if loc is not None:  # text placed by hand (AutoCAD): its middle stays where it was
+            ov.set_location(loc, leader=ov.get("dimtmove", 0) == 1)
+        render_dimension(ov)
+        blocks.append(dim.dxf.get("geometry"))
+        if keep is None or (shift := dim.dxf.text_midpoint - keep).magnitude < 1e-9:
+            break
+        loc = loc - shift  # ezdxf places the text's anchor at the location, not its middle
     from .annotate import store_measurement
     store_measurement(dim)
-    new = dim.dxf.get("geometry")
-    if old and old != new and old in ctx.doc.blocks:
-        try:
-            ctx.doc.blocks.delete_block(old, safe=False)
-        except Exception:
-            pass
+    for old in blocks[:-1]:
+        if old and old != blocks[-1] and old in ctx.doc.blocks:
+            try:
+                ctx.doc.blocks.delete_block(old, safe=False)
+            except Exception:
+                pass
 
 
 def normalize_extrusion(e) -> None:

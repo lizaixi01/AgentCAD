@@ -309,27 +309,48 @@ MIN_PRINTED_TEXT = 2.5  # mm on paper; ISO 3098 / GB/T 14691 smallest standard c
 
 
 def _model_text_heights(doc: Drawing):
-    """(handle, kind, height in model units, (x, y)) for text and dimension text in model space."""
+    """(handle, kind, height in model units, (x, y), DIMSCALE) for text and dimension text in model space;
+    DIMSCALE is 1 for text."""
     for e in doc.modelspace():
         t = e.dxftype()
         try:
             if t == "TEXT":
-                yield e.dxf.handle, "text", e.dxf.height, (e.dxf.insert.x, e.dxf.insert.y)
+                yield e.dxf.handle, "text", e.dxf.height, (e.dxf.insert.x, e.dxf.insert.y), 1.0
             elif t == "MTEXT":
-                yield e.dxf.handle, "text", e.dxf.char_height, (e.dxf.insert.x, e.dxf.insert.y)
+                yield e.dxf.handle, "text", e.dxf.char_height, (e.dxf.insert.x, e.dxf.insert.y), 1.0
             elif t == "INSERT":
                 for a in e.attribs:
                     if a.dxf.text:
-                        yield a.dxf.handle, "text", a.dxf.height, (a.dxf.insert.x, a.dxf.insert.y)
+                        yield a.dxf.handle, "text", a.dxf.height, (a.dxf.insert.x, a.dxf.insert.y), 1.0
             elif t == "DIMENSION":
                 ov = e.override()
                 scale, txt = ov.get("dimscale", 1.0), ov.get("dimtxt", 0.18)
                 if not scale:  # DIMSCALE 0: AutoCAD sizes it to the viewport, always readable
                     continue
                 p = e.dxf.get("text_midpoint") or e.dxf.get("defpoint")
-                yield e.dxf.handle, "dimension", txt * scale, (p.x, p.y)
+                yield e.dxf.handle, "dimension", txt * scale, (p.x, p.y), scale
         except Exception:
             continue
+
+
+def _printed_text_fix(small: list[tuple], s: float) -> str:
+    """How to make text seen through a viewport at scale ``s`` print large enough. Lettering height is set on the
+    printed sheet (ISO 3098; GB/T 14665: 3.5 mm digits on A2-A4), whatever the drawing scale. The H6 rerun kept
+    1.75 mm text because the hint offered only edits that its task forbade; the annotation scale is how the drawing
+    is printed, not what its dimensions say."""
+    fixes = []
+    dims = [(ht / ds, ds) for _, k, ht, ds in small if k == "dimension"]
+    if dims:
+        if s < 1 and min(size for size, _ in dims) >= MIN_PRINTED_TEXT - 1e-9:
+            fixes.append(f"dimensions: set_annotation_scale scale={1 / s:g} (the sheet's plot scale), so their text, "
+                         "arrows and gaps print at the style's size; values, definition points and hand-placed text "
+                         "stay as they are (it also sets LTSCALE)")
+        else:
+            need = max(MIN_PRINTED_TEXT / (s * ds) for _, ds in dims)
+            fixes.append(f"dimensions: modify their 'text_height' to at least {need:.3g}")
+    if any(k == "text" for _, k, _, _ in small):
+        fixes.append(f"text: modify its 'height' to at least {MIN_PRINTED_TEXT / s:.3g}")
+    return "; ".join(fixes)
 
 
 def printed_text_issues(doc: Drawing) -> list[dict[str, Any]]:
@@ -351,27 +372,18 @@ def printed_text_issues(doc: Drawing) -> list[dict[str, Any]]:
             hw, hh = vp.dxf.width / s / 2, vh / 2
             if model_text is None:
                 model_text = list(_model_text_heights(doc))
-            small = [(h, k, ht) for h, k, ht, (x, y) in model_text
+            small = [(h, k, ht, ds) for h, k, ht, (x, y), ds in model_text
                      if abs(x - c.x) <= hw and abs(y - c.y) <= hh and 0 < ht * s < MIN_PRINTED_TEXT - 1e-9]
             if small:
-                lo = min(ht for _, _, ht in small) * s
-                kinds = sorted({k for _, k, _ in small})
-                # The H6 rerun saw this warning and kept 1.75 mm text: modifying the dimensions broke the task's
-                # "do not change the dimensions". DIMSCALE changes how big they print, not what they say.
-                fixes = []
-                if "dimension" in kinds:
-                    fixes.append(f"dimensions: set_annotation_scale scale={1 / s:g} (the sheet's plot scale): text, "
-                                 "arrows and gaps then print at their style size through this viewport; dimension "
-                                 "values, positions and the part do not change")
-                if "text" in kinds:
-                    fixes.append(f"text: modify its 'height' to at least {MIN_PRINTED_TEXT / s:g}")
+                lo = min(ht for _, _, ht, _ in small) * s
+                kinds = sorted({k for _, k, _, _ in small})
                 out.append(issue("PRINTED_TEXT_TOO_SMALL", "warning",
                                  f"Viewport {vp.dxf.handle} in layout {name!r} shows the model at "
                                  f"{_ratio(s)}: {len(small)} {'/'.join(kinds)} text(s) print as small as "
-                                 f"{lo:.2f} mm (minimum {MIN_PRINTED_TEXT} mm)", [h for h, _, _ in small][:50],
+                                 f"{lo:.2f} mm (minimum {MIN_PRINTED_TEXT} mm)", [h for h, *_ in small][:50],
                                  layout=name, viewport=vp.dxf.handle, scale=s,
                                  min_model_height=round(MIN_PRINTED_TEXT / s, 6),
-                                 hint="; ".join(fixes)))
+                                 hint=_printed_text_fix(small, s)))
         tiny = [e.dxf.handle for e in lay.query("TEXT MTEXT")
                 if 0 < (e.dxf.height if e.dxftype() == "TEXT" else e.dxf.char_height) < MIN_PRINTED_TEXT - 1e-9]
         if tiny:

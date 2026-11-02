@@ -30,24 +30,23 @@ def setup_text_style(doc) -> None:
 
 def apply_annotation_scale(doc, scale: float) -> None:
     """Plot scale 1:scale. Dimension sizes (DIMSCALE) and linetype patterns (LTSCALE) grow with it, so a
-    6000 mm room drawn at 1:50 gets readable arrows and dash-dot axes. Applies to our style and to every style the
-    model's dimensions use: a drawing from elsewhere (H6: style EZDXF) kept 1.75 mm text on a 1:2 sheet."""
+    6000 mm room drawn at 1:50 gets readable arrows and dash-dot axes."""
     doc.header["$DIMSCALE"] = scale
     doc.header["$LTSCALE"] = scale
-    names = {DIMSTYLE} | {d.dxf.get("dimstyle", "Standard") for d in doc.modelspace().query("DIMENSION")}
-    for name in names:
-        if name in doc.dimstyles:
-            doc.dimstyles.get(name).dxf.dimscale = scale
+    if DIMSTYLE in doc.dimstyles:
+        doc.dimstyles.get(DIMSTYLE).dxf.dimscale = scale
 
 
 def _dimstyle(ctx: Ctx) -> str:
     return DIMSTYLE if DIMSTYLE in ctx.doc.dimstyles else "Standard"
 
 
-def _override(text_height, length_factor=None) -> dict[str, Any]:
+def _override(text_height, length_factor=None, ctx: Ctx | None = None) -> dict[str, Any]:
     ov: dict[str, Any] = {"dimtxt": text_height} if text_height else {}
     if length_factor:
         ov["dimlfac"] = float(length_factor)
+    if ctx is not None and getattr(ctx.msp, "is_any_paperspace", False):
+        ov["dimscale"] = 1.0  # on the sheet, sizes are paper mm; the model's annotation scale is not for them
     return ov
 
 
@@ -140,7 +139,7 @@ def add_linear_dim(ctx: Ctx, p1, p2, orientation, angle, offset, base, text, tex
     if G.dist(p1, p2) < 1e-9:
         raise input_error("DEGENERATE_GEOMETRY", "Dimension points coincide")
     attrs = ctx.attribs(p)
-    ov = _override(text_height, length_factor)
+    ov = _override(text_height, length_factor, ctx)
     if orientation == "aligned":
         dist = offset if base is None else _signed_dist(p1, p2, base)
         d = ctx.msp.add_aligned_dim(p1, p2, distance=dist, dimstyle=_dimstyle(ctx), override=ov, dxfattribs=attrs)
@@ -187,7 +186,7 @@ def add_radius_dim(ctx: Ctx, target, center, radius, angle, text, text_height, l
         return {"created": [], "skipped": True, "existing": s}
     c, r = _circle_of(ctx, target, center, radius)
     d = ctx.msp.add_radius_dim(center=c, radius=r, angle=angle, dimstyle=_dimstyle(ctx),
-                               override=_override(text_height, length_factor), dxfattribs=ctx.attribs(p))
+                               override=_override(text_height, length_factor, ctx), dxfattribs=ctx.attribs(p))
     return _finish_dim(ctx, d, p, text)
 
 
@@ -200,7 +199,7 @@ def add_diameter_dim(ctx: Ctx, target, center, radius, angle, text, text_height,
     if (s := check_tag(ctx, p)) is not None:
         return {"created": [], "skipped": True, "existing": s}
     c, r = _circle_of(ctx, target, center, radius)
-    ov = _override(text_height, length_factor)
+    ov = _override(text_height, length_factor, ctx)
     if outside:  # ezdxf (like AutoCAD with DIMTOFL off) then draws only the line from the circle to the text
         st = ctx.doc.dimstyles.get(_dimstyle(ctx)).dxf
         h = (text_height or st.get("dimtxt", 2.5)) * (st.get("dimscale", 1.0) or 1.0)  # drawn size
@@ -227,7 +226,7 @@ def add_angular_dim(ctx: Ctx, center, p1, p2, radius, text, text_height, length_
     mid = a1 + G.ccw_span(a1, a2) / 2
     base = G.polar(center, rr, mid)
     d = ctx.msp.add_angular_dim_3p(base=base, center=center, p1=p1, p2=p2, dimstyle=_dimstyle(ctx),
-                                   override=_override(text_height, length_factor), dxfattribs=ctx.attribs(p))
+                                   override=_override(text_height, length_factor, ctx), dxfattribs=ctx.attribs(p))
     return _finish_dim(ctx, d, p, text)
 
 
@@ -245,7 +244,7 @@ def add_ordinate_dim(ctx: Ctx, feature, leader_end, axis, origin, text, text_hei
         raise input_error("DEGENERATE_GEOMETRY", "leader_end coincides with feature")
     add = ctx.msp.add_ordinate_x_dim if axis == "x" else ctx.msp.add_ordinate_y_dim
     d = add(feature_location=feature, offset=G.sub(leader_end, feature), origin=origin, dimstyle=_dimstyle(ctx),
-            override=_override(text_height, length_factor), dxfattribs=ctx.attribs(p))
+            override=_override(text_height, length_factor, ctx), dxfattribs=ctx.attribs(p))
     return _finish_dim(ctx, d, p, text)
 
 
@@ -394,19 +393,39 @@ def add_table(ctx: Ctx, insert, rows, col_widths, row_height, text_height, **p):
 
 @op("set_annotation_scale", "annotate", "Set the plot scale 1:scale for annotations: dimension arrows/text/gaps "
     "(DIMSCALE) and linetype dash lengths (LTSCALE) are multiplied by 'scale'. Use e.g. 50 or 100 for building "
-    "plans in mm, 2 for a sheet that shows the part at 1:2. Model-space dimensions are re-rendered, whatever their "
-    "style; their values and positions stay as they are.",
+    "plans in mm, 2 for a sheet that shows the part at 1:2: lettering height is set on the printed sheet (ISO "
+    "3098, GB/T 14665), whatever the drawing scale. Model-space dimensions of any style are re-rendered; their "
+    "values, definition points and text placed by hand stay as they are. Sheet (paper-space) dimensions keep 1.",
     {"scale": P("number", True, gt=0, description="N of the plot scale 1:N")})
 def set_annotation_scale(ctx: Ctx, scale):
     apply_annotation_scale(ctx.doc, float(scale))
+    from ..errors import AgentCADError
+    from ..tolerances import check_dimension_tolerance
     from .edit import rerender_dimension
-    done = []
+    done, skipped = [], []
     for d in ctx.doc.modelspace().query("DIMENSION"):
-        if d.dxf.get("dimstyle", "Standard") in ctx.doc.dimstyles:  # per-entity overrides (text_height) are kept
-            rerender_dimension(ctx, d)
-            ctx.touched(d)
-            done.append(d.dxf.handle)
-    return {"scale": float(scale), "rerendered": done}
+        h = d.dxf.handle
+        try:
+            ov = d.override()
+            if not ov.get("dimscale", 1.0):  # DIMSCALE 0: AutoCAD sizes it to each viewport already
+                skipped.append({"handle": h, "reason": "DIMSCALE 0 (sized to the viewport)"})
+                continue
+            check_dimension_tolerance(d, ctx.unit)
+        except (AgentCADError, Exception) as exc:  # a style missing from the table, a malformed tolerance
+            skipped.append({"handle": h, "reason": str(getattr(exc, "message", exc))})
+            continue
+        # Our style carries the scale. Others get it per entity, so the style's paper-space and block dimensions
+        # (and a per-entity DIMSCALE, which would win over the style) do not stand in the way.
+        if d.dxf.get("dimstyle") != DIMSTYLE or "dimscale" in ov.dimstyle_attribs:
+            ov["dimscale"] = float(scale)
+            ov.commit()
+        rerender_dimension(ctx, d)
+        ctx.touched(d)
+        done.append(h)
+    out = {"scale": float(scale), "rerendered": done}
+    if skipped:
+        out["skipped"] = skipped
+    return out
 
 
 TITLE_FIELDS = ["TITLE", "DWG_NO", "MATERIAL", "SCALE", "UNITS", "DRAWN_BY", "DATE", "SHEET"]

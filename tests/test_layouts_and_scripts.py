@@ -267,13 +267,14 @@ def test_printed_text_height(rt, ws):
 
 
 def test_annotation_scale_fixes_printed_dimensions_without_changing_them(rt, ws):
-    """The H6 rerun saw the warning and kept 1.75 mm text: the task said not to change the dimensions, and the
-    hint only offered modifying them. set_annotation_scale did nothing either: the dimensions were drawn
-    elsewhere, in another dimension style, and it only re-rendered ours."""
+    """Lettering height is set on the printed sheet (ISO 3098, GB/T 14665), whatever the drawing scale. The H6
+    rerun saw the warning and kept 1.75 mm text: the task said not to change the dimensions and the hint offered
+    only modifying them; set_annotation_scale did nothing either, the dimensions being in another style."""
     name = plate(ws)
 
     def dims():
-        return sorted((round(d.get_measurement(), 6), tuple(round(v, 6) for v in d.dxf.defpoint), d.dxf.text)
+        return sorted((round(d.get_measurement(), 6), tuple(round(v, 6) for v in d.dxf.defpoint),
+                       tuple(round(v, 6) for v in d.dxf.defpoint2), d.dxf.text)
                       for d in reread(ws, name).modelspace().query("DIMENSION"))
 
     before = dims()
@@ -286,10 +287,76 @@ def test_annotation_scale_fixes_printed_dimensions_without_changing_them(rt, ws)
     assert "PRINTED_TEXT_TOO_SMALL" not in [i["code"] for i in r["validation"]["issues"]]
     doc = reread(ws, name)
     dim = next(iter(doc.modelspace().query("DIMENSION")))
-    assert dim.dxf.dimstyle != "AGENTCAD" and doc.dimstyles.get(dim.dxf.dimstyle).dxf.dimscale == 2
+    style = doc.dimstyles.get(dim.dxf.dimstyle)
+    assert dim.dxf.dimstyle != "AGENTCAD" and style.dxf.dimscale == 1  # the shared style is left alone ...
+    assert dim.override().get("dimscale") == 2                            # ... the dimension carries the scale
     text = next(iter(doc.blocks.get(dim.dxf.geometry).query("MTEXT")))
     assert text.dxf.char_height == A(7)  # 3.5 mm on paper through the 1:2 viewport
-    assert dims() == before  # values, positions and text overrides as they were
+    assert dims() == before  # values, definition points and text overrides as they were
+
+
+def test_annotation_scale_keeps_hand_placed_text_and_sheet_dimensions(rt, ws):
+    """Review of #83: re-rendering put AutoCAD text dragged off the line back to the default; a per-entity
+    DIMSCALE beat the style; sheet dimensions drawn after the op printed at twice their size."""
+    doc = ezdxf.new("R2010", setup=True)
+    doc.header["$INSUNITS"] = 4
+    msp = doc.modelspace()
+    msp.add_lwpolyline([(0, 0), (300, 0), (300, 160), (0, 160)], close=True)
+    moved = msp.add_linear_dim(base=(0, -20), p1=(0, 0), p2=(300, 0), override={"dimtxt": 3.5})
+    moved.set_location((60, -45), leader=True)
+    moved.render()
+    pinned = msp.add_linear_dim(base=(-20, 0), p1=(0, 0), p2=(0, 160), angle=90,
+                                override={"dimtxt": 3.5, "dimscale": 1})
+    pinned.render()
+    zero = msp.add_linear_dim(base=(0, 180), p1=(0, 160), p2=(300, 160), override={"dimscale": 0})
+    zero.render()
+    doc.saveas(ws / "hand.dxf")
+    mid = (moved.dimension.dxf.text_midpoint.x, moved.dimension.dxf.text_midpoint.y)
+    ok(rt.apply_operations("hand.dxf", [{"op": "create_layout", "name": "A3"},
+                                        {"op": "add_viewport", "center": [220, 160], "scale": 0.5, "layout": "A3"}]))
+    r = ok(rt.apply_operations("hand.dxf", [{"op": "set_annotation_scale", "scale": 2}]))
+    res = r["results"][0]
+    assert len(res["rerendered"]) == 2 and [s["reason"] for s in res["skipped"]] == ["DIMSCALE 0 (sized to the viewport)"]
+    assert "PRINTED_TEXT_TOO_SMALL" not in [i["code"] for i in r["validation"]["issues"]]
+    d = reread(ws, "hand.dxf")
+    m = next(e for e in d.modelspace().query("DIMENSION") if e.dxf.angle == 0 and e.dxf.defpoint.y < 0)
+    assert m.dxf.dimtype & 128 and (m.dxf.text_midpoint.x, m.dxf.text_midpoint.y) == (A(mid[0]), A(mid[1]))
+    assert len(list(d.blocks.get(m.dxf.geometry).query("MTEXT"))) == 1
+    assert len([b for b in d.blocks if b.name.startswith("*D")]) == len(d.modelspace().query("DIMENSION"))
+
+
+def test_sheet_dimensions_ignore_the_model_annotation_scale(rt, ws):
+    """Our style carries the model's annotation scale; a dimension drawn on the sheet after set_annotation_scale
+    printed at 7 mm instead of 3.5 (review of #83). Sheet dimensions are in paper mm."""
+    ok(rt.create_drawing("own.dxf", units="mm"))
+    ok(rt.apply_operations("own.dxf", [
+        {"op": "add_rectangle", "corner": [0, 0], "width": 300, "height": 160, "layer": "OUTLINE"},
+        {"op": "add_linear_dim", "p1": [0, 0], "p2": [300, 0], "offset": -20, "layer": "DIM"},
+        {"op": "create_layout", "name": "A3"},
+        {"op": "add_viewport", "center": [220, 160], "scale": 0.5, "layout": "A3"},
+        {"op": "set_annotation_scale", "scale": 2},
+        {"op": "add_linear_dim", "p1": [30, 20], "p2": [130, 20], "offset": -8, "layout": "A3"}]))
+    doc = reread(ws, "own.dxf")
+    height = {lay: next(iter(doc.blocks.get(d.dxf.geometry).query("MTEXT"))).dxf.char_height
+              for lay in ("Model", "A3") for d in doc.layouts.get(lay).query("DIMENSION")}
+    dimtxt = doc.dimstyles.get("AGENTCAD").dxf.dimtxt
+    assert height == {"Model": A(2 * dimtxt), "A3": A(dimtxt)}
+
+
+@pytest.mark.parametrize("scale, txt, says", [(2.0, 1.0, "text_height"), (1.0, 1.8, "text_height"),
+                                               (0.5, 3.5, "set_annotation_scale scale=2")])
+def test_printed_text_hint_names_a_fix_that_works(rt, ws, scale, txt, says):
+    """A 2:1 detail of 1 mm text needs a bigger text height, not annotation scale 0.5 (review of #83)."""
+    doc = ezdxf.new("R2010", setup=True)
+    doc.header["$INSUNITS"] = 4
+    msp = doc.modelspace()
+    msp.add_lwpolyline([(0, 0), (40, 0), (40, 20), (0, 20)], close=True)
+    msp.add_linear_dim(base=(0, -5), p1=(0, 0), p2=(40, 0), override={"dimtxt": txt}).render()
+    doc.saveas(ws / "h.dxf")
+    r = ok(rt.apply_operations("h.dxf", [{"op": "create_layout", "name": "S"},
+                                         {"op": "add_viewport", "center": [150, 150], "scale": scale, "layout": "S"}]))
+    hint = next(i for i in r["validation"]["issues"] if i["code"] == "PRINTED_TEXT_TOO_SMALL")["details"]["hint"]
+    assert says in hint and ("set_annotation_scale" in hint) == (says.startswith("set_annotation_scale"))
 
 
 def sheet_with_view(rt, ws):

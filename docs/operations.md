@@ -245,7 +245,7 @@ Create a text style for add_text / add_mtext 'style'. 'font' is an SHX (e.g. gbe
 
 ### `set_annotation_scale`
 
-Set the plot scale 1:scale for annotations: dimension arrows/text/gaps (DIMSCALE) and linetype dash lengths (LTSCALE) are multiplied by 'scale'. Use e.g. 50 or 100 for building plans in mm, 2 for a sheet that shows the part at 1:2. Model-space dimensions are re-rendered, whatever their style; their values and positions stay as they are.
+Set the plot scale 1:scale for annotations: dimension arrows/text/gaps (DIMSCALE) and linetype dash lengths (LTSCALE) are multiplied by 'scale'. Use e.g. 50 or 100 for building plans in mm, 2 for a sheet that shows the part at 1:2: lettering height is set on the printed sheet (ISO 3098, GB/T 14665), whatever the drawing scale. Model-space dimensions of any style are re-rendered; their values, definition points and text placed by hand stay as they are. Sheet (paper-space) dimensions keep 1.
 
 | 参数 | 类型 | 必需 | 默认 | 说明 |
 |---|---|---|---|---|

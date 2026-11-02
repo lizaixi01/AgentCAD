@@ -17,7 +17,7 @@
 | `add_hatch` | draw | test_i_common_ops.py, test_k_pdf.py, test_t_workflow_guards.py |
 | `add_leader` | annotate | test_h_operations.py |
 | `add_line` | draw | test_autocad_findings.py, test_constraints.py, test_d_errors.py, test_drafting_checks.py, test_h_operations.py, test_i_common_ops.py, test_j_compact_results.py, test_k_pdf.py, test_layouts_and_scripts.py, test_m_library.py, test_o_viewer.py, test_p_busy_files.py, test_q_viewer_progress.py, test_security.py, test_t_workflow_guards.py, test_y_tolerances.py, test_z_locking.py |
-| `add_linear_dim` | annotate | test_autocad_findings.py, test_b_revision.py, test_drafting_checks.py, test_f_repro_recovery.py, test_h_operations.py, test_t_workflow_guards.py, test_y_tolerances.py |
+| `add_linear_dim` | annotate | test_autocad_findings.py, test_b_revision.py, test_drafting_checks.py, test_f_repro_recovery.py, test_h_operations.py, test_layouts_and_scripts.py, test_t_workflow_guards.py, test_y_tolerances.py |
 | `add_mtext` | annotate | test_h_operations.py, test_i_common_ops.py, test_k_pdf.py |
 | `add_ordinate_dim` | annotate | test_i_common_ops.py |
 | `add_pid_symbol` | library | test_m_library.py |
