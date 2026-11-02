@@ -20,7 +20,7 @@ from .worker import CADWorker
 
 INLINE_IMAGE_MAX = 2 * 1024 * 1024  # bytes: a png export larger than this is not returned inline
 
-INSTRUCTIONS = """AgentCAD: CAD runtime for agents: 2D drawings (.dxf).
+INSTRUCTIONS = """AgentCAD: CAD runtime for agents: 2D drawings (.dxf). Its live viewer also shows 3D parts you build.
 Paths are relative to the workspace.
 Tool names below are this server's own; your client may list them with a prefix (Claude Code:
 mcp__<server name>__<tool>, usually mcp__agentcad__list_operations). Always call them by the listed name.
@@ -50,6 +50,13 @@ Drawings
 - Source pictures (a scanned or photographed drawing): inspect_image magnifies a region (rotate=90/180/270 makes
   text upright; dimensions=[] adds source-coordinate guides; code=... measures pixels with numpy if scripts
   are enabled).
+
+3D parts
+- AgentCAD has no 3D modelling tools: build the part with your own code (CadQuery, build123d, or FreeCAD's Python;
+  FreeCAD may already be installed) and save it in the workspace (agentcad_status gives its folder) as .step,
+  .FCStd, .stl or .brep. The live viewer shows it in 3D (rotate, zoom) and records every save as a version, with a
+  before/after comparison. Save to the same file after each meaningful step (the base, then each feature), so the
+  user watches the part being built instead of one finished result.
 
 Live viewer: results that change a file carry viewer_url, a page on this computer where the user watches the
 work step by step and can save or share it. Give the user that link once, the first time you change something.
@@ -475,6 +482,9 @@ def serve_stdio(policy: Policy | None = None) -> None:
     global SESSION
     policy = policy or Policy()
     SESSION = sessions.Session(policy)  # the viewer lists this process until it exits
+    from .backends import freecad
+    from .policy import STATE_DIR
+    freecad.remember(policy.root / STATE_DIR)  # for a viewer started without this app's environment (3D view)
     build_server(policy).run("stdio")
 
 

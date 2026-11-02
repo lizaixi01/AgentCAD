@@ -485,8 +485,10 @@ def test_page_adds_files_without_overwriting(page_viewer, tmp_path):
         code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": quote(name)})
         assert code == 200 and r["path"] == want and (tmp_path / want).is_file(), (name, r)
         assert r["shown"] == want.endswith(".dxf")  # a drawing opens; the rest wait for the assistant
+    code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": "part.step"})
+    assert code == 200 and r["path"] == "part.step" and r["shown"] and r["kind"] == "part"  # 3D parts open too
     assert not (tmp_path.parent / "evil.dxf").exists()
-    for name in ("virus.exe", "part.FCStd", "part.step", "part.stl"):  # no 3D parts: agents write CAD code for those
+    for name in ("virus.exe", "notes.docx"):
         code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": name})
         assert code == 400 and r["error"]["code"] == "UNSUPPORTED_FILE", name
     # the page learns where the drawings are and that it may add files; the new drawing is listed
@@ -630,3 +632,110 @@ def test_a_refused_body_of_unknown_size_does_not_reset_the_answer(page_viewer):
     with ThreadPoolExecutor(16) as ex:
         got = list(ex.map(lambda i: refused(*reqs[i % 2][:2]), range(300)))
     assert got == [reqs[i % 2][2] for i in range(300)]
+
+
+# --- 3D parts the agent's own code saves ----------------------------------------------------------------------
+
+def _settle(path: Path) -> None:
+    """Make a just-written file look as if its writer finished a while ago (SETTLE)."""
+    t = path.stat().st_mtime - 5
+    os.utime(path, (t, t))
+
+
+def test_saved_3d_files_become_versions(ws, cache):
+    """An agent saves its own CadQuery/FreeCAD result over the same file; each settled save is one version, listed
+    in the timeline with the version before it, and reported as a 'save' activity."""
+    from agentcad import progress
+    v = Viewer(Policy(root=ws, read_only=False), port=0, interval=0.05, cache_dir=cache)
+    v.feed.rescan = 0  # look for new files on every poll
+    part = ws / "arm.step"
+    part.write_bytes(b"ISO-10303-21; first")
+    _settle(part)
+    v.feed.poll()
+    assert [r["tool"] for r in v.ws.timeline("arm.step")["records"]] == ["save"]
+    v.feed.poll()  # unchanged: nothing new
+    assert len(v.ws.timeline("arm.step")["records"]) == 1
+    part.write_bytes(b"ISO-10303-21; second")  # still being written: not yet a version
+    v.feed.poll()
+    assert len(v.ws.timeline("arm.step")["records"]) == 1
+    _settle(part)
+    v.feed.poll()
+    recs = v.ws.timeline("arm.step")["records"]
+    assert [r["seq"] for r in recs] == [1, 2] and recs[1]["before"] == recs[0]["version"]
+    assert all(r["available"] for r in recs) and recs[1]["version"] == sha256_file(part)
+    assert v.ws.snapshot("arm.step", recs[0]["version"])[1].read_bytes() == b"ISO-10303-21; first"
+    log = [json.loads(x) for x in progress.log_path(v.ws.policy).read_text("utf-8").splitlines()]
+    assert [(e["tool"], e["drawing"], e["state"]) for e in log] == [("save", "arm.step", "done")] * 2
+    # the files listed include the part, as a part; the part itself was never written by the viewer
+    assert {"arm.step"} <= set(v.ws.list_drawings()) and part.read_bytes() == b"ISO-10303-21; second"
+    v.httpd.server_close()
+
+
+def test_read_only_viewer_records_no_versions(ws, cache):
+    v = Viewer(Policy(root=ws, read_only=True), port=0, interval=0.05, cache_dir=cache)
+    v.feed.rescan = 0
+    part = ws / "arm.stl"
+    part.write_bytes(b"solid x")
+    _settle(part)
+    v.feed.poll()
+    assert v.ws.timeline("arm.stl")["records"] == [] and not (ws / ".agentcad" / "drawings").exists()
+    v.httpd.server_close()
+
+
+needs_freecad = pytest.mark.skipif(not __import__("agentcad.backends.freecad", fromlist=["x"]).available(),
+                                   reason="FreeCAD not installed (set AGENTCAD_FREECAD)")
+
+
+@needs_freecad
+def test_3d_part_mesh_thumbnail_and_change(ws, cache):
+    """A STEP the agent saved, then a changed one: the page gets triangles, a thumbnail, and what changed."""
+    import subprocess
+    from agentcad.backends import freecad
+    cmd, extra = freecad.require()
+    script = ws / "make.py"
+    script.write_text(  # a stand-in for the agent's own code; by environment: freecadcmd passes no arguments
+        "import os, sys\n"
+        "[sys.path.insert(0, p) for p in os.environ.get('AGENTCAD_FREECAD_LIB', '').split(os.pathsep) if p]\n"
+        "import FreeCAD, Part\n"
+        "box = Part.makeBox(40, 20, 10)\n"
+        "cyl = Part.makeCylinder(5, 30, FreeCAD.Vector(20, 10, 0))\n"
+        "(box.fuse(cyl) if os.environ['KIND'] == 'boss' else box.cut(cyl)).exportStep(os.environ['OUT'])\n",
+        "utf-8")
+    part = ws / "arm.step"
+    v = Viewer(Policy(root=ws, read_only=False), port=0, interval=0.05, cache_dir=cache)
+    v.feed.rescan = 0
+    v.start()
+    try:
+        for kind in ("boss", "hole"):
+            subprocess.run(cmd + [str(script)], env={**os.environ, **extra, "OUT": str(part), "KIND": kind},
+                           check=True, capture_output=True, timeout=120)
+            _settle(part)
+            v.feed.poll()
+        code, tl = get_json(v, "/api/timeline", path="arm.step")
+        assert code == 200 and tl["kind"] == "part" and len(tl["records"]) == 2
+        code, mesh = get_json(v, "/api/mesh", path="arm.step")
+        assert code == 200 and mesh["indices"] and mesh["edges"] and not mesh["missing_faces"]
+        code, ctype, png = get(v, "/api/thumb", path="arm.step")
+        assert code == 200 and ctype == "image/png" and png.startswith(b"\x89PNG")
+        code, d = get_json(v, "/api/diff", path="arm.step", v=tl["current"])
+        assert code == 200 and d["shape"]["size"] == {"old": [40.0, 20.0, 30.0], "new": [40.0, 20.0, 10.0]}
+    finally:
+        v.stop()
+
+
+def test_freecad_location_is_remembered_for_the_desktop_viewer(tmp_path, monkeypatch):
+    """The agent apps start AgentCAD with AGENTCAD_FREECAD; the viewer the desktop icon opens has no such setting,
+    so the location is kept in the workspace's state folder and used from there."""
+    from agentcad.backends import freecad
+    fc = tmp_path / "FreeCAD"
+    (fc / "bin").mkdir(parents=True)
+    (fc / "bin" / ("freecadcmd.exe" if os.name == "nt" else "freecadcmd")).write_text("", "utf-8")
+    monkeypatch.delenv("FREECAD_LIB", raising=False)
+    monkeypatch.setenv("AGENTCAD_FREECAD", str(fc))
+    state = tmp_path / "ws" / ".agentcad"
+    freecad.remember(state)
+    assert (state / "freecad.txt").read_text("utf-8") == str(fc)
+    monkeypatch.delenv("AGENTCAD_FREECAD")
+    monkeypatch.setattr(freecad, "find_freecad", lambda: None)  # as on a computer where it is not installed normally
+    freecad.recall(state)
+    assert os.environ["AGENTCAD_FREECAD"] == str(fc)

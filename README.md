@@ -23,7 +23,7 @@ AgentCAD is an open-source program you install on your machine, the CAD engine y
 </p>
 <p align="center"><sub>Both drawings were made by an agent through AgentCAD and plotted by AutoCAD 2027. Left: "make an A3 sheet with a 1:2 viewport". Right: "dimension this part so the shop can make it".</sub></p>
 
-**3D parts are not part of AgentCAD.** For a 3D part, let your agent write CadQuery or build123d code directly. We built a 3D layer on FreeCAD and measured it against agents writing the code themselves: the results were mixed (Claude Code did better through AgentCAD, Codex and the BenchCAD 2 native-tool control did better without it; see [benchmarks](docs/benchmarks.md#timed-trials-and-benchcad-vision2code)), not enough to carry its complexity, so we removed it to keep AgentCAD focused on drawings.
+**3D parts are not part of AgentCAD.** For a 3D part, let your agent write CadQuery or build123d code directly. We built a 3D layer on FreeCAD and measured it against agents writing the code themselves: the results were mixed (Claude Code did better through AgentCAD, Codex and the BenchCAD 2 native-tool control did better without it; see [benchmarks](docs/benchmarks.md#timed-trials-and-benchcad-vision2code)), not enough to carry its complexity, so we removed it to keep AgentCAD focused on drawings. The live viewer still shows the parts your agent builds: it saves the model in the workspace (STEP, FCStd, STL), and every save appears as a version you can rotate and compare, so you watch the part being built (needs FreeCAD on the computer to display).
 
 ## Get started in two minutes
 
@@ -134,7 +134,7 @@ Your agent can already write code. It still can't do CAD: asked to edit a drawin
 | [docs/tutorial.md](docs/tutorial.md) | Step-by-step tutorial: generate, validate, revise, roll back, DWG, connecting agents |
 | [docs/architecture.md](docs/architecture.md) | Architecture, data model, transactions, error envelope |
 | [docs/operations.md](docs/operations.md) | Reference for every operation (generated from code) |
-| [docs/viewer.md](docs/viewer.md) | Live viewer: watch drawings change in the browser, timeline, diffs |
+| [docs/viewer.md](docs/viewer.md) | Live viewer: watch drawings and 3D parts change in the browser, timeline, diffs |
 | [docs/benchmarks.md](docs/benchmarks.md) | Every benchmark and comparison: results, caveats, and the full reports with run logs and graders |
 | [docs/limitations-roadmap.md](docs/limitations-roadmap.md) | Known limitations and roadmap |
 

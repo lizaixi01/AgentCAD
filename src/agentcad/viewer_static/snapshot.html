@@ -70,9 +70,9 @@ footer { text-align: center; margin-top: 26px; }
   document.title = name + " · AgentCAD";
   $("name").textContent = name;
   const when = D.exported ? new Date(D.exported.replace(/([+-]\d\d)(\d\d)$/, "$1:$2")) : new Date();
-  $("meta").textContent = `${t("drawing")} · ${t("exportedFrom", { d: when.toLocaleString(L === "zh" ? "zh-CN" : undefined) })}`;
+  $("meta").textContent = `${D.kind === "part" ? t("part") : t("drawing")} · ${t("exportedFrom", { d: when.toLocaleString(L === "zh" ? "zh-CN" : undefined) })}`;
   $("lgA").textContent = t("legendAdded"); $("lgM").textContent = t("legendModified"); $("lgO").textContent = t("legendOther");
-  const views = [["drawing", t("drawing"), D.image]];
+  const views = [["drawing", D.kind === "part" ? t("part") : t("drawing"), D.image]];
   if (D.image_changes) views.push(["changes", t("highlight"), D.image_changes]);
   if (D.image_before && D.image_after) views.push(["compare", t("compare"), null]);
   function show(key) {

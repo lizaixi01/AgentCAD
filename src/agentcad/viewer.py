@@ -1,4 +1,4 @@
-"""Live viewer: a local web page that shows a workspace's drawings as agents change them (stdlib only).
+"""Live viewer: a local web page that shows a workspace's drawings and parts as agents change them (stdlib only).
 
     agentcad viewer --root <dir> [--port 8770]
 
@@ -6,16 +6,23 @@ It only reads the workspace. Every commit goes through the store (checkpoint, at
 thread polls each drawing's file and journal (``stat`` only, no open) and pushes a change event to the page over
 Server-Sent Events. Versions are addressed by sha256: a commit's journal record carries the sha of the file it
 wrote, and each checkpoint the sha of the content it holds, so any committed version still on disk can be shown.
-Files are read into a content-addressed cache outside the workspace before they are parsed.
+Files are read into a content-addressed cache outside the workspace before they are parsed or handed to FreeCAD.
+
+3D parts (.FCStd, .step/.stp, .stl, .brep) are not made through AgentCAD: agents write them with their own code
+and save them in the workspace. Each time such a file settles on new content, the viewer records it as a version
+in that file's store (a checkpoint and a journal record, tool 'save'), so the page's timeline shows how the part
+was built and any saved version can be shown again. FreeCAD (backends/freecad.py) reads them for the page.
 
     GET /                         the page (viewer_static/index.html)
     GET /ui/<file>                the UI kit (viewer_static/ui): fluid.css, fluid.js, Inter, gallery.html
-    GET /api/drawings             drawings (.dxf) under the root
+    GET /api/drawings             drawings (.dxf) and 3D parts (.FCStd, .step, .stl, .brep) under the root
     GET /api/timeline?path=       journal records, each with the version it produced
     GET /api/svg?path=&v=&diff=1&hide=L1,L2    2D render (diff: added green, modified orange, rest grey)
     GET /api/layers?path=&v=      layers with entity counts
     GET /api/diff?path=&v=        what the commit that made version v changed (as get_diff reports it)
-    GET /api/thumb?path=&v=       small picture for the file list and before/after (SVG)
+    GET /api/mesh?path=&v=        3D part: triangles and edges (JSON) for three.js
+    GET /api/png?path=&v=         3D part: a shaded iso picture (fallback when WebGL is unavailable)
+    GET /api/thumb?path=&v=       small picture for the file list and before/after (2D: SVG, 3D: iso PNG)
     GET /api/activity             recent progress events the runtime wrote (progress.py), oldest first
     GET /api/sessions             the assistants connected now (sessions.py): app, conversation label, last activity
     GET /api/export?path=&v=      a self-contained HTML snapshot (picture + change history) to send to someone
@@ -55,12 +62,13 @@ from .policy import STATE_DIR, Policy
 from .store import DrawingStore, read_dxf, sha256_file
 
 STATIC = Path(__file__).resolve().parent / "viewer_static"
-SUFFIXES = (".dxf",)
+PART_SUFFIXES = (".fcstd", ".step", ".stp", ".stl", ".brep")
+SUFFIXES = (".dxf", *PART_SUFFIXES)
 SKIP_DIRS = {STATE_DIR, ".git", ".venv", "venv", "node_modules", "__pycache__", ".claude"}
 MAX_FILES = 2000
-# files a person can add from the page (drag, paste, "Add files"): drawings the viewer shows, and files kept for the
-# assistant to use (DWG to convert, reference pictures and PDFs)
-IMPORT_SHOWN = (".dxf",)
+# files a person can add from the page (drag, paste, "Add files"): drawings and parts the viewer shows, and files kept
+# for the assistant to use (DWG to convert, reference pictures and PDFs)
+IMPORT_SHOWN = SUFFIXES
 IMPORT_KEPT = (".dwg", ".pdf", ".png", ".jpg", ".jpeg", ".webp")
 MAX_IMPORT = 100 * 1024 * 1024
 # a refused request's body up to this size is read before the connection closes (see Handler.do_POST)
@@ -68,12 +76,15 @@ MAX_DRAIN = 64 * 1024
 # Windows device names; they count before the first dot ("nul.x.dxf"), and older Windows also takes ¹²³
 WINDOWS_RESERVED = {"con", "prn", "aux", "nul", "conin$", "conout$",
                     *(f"{d}{i}" for d in ("com", "lpt") for i in (*range(10), "¹", "²", "³"))}
-ROUTES = {"/api/timeline", "/api/layers", "/api/diff", "/api/svg", "/api/thumb", "/api/export"}
+ROUTES = {"/api/timeline", "/api/layers", "/api/diff", "/api/svg", "/api/mesh", "/api/png", "/api/thumb",
+          "/api/export"}
 STATIC_FILES = {"/friendly.js": ("friendly.js", "text/javascript; charset=utf-8"),
                 "/logo.svg": ("logo.svg", "image/svg+xml")}
 # the UI kit (viewer_static/ui): fluid.css, fluid.js, the Inter font and the component gallery; only these types
 UI_TYPES = {".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".html": "text/html; charset=utf-8",
             ".woff2": "font/woff2", ".svg": "image/svg+xml", ".md": "text/markdown; charset=utf-8"}
+FREECAD_JOBS = threading.BoundedSemaphore(2)  # thumbnails of many parts must not start FreeCAD for each at once
+SETTLE = 1.0  # seconds a 3D file must stay unchanged before it counts as saved (the agent may still be writing it)
 INFO_FILE = "viewer.json"  # <root>/.agentcad/viewer.json: where a running viewer listens (see viewer_url)
 LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})
 COLORS = {"added": "#16a34a", "modified": "#ea580c", "other": "#b8bcc4"}
@@ -108,6 +119,23 @@ def _retry(fn):
     return wrapper
 
 
+def _is_part(rel: str) -> bool:
+    return rel.lower().endswith(PART_SUFFIXES)
+
+
+def _read_part(path: Path, policy: Policy) -> Path:
+    """The store's reader for 3D files: only that the file is there; FreeCAD reads it when the page asks."""
+    if not path.is_file() or not path.stat().st_size:
+        raise AgentCADError("FILE_READ_ERROR", f"{path.name} is empty or missing", category="file")
+    return path
+
+
+def _compare(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
+    """What changed between two 3D versions' summaries (size, volume, area, counts), as {key: {old, new}}."""
+    return {"shape": {k: {"old": old.get(k), "new": new.get(k)} for k in sorted(set(old) | set(new))
+                      if old.get(k) != new.get(k)}}
+
+
 class Workspace:
     """Read-only access to the drawings under a root and to their committed versions."""
 
@@ -116,6 +144,7 @@ class Workspace:
         root_key = hashlib.sha256(str(policy.root).encode()).hexdigest()[:12]
         self.cache = cache_dir or Path(tempfile.gettempdir()) / "agentcad-viewer" / root_key
         self.cache.mkdir(parents=True, exist_ok=True)
+        self.record = False  # record saved 3D versions in the state directory (the Viewer sets it unless read-only)
         self._sha_memo: dict[str, tuple[tuple[int, int], str]] = {}
         self._ready: set[Path] = set()  # cached copies whose os.replace has returned
         self._results: OrderedDict[tuple, Any] = OrderedDict()
@@ -131,7 +160,8 @@ class Workspace:
         suffix = ("." + suffix).lower() if dot else ""
         if suffix not in IMPORT_SHOWN + IMPORT_KEPT:
             raise input_error("UNSUPPORTED_FILE", f"{base or name!r}: not a file AgentCAD uses",
-                              hint="Drawings (.dxf, .dwg) or reference pictures (.png, .jpg, .pdf)")
+                              hint="Drawings (.dxf, .dwg), parts (.FCStd, .step, .stl) or reference pictures "
+                                   "(.png, .jpg, .pdf)")
         if len(data) > MAX_IMPORT:
             raise input_error("FILE_TOO_LARGE", f"{base} is larger than {MAX_IMPORT // (1024 * 1024)} MB")
         stem = (stem.strip(" .") or "drawing")[:120]
@@ -147,7 +177,7 @@ class Workspace:
             except FileExistsError:
                 continue
             rel = target.relative_to(root).as_posix()
-            return {"path": rel, "kind": "drawing" if suffix == ".dxf" else
+            return {"path": rel, "kind": "part" if _is_part(rel) else "drawing" if suffix == ".dxf" else
                     suffix.lstrip("."), "shown": suffix in IMPORT_SHOWN, "renamed": n > 1, "bytes": len(data)}
         raise input_error("FILE_EXISTS", f"Too many files named {stem}{suffix}")
 
@@ -176,7 +206,9 @@ class Workspace:
         return out
 
     def store(self, rel: str) -> DrawingStore:
-        p = self.policy.resolve(rel, must_exist=False, suffixes=(".dxf",))
+        p = self.policy.resolve(rel, must_exist=False, suffixes=SUFFIXES)
+        if _is_part(rel):
+            return DrawingStore(self.policy, p, reader=_read_part)
         return DrawingStore(self.policy, p)
 
     def signature(self, rel: str) -> tuple:
@@ -233,7 +265,7 @@ class Workspace:
                     line["before"] = cps[before]
             records.append(line)
         cur = self.current_sha(st)
-        return {"drawing": rel, "kind": "drawing", "current": cur,
+        return {"drawing": rel, "kind": "part" if _is_part(rel) else "drawing", "current": cur,
                 "modified_outside_runtime": bool(cur and st.head().get("sha256") and cur != st.head()["sha256"]),
                 "records": records}
 
@@ -393,13 +425,92 @@ class Workspace:
                                                             "the runtime)"}
         if before not in self.versions(self.store(rel)):
             return {"version": sha, "before": before, "note": "the earlier version is no longer stored"}
-        d = self._change_sets(rel, sha, before)
+        if _is_part(rel):
+            d = self._memo(("diff3d", sha, before),
+                           lambda: _compare(self._summary(rel, before), self._summary(rel, sha)))
+        else:
+            d = self._change_sets(rel, sha, before)
         return {"version": sha, "before": before, **d}
+
+    # --- 3D (FreeCAD) -------------------------------------------------------------------------------
+    def _fc(self, job: dict[str, Any], src: Path, out: Path | None = None) -> dict[str, Any]:
+        from .backends import freecad
+        self._find_freecad()
+        with FREECAD_JOBS:
+            res = freecad.run(job, inputs={"input": src}, outputs={"output": out} if out else None)
+        if not res.get("ok"):
+            e = res.get("error") or {}
+            raise AgentCADError(e.get("code", "FREECAD_ERROR"), e.get("message", "FreeCAD job failed"),
+                                category="geometry" if e.get("category") == "geometry" else "internal",
+                                hint=e.get("hint"))
+        return res
+
+    def _find_freecad(self) -> None:
+        from .backends import freecad
+        state = self.policy.root / STATE_DIR
+        if self.record:
+            freecad.remember(state)
+        freecad.recall(state)
+
+    def _summary(self, rel: str, sha: str) -> dict[str, Any]:
+        src = self.snapshot(rel, sha)[1]
+        return self._memo(("summary", sha), lambda: self._fc({"action": "summary"}, src)["summary"])
+
+    def record_save(self, rel: str) -> bool:
+        """Record the 3D file's current content as a version (checkpoint + journal record 'save'), once it has stayed
+        unchanged for SETTLE seconds and is not recorded yet. True when a version was added."""
+        if not self.record or not _is_part(rel):
+            return False
+        st = self.store(rel)
+        try:
+            s = st.path.stat()
+        except OSError:
+            return False
+        if not s.st_size or time.time() - s.st_mtime < SETTLE:
+            return False
+        from .locking import drawing_lock
+        with drawing_lock(st.dir):  # two viewers on one workspace record each version once
+            sha = sha256_file(st.path)
+            cps = st.list_checkpoints()
+            if any(c.get("sha256") == sha for c in cps):
+                return False
+            before = cps[-1]["id"] if cps else None
+            cid = st.checkpoint("saved")
+            if cid is None:
+                return False
+            st.journal({"tool": "save", "ok": True, "sha256": sha, "checkpoint_before": before,
+                        "bytes": s.st_size})
+        progress.Activity(self.policy, "save", rel).emit("done", bytes=s.st_size)
+        return True
+
+    @_retry
+    def mesh(self, rel: str, version: str | None) -> Path:
+        sha, src = self.snapshot(rel, version)
+        out = self.cache / f"{sha}.mesh.json"
+        if not out.is_file():
+            self._memo(("mesh", sha), lambda: self._fc({"action": "mesh"}, src, out))
+        return out
+
+    @_retry
+    def png(self, rel: str, version: str | None) -> Path:
+        sha, src = self.snapshot(rel, version)
+        out = self.cache / f"{sha}.png"
+        if not out.is_file():
+            self._memo(("png", sha), lambda: self._fc({"action": "render", "size": 768}, src, out))
+        return out
+
 
     @_retry
     def thumb(self, rel: str, version: str | None) -> tuple[bytes, str]:
-        """A small picture: the SVG."""
-        return self.svg(rel, version).encode("utf-8"), "image/svg+xml"
+        """A small picture: 2D the SVG, 3D one shaded iso view."""
+        if not _is_part(rel):
+            return self.svg(rel, version).encode("utf-8"), "image/svg+xml"
+        sha, src = self.snapshot(rel, version)
+        out = self.cache / f"{sha}.thumb.png"
+        if not out.is_file():
+            self._memo(("thumb", sha), lambda: self._fc({"action": "render", "size": 240},
+                                                        src, out))
+        return out.read_bytes(), "image/png"
 
     # --- export ---------------------------------------------------------------------------------------
     def export_html(self, rel: str, version: str | None) -> tuple[str, str]:
@@ -418,14 +529,22 @@ class Workspace:
         data: dict[str, Any] = {"name": rel, "kind": tl["kind"], "version": sha[:12],
                                 "exported": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "history": hist}
         before = self.before(rel, sha)
-        def uri(svg_text: str) -> str:
-            return "data:image/svg+xml;base64," + base64.b64encode(svg_text.encode("utf-8")).decode()
-        data["image"] = uri(self.svg(rel, sha))
-        if before and before in self.versions(self.store(rel)):
-            data["image_changes"] = uri(self.svg(rel, sha, diff=True))
-            data["image_before"] = uri(self.svg(rel, before, frame=sha))
-            data["image_after"] = uri(self.svg(rel, sha, frame=before))
-            data["diff"] = {"summary": self._change_sets(rel, sha, before)["summary"]}
+        if _is_part(rel):
+            data["image"] = "data:image/png;base64," + base64.b64encode(self.png(rel, sha).read_bytes()).decode()
+            try:
+                d = self.diff(rel, sha)
+                data["diff"] = {k: d[k] for k in ("parameters", "shape", "features") if d.get(k)}
+            except AgentCADError:
+                pass
+        else:
+            def uri(svg_text: str) -> str:
+                return "data:image/svg+xml;base64," + base64.b64encode(svg_text.encode("utf-8")).decode()
+            data["image"] = uri(self.svg(rel, sha))
+            if before and before in self.versions(self.store(rel)):
+                data["image_changes"] = uri(self.svg(rel, sha, diff=True))
+                data["image_before"] = uri(self.svg(rel, before, frame=sha))
+                data["image_after"] = uri(self.svg(rel, sha, frame=before))
+                data["diff"] = {"summary": self._change_sets(rel, sha, before)["summary"]}
         data = _scrub_obj(data, self.policy.root)
         page = (STATIC / "snapshot.html").read_text("utf-8")
         friendly = (STATIC / "friendly.js").read_text("utf-8")
@@ -486,6 +605,7 @@ class ChangeFeed:
         self._next_id = 0
         self.cond = threading.Condition()
         self.sigs: dict[str, tuple] = {}
+        self.unsaved: set[str] = set()  # 3D files whose current content may not be recorded as a version yet
         self.drawings: list[str] = []
         self._last_scan = 0.0
         self._stop = threading.Event()
@@ -568,7 +688,23 @@ class ChangeFeed:
                     self._emit(rel, "added" if old is None else "changed")
             for rel in self.sigs.keys() - now.keys():
                 self._emit(rel, "removed")
+        for rel, sig in now.items():
+            if _is_part(rel) and (first or self.sigs.get(rel, (None,))[0] != sig[0]):
+                self.unsaved.add(rel)  # new content of a 3D file (or one seen at start): a version to record
         self.sigs = now
+        for rel in sorted(self.unsaved):
+            try:
+                age = time.time() - (self.ws.policy.root / rel).stat().st_mtime
+            except OSError:
+                self.unsaved.discard(rel)
+                continue
+            if age < SETTLE:
+                continue  # still being written: wait until it settles
+            self.unsaved.discard(rel)
+            try:
+                self.ws.record_save(rel)  # its journal changes, so the next poll sends the page a 'changed' event
+            except (AgentCADError, OSError):
+                pass
 
     def since(self, last: int, progress: bool = False) -> list[dict[str, Any]]:
         """Events after id ``last``: file events, and with ``progress`` the progress events too."""
@@ -661,7 +797,7 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                     return self._json({"ok": True, "root": str(ws.policy.root)})
                 if u.path == "/api/drawings":
                     return self._json({"ok": True, "root": str(ws.policy.root), "can_add": can_add(), "drawings": [
-                        {"path": r, "kind": "drawing"} for r in ws.list_drawings()],
+                        {"path": r, "kind": "part" if _is_part(r) else "drawing"} for r in ws.list_drawings()],
                         "last_event": feed.last_id})
                 if u.path == "/api/events":
                     return self._events(int(self.headers.get("Last-Event-ID") or q.get("since") or feed.last_id),
@@ -685,8 +821,13 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                 if u.path == "/api/thumb":
                     body, ctype = ws.thumb(path, v)
                     return self._send(200, body, ctype, cache=pinned)
-                name, page = ws.export_html(path, v)  # /api/export
-                return self._send(200, page.encode("utf-8"), "text/html; charset=utf-8", download=name)
+                if u.path == "/api/export":
+                    name, page = ws.export_html(path, v)
+                    return self._send(200, page.encode("utf-8"), "text/html; charset=utf-8",
+                                      download=name)
+                if u.path == "/api/mesh":
+                    return self._send(200, ws.mesh(path, v).read_bytes(), "application/json", cache=pinned)
+                return self._send(200, ws.png(path, v).read_bytes(), "image/png", cache=pinned)  # /api/png
             except AgentCADError as exc:
                 code = 404 if exc.code in ("FILE_NOT_FOUND", "VERSION_NOT_FOUND") else \
                     503 if exc.category == "dependency" else 403 if exc.category == "policy" else 400
@@ -838,6 +979,7 @@ class Viewer:
         self.writable = not policy.read_only  # the page may add new files (never change one) unless read-only
         policy.read_only = True  # the viewer never writes a drawing
         self.ws = Workspace(policy, cache_dir)
+        self.ws.record = self.writable  # saved 3D versions go to the state directory, never into a drawing
         self.feed = ChangeFeed(self.ws, interval)
         if host not in LOOPBACK and not allow_remote:
             raise AgentCADError("REMOTE_NOT_ALLOWED", f"--host {host} would expose the workspace to the network",

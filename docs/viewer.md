@@ -3,6 +3,21 @@
 Agent 改图纸时，人可以在浏览器里实时看到它在变：正在做哪一步、做完了没有、有没有问题，还能把结果存成一个
 网页或一张图片发给别人。查看器只读工作区，不依赖是哪个 Agent 在改（Claude Code、Codex、CLI、HTTP API 都一样）。
 
+## 三维零件
+
+AgentCAD 不建三维模型：Agent 用自己的代码（CadQuery、build123d 或 FreeCAD 的 Python）建零件，存进工作区
+（`.step`/`.stp`、`.FCStd`、`.stl`、`.brep`）。查看器把它们和图纸列在一起，用 three.js 显示，可以旋转、平移、缩放。
+
+- **每存一次就是一个版本。** 文件内容变了、并且 1 秒内没再变（`SETTLE`，Agent 可能还在写），查看器就把它记成一个
+  版本：在这个文件的状态目录里存一个检查点、写一条 journal 记录（`tool: "save"`），动态里出现“保存了新版本的零件”。
+  所以 Agent 每做完一步（底座、再每个特征）存一次同一个文件，用户就能看到零件一步步建出来，点开任何一个版本，
+  或者“前后对比”看两版的样子和尺寸、体积、面数的变化。MCP 的说明（instructions）要求 Agent 这样做。
+- 只读的查看器（`--read-only`）不记版本，只显示当前文件。两个查看器看同一个工作区时，每个版本只记一次（写锁）。
+- 显示要用 FreeCAD（`backends/freecad.py` 在单独的 FreeCAD 进程里运行 `backends/_fc_view.py`，只读文件、
+  三角化和出缩略图，不建模）。查找顺序：`AGENTCAD_FREECAD`、`FREECAD_LIB`、常见安装位置、`PATH` 上的
+  `freecadcmd`。从桌面图标打开的查看器拿不到 Agent 应用配置里的 `AGENTCAD_FREECAD`，所以 MCP 服务器启动时（以及带着它的
+  查看器）把这个位置记在 `<工作区>/.agentcad/freecad.txt`，查看器自己找不到 FreeCAD 时用它。
+
 ## 怎么打开
 
 **通过 MCP 用 AgentCAD 时什么都不用做。** MCP 服务器在第一次创建或修改文件时，在后台启动查看器（同一个进程里的
@@ -163,12 +178,14 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。
 | 路径 | 返回 |
 |---|---|
 | `/` | 页面（`/friendly.js`、`/logo.svg` 是它的脚本和图标） |
-| `/api/drawings` | `{"drawings": [{"path", "kind": "drawing"}], "last_event"}` |
+| `/api/drawings` | `{"drawings": [{"path", "kind": "drawing" \| "part"}], "last_event"}` |
 | `/api/timeline?path=` | `{"current", "modified_outside_runtime", "records": [{"seq", "tool", "ok", "label", "ops", "steps", "changes", "error", "version", "available", "before"}]}`（`steps`：按操作归并的摘要，同进度事件的 `ops`） |
 | `/api/svg?path=&v=&diff=1&hide=L1,L2&frame=` | 二维 SVG；`frame` 是另一个版本，两版用同一个取景 |
 | `/api/layers?path=&v=` | 图层和实体数 |
-| `/api/diff?path=&v=` | 这一版的改动（`before` = 起始版本） |
-| `/api/thumb?path=&v=` | 缩略图：SVG |
+| `/api/diff?path=&v=` | 这一版的改动（`before` = 起始版本）；三维零件是 `shape`：尺寸、体积、面积、面数等前后值 |
+| `/api/mesh?path=&v=` | 三维零件：三角形和棱线（JSON），给 three.js |
+| `/api/png?path=&v=` | 三维零件：一张着色的等轴测图（浏览器没有 WebGL 时用） |
+| `/api/thumb?path=&v=` | 缩略图：图纸是 SVG，三维零件是 PNG |
 | `/api/export?path=&v=` | 自包含的 HTML 快照（`Content-Disposition: attachment`，文件名 `<名字>-<sha 前 8 位>.html`） |
 | `/api/activity` | `{"events": [最近的进度事件，旧的在前], "last_event"}` |
 | `/api/events` | SSE，`data: {"id", "drawing", "kind": "changed" \| "added" \| "removed"}`；`?progress=1` 另有 `{"kind": "activity", "activity": <进度事件>}` |

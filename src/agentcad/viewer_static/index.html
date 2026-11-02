@@ -171,14 +171,15 @@ main { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; min
         --paper: #ffffff; --paper-ink: #1f2937; }
 :root[data-theme="dark"] #view { --paper: #212121; --paper-ink: #dedede; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #view { --paper: #212121; --paper-ink: #dedede; } }
-#stage, #compare { position: absolute; inset: 0; }
+#stage, #three, #compare { position: absolute; inset: 0; }
 #view { user-select: none; -webkit-user-select: none; }  /* a double-click resets the view; it must not select the legend */
 #stage svg { width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: none; }
 #stage svg.drag { cursor: grabbing; }
 /* a dark model space: the render's white paper becomes #212121 (the canvas below) and black lines light grey,
    colours keep their hue (AutoCAD's ACI 7) */
-:root[data-theme="dark"] #stage svg, :root[data-theme="dark"] #compare img, :root[data-theme="dark"] .thumb.dxf { filter: invert(.87) hue-rotate(180deg); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #stage svg, :root:not([data-theme="light"]) #compare img, :root:not([data-theme="light"]) .thumb.dxf { filter: invert(.87) hue-rotate(180deg); } }
+:root[data-theme="dark"] #stage svg, :root[data-theme="dark"] #compare:not(.side) img, :root[data-theme="dark"] .thumb.dxf { filter: invert(.87) hue-rotate(180deg); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #stage svg, :root:not([data-theme="light"]) #compare:not(.side) img, :root:not([data-theme="light"]) .thumb.dxf { filter: invert(.87) hue-rotate(180deg); } }
+#png { position: absolute; inset: 0; margin: auto; max-width: 100%; max-height: 100%; }
 #cadbar { position: absolute; top: 12px; right: 12px; display: flex; gap: 2px; padding: 4px; border-radius: var(--radius-m); z-index: 3;
           background: color-mix(in oklab, var(--surface-4) 88%, transparent); backdrop-filter: blur(8px); box-shadow: var(--shadow-4); }
 #view.earlier #cadbar { top: 66px; }  /* below the earlier-version banner, which the toolbar would otherwise sit under */
@@ -220,6 +221,9 @@ main { display: flex; flex-direction: column; gap: 12px; padding: 16px 18px; min
 #compare .lbl { position: absolute; top: 12px; padding: 4px 12px; border-radius: var(--radius-pill); font-size: var(--fs-caption); font-variation-settings: var(--wght-semibold); z-index: 3; }
 #compare .lbl.b { left: 12px; background: var(--surface-4); color: var(--fg); box-shadow: var(--shadow-2); }
 #compare .lbl.a { right: 12px; background: var(--ff-accent); color: #fff; }
+#compare.side { display: grid; grid-template-columns: 1fr 1fr; }
+#compare.side .pane { position: relative; border-right: 1px solid var(--border); }
+#compare.side .pane.after { clip-path: none; }
 #compare .note { position: absolute; inset: 0; display: grid; place-items: center; color: var(--fg-muted); font-size: 17px; padding: 20px; text-align: center; }
 
 /* activity and versions */
@@ -294,6 +298,14 @@ details[open] > summary::after { transform: rotate(225deg) translateY(-2px); }
   #list li { grid-template-columns: 56px 1fr; }
 }
 </style>
+<script type="importmap">
+{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+               "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/" },
+  "integrity": {
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js": "sha384-61S/Nu32S3E5+n+KpCOTb2eRYps6fVKm+9Gz1QBvSePFthb46f063Aa/qe/lykFZ",
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js": "sha384-qlO/ZugKPxAQUAvTlQoo0QECzxJIJySZmCF/DHdb2Xn/hHndFwX/vfUAC9Hbk6LP",
+    "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/utils/BufferGeometryUtils.js": "sha384-jHGXS4+FuVOBnZkNme2ury3Ccg5DWDLYK22xX/WGdZCZsjRM4J+3n6Qc4CXx1Hjf" } }
+</script>
 <script src="/ui/fluid.js"></script>
 <script src="/friendly.js"></script>
 </head>
@@ -335,7 +347,7 @@ details[open] > summary::after { transform: rotate(225deg) translateY(-2px); }
   <div class="emptyNote" id="listEmpty" data-t="filesEmpty" hidden></div>
   <button class="mini" id="addBtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg><span data-t="addFiles"></span></button>
   <div id="addHint" data-t="addHint" hidden></div>
-  <input type="file" id="pick" multiple hidden accept=".dxf,.dwg,.pdf,.png,.jpg,.jpeg,.webp">
+  <input type="file" id="pick" multiple hidden accept=".dxf,.dwg,.fcstd,.FCStd,.step,.stp,.stl,.brep,.pdf,.png,.jpg,.jpeg,.webp">
   <label class="follow" id="followLbl"><input type="checkbox" id="follow" checked><span data-t="follow"></span></label>
 </aside>
 
@@ -354,7 +366,7 @@ details[open] > summary::after { transform: rotate(225deg) translateY(-2px); }
   </div>
   <div id="layers"></div>
   <div id="view">
-    <div id="stage"></div>
+    <div id="stage"></div><div id="three"></div><img id="png" alt="" hidden>
     <div id="cadbar" hidden>
       <button id="zoomAll" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
       <button id="zoomIn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-4-4M8 11h6M11 8v6"/></svg></button>
@@ -393,13 +405,14 @@ const params = new URLSearchParams(location.search);  // ?lang=zh|en&theme=light
 let LANG = ["zh", "en"].includes(params.get("lang")) ? params.get("lang") : F.pick();
 const t = (k, v) => F.t(k, v, LANG);
 const S = { drawings: [], path: null, tl: null, version: null, hidden: new Set(), layersFor: null, ping: new Set(),
-            renderSeq: 0, runs: new Map(), compare: false, thumbs: new Map(), items: new Map(), celebrated: null };
+            three: null, renderSeq: 0, runs: new Map(), compare: false, thumbs: new Map(), items: new Map(), celebrated: null };
 const api = (p, q = {}) => fetch(p + "?" + new URLSearchParams(q)).then(async (r) => {
   const ct = r.headers.get("content-type") || "";
   if (!r.ok) { const e = ct.includes("json") ? (await r.json()).error : { message: r.statusText }; throw e; }
   return ct.includes("json") ? r.json() : r.text();
 });
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const isPart = (p) => AgentCADFriendly.PART.test(p || "");
 const busy = (s) => { $("busy").textContent = s || ""; };
 const base = (p) => String(p || "").split("/").pop();
 const ICON = {
@@ -587,6 +600,7 @@ function stateOf(r) {
   const st = r.last.state;
   return (st === "working" || st === "checking") && Date.now() / 1000 - r.last.ts > 600 ? "idle" : st;  // a crashed run
 }
+const kindOf = (p) => (isPart(p) ? "part" : "drawing");
 function renderStatus() {
   const r = latestRun(), st = stateOf(r), box = $("status"), bar = $("stBar");
   box.dataset.state = st;
@@ -601,7 +615,7 @@ function renderStatus() {
       if (s && s.total) {
         text = `${t("stepOf", { i: s.step, n: s.total })}: ${F.opText(s.op || {}, LANG, "doing")}`;
         pct = Math.max(4, (s.step - 0.5) / s.total * 100);
-      } else { text = F.toolText(r.tool, LANG, "doing") + "…"; bar.classList.add("indet"); }
+      } else { text = F.toolText(r.tool, kindOf(r.drawing), LANG, "doing") + "…"; bar.classList.add("indet"); }
     } else if (st === "checking") {
       title = `${t("checking")} · ${file}`; text = t("checkingNow"); pct = 100; bar.classList.add("indet");
     } else if (st === "done") {
@@ -625,14 +639,14 @@ function renderFeed() {
   const runs = [...S.runs.values()].reverse().slice(0, 60);
   $("feedEmpty").hidden = runs.length > 0;
   for (const r of runs) {
-    const st = stateOf(r), ev = r.last;
+    const st = stateOf(r), ev = r.last, kind = kindOf(r.drawing);
     const cls = { done: "ok", error: "bad", working: "work", checking: "chk" }[st] || "";
     let main;
     if (st === "done") main = F.summary({ ...ev, drawing: r.drawing }, LANG);
-    else if (st === "error") main = `${F.toolText(r.tool, LANG, "done")} – ${t("failed")}`;
-    else if (st === "working") main = (r.step ? F.opText(r.step.op || {}, LANG, "doing") : F.toolText(r.tool, LANG, "doing")) + "…";
+    else if (st === "error") main = `${F.toolText(r.tool, kind, LANG, "done")} – ${t("failed")}`;
+    else if (st === "working") main = (r.step ? F.opText(r.step.op || {}, LANG, "doing") : F.toolText(r.tool, kind, LANG, "doing")) + "…";
     else if (st === "checking") main = t("checkingNow");
-    else main = F.toolText(r.tool, LANG, "done");
+    else main = F.toolText(r.tool, kind, LANG, "done");
     const sub = [esc(base(r.drawing)), esc(ago(ev.ts))];
     if (whoText(ev)) sub.unshift(`<span class="who">${esc(t("by", { who: whoText(ev) }))}</span>`);
     const v = st === "done" ? F.verdict(ev, LANG) : "";
@@ -712,22 +726,22 @@ function renderFileList() {
     const rvb = li.querySelector(".reveal"); rvb.dataset.tip = t("showInFolder"); rvb.setAttribute("aria-label", t("showInFolder"));
     li.title = p;
     const ts = lastChange(p);
-    li.querySelector(".fmeta").innerHTML = `<span>${esc(t("drawing"))}</span>` +
+    li.querySelector(".fmeta").innerHTML = `<span>${esc(isPart(p) ? t("part") : t("drawing"))}</span>` +
       (ts ? `<span>· ${esc(ago(ts))}</span>` : "") + (S.ping.has(p) ? '<span class="ping"></span>' : "");
     const stamp = String(S.thumbs.get(p) || 0), img = li.querySelector("img");
-    img.classList.add("dxf");  // thumbnails follow the dark model space
+    img.classList.toggle("dxf", !isPart(p));  // 2D thumbnails follow the dark model space
     if (img.dataset.stamp !== stamp) { img.dataset.stamp = stamp; img.src = "/api/thumb?" + new URLSearchParams({ path: p, s: stamp }); }
   });
 }
 function updateTitle() {
   if (!S.path) { $("fileTitle").textContent = ""; return; }
-  $("fileTitle").innerHTML = `<span>${esc(base(S.path))}</span><span class="tag">${esc(t("drawing"))}</span>`;
+  $("fileTitle").innerHTML = `<span>${esc(base(S.path))}</span><span class="tag">${esc(isPart(S.path) ? t("part") : t("drawing"))}</span>`;
 }
 function select(path) {
   if (!path || path === S.path) return;
   S.path = path; S.version = null; S.hidden = new Set(); S.layersFor = null; S.ping.delete(path);
   updateTitle();
-  $("hlBtn").hidden = false; $("cmpBtn").hidden = false; $("shareBtn").disabled = false;
+  $("hlBtn").hidden = isPart(path); $("cmpBtn").hidden = false; $("shareBtn").disabled = false;
   resetView(); renderFileList();
   refresh(true);
 }
@@ -783,6 +797,8 @@ async function loadDiff(v) {
     rows.push(`<div class="row mod">~ ${esc(e.id)} ${esc(e.type)}${f ? " (" + esc(f) + ")" : ""}</div>`);
   }
   for (const e of (d.deleted || []).slice(0, 60)) rows.push(`<div class="row del">− ${esc(ent(e))}</div>`);
+  for (const [k, c] of Object.entries(d.parameters || {})) rows.push(`<div class="row mod">${esc(k)}: ${esc(c.old)} → ${esc(c.new)}</div>`);
+  for (const [k, c] of Object.entries(d.shape || {})) rows.push(`<div class="row mod">${esc(k)}: ${esc(JSON.stringify(c.old))} → ${esc(JSON.stringify(c.new))}</div>`);
   if (d.layers) {
     for (const l of d.layers.added || []) rows.push(`<div class="row add">+ layer ${esc(l)}</div>`);
     for (const l of d.layers.deleted || []) rows.push(`<div class="row del">− layer ${esc(l)}</div>`);
@@ -792,11 +808,12 @@ async function loadDiff(v) {
 
 // ---- rendering -------------------------------------------------------------------------------------
 function resetView() {
-  $("stage").innerHTML = ""; $("layers").innerHTML = ""; $("legend").hidden = true; $("compare").hidden = true;
+  $("stage").innerHTML = ""; $("layers").innerHTML = ""; $("png").hidden = true; $("legend").hidden = true; $("compare").hidden = true;
   S.view = null; S.baseVB = null;
+  if (S.three) { S.three.dispose(); S.three = null; }
 }
 function updateHint() {
-  $("hint").textContent = S.path ? t("zoomHint") : "";
+  $("hint").textContent = S.path ? t(isPart(S.path) ? "orbitHint" : "zoomHint") : "";
   $("hint").hidden = !S.path || S.compare || !$("banner").hidden;  // the earlier-version banner sits there
   $("view").classList.toggle("earlier", !$("banner").hidden);  // and the zoom toolbar moves below it
 }
@@ -816,11 +833,13 @@ async function refresh() {
   updateHint();
   loadDiff(v);
   if (S.compare) {
-    $("stage").hidden = $("legend").hidden = $("cadbar").hidden = true; $("layers").innerHTML = "";
+    $("stage").hidden = $("three").hidden = $("png").hidden = $("legend").hidden = $("cadbar").hidden = true; $("layers").innerHTML = "";
     return renderCompare(v);
   }
-  $("compare").hidden = true; $("stage").hidden = false; $("cadbar").hidden = false;
-  await render2d(v, seq);
+  // only the layer for this kind of file: the (transparent) 3D layer on top of a 2D drawing took every wheel, drag
+  // and double-click, so zoom, pan and reset did nothing
+  $("compare").hidden = true; $("stage").hidden = isPart(S.path); $("three").hidden = !isPart(S.path); $("cadbar").hidden = isPart(S.path);
+  if (isPart(S.path)) await render3d(v, seq); else await render2d(v, seq);
 }
 
 async function render2d(v, seq) {
@@ -907,7 +926,14 @@ function renderCompare(v) {
   const stored = new Set(S.tl.records.filter((r) => r.available).map((r) => r.version));
   if (!before || !stored.has(before)) { box.innerHTML = `<div class="note">${esc(t("noBefore"))}</div>`; return; }
   const hl = $("hlBtn").getAttribute("aria-pressed") === "true";  // the "after" side coloured by what changed
-  const src = (sha, other) => "/api/svg?" + new URLSearchParams({ path: S.path, v: sha, frame: other, diff: hl && sha === after ? 1 : 0 });
+  const src = (sha, other) => isPart(S.path) ? "/api/thumb?" + new URLSearchParams({ path: S.path, v: sha })
+    : "/api/svg?" + new URLSearchParams({ path: S.path, v: sha, frame: other, diff: hl && sha === after ? 1 : 0 });
+  if (isPart(S.path)) {
+    box.className = "side";
+    box.innerHTML = `<div class="pane"><img alt="" src="${esc(src(before))}"><span class="lbl b">${esc(t("before"))}</span></div>` +
+                    `<div class="pane after"><img alt="" src="${esc(src(after))}"><span class="lbl a">${esc(t("after"))}</span></div>`;
+    return;
+  }
   box.innerHTML = `<div class="pane"><img alt="" src="${esc(src(before, after))}"></div><div class="pane after"><img alt="" src="${esc(src(after, before))}"></div>` +
     `<span class="lbl b">${esc(t("before"))}</span><span class="lbl a">${esc(t("after"))}</span><div class="line"></div>` +
     '<div class="knob"><svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6-6 6 6 6M15 6l6 6-6 6"/></svg></div>' +
@@ -919,6 +945,90 @@ function renderCompare(v) {
 $("cmpBtn").onclick = () => { S.compare = !S.compare; $("cmpBtn").setAttribute("aria-pressed", String(S.compare)); S.layersFor = null; if (!S.compare) $("stage").innerHTML = ""; refresh(); };
 $("hlBtn").onclick = () => { const b = $("hlBtn"); b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")); refresh(); };
 $("nowBtn").onclick = () => { S.version = null; refresh(); };
+
+// ---- 3D -------------------------------------------------------------------------------------------------
+let THREE = null, Orbit = null, Utils = null;
+async function three() {
+  if (THREE === null) {
+    try {
+      THREE = await import("three");
+      Orbit = (await import("three/addons/controls/OrbitControls.js")).OrbitControls;
+      Utils = await import("three/addons/utils/BufferGeometryUtils.js");
+    } catch (e) { THREE = false; }
+  }
+  return THREE;
+}
+async function render3d(v, seq) {
+  $("legend").hidden = true; $("layers").innerHTML = "";
+  if (!S.three) busy(t("meshing"));
+  const T = await three();
+  if (!T) {  // no WebGL library (offline): the shaded preview grid
+    const img = $("png"); img.hidden = false;
+    img.onload = () => busy(""); img.onerror = () => busy("");
+    img.src = "/api/png?" + new URLSearchParams({ path: S.path, v: v || S.tl.current });
+    return;
+  }
+  let m;
+  try { m = await api("/api/mesh", { path: S.path, v: v || S.tl.current }); }
+  catch (e) { busy(cannotShow(e)); return; }
+  if (seq !== S.renderSeq) return;
+  busy("");
+  if (!S.three) S.three = makeScene(T);
+  S.three.show(m);
+}
+function makeScene(T) {
+  const el = $("three");
+  const renderer = new T.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });  // kept for "Save picture"
+  renderer.setPixelRatio(window.devicePixelRatio);
+  el.appendChild(renderer.domElement);
+  const scene = new T.Scene();
+  const camera = new T.PerspectiveCamera(35, 1, 0.1, 1e6);
+  camera.up.set(0, 0, 1);
+  scene.add(new T.HemisphereLight(0xffffff, 0x8890a0, 1.6));
+  const sun = new T.DirectionalLight(0xffffff, 1.6); scene.add(sun);
+  const controls = new Orbit(camera, renderer.domElement);
+  controls.enableDamping = true;
+  const group = new T.Group(); scene.add(group);
+  let framed = 0, raf = 0, moved = false;
+  controls.addEventListener("start", () => { moved = true; });
+  // a resized canvas (a narrower pane, a phone turned) is re-framed until the user moves the camera themselves
+  const size = () => { const r = el.getBoundingClientRect(); renderer.setSize(r.width, r.height, false);
+    renderer.domElement.style.width = "100%"; renderer.domElement.style.height = "100%";
+    camera.aspect = r.width / Math.max(r.height, 1); camera.updateProjectionMatrix();
+    if (framed && !moved && r.width > 0 && r.height > 0) fit(); };
+  const ro = new ResizeObserver(size); ro.observe(el); size();
+  const loop = () => { raf = requestAnimationFrame(loop); controls.update(); sun.position.copy(camera.position); renderer.render(scene, camera); };
+  loop();
+  function show(m) {
+    group.clear();
+    let g = new T.BufferGeometry();
+    g.setAttribute("position", new T.Float32BufferAttribute(m.positions, 3));
+    g.setIndex(m.indices);
+    g = Utils.toCreasedNormals(g, Math.PI / 6);
+    group.add(new T.Mesh(g, new T.MeshStandardMaterial({ color: 0x9fb8d8, metalness: 0.1, roughness: 0.55,
+      polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 })));
+    const seg = [];
+    for (const e of m.edges) for (let i = 0; i + 5 < e.length; i += 3) seg.push(e[i], e[i + 1], e[i + 2], e[i + 3], e[i + 4], e[i + 5]);
+    const lg = new T.BufferGeometry(); lg.setAttribute("position", new T.Float32BufferAttribute(seg, 3));
+    group.add(new T.LineSegments(lg, new T.LineBasicMaterial({ color: 0x1d2330 })));
+    // keep the user's camera across updates unless the part grew or shrank a lot
+    const r = new T.Box3().setFromObject(group).getSize(new T.Vector3()).length() || 1;
+    if (!framed || r > framed * 1.2 || r < framed / 1.2) fit();
+  }
+  function fit() {
+    const box = new T.Box3().setFromObject(group), c = box.getCenter(new T.Vector3()), r = box.getSize(new T.Vector3()).length() || 1;
+    controls.target.copy(c);
+    // the bounding sphere (radius r/2) fits the narrower of the two fields of view, with a 25 % margin
+    const half = Math.PI / 360 * camera.fov, hHalf = Math.atan(Math.tan(half) * camera.aspect);
+    const dist = (r / 2) / Math.sin(Math.min(half, hHalf)) * 1.25;
+    camera.position.copy(c).add(new T.Vector3(1, -1.3, 0.9).normalize().multiplyScalar(dist));
+    camera.near = r / 100; camera.far = r * 100; camera.updateProjectionMatrix();
+    framed = r; moved = false;
+  }
+  renderer.domElement.addEventListener("dblclick", fit);
+  return { show, canvas: () => { renderer.render(scene, camera); return renderer.domElement; },
+           dispose() { cancelAnimationFrame(raf); ro.disconnect(); renderer.dispose(); el.innerHTML = ""; } };
+}
 
 // ---- save & share ----------------------------------------------------------------------------------
 const pop = $("sharePop");
@@ -942,15 +1052,21 @@ $("saveHtml").onclick = async () => {
   } catch (e) { toast(t("saveFailed", { m: e.message || e })); }
 };
 async function pictureCanvas() {
-  const hl = $("hlBtn").getAttribute("aria-pressed") === "true";
-  const text = await api("/api/svg", { path: S.path, v: S.version || "current", diff: hl ? 1 : 0, hide: [...S.hidden].join(",") });
-  const [, , vw, vh] = ((/viewBox="([^"]+)"/.exec(text) || [])[1] || "0 0 1600 1000").split(/\s+/).map(Number);
-  let w = 2000, h = Math.round(2000 * vh / vw);
-  if (h > 2400) { h = 2400; w = Math.round(2400 * vw / vh); }
-  const src = new Image(w, h);
-  const url = URL.createObjectURL(new Blob([text], { type: "image/svg+xml" }));
-  await new Promise((ok, bad) => { src.onload = ok; src.onerror = () => bad(new Error("render")); src.src = url; });
-  URL.revokeObjectURL(url);
+  let src, w, h;
+  if (isPart(S.path)) {
+    if (S.three) { src = S.three.canvas(); w = src.width; h = src.height; }
+    else { src = $("png"); w = src.naturalWidth; h = src.naturalHeight; }
+  } else {
+    const hl = $("hlBtn").getAttribute("aria-pressed") === "true";
+    const text = await api("/api/svg", { path: S.path, v: S.version || "current", diff: hl ? 1 : 0, hide: [...S.hidden].join(",") });
+    const [, , vw, vh] = ((/viewBox="([^"]+)"/.exec(text) || [])[1] || "0 0 1600 1000").split(/\s+/).map(Number);
+    w = 2000; h = Math.round(2000 * vh / vw);
+    if (h > 2400) { h = 2400; w = Math.round(2400 * vw / vh); }
+    src = new Image(w, h);
+    const url = URL.createObjectURL(new Blob([text], { type: "image/svg+xml" }));
+    await new Promise((ok, bad) => { src.onload = ok; src.onerror = () => bad(new Error("render")); src.src = url; });
+    URL.revokeObjectURL(url);
+  }
   const pad = 32, foot = 72, c = document.createElement("canvas");
   c.width = w + pad * 2; c.height = h + pad * 2 + foot;
   const g = c.getContext("2d");
