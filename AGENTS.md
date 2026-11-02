@@ -54,13 +54,15 @@ A PR is merged when all of these hold:
    file system or a GUI (`MACOS_PATHS` in `.github/workflows/verify.yml`). For any other change that
    could differ on macOS, add the label yourself: `gh pr edit <n> --add-label needs-macos`. When macOS
    is needed, a macOS job that got no runner blocks the merge too; rerun it
-   (`gh run rerun <run id> --failed`). CI tests the branch merged with `main` as `main` was when the
+   (`gh run rerun <run id> --failed`). If it still has no runner after two reruns, ask the user
+   whether to merge without macOS (this includes a PR that fixes a red `main`). CI tests the branch merged with `main` as `main` was when the
    run started, so there is no need to merge `main` into the branch first. Do that (and let CI run
    again) only when GitHub reports a conflict, or when `main` has changed the same files since the
    PR's last CI run.
 2. **`main` is not red**: `gh api repos/lizaixi01/AgentCAD/commits/main/status --jq .state` is not
-   `failure` (`pending` means `main`'s CI is still running, and merging may go ahead). The `main
-   health` CI job sets it to `failure` when Linux or Windows failed on `main`, or macOS ran and failed.
+   `failure`. `pending` means `main`'s CI is still running or macOS is unverified; merging may go
+   ahead. The `main health` CI job posts the statuses `agentcad/main-health` and `agentcad/macos`, and
+   reports `failure` when Linux or Windows failed on `main`, or macOS failed and has not passed since.
    Then fix `main` first (the PR that fixes it is exempt from this rule).
 3. **GitHub reports the PR mergeable.**
 4. **Independent review**, unless the PR changes only docs, tests, write-ups of results, or fixes

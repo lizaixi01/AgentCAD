@@ -115,15 +115,18 @@ jobs:
           fi
 
   main-health:
-    # Verdict for a main commit, posted as the commit status agentcad/main-health: failure if Linux or
-    # Windows failed, or macOS ran and failed. macOS without a runner is an allowed exception: the
-    # merged PR gets the macos-unverified label and a comment with retest and rollback commands.
+    # Verdict for a main commit, posted as two commit statuses:
+    #   agentcad/macos: success, failure, or pending (no runner: an allowed, logged exception);
+    #   agentcad/main-health: failure if Linux or Windows failed, or macOS failed and has not passed since.
+    # A macOS failure is carried forward through later runs that got no macOS runner, and also marks the
+    # current main head red, so a run that could not test macOS never turns a real failure green.
     name: main health
     if: ${{ always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
     needs: tests
     runs-on: ubuntu-latest
     permissions:
       actions: read
+      contents: read
       issues: write
       pull-requests: write
       statuses: write
@@ -137,8 +140,17 @@ jobs:
     steps:
       - shell: bash
         run: |
-          set -euo pipefail
-          jobs=$(gh api "repos/$GH_REPO/actions/runs/$RUN/jobs?per_page=50" --jq '[.jobs[] | select(.name | startswith("tests ("))]')
+          set -uo pipefail
+          warn() { echo "::warning::$*"; }
+          status_of() {  # latest state of status context $2 on commit $1
+            gh api "repos/$GH_REPO/commits/$1/status" --jq ".statuses[] | select(.context == \"$2\") | .state" | head -n 1
+          }
+          post() {  # commit, state, context, description
+            gh api "repos/$GH_REPO/statuses/$1" -f state="$2" -f context="$3" \
+              -f description="${4:0:140}" -f target_url="$RUN_URL" >/dev/null
+          }
+
+          jobs=$(gh api "repos/$GH_REPO/actions/runs/$RUN/jobs?per_page=50" --jq '[.jobs[] | select(.name | startswith("tests ("))]') || exit 1
           others=$(jq -r '[.[] | select(.name | startswith("tests (macos") | not) | .conclusion] | unique | join(",")' <<<"$jobs")
           mac=$(jq -r '[.[] | select(.name | startswith("tests (macos"))][0]
             | if . == null then "missing"
@@ -146,33 +158,62 @@ jobs:
               elif (.runner_name // "") == "" and ((.steps // []) | length) == 0 then "no-runner"
               else "failed" end' <<<"$jobs")
           echo "Linux/Windows: $others; macOS: $mac"
-          pr=$(gh api "repos/$GH_REPO/commits/$SHA/pulls" --jq '.[0].number // empty' || true)
-          gh label create macos-unverified --color FBCA04 --force \
-            --description "Merged while macOS CI had no runner; cleared by a later green macOS run on main" >/dev/null
 
-          if [ "$others" != success ] || [ "$mac" = failed ] || [ "$mac" = missing ]; then
-            state=failure
-            desc="main is red: Linux/Windows $others, macOS $mac. Fix main before other merges."
-          elif [ "$mac" = no-runner ]; then
-            state=success
-            desc="Linux/Windows passed; macOS had no runner (exception logged)"
-            if [ "$EVENT" = push ] && [ -n "$pr" ]; then
-              gh api "repos/$GH_REPO/issues/$pr/labels" -f "labels[]=macos-unverified" >/dev/null
-              gh api "repos/$GH_REPO/issues/$pr/comments" >/dev/null -f body="**macOS not verified.** GitHub had no macOS runner for the main run of this merge ($SHA): $RUN_URL. Linux and Windows passed. Retest: \`gh run rerun $RUN --failed\` (the nightly run also retries). If macOS later fails, roll back with \`git revert -m 1 $SHA\`. The label is removed once a later macOS run on main passes."
-            fi
-          else
-            state=success
-            desc="Linux, Windows and macOS passed"
-            for n in $(gh api "repos/$GH_REPO/issues?labels=macos-unverified&state=all&per_page=100" --jq '.[].number'); do
-              # Only PRs this commit includes: a late retest of an older commit must not clear newer ones.
-              merged=$(gh api "repos/$GH_REPO/pulls/$n" --jq '.merge_commit_sha')
-              rel=$(gh api "repos/$GH_REPO/compare/$merged...$SHA" --jq '.status' || echo unknown)
-              case "$rel" in ahead|identical) ;; *) continue ;; esac
-              gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/macos-unverified" >/dev/null
-              gh api "repos/$GH_REPO/issues/$n/comments" >/dev/null -f body="macOS verified: a later main run passed on macOS ($SHA, $RUN_URL), and it includes this merge."
+          carried=""
+          if [ "$mac" = no-runner ]; then
+            parent=$(gh api "repos/$GH_REPO/commits/$SHA" --jq '.parents[0].sha') || exit 1
+            for c in "$SHA" "$parent"; do
+              if [ "$(status_of "$c" agentcad/macos)" = failure ]; then carried=$c; fi
             done
           fi
-          gh api "repos/$GH_REPO/statuses/$SHA" -f state="$state" -f context=agentcad/main-health \
-            -f description="${desc:0:140}" -f target_url="$RUN_URL" >/dev/null
+          case "$mac" in
+            success) mstate=success; mdesc="macOS passed" ;;
+            no-runner)
+              if [ -n "$carried" ]; then
+                mstate=failure; mdesc="macOS failed at ${carried:0:7} and has not passed since (this run had no runner)"
+              else
+                mstate=pending; mdesc="macOS not verified: no runner (exception logged on the PR)"
+              fi ;;
+            *) mstate=failure; mdesc="macOS $mac" ;;
+          esac
+          if [ "$others" != success ] || [ "$mstate" = failure ]; then
+            state=failure; desc="main is red. Linux/Windows: $others; $mdesc. Fix main before other merges."
+          else
+            state=success; desc="Linux/Windows passed; $mdesc"
+          fi
+          # Statuses first: if anything below fails, the verdict is already recorded.
+          post "$SHA" "$mstate" agentcad/macos "$mdesc" || exit 1
+          post "$SHA" "$state" agentcad/main-health "$desc" || exit 1
           echo "$state: $desc"
+
+          if [ "$mstate" = failure ]; then
+            # Later merges may have gone green while this ran: mark the head red unless macOS passed there.
+            head=$(gh api "repos/$GH_REPO/commits/main" --jq .sha) || head=""
+            if [ -n "$head" ] && [ "$head" != "$SHA" ] && [ "$(status_of "$head" agentcad/macos)" != success ]; then
+              post "$head" failure agentcad/macos "macOS failed at ${SHA:0:7} and has not passed since" || warn "could not mark $head"
+              post "$head" failure agentcad/main-health "main is red: macOS failed at ${SHA:0:7}. Fix main before other merges." || warn "could not mark $head"
+            fi
+          fi
+
+          gh label create macos-unverified --color FBCA04 --force \
+            --description "Merged while macOS CI had no runner; cleared by a later green macOS run on main" >/dev/null \
+            || warn "could not create the macos-unverified label"
+          pr=$(gh api "repos/$GH_REPO/commits/$SHA/pulls" --jq '.[0].number // empty') || pr=""
+          if [ "$mstate" = pending ] && [ "$EVENT" = push ] && [ -n "$pr" ]; then
+            gh api "repos/$GH_REPO/issues/$pr/labels" -f "labels[]=macos-unverified" >/dev/null \
+              || warn "could not label PR #$pr"
+            gh api "repos/$GH_REPO/issues/$pr/comments" >/dev/null -f body="**macOS not verified.** GitHub had no macOS runner for the main run of this merge ($SHA): $RUN_URL. Linux and Windows passed. Retest: \`gh run rerun $RUN --failed\` (the nightly run also retries). If macOS later fails, roll back with \`git revert -m 1 $SHA\`. The label is removed once a later macOS run on main passes." \
+              || warn "could not comment on PR #$pr"
+          fi
+          if [ "$mac" = success ]; then
+            for n in $(gh api "repos/$GH_REPO/issues?labels=macos-unverified&state=all&per_page=100" --jq '.[].number'); do
+              # Only PRs this commit includes: a late retest of an older commit must not clear newer ones.
+              merged=$(gh api "repos/$GH_REPO/pulls/$n" --jq '.merge_commit_sha') || continue
+              rel=$(gh api "repos/$GH_REPO/compare/$merged...$SHA" --jq '.status') || continue
+              case "$rel" in ahead|identical) ;; *) continue ;; esac
+              gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/macos-unverified" >/dev/null || continue
+              gh api "repos/$GH_REPO/issues/$n/comments" >/dev/null -f body="macOS verified: a later main run passed on macOS ($SHA, $RUN_URL), and it includes this merge." \
+                || warn "could not comment on PR #$n"
+            done
+          fi
           [ "$state" = success ]
