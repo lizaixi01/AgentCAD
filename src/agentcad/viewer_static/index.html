@@ -730,8 +730,45 @@ function renderFileList() {
       (ts ? `<span>· ${esc(ago(ts))}</span>` : "") + (S.ping.has(p) ? '<span class="ping"></span>' : "");
     const stamp = String(S.thumbs.get(p) || 0), img = li.querySelector("img");
     img.classList.toggle("dxf", !isPart(p));  // 2D thumbnails follow the dark model space
-    if (img.dataset.stamp !== stamp) { img.dataset.stamp = stamp; img.src = "/api/thumb?" + new URLSearchParams({ path: p, s: stamp }); }
+    if (img.dataset.stamp !== stamp) { img.dataset.stamp = stamp; setThumb(img, "/api/thumb?" + new URLSearchParams({ path: p, s: stamp }), isPart(p)); }
   });
+}
+// A 3D thumbnail costs a FreeCAD run: fetch only those on screen, two at a time, so the part being viewed never
+// waits behind a screenful of thumbnails for one of the few connections a browser opens to a site.
+// queue: images on screen waiting for their turn (one scrolled away leaves it); busy: images loading now, each counted
+// once however often its picture changes meanwhile (the newer one waits until it finishes)
+const thumbQ = { queue: [], busy: new Set() };
+thumbQ.seen = new IntersectionObserver((entries) => {
+  for (const e of entries) {
+    const i = thumbQ.queue.indexOf(e.target);
+    if (e.isIntersecting && i < 0) thumbQ.queue.push(e.target);
+    else if (!e.isIntersecting && i >= 0) thumbQ.queue.splice(i, 1);
+  }
+  pumpThumbs();
+});
+function pumpThumbs() {
+  for (const b of thumbQ.busy) if (!b.isConnected) thumbQ.busy.delete(b);  // a row removed while it loaded
+  while (thumbQ.busy.size < 2 && thumbQ.queue.length) {
+    const img = thumbQ.queue.pop();  // newest first: what was just scrolled into view
+    const url = img.dataset.want;
+    if (!url || !img.isConnected || thumbQ.busy.has(img)) continue;
+    delete img.dataset.want;
+    thumbQ.seen.unobserve(img);
+    thumbQ.busy.add(img);
+    img.onload = img.onerror = () => {
+      img.onload = img.onerror = null;
+      thumbQ.busy.delete(img);
+      if (img.dataset.want) thumbQ.seen.observe(img);  // a newer picture arrived while this one loaded
+      pumpThumbs();
+    };
+    img.loading = "eager";  // it is on screen now; a lazy image the browser defers would hold its slot
+    img.src = url;
+  }
+}
+function setThumb(img, url, part) {
+  if (!part) { img.src = url; return; }  // 2D thumbnails are cheap SVGs
+  img.dataset.want = url;
+  if (!thumbQ.busy.has(img)) thumbQ.seen.observe(img);
 }
 function updateTitle() {
   if (!S.path) { $("fileTitle").textContent = ""; return; }
@@ -1095,6 +1132,8 @@ function connect() {
   es.onmessage = (msg) => {
     const ev = JSON.parse(msg.data);
     if (ev.kind === "activity") { onActivity(ev.activity); return; }
+    // only the version history of a 3D part moved (the viewer recorded a version it found): no jump, no new thumbnail
+    if (ev.history) { if (ev.drawing === S.path) refresh(); return; }
     S.thumbs.set(ev.drawing, (S.thumbs.get(ev.drawing) || 0) + 1);
     if (ev.kind !== "changed") loadList(); else renderFileList();
     if (ev.drawing === S.path) refresh();

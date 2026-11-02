@@ -2,12 +2,13 @@
 
     agentcad viewer --root <dir> [--port 8770]
 
-It only reads drawings and parts (the one thing it writes besides viewer.json and files the page adds is the
-version history of 3D parts, below, in the state directory). Every commit goes through the store (checkpoint, atomic replace, journal), so a
+It only reads drawings and parts. Besides viewer.json and files the page adds, it writes only in the state
+directory: the version history of 3D parts (below) and its cache. Every commit goes through the store (checkpoint, atomic replace, journal), so a
 thread polls each drawing's file and journal (``stat`` only, no open) and pushes a change event to the page over
 Server-Sent Events. Versions are addressed by sha256: a commit's journal record carries the sha of the file it
 wrote, and each checkpoint the sha of the content it holds, so any committed version still on disk can be shown.
-Files are read into a content-addressed cache outside the workspace before they are parsed or handed to FreeCAD.
+Files are read into a content-addressed cache (<root>/.agentcad/viewer-cache; the system temp folder for a
+--read-only viewer or a workspace it cannot write) before they are parsed or handed to FreeCAD.
 
 3D parts (.FCStd, .step/.stp, .stl, .brep) are not made through AgentCAD: agents write them with their own code
 and save them in the workspace. Each time such a file settles on new content, the viewer records it as a version
@@ -27,7 +28,8 @@ was built and any saved version can be shown again. FreeCAD (backends/freecad.py
     GET /api/activity             recent progress events the runtime wrote (progress.py), oldest first
     GET /api/sessions             the assistants connected now (sessions.py): app, conversation label, last activity
     GET /api/export?path=&v=      a self-contained HTML snapshot (picture + change history) to send to someone
-    GET /api/events?progress=1    SSE: {"drawing", "kind": changed|added|removed, "id"}; progress=1 adds
+    GET /api/events?progress=1    SSE: {"drawing", "kind": changed|added|removed, "id", "history"?: true when only
+                                  a 3D part's version history changed}; progress=1 adds
                                   {"kind": "activity", "activity": <progress event>}
     POST /api/import              add a file to the workspace (body: its bytes; X-AgentCAD-Filename: its name,
                                   URL-encoded): never overwrites, "plate (2).dxf" instead; refused when read-only
@@ -84,7 +86,10 @@ STATIC_FILES = {"/friendly.js": ("friendly.js", "text/javascript; charset=utf-8"
 # the UI kit (viewer_static/ui): fluid.css, fluid.js, the Inter font and the component gallery; only these types
 UI_TYPES = {".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".html": "text/html; charset=utf-8",
             ".woff2": "font/woff2", ".svg": "image/svg+xml", ".md": "text/markdown; charset=utf-8"}
-FREECAD_JOBS = threading.BoundedSemaphore(2)  # thumbnails of many parts must not start FreeCAD for each at once
+# FreeCAD runs: the part on screen (mesh, picture, comparison) has its own lane, so it never waits behind the file
+# list's thumbnails, which take one run each and come a screenful at a time
+FREECAD_JOBS = {"view": threading.BoundedSemaphore(2), "thumb": threading.BoundedSemaphore(1)}
+CACHE_DIR = "viewer-cache"  # <root>/.agentcad/viewer-cache: renders and version copies, kept with the workspace
 SETTLE = 1.0  # seconds a 3D file must stay unchanged before it counts as saved (the agent may still be writing it)
 MAX_PART_BYTES = 200 * 1024 * 1024  # larger 3D files are shown but not copied into the version history
 RETRY = 5.0  # seconds before trying again to record a version that could not be recorded
@@ -139,13 +144,30 @@ def _compare(old: dict[str, Any], new: dict[str, Any]) -> dict[str, Any]:
                       if old.get(k) != new.get(k)}}
 
 
+def _temp_cache(root: Path) -> Path:
+    return Path(tempfile.gettempdir()) / "agentcad-viewer" / hashlib.sha256(str(root).encode()).hexdigest()[:12]
+
+
+def _workspace_cache(root: Path) -> Path | None:
+    """<root>/.agentcad/viewer-cache, if it can be made: 3D meshes and pictures add up, and the workspace is where
+    the user chose to keep their files (often not the system drive, which holds the temp folder)."""
+    d = root / STATE_DIR / CACHE_DIR
+    try:
+        d.mkdir(parents=True, exist_ok=True)
+        probe = d / f".probe-{uuid.uuid4().hex[:8]}"
+        probe.write_bytes(b"")
+        probe.unlink()
+    except OSError:
+        return None
+    return d
+
+
 class Workspace:
     """Read-only access to the drawings under a root and to their committed versions."""
 
     def __init__(self, policy: Policy, cache_dir: Path | None = None) -> None:
         self.policy = policy
-        root_key = hashlib.sha256(str(policy.root).encode()).hexdigest()[:12]
-        self.cache = cache_dir or Path(tempfile.gettempdir()) / "agentcad-viewer" / root_key
+        self.cache = cache_dir or _temp_cache(policy.root)
         self.cache.mkdir(parents=True, exist_ok=True)
         self.record = False  # record saved 3D versions in the state directory (the Viewer sets it unless read-only)
         self._sha_memo: dict[str, tuple[tuple[int, int], str]] = {}
@@ -436,10 +458,10 @@ class Workspace:
         return {"version": sha, "before": before, **d}
 
     # --- 3D (FreeCAD) -------------------------------------------------------------------------------
-    def _fc(self, job: dict[str, Any], src: Path, out: Path | None = None) -> dict[str, Any]:
+    def _fc(self, job: dict[str, Any], src: Path, out: Path | None = None, lane: str = "view") -> dict[str, Any]:
         from .backends import freecad
         self._find_freecad()
-        with FREECAD_JOBS:
+        with FREECAD_JOBS[lane]:
             res = freecad.run(job, inputs={"input": src}, outputs={"output": out} if out else None)
         if not res.get("ok"):
             e = res.get("error") or {}
@@ -457,11 +479,12 @@ class Workspace:
         src = self.snapshot(rel, sha)[1]
         return self._memo(("summary", sha), lambda: self._fc({"action": "summary"}, src)["summary"])
 
-    def record_save(self, rel: str) -> bool:
+    def record_save(self, rel: str, announce: bool = True) -> bool:
         """Record the 3D file's current content as a version (journal record 'save' and, for content not stored yet,
         a checkpoint), once it has stayed unchanged for SETTLE seconds and differs from the last recorded version.
-        Content seen before (the agent went back) is recorded again, pointing at its stored copy. True when a version
-        was added."""
+        Content seen before (the agent went back) is recorded again, pointing at its stored copy. ``announce``: also
+        report it as a 'save' progress event; not for files that were already there when the viewer started (a page
+        following the assistant would jump to each of hundreds of old parts). True when a version was added."""
         if not self.record or not _is_part(rel):
             return False
         st = self.store(rel)
@@ -491,7 +514,8 @@ class Workspace:
                     return False  # rewritten while it was copied: the next settled save is recorded instead
             st.journal({"tool": "save", "ok": True, "sha256": sha, "checkpoint_before": stored.get(last),
                         "bytes": s.st_size})
-        progress.Activity(self.policy, "save", rel).emit("done", bytes=s.st_size)
+        if announce:
+            progress.Activity(self.policy, "save", rel).emit("done", bytes=s.st_size)
         return True
 
     @_retry
@@ -519,8 +543,7 @@ class Workspace:
         sha, src = self.snapshot(rel, version)
         out = self.cache / f"{sha}.thumb.png"
         if not out.is_file():
-            self._memo(("thumb", sha), lambda: self._fc({"action": "render", "size": 240},
-                                                        src, out))
+            self._memo(("thumb", sha), lambda: self._fc({"action": "render", "size": 240}, src, out, lane="thumb"))
         return out.read_bytes(), "image/png"
 
     # --- export ---------------------------------------------------------------------------------------
@@ -617,6 +640,9 @@ class ChangeFeed:
         self.cond = threading.Condition()
         self.sigs: dict[str, tuple] = {}
         self.unsaved: dict[str, float] = {}  # 3D files whose content may not be recorded yet -> when to try
+        # of those, the ones already there at start, with their file's (mtime, size) then: recorded without an
+        # announcement while the file is still what the viewer found
+        self.found: dict[str, tuple] = {}
         self._polling = threading.Lock()  # the feed thread and a caller (tests) never poll at the same time
         self.drawings: list[str] = []
         self._last_scan = 0.0
@@ -701,12 +727,19 @@ class ChangeFeed:
             for rel, sig in now.items():
                 old = self.sigs.get(rel)
                 if old != sig:
-                    self._emit(rel, "added" if old is None else "changed")
+                    # a 3D part whose file is unchanged and only its history moved: the viewer recorded a version
+                    # (of a part it found at start, say); the page refreshes it but does not jump to it
+                    history = old is not None and _is_part(rel) and old[0] == sig[0]
+                    self._emit(rel, "added" if old is None else "changed", **({"history": True} if history else {}))
             for rel in self.sigs.keys() - now.keys():
                 self._emit(rel, "removed")
         for rel, sig in now.items():
             if _is_part(rel) and (first or self.sigs.get(rel, (None,))[0] != sig[0]):
                 self.unsaved[rel] = 0.0  # new content of a 3D file (or one seen at start): a version to record
+                if first:
+                    self.found[rel] = sig[0]
+                else:
+                    self.found.pop(rel, None)
         self.sigs = now
         if first:
             return  # recorded by the feed thread, not while the viewer (or the MCP server's first call) starts
@@ -719,8 +752,10 @@ class ChangeFeed:
             if age < SETTLE or time.monotonic() < when:
                 continue  # still being written, or waiting to try again
             del self.unsaved[rel]
-            try:
-                self.ws.record_save(rel)  # its journal changes, so the next poll sends the page a 'changed' event
+            try:  # its journal changes, so the next poll sends the page a 'changed' event
+                st = (self.ws.policy.root / rel).stat()
+                self.ws.record_save(rel, announce=self.found.get(rel) != (st.st_mtime_ns, st.st_size))
+                self.found.pop(rel, None)
             except Exception:  # noqa: BLE001 - any failure: try again later, never stop the feed
                 self.unsaved[rel] = time.monotonic() + RETRY
 
@@ -995,6 +1030,8 @@ class Viewer:
                  allow_remote: bool = False,
                  cache_dir: Path | None = None) -> None:
         self.writable = not policy.read_only  # the page may add new files (never change one) unless read-only
+        if cache_dir is None and self.writable:
+            cache_dir = _workspace_cache(policy.root)  # a --read-only viewer keeps its cache in the temp folder
         policy.read_only = True  # the viewer never writes a drawing
         self.ws = Workspace(policy, cache_dir)
         self.ws.record = self.writable  # saved 3D versions go to the state directory, never into a drawing

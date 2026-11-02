@@ -687,6 +687,16 @@ def test_parts_already_there_are_recorded_after_start(ws, cache):
     assert v.ws.timeline("old.stl")["records"] == []
     v.feed.poll()
     assert [r["tool"] for r in v.ws.timeline("old.stl")["records"]] == ["save"]
+    v.feed.poll()  # the page hears that only the history moved, so it does not jump there
+    assert [(e["drawing"], e["kind"], e.get("history")) for e in v.feed.since(0)] == [("old.stl", "changed", True)]
+    # not announced: a page following the assistant would otherwise jump to every old part
+    from agentcad import progress
+    log = progress.log_path(v.ws.policy)
+    assert not log.is_file() or not [x for x in log.read_text("utf-8").splitlines() if '"save"' in x]
+    part.write_bytes(b"solid newer")  # a real save after the start is announced
+    _settle(part)
+    v.feed.poll()
+    assert sum('"save"' in x for x in log.read_text("utf-8").splitlines()) == 1
     v.httpd.server_close()
 
 
@@ -812,3 +822,78 @@ def test_install_folder_search_is_never_relative(tmp_path, monkeypatch):
     monkeypatch.setenv("PATH", "")
     hit = freecad.find_freecad()
     assert hit is None or Path(hit[0][0]).is_absolute() and tmp_path not in Path(hit[0][0]).resolve().parents
+
+
+def test_viewer_cache_lives_with_the_workspace(tmp_path):
+    """Renders and version copies go to <root>/.agentcad/viewer-cache (the workspace is where the user keeps their
+    files; the temp folder is on the system drive), except for a --read-only viewer."""
+    from agentcad.viewer import CACHE_DIR, _temp_cache
+    root = tmp_path / "ws"
+    root.mkdir()
+    v = Viewer(Policy(root=root, read_only=False), port=0)
+    assert v.ws.cache == root / ".agentcad" / CACHE_DIR and v.ws.cache.is_dir()
+    v.httpd.server_close()
+    ro = Viewer(Policy(root=root, read_only=True), port=0)
+    assert ro.ws.cache == _temp_cache(root)
+    ro.httpd.server_close()
+
+
+def test_thumbnails_have_their_own_freecad_lane(ws, cache, monkeypatch):
+    """The part on screen never waits behind the file list's thumbnails."""
+    from agentcad import viewer as viewer_mod
+    from agentcad.backends import freecad
+    held: list[str] = []
+    lanes = []
+
+    class Lane:
+        def __init__(self, name):
+            self.name = name
+
+        def __enter__(self):
+            held.append(self.name)
+
+        def __exit__(self, *exc):
+            held.remove(self.name)
+
+    monkeypatch.setattr(viewer_mod, "FREECAD_JOBS", {"view": Lane("view"), "thumb": Lane("thumb")})
+    monkeypatch.setattr(freecad, "run", lambda job, inputs=None, outputs=None: (
+        lanes.append(list(held)), [Path(o).write_bytes(b"x") for o in (outputs or {}).values()],
+        {"ok": True, "summary": {}})[-1])
+    part = ws / "p.stl"
+    part.write_bytes(b"solid p")
+    w = Workspace(Policy(root=ws, read_only=True), cache)
+    monkeypatch.setattr(w, "_find_freecad", lambda: None)
+    w.thumb("p.stl", None)
+    w.mesh("p.stl", None)
+    assert lanes == [["thumb"], ["view"]]
+
+
+def test_a_part_changed_after_start_is_announced(ws, cache):
+    """A part the viewer found at start, then saved again by the agent before its first version was recorded, is a
+    real save: announced, and its event is not marked as history only."""
+    from agentcad import progress
+    part = ws / "found.step"
+    part.write_bytes(b"ISO-10303-21; at start")
+    _settle(part)
+    v = Viewer(Policy(root=ws, read_only=False), port=0, interval=0.05, cache_dir=cache)
+    v.feed.rescan = 0
+    part.write_bytes(b"ISO-10303-21; saved again")
+    _settle(part)
+    v.feed.poll()
+    assert [(e["kind"], e.get("history")) for e in v.feed.since(0)] == [("changed", None)]
+    log = progress.log_path(v.ws.policy).read_text("utf-8").splitlines()
+    assert sum('"save"' in x for x in log) == 1
+    v.httpd.server_close()
+
+
+def test_unwritable_workspace_cache_falls_back_to_temp(tmp_path, monkeypatch):
+    from agentcad import viewer as viewer_mod
+    root = tmp_path / "ws"
+    root.mkdir()
+    real = Path.write_bytes
+    monkeypatch.setattr(Path, "write_bytes", lambda self, data: (_ for _ in ()).throw(PermissionError("read-only"))
+                        if ".probe-" in self.name else real(self, data))
+    assert viewer_mod._workspace_cache(root) is None
+    v = Viewer(Policy(root=root, read_only=False), port=0)
+    assert v.ws.cache == viewer_mod._temp_cache(root)
+    v.httpd.server_close()
