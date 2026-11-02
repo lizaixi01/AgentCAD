@@ -2,26 +2,64 @@ name: Verify AgentCAD
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled]
   push:
     branches: [main]
+  schedule:
+    # Nightly full matrix on main: retries macOS runs that never got a runner.
+    - cron: "0 19 * * *"
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: verify-${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  # A new push to a PR cancels its older run. Every main run is kept, so each commit gets a verdict.
+  group: verify-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+          fetch-depth: 2
+      - id: plan
+        shell: bash
+        env:
+          EVENT: ${{ github.event_name }}
+          FORCE: ${{ contains(github.event.pull_request.labels.*.name, 'needs-macos') }}
+          # PRs touching these must also pass macOS (AGENTS.md, "Review and merge").
+          MACOS_PATHS: '^(installer/|pyproject\.toml$|uv\.lock$|\.github/workflows/|src/agentcad/backends/|src/agentcad/(install|desktop|setup_gui|sessions|locking|store|policy|scripting|viewer|progress)\.py$)'
+        run: |
+          linux310='{"os":"ubuntu-latest","python":"3.10"}'
+          linux='{"os":"ubuntu-latest","python":"3.12"}'
+          windows='{"os":"windows-latest","python":"3.11"}'
+          macos='{"os":"macos-latest","python":"3.12"}'
+          if [ "$EVENT" != pull_request ]; then
+            matrix="[$linux310,$linux,$windows,$macos]"
+          elif [ "$FORCE" = true ]; then
+            echo "needs-macos label: macOS is required"
+            matrix="[$linux,$windows,$macos]"
+          elif git diff --name-only HEAD^1 HEAD | grep -E "$MACOS_PATHS"; then
+            echo "^ these files need macOS: macOS is required"
+            matrix="[$linux,$windows,$macos]"
+          else
+            echo "no macOS-sensitive files: Linux and Windows only"
+            matrix="[$linux,$windows]"
+          fi
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
   tests:
+    needs: plan
     strategy:
       fail-fast: false
       matrix:
-        # Pull requests: Linux 3.12 and Windows. Pushes to main and manual runs: all four.
-        include: ${{ fromJSON(github.event_name == 'pull_request'
-          && '[{"os":"ubuntu-latest","python":"3.12"},{"os":"windows-latest","python":"3.11"}]'
-          || '[{"os":"ubuntu-latest","python":"3.10"},{"os":"ubuntu-latest","python":"3.12"},{"os":"windows-latest","python":"3.11"},{"os":"macos-latest","python":"3.12"}]') }}
+        include: ${{ fromJSON(needs.plan.outputs.matrix) }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     env:
@@ -57,3 +95,130 @@ jobs:
             ${{ runner.temp }}/v8
           if-no-files-found: error
           retention-days: 30
+
+  merge-gate:
+    # The PR check to require: every planned job passed, macOS included when the plan asked for it.
+    name: merge gate
+    if: ${{ always() && github.event_name == 'pull_request' }}
+    needs: [plan, tests]
+    runs-on: ubuntu-latest
+    steps:
+      - shell: bash
+        env:
+          PLAN: ${{ needs.plan.result }}
+          TESTS: ${{ needs.tests.result }}
+        run: |
+          echo "plan: $PLAN, tests: $TESTS"
+          if [ "$PLAN" != success ] || [ "$TESTS" != success ]; then
+            echo "::error::Not mergeable: a planned test job did not pass (a macOS job without a runner counts as not passed here)."
+            exit 1
+          fi
+
+  main-health:
+    # Verdict for a main commit, posted as two commit statuses:
+    #   agentcad/macos: success, failure, or pending (no runner: an allowed, logged exception);
+    #   agentcad/main-health: failure if Linux or Windows failed, or macOS failed and has not passed since.
+    # A macOS failure is carried forward through later runs that got no macOS runner, and also marks the
+    # current main head red, so a run that could not test macOS never turns a real failure green.
+    name: main health
+    if: ${{ always() && github.event_name != 'pull_request' && github.ref == 'refs/heads/main' }}
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+      pull-requests: write
+      statuses: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      RUN: ${{ github.run_id }}
+      SHA: ${{ github.sha }}
+      EVENT: ${{ github.event_name }}
+      RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+    steps:
+      - shell: bash
+        run: |
+          set -uo pipefail
+          warn() { echo "::warning::$*"; }
+          status_of() {  # latest state of status context $2 on commit $1
+            gh api "repos/$GH_REPO/commits/$1/status" --jq ".statuses[] | select(.context == \"$2\") | .state" | head -n 1
+          }
+          post() {  # commit, state, context, description
+            gh api "repos/$GH_REPO/statuses/$1" -f state="$2" -f context="$3" \
+              -f description="${4:0:140}" -f target_url="$RUN_URL" >/dev/null
+          }
+
+          jobs=$(gh api "repos/$GH_REPO/actions/runs/$RUN/jobs?per_page=50" --jq '[.jobs[] | select(.name | startswith("tests ("))]') || exit 1
+          others=$(jq -r '[.[] | select(.name | startswith("tests (macos") | not) | .conclusion] | unique | join(",")' <<<"$jobs")
+          mac=$(jq -r '[.[] | select(.name | startswith("tests (macos"))][0]
+            | if . == null then "missing"
+              elif .conclusion == "success" then "success"
+              elif (.runner_name // "") == "" and ((.steps // []) | length) == 0 then "no-runner"
+              else "failed" end' <<<"$jobs")
+          echo "Linux/Windows: $others; macOS: $mac"
+
+          carried=""
+          earlier=""
+          if [ "$mac" = no-runner ]; then
+            earlier=$(status_of "$SHA" agentcad/macos)
+            parent=$(gh api "repos/$GH_REPO/commits/$SHA" --jq '.parents[0].sha') || exit 1
+            for c in "$SHA" "$parent"; do
+              if [ "$(status_of "$c" agentcad/macos)" = failure ]; then carried=$c; fi
+            done
+          fi
+          case "$mac" in
+            success) mstate=success; mdesc="macOS passed" ;;
+            no-runner)
+              if [ "$earlier" = success ]; then
+                # An earlier run of this commit passed macOS, and that covers its parent too.
+                mstate=success; mdesc="macOS passed earlier on this commit (this run had no runner)"
+              elif [ -n "$carried" ]; then
+                mstate=failure; mdesc="macOS failed at ${carried:0:7} and has not passed since (this run had no runner)"
+              else
+                mstate=pending; mdesc="macOS not verified: no runner (exception logged on the PR)"
+              fi ;;
+            *) mstate=failure; mdesc="macOS $mac" ;;
+          esac
+          if [ "$others" != success ] || [ "$mstate" = failure ]; then
+            state=failure; desc="main is red. Linux/Windows: $others; $mdesc. Fix main before other merges."
+          else
+            state=success; desc="Linux/Windows passed; $mdesc"
+          fi
+          # Statuses first: if anything below fails, the verdict is already recorded.
+          post "$SHA" "$mstate" agentcad/macos "$mdesc" || exit 1
+          post "$SHA" "$state" agentcad/main-health "$desc" || exit 1
+          echo "$state: $desc"
+
+          if [ "$mstate" = failure ]; then
+            # Later merges may have gone green while this ran: mark the head red unless macOS passed there.
+            head=$(gh api "repos/$GH_REPO/commits/main" --jq .sha) || head=""
+            if [ -n "$head" ] && [ "$head" != "$SHA" ] && [ "$(status_of "$head" agentcad/macos)" != success ]; then
+              post "$head" failure agentcad/macos "macOS failed at ${SHA:0:7} and has not passed since" || warn "could not mark $head"
+              post "$head" failure agentcad/main-health "main is red: macOS failed at ${SHA:0:7}. Fix main before other merges." || warn "could not mark $head"
+            fi
+          fi
+
+          gh label create macos-unverified --color FBCA04 --force \
+            --description "Merged while macOS CI had no runner; cleared by a later green macOS run on main" >/dev/null \
+            || warn "could not create the macos-unverified label"
+          pr=$(gh api "repos/$GH_REPO/commits/$SHA/pulls" --jq '.[0].number // empty') || pr=""
+          if [ "$mstate" = pending ] && [ "$EVENT" = push ] && [ -n "$pr" ]; then
+            gh api "repos/$GH_REPO/issues/$pr/labels" -f "labels[]=macos-unverified" >/dev/null \
+              || warn "could not label PR #$pr"
+            gh api "repos/$GH_REPO/issues/$pr/comments" >/dev/null -f body="**macOS not verified.** GitHub had no macOS runner for the main run of this merge ($SHA): $RUN_URL. Linux and Windows passed. Retest: \`gh run rerun $RUN --failed\` (the nightly run also retries). If macOS later fails, roll back with \`git revert -m 1 $SHA\`. The label is removed once a later macOS run on main passes." \
+              || warn "could not comment on PR #$pr"
+          fi
+          if [ "$mac" = success ]; then
+            for n in $(gh api "repos/$GH_REPO/issues?labels=macos-unverified&state=all&per_page=100" --jq '.[].number'); do
+              # Only PRs this commit includes: a late retest of an older commit must not clear newer ones.
+              merged=$(gh api "repos/$GH_REPO/pulls/$n" --jq '.merge_commit_sha') || continue
+              rel=$(gh api "repos/$GH_REPO/compare/$merged...$SHA" --jq '.status') || continue
+              case "$rel" in ahead|identical) ;; *) continue ;; esac
+              gh api -X DELETE "repos/$GH_REPO/issues/$n/labels/macos-unverified" >/dev/null || continue
+              gh api "repos/$GH_REPO/issues/$n/comments" >/dev/null -f body="macOS verified: a later main run passed on macOS ($SHA, $RUN_URL), and it includes this merge." \
+                || warn "could not comment on PR #$n"
+            done
+          fi
+          [ "$state" = success ]

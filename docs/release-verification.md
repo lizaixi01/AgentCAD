@@ -12,7 +12,8 @@ uv run --locked python -m pytest -p no:cacheprovider --basetemp=/your/own/tempor
 ```
 
 The GitHub workflow runs Linux 3.10/3.12, Windows 3.11 and macOS 3.12 on every push to
-`main` (pull requests run only Linux 3.12 and Windows 3.11). Its Linux
+`main` and nightly (pull requests run Linux 3.12 and Windows 3.11, plus macOS when they touch
+macOS-sensitive files; see AGENTS.md). Its Linux
 3.12 lane also runs the original pinned v8 evaluator through the real MCP adapter.
 JUnit and benchmark artifacts are retained for 30 days. A workflow definition is
 not evidence of a passing run: cite the completed run and commit. Missing optional
