@@ -483,8 +483,12 @@ class Workspace:
                 if st.checkpoint("saved") is None:
                     return False
                 sha = st.list_checkpoints()[-1]["sha256"]  # what the copy holds, should the file have changed since
-                if sha == last:
+                try:
+                    after = st.path.stat()
+                except OSError:
                     return False
+                if sha == last or (after.st_mtime_ns, after.st_size) != (s.st_mtime_ns, s.st_size):
+                    return False  # rewritten while it was copied: the next settled save is recorded instead
             st.journal({"tool": "save", "ok": True, "sha256": sha, "checkpoint_before": stored.get(last),
                         "bytes": s.st_size})
         progress.Activity(self.policy, "save", rel).emit("done", bytes=s.st_size)
@@ -717,7 +721,7 @@ class ChangeFeed:
             del self.unsaved[rel]
             try:
                 self.ws.record_save(rel)  # its journal changes, so the next poll sends the page a 'changed' event
-            except (AgentCADError, OSError):
+            except Exception:  # noqa: BLE001 - any failure: try again later, never stop the feed
                 self.unsaved[rel] = time.monotonic() + RETRY
 
     def since(self, last: int, progress: bool = False) -> list[dict[str, Any]]:

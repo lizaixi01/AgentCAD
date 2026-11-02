@@ -66,9 +66,31 @@ def find_freecad() -> tuple[list[str], dict[str, str]] | None:
             if hit:
                 return hit
     for name in ("freecadcmd", "FreeCADCmd"):
-        w = shutil.which(name)
+        w = _on_path(name)
         if w:
             return [w], {}
+    return None
+
+
+def _on_path(name: str) -> str | None:
+    """``name`` in an absolute PATH folder other than the current one. shutil.which looks in the current folder
+    first on Windows (Python 3.11 and older), so a project folder holding a 'freecadcmd.exe' would be run."""
+    try:
+        here = Path.cwd().resolve()
+    except OSError:
+        here = None
+    for d in os.environ.get("PATH", "").split(os.pathsep):
+        p = Path(d) if d else None
+        if p is None or not p.is_absolute() or str(p).startswith(("\\\\", "//")):
+            continue
+        try:
+            if here is not None and p.resolve() == here:
+                continue
+        except OSError:
+            continue
+        hit = shutil.which(name, path=str(p))
+        if hit and Path(hit).is_absolute() and Path(hit).parent.resolve() == p.resolve():
+            return hit
     return None
 
 

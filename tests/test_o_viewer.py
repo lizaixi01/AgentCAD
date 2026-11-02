@@ -781,3 +781,19 @@ def test_a_workspace_cannot_choose_the_program_the_viewer_runs(ws, cache, monkey
     (ws / ".agentcad" / "freecad.txt").write_text(str(evil), "utf-8")
     Workspace(Policy(root=ws, read_only=True), cache)._find_freecad()
     assert os.environ.get("AGENTCAD_FREECAD") != str(evil)
+
+
+def test_a_freecadcmd_in_the_current_folder_is_not_run(tmp_path, monkeypatch):
+    """shutil.which looks in the current folder first on Windows (Python <= 3.11): a project folder that ships a
+    'freecadcmd' must not be taken for FreeCAD."""
+    from agentcad.backends import freecad
+    fake = tmp_path / ("freecadcmd.exe" if os.name == "nt" else "freecadcmd")
+    fake.write_text("", "utf-8")
+    fake.chmod(0o755)
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("AGENTCAD_FREECAD", raising=False)
+    monkeypatch.delenv("FREECAD_LIB", raising=False)
+    monkeypatch.setenv("PATH", os.pathsep.join(["", ".", str(tmp_path)]))  # empty, relative and the current folder
+    assert freecad._on_path("freecadcmd") is None
+    hit = freecad.find_freecad()
+    assert hit is None or Path(hit[0][0]).parent != tmp_path

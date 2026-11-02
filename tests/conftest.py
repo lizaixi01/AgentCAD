@@ -20,6 +20,14 @@ PLATE_SPEC = {
 }
 
 
+@pytest.fixture(autouse=True)
+def _freecad_memo(tmp_path_factory, monkeypatch):
+    """Tests never write the user's real remembered-FreeCAD file (backends/freecad.py memo_path)."""
+    from agentcad.backends import freecad
+    memo = tmp_path_factory.mktemp("user-state") / "AgentCAD" / "freecad.txt"
+    monkeypatch.setattr(freecad, "memo_path", lambda: memo)
+
+
 @pytest.fixture
 def ws(tmp_path: Path) -> Path:
     return tmp_path

@@ -797,7 +797,6 @@ async function loadDiff(v) {
     rows.push(`<div class="row mod">~ ${esc(e.id)} ${esc(e.type)}${f ? " (" + esc(f) + ")" : ""}</div>`);
   }
   for (const e of (d.deleted || []).slice(0, 60)) rows.push(`<div class="row del">− ${esc(ent(e))}</div>`);
-  for (const [k, c] of Object.entries(d.parameters || {})) rows.push(`<div class="row mod">${esc(k)}: ${esc(c.old)} → ${esc(c.new)}</div>`);
   for (const [k, c] of Object.entries(d.shape || {})) rows.push(`<div class="row mod">${esc(k)}: ${esc(JSON.stringify(c.old))} → ${esc(JSON.stringify(c.new))}</div>`);
   if (d.layers) {
     for (const l of d.layers.added || []) rows.push(`<div class="row add">+ layer ${esc(l)}</div>`);
