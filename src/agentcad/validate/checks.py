@@ -356,15 +356,22 @@ def printed_text_issues(doc: Drawing) -> list[dict[str, Any]]:
             if small:
                 lo = min(ht for _, _, ht in small) * s
                 kinds = sorted({k for _, k, _ in small})
+                # The H6 rerun saw this warning and kept 1.75 mm text: modifying the dimensions broke the task's
+                # "do not change the dimensions". DIMSCALE changes how big they print, not what they say.
+                fixes = []
+                if "dimension" in kinds:
+                    fixes.append(f"dimensions: set_annotation_scale scale={1 / s:g} (the sheet's plot scale): text, "
+                                 "arrows and gaps then print at their style size through this viewport; dimension "
+                                 "values, positions and the part do not change")
+                if "text" in kinds:
+                    fixes.append(f"text: modify its 'height' to at least {MIN_PRINTED_TEXT / s:g}")
                 out.append(issue("PRINTED_TEXT_TOO_SMALL", "warning",
                                  f"Viewport {vp.dxf.handle} in layout {name!r} shows the model at "
                                  f"{_ratio(s)}: {len(small)} {'/'.join(kinds)} text(s) print as small as "
                                  f"{lo:.2f} mm (minimum {MIN_PRINTED_TEXT} mm)", [h for h, _, _ in small][:50],
                                  layout=name, viewport=vp.dxf.handle, scale=s,
                                  min_model_height=round(MIN_PRINTED_TEXT / s, 6),
-                                 hint=f"Make model text and dimension text at least {MIN_PRINTED_TEXT / s:g} "
-                                      "(modify text 'height' / dimension 'text_height'), or use a larger "
-                                      "viewport scale"))
+                                 hint="; ".join(fixes)))
         tiny = [e.dxf.handle for e in lay.query("TEXT MTEXT")
                 if 0 < (e.dxf.height if e.dxftype() == "TEXT" else e.dxf.char_height) < MIN_PRINTED_TEXT - 1e-9]
         if tiny:

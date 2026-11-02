@@ -30,11 +30,14 @@ def setup_text_style(doc) -> None:
 
 def apply_annotation_scale(doc, scale: float) -> None:
     """Plot scale 1:scale. Dimension sizes (DIMSCALE) and linetype patterns (LTSCALE) grow with it, so a
-    6000 mm room drawn at 1:50 gets readable arrows and dash-dot axes."""
+    6000 mm room drawn at 1:50 gets readable arrows and dash-dot axes. Applies to our style and to every style the
+    model's dimensions use: a drawing from elsewhere (H6: style EZDXF) kept 1.75 mm text on a 1:2 sheet."""
     doc.header["$DIMSCALE"] = scale
     doc.header["$LTSCALE"] = scale
-    if DIMSTYLE in doc.dimstyles:
-        doc.dimstyles.get(DIMSTYLE).dxf.dimscale = scale
+    names = {DIMSTYLE} | {d.dxf.get("dimstyle", "Standard") for d in doc.modelspace().query("DIMENSION")}
+    for name in names:
+        if name in doc.dimstyles:
+            doc.dimstyles.get(name).dxf.dimscale = scale
 
 
 def _dimstyle(ctx: Ctx) -> str:
@@ -391,14 +394,15 @@ def add_table(ctx: Ctx, insert, rows, col_widths, row_height, text_height, **p):
 
 @op("set_annotation_scale", "annotate", "Set the plot scale 1:scale for annotations: dimension arrows/text/gaps "
     "(DIMSCALE) and linetype dash lengths (LTSCALE) are multiplied by 'scale'. Use e.g. 50 or 100 for building "
-    "plans in mm. Existing dimensions are re-rendered.",
+    "plans in mm, 2 for a sheet that shows the part at 1:2. Model-space dimensions are re-rendered, whatever their "
+    "style; their values and positions stay as they are.",
     {"scale": P("number", True, gt=0, description="N of the plot scale 1:N")})
 def set_annotation_scale(ctx: Ctx, scale):
     apply_annotation_scale(ctx.doc, float(scale))
     from .edit import rerender_dimension
     done = []
-    for d in ctx.msp.query("DIMENSION"):
-        if d.dxf.get("dimstyle") == DIMSTYLE:  # per-entity overrides (text_height) are kept by override()
+    for d in ctx.doc.modelspace().query("DIMENSION"):
+        if d.dxf.get("dimstyle", "Standard") in ctx.doc.dimstyles:  # per-entity overrides (text_height) are kept
             rerender_dimension(ctx, d)
             ctx.touched(d)
             done.append(d.dxf.handle)

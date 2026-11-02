@@ -266,6 +266,32 @@ def test_printed_text_height(rt, ws):
     assert not [i for i in v["issues"] if i["code"] == "PRINTED_TEXT_TOO_SMALL"]
 
 
+def test_annotation_scale_fixes_printed_dimensions_without_changing_them(rt, ws):
+    """The H6 rerun saw the warning and kept 1.75 mm text: the task said not to change the dimensions, and the
+    hint only offered modifying them. set_annotation_scale did nothing either: the dimensions were drawn
+    elsewhere, in another dimension style, and it only re-rendered ours."""
+    name = plate(ws)
+
+    def dims():
+        return sorted((round(d.get_measurement(), 6), tuple(round(v, 6) for v in d.dxf.defpoint), d.dxf.text)
+                      for d in reread(ws, name).modelspace().query("DIMENSION"))
+
+    before = dims()
+    r = ok(rt.apply_operations(name, [{"op": "create_layout", "name": "A3"},
+                                      {"op": "add_viewport", "center": [220, 160], "scale": 0.5, "layout": "A3"}]))
+    small = next(i for i in r["validation"]["issues"] if i["code"] == "PRINTED_TEXT_TOO_SMALL")
+    assert "set_annotation_scale scale=2" in small["details"]["hint"]
+    r = ok(rt.apply_operations(name, [{"op": "set_annotation_scale", "scale": 2}]))
+    assert len(r["results"][0]["rerendered"]) == 2
+    assert "PRINTED_TEXT_TOO_SMALL" not in [i["code"] for i in r["validation"]["issues"]]
+    doc = reread(ws, name)
+    dim = next(iter(doc.modelspace().query("DIMENSION")))
+    assert dim.dxf.dimstyle != "AGENTCAD" and doc.dimstyles.get(dim.dxf.dimstyle).dxf.dimscale == 2
+    text = next(iter(doc.blocks.get(dim.dxf.geometry).query("MTEXT")))
+    assert text.dxf.char_height == A(7)  # 3.5 mm on paper through the 1:2 viewport
+    assert dims() == before  # values, positions and text overrides as they were
+
+
 def sheet_with_view(rt, ws):
     """plate() plus an A3 layout: its main viewport (id 1, made by create_layout) and one 1:2 view of the model."""
     name = plate(ws)
