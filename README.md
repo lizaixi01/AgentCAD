@@ -117,7 +117,7 @@ Your agent can already write code. It still can't do CAD: asked to edit a drawin
 | Engineering workflows | Native P&ID connectivity/readback, orthogonal plans with measured room areas, revolved-part views with BOM/balloons, preliminary foreign-plant takeoff, guarded edits and physical dimension verification. [Contracts and limits](docs/engineering-workflows.md) |
 | Live AutoCAD | `autocad_live` (Windows, COM) shows the agent's drawing in the user's running AutoCAD and pulls the user's edits back as a checkpointed, validated change. Raw command lines are off by default |
 | File formats | DXF R12–R2018, SVG and JSON export. PDF plotting with no extra software: one page per sheet, paper layouts 1:1, model space at a standard scale, Chinese text included. DWG import/export and AUDIT through headless AutoCAD (accoreconsole), optional |
-| Tests | Pinned assessment regression at `290ced3`: **885 passed, 8 skipped** (CadQuery-dependent), with AutoCAD 2027 and FreeCAD 1.1.4 enabled. [Windows/Linux/macOS CI and retained evidence](docs/source-capability-recheck.md#verification-and-production-evidence) report optional-backend skips separately |
+| Tests | Pinned assessment regression at `290ced3`, before 3D was removed: **885 passed, 8 skipped** (CadQuery-dependent), with AutoCAD 2027 and FreeCAD 1.1.4 enabled. [Windows/Linux/macOS CI and retained evidence](docs/source-capability-recheck.md#verification-and-production-evidence) report optional-backend skips separately |
 
 ## Where it stands
 
@@ -134,7 +134,7 @@ Your agent can already write code. It still can't do CAD: asked to edit a drawin
 | [docs/tutorial.md](docs/tutorial.md) | Step-by-step tutorial: generate, validate, revise, roll back, DWG, connecting agents |
 | [docs/architecture.md](docs/architecture.md) | Architecture, data model, transactions, error envelope |
 | [docs/operations.md](docs/operations.md) | Reference for every operation (generated from code) |
-| [docs/viewer.md](docs/viewer.md) | Live viewer: watch drawings and parts change in the browser, timeline, diffs |
+| [docs/viewer.md](docs/viewer.md) | Live viewer: watch drawings change in the browser, timeline, diffs |
 | [docs/benchmarks.md](docs/benchmarks.md) | Every benchmark and comparison: results, caveats, and the full reports with run logs and graders |
 | [docs/limitations-roadmap.md](docs/limitations-roadmap.md) | Known limitations and roadmap |
 

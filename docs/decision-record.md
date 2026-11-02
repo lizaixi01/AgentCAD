@@ -469,7 +469,8 @@ AgentCAD 在 T2/case1 仍较高（38.74 对 17.33）；复杂 T4 两边都低于
 ## 后果
 
 - AgentCAD 只处理二维图纸（DXF，有 AutoCAD 时含 DWG）。
-- 三维实验记录（`examples/benchcad`、`examples/benchcad2`、`examples/parametric_cad_bench` 及上面的评估追加）保留为历史，
+- 三维实验记录（`examples/benchcad`、`examples/benchcad2`、`examples/parametric_cad_bench`、`research/shahe-benchmark`、
+  `research/iphone18-comparison` 及上面的评估追加）保留为历史，
   其测试框架依赖移除前的代码，不再随当前代码运行。
 - 以后若需要从三维模型出二维工程图，应作为二维功能的输入（例如读入投影出的 DXF），不恢复三维建模层。
 

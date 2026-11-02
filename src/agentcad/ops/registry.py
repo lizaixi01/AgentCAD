@@ -80,7 +80,7 @@ class OpDef:
     params: dict[str, Param]
     fn: Callable[..., dict[str, Any]]
     common_draw: bool = False  # accepts layer/color/linetype/lineweight/tag
-    common_all: bool = True  # accepts layout (2D ops; 3D part ops have no layouts)
+    common_all: bool = True  # accepts layout
 
     def schema(self) -> dict[str, Any]:
         props = {k: p.json_schema() for k, p in self.all_params().items()}

@@ -4,7 +4,6 @@ so the config is generated from the running interpreter instead of committed."""
 from __future__ import annotations
 
 import json
-import os
 import sys
 from pathlib import Path
 from typing import Any
