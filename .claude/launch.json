@@ -11,9 +11,10 @@
         "playground",
         "viewer",
         "--port",
-        "8770"
+        "8781"
       ],
-      "port": 8770
+      "port": 8781,
+      "autoPort": false
     },
     {
       "name": "agentcad-setup-demo",

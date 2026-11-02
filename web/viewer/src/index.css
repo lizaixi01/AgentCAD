@@ -108,3 +108,16 @@
     @apply font-sans;
     }
 }
+/* the canvas */
+.drawing-svg { width: 100%; height: 100%; display: block; cursor: crosshair; touch-action: none; }
+.drawing-svg.drag { cursor: grabbing; }
+.drawing-svg.enter { animation: view-in 220ms ease-out; }
+.dark .drawing-svg, .dark .compare-img { filter: invert(.88) hue-rotate(180deg); }  /* black lines turn light (AutoCAD's ACI 7) */
+@keyframes view-in { from { opacity: 0; transform: scale(.985); } }
+@keyframes confetti-fall { to { transform: translate(var(--dx), 110vh) rotate(var(--r)); opacity: .9; } }
+@keyframes done-pop {
+  0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 10% { opacity: 1; transform: translate(-50%, -50%) scale(1.05); }
+  18% { transform: translate(-50%, -50%) scale(1); } 82% { opacity: 1; } 100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+}
+@media (prefers-reduced-motion: reduce) { .drawing-svg.enter { animation: none; } }
+@keyframes indet { from { transform: translateX(-110%); } to { transform: translateX(340%); } }
