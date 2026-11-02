@@ -200,7 +200,7 @@ def add_diameter_dim(ctx: Ctx, target, center, radius, angle, text, text_height,
     ov = _override(text_height, length_factor)
     if outside:  # ezdxf (like AutoCAD with DIMTOFL off) then draws only the line from the circle to the text
         st = ctx.doc.dimstyles.get(_dimstyle(ctx)).dxf
-        h = text_height or st.get("dimtxt", 2.5) * (st.get("dimscale", 1.0) or 1.0)
+        h = (text_height or st.get("dimtxt", 2.5)) * (st.get("dimscale", 1.0) or 1.0)  # drawn size
         d = ctx.msp.add_diameter_dim(center=c, radius=r, location=G.polar(tuple(c)[:2], r + 4 * h, angle),
                                      dimstyle=_dimstyle(ctx), override={**ov, "dimtofl": 0},
                                      dxfattribs=ctx.attribs(p))

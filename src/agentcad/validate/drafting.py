@@ -5,6 +5,7 @@ delivered dimensions drawn over one another, and a stepped shaft without the edg
 the drawing is correct, only harder to read or incomplete as a view."""
 from __future__ import annotations
 
+import bisect
 import re
 from typing import Any
 
@@ -16,7 +17,7 @@ from .features import Features, dimension_direction, measure_dimension
 Seg = tuple[G.Vec, G.Vec]
 MAX_DIMENSIONS = 2000  # pairwise checks; a sheet with more is a survey drawing, not a part
 CHAR_WIDTH = 0.6  # of the text height: an average glyph, narrower than most fonts so overlaps are real ones
-CENTER_RE = re.compile(r"CENT|AXIS|中心|轴线", re.I)
+CENTER_RE = re.compile(r"CENT(?:ER|RE)|AXIS|中心|轴线", re.I)
 DIAMETER_RE = re.compile(r"%%c|Ø|⌀", re.I)
 
 
@@ -39,11 +40,12 @@ def _dimension_shape(e) -> dict[str, Any] | None:
         if kind in ("linear", "aligned"):
             direction, on = dimension_direction(e), (x.defpoint.x, x.defpoint.y)
             ends = [_project(on, direction, (p.x, p.y)) for p in (x.defpoint2, x.defpoint3)] if direction else []
-            center = None
+            center, radius = None, 0.0
         elif kind in ("diameter", "radius"):
             p, q = (x.defpoint.x, x.defpoint.y), (x.defpoint4.x, x.defpoint4.y)
             direction, on, ends = G.unit(G.sub(q, p)), p, [p, q]
             center = p if kind == "radius" else G.mul(G.add(p, q), 0.5)
+            radius = G.dist(p, q) / (1 if kind == "radius" else 2)
         else:
             return None
     except Exception:
@@ -62,6 +64,8 @@ def _dimension_shape(e) -> dict[str, Any] | None:
     h = max((b[1] for b in texts), default=0.0) or _dim_text_height(e)
     tol = max(h * 0.1, 1e-6)
     drawn = [s for s in lines if all(abs(G.cross(G.sub(p, on), direction)) <= tol for p in s)]
+    if center is not None:  # the dimension line reaches the circle; a center mark's arm along it does not
+        drawn = [s for s in drawn if max(G.dist(p, center) for p in s) >= radius * 0.9]
     return {"id": x.handle, "kind": kind, "direction": direction, "lines": drawn or [tuple(ends)],
             "texts": [b[0] for b in texts], "height": h, "tol": tol, "center": center}
 
@@ -167,12 +171,13 @@ def _dimension_overlaps(dims: list[dict], issue) -> list[dict[str, Any]]:
     out = []
     boxes = sorted(((_bbox(d), d) for d in dims), key=lambda bd: bd[0][0])
     overlaps: list[tuple[str, str, str]] = []
-    crossings: dict[tuple, dict] = {}
+    crossings: list[dict] = []
+    pad = max((d["tol"] for d in dims), default=0.0)
     for i, (ba, a) in enumerate(boxes):
         for bb, b in boxes[i + 1:]:
-            if bb[0] > ba[2]:
+            if bb[0] > ba[2] + pad:
                 break
-            if bb[1] > ba[3] or bb[3] < ba[1]:
+            if bb[1] > ba[3] + pad or bb[3] < ba[1] - pad:
                 continue
             tol, h = max(a["tol"], b["tol"]), max(a["height"], b["height"], 1e-6)
             why = None
@@ -191,8 +196,10 @@ def _dimension_overlaps(dims: list[dict], issue) -> list[dict[str, Any]]:
                     p = _cross_point(s, t, h * 0.5)
                     if p is None:
                         continue
-                    key = (round(p[0] / h), round(p[1] / h))
-                    c = crossings.setdefault(key, {"at": p, "ids": set(), "centers": True})
+                    c = next((c for c in crossings if G.dist(c["at"], p) <= h), None)
+                    if c is None:
+                        c = {"at": p, "ids": set(), "centers": True}
+                        crossings.append(c)
                     c["ids"].update((a["id"], b["id"]))
                     c["centers"] &= all(d["center"] is not None and G.dist(d["center"], p) <= h for d in (a, b))
     # One warning per group of dimensions piled on one another: 50 lengths of 1 mm steps are one problem, not 144
@@ -217,7 +224,7 @@ def _dimension_overlaps(dims: list[dict], issue) -> list[dict[str, Any]]:
                          hint="Move one: another angle for a diameter or radius dimension, another offset "
                               "for a linear one (modify, or delete and add it again); steps too short to "
                               "dimension one by one take a single dimension or a table"))
-    for c in crossings.values():
+    for c in crossings:
         # Two diameters of concentric circles have to meet at the common center; a third there is clutter.
         if c["centers"] and len(c["ids"]) <= 2:
             continue
@@ -234,46 +241,58 @@ def _dimension_overlaps(dims: list[dict], issue) -> list[dict[str, Any]]:
 
 # --- turned parts: the edge of every shoulder and chamfer -------------------------------------------------------
 
-def _axis_lines(doc: Drawing, space) -> list[Seg]:
-    out = []
+def _axes(doc: Drawing, space) -> list[tuple[G.Vec, G.Vec, float, float]]:
+    """Center lines, the pieces of one line merged: (point on it, unit direction, extent from, to)."""
+    lines: dict[tuple, list] = {}
     for e in space.query("LINE"):
         lt = e.dxf.get("linetype", "BYLAYER")
         if lt.upper() == "BYLAYER" and e.dxf.layer in doc.layers:
             lt = doc.layers.get(e.dxf.layer).dxf.get("linetype", "")
-        if CENTER_RE.search(lt) or CENTER_RE.search(e.dxf.layer):
-            s, q = (e.dxf.start.x, e.dxf.start.y), (e.dxf.end.x, e.dxf.end.y)
-            if G.dist(s, q) > 0:
-                out.append((s, q))
-    return out
+        if not (CENTER_RE.search(lt) or CENTER_RE.search(e.dxf.layer)):
+            continue
+        s, q = (e.dxf.start.x, e.dxf.start.y), (e.dxf.end.x, e.dxf.end.y)
+        if G.dist(s, q) <= 1e-6 * max(1.0, *map(abs, s + q)):
+            continue
+        u = G.unit(G.sub(q, s))
+        if u[0] < -1e-12 or (abs(u[0]) <= 1e-12 and u[1] < 0):
+            u = (-u[0], -u[1])
+        off = G.cross(u, s)
+        o = G.mul((-u[1], u[0]), off)
+        ends = [G.dot(G.sub(p, o), u) for p in (s, q)]
+        a = lines.setdefault((round(G.angle_of(u), 4), round(off, 6)), [o, u, min(ends), max(ends)])
+        a[2], a[3] = min(a[2], *ends), max(a[3], *ends)
+    return [tuple(a) for a in lines.values()]
 
 
 def _turned_edges(doc: Drawing, space, feats: Features, issue) -> list[dict[str, Any]]:
     """A turned part (shaft, pin, bushing) in a view along its axis shows each diameter change as a line across
     the part: the circular edge seen edge-on. Checked for outlines symmetric about a center line that carry a
-    diameter dimension across that line, so a flat stepped plate (no such line) is left alone."""
+    diameter dimension across that line between two points of the outline (not a bore), so a flat stepped plate
+    (dimensioned without Ø) is left alone."""
     out = []
-    axes = _axis_lines(doc, space)
-    if not axes or not feats.contours:
+    if not feats.contours:
         return out
     diam = [((e.dxf.defpoint2.x, e.dxf.defpoint2.y), (e.dxf.defpoint3.x, e.dxf.defpoint3.y))
-            for e in space.query("DIMENSION") if measure_dimension(e)[0] in ("linear", "aligned") and _shows_diameter(e)]
-    if not diam:
-        return out
-    for o, q in axes:
-        u = G.unit(G.sub(q, o))
+            for e in space.query("DIMENSION")
+            if measure_dimension(e)[0] in ("linear", "aligned") and _shows_diameter(e)]
+    for o, u, a0, a1 in _axes(doc, space) if diam else []:
+        frame = None
         for c in feats.contours:
-            local = [(G.dot(G.sub(p, o), u), G.cross(u, G.sub(p, o))) for p in c.polygon]
+            local = [_local(p, o, u) for p in c.polygon]
             if len(local) < 4:
                 continue
             us, vs = [p[0] for p in local], [p[1] for p in local]
-            span, half = max(us) - min(us), max(abs(min(vs)), abs(max(vs)))
-            tol = max(span, half) * 1e-4
+            tol = max(max(us) - min(us), max(abs(min(vs)), abs(max(vs)))) * 1e-4
             if min(vs) > -tol or max(vs) < tol or abs(max(vs) + min(vs)) > tol * 10:
                 continue
-            if not _mirrored(local, tol * 10):
+            if a1 < min(us) or a0 > max(us):  # the center line of something else further along the same line
                 continue
-            if not any(_across(a, b, o, u, min(us), max(us), tol * 10) for a, b in diam):
+            if not any(_across(a, b, o, u, local, tol * 10) for a, b in diam) or not _mirrored(local, tol * 10):
                 continue
+            if frame is None:  # every straight edge in the axis' frame, once per axis
+                frame = [(_local(s, o, u), _local(q, o, u)) for s, q in feats.segments]
+            across = sorted(((a[0] + b[0]) / 2, *sorted((a[1], b[1]))) for a, b in frame
+                            if abs(a[0] - b[0]) <= tol * 10)
             missing = []
             n = len(local)
             for i, p in enumerate(local):
@@ -284,7 +303,7 @@ def _turned_edges(doc: Drawing, space, feats: Features, issue) -> list[dict[str,
                 back = G.dot(G.unit(G.sub(p, prev)), G.unit(G.sub(nxt, p)))
                 if turn < 0.5 and back > 0:  # under 30 degrees: a straight run or a flattened arc
                     continue
-                if not _covered(feats.segments, o, u, p[0], p[1], tol * 10):
+                if not _covered(across, p[0], p[1], tol * 10):
                     missing.append(p)
             seen: list[G.Vec] = []
             for p in sorted(missing):
@@ -302,6 +321,12 @@ def _turned_edges(doc: Drawing, space, feats: Features, issue) -> list[dict[str,
     return out
 
 
+def _local(p: G.Vec, o: G.Vec, u: G.Vec) -> G.Vec:
+    """(along the axis, across it)."""
+    d = G.sub(p, o)
+    return G.dot(d, u), G.cross(u, d)
+
+
 def _shows_diameter(e) -> bool:
     txt = e.dxf.get("text", "") or ""
     if DIAMETER_RE.search(txt):
@@ -313,26 +338,36 @@ def _shows_diameter(e) -> bool:
 
 
 def _mirrored(local: list[G.Vec], tol: float) -> bool:
-    pts = sorted(local)
-    return all(any(abs(p[0] - q[0]) <= tol and abs(p[1] + q[1]) <= tol for q in pts) for p in pts)
+    """Every vertex has its mirror image across the axis (looked up in a grid, not against every vertex)."""
+    cells: dict[tuple[int, int], list[G.Vec]] = {}
+    for p in local:
+        cells.setdefault((round(p[0] / tol), round(p[1] / tol)), []).append(p)
+    for p in local:
+        ku, kv = round(p[0] / tol), round(-p[1] / tol)
+        if not any(abs(p[0] - q[0]) <= tol and abs(p[1] + q[1]) <= tol
+                   for du in (-1, 0, 1) for dv in (-1, 0, 1) for q in cells.get((ku + du, kv + dv), ())):
+            return False
+    return True
 
 
-def _across(a: G.Vec, b: G.Vec, o: G.Vec, u: G.Vec, u0: float, u1: float, tol: float) -> bool:
-    la = (G.dot(G.sub(a, o), u), G.cross(u, G.sub(a, o)))
-    lb = (G.dot(G.sub(b, o), u), G.cross(u, G.sub(b, o)))
-    return abs(la[1] + lb[1]) <= tol and abs(la[1]) > tol and u0 - tol <= la[0] <= u1 + tol and \
-        u0 - tol <= lb[0] <= u1 + tol
+def _across(a: G.Vec, b: G.Vec, o: G.Vec, u: G.Vec, local: list[G.Vec], tol: float) -> bool:
+    """A dimension between mirrored points on the outline itself: its outer diameter, not a bore inside it."""
+    la, lb = _local(a, o, u), _local(b, o, u)
+    if abs(la[1] + lb[1]) > tol or abs(la[1]) <= tol:
+        return False
+    edges = list(zip(local, local[1:] + local[:1]))
+    return all(any(G.dist_to_segment(p, s, q) <= tol for s, q in edges) for p in (la, lb))
 
 
-def _covered(segments: list[Seg], o: G.Vec, u: G.Vec, at: float, r: float, tol: float) -> bool:
-    """Whether straight edges at axial position ``at`` cover the part from -r to r (90 %)."""
+def _covered(across: list[tuple[float, float, float]], at: float, r: float, tol: float) -> bool:
+    """Whether edges across the axis at axial position ``at`` (sorted (u, lo, hi)) cover -r..r (90 %)."""
+    i = bisect.bisect_left(across, (at - tol,))
     spans = []
-    for s, q in segments:
-        a = (G.dot(G.sub(s, o), u), G.cross(u, G.sub(s, o)))
-        b = (G.dot(G.sub(q, o), u), G.cross(u, G.sub(q, o)))
-        if abs(a[0] - at) <= tol and abs(b[0] - at) <= tol:
-            lo, hi = sorted((a[1], b[1]))
-            spans.append((max(lo, -r), min(hi, r)))
+    while i < len(across) and across[i][0] <= at + tol:
+        lo, hi = max(across[i][1], -r), min(across[i][2], r)
+        if hi > lo:
+            spans.append((lo, hi))
+        i += 1
     covered, reach = 0.0, -r
     for lo, hi in sorted(spans):
         if hi > reach:

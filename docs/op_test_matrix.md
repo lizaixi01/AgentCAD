@@ -69,7 +69,7 @@
 | `remove_duplicates` | edit | test_t_workflow_guards.py |
 | `rotate` | edit | test_h_operations.py |
 | `scale` | edit | test_h_operations.py |
-| `set_annotation_scale` | annotate | test_autocad_findings.py |
+| `set_annotation_scale` | annotate | test_autocad_findings.py, test_drafting_checks.py |
 | `set_attributes` | block | test_h_operations.py |
 | `set_page_setup` | layout | **无** |
 | `set_properties` | edit | test_h_operations.py |

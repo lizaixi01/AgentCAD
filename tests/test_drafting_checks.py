@@ -117,3 +117,57 @@ def test_a_stepped_plate_without_diameters_is_left_alone(rt):
     """The same outline with plain (not Ø) dimensions may be a flat plate: no line across."""
     plate = SHAFT[:2] + [{**SHAFT[2], "text": "<>"}]
     assert "TURNED_EDGE_MISSING" not in codes(draw(rt, "plate.dxf", plate + CHAMFERS))
+
+
+@pytest.mark.parametrize("angle", [0, 90, 180, 270])
+def test_an_outside_diameter_at_an_axis_angle_is_clean(rt, angle):
+    """Its center mark has an arm along the dimension line; that arm is not the dimension line (review of #82)."""
+    r = draw(rt, f"axis{angle}.dxf", FLANGE + [
+        {"op": "add_diameter_dim", "target": "$0", "angle": 45, "layer": "DIM"},
+        {"op": "add_diameter_dim", "target": "$2", "angle": 120, "layer": "DIM"},
+        {"op": "add_diameter_dim", "target": "$1", "angle": angle, "outside": True, "layer": "DIM"}])
+    assert codes(r) == []
+
+
+def test_an_outside_diameter_clears_the_circle_at_any_annotation_scale(rt):
+    import ezdxf
+    for th in (None, 3.5):
+        name = f"s{th}.dxf"
+        draw(rt, name, [{"op": "set_annotation_scale", "scale": 50},
+                        {"op": "add_circle", "center": [0, 0], "diameter": 3000, "layer": "OUTLINE"},
+                        {"op": "add_diameter_dim", "target": "$1", "angle": 30, "outside": True, "layer": "DIM",
+                         **({"text_height": th} if th else {})}])
+        d = ezdxf.readfile(rt.policy.root / name).modelspace().query("DIMENSION")[0]
+        t = next(g for g in d.get_geometry_block() if g.dxftype() == "MTEXT")
+        assert t.dxf.insert.vec2.magnitude - 1500 > 2 * t.dxf.char_height
+
+
+def test_three_diameters_away_from_the_origin_are_one_crossing(rt):
+    """Grouped by distance: a rounded key split (29.75, 127.75) into three cells and missed it (review of #82)."""
+    c = [29.75, 127.75]
+    circles = [{"op": "add_circle", "center": c, "diameter": d, "layer": "OUTLINE"} for d in (150, 110, 60)]
+    r = draw(rt, "off.dxf", circles + [{"op": "add_diameter_dim", "target": f"${i}", "angle": a, "layer": "DIM"}
+                                       for i, a in enumerate((330, 30, 120))])
+    assert codes(r) == ["DIMENSION_LINES_CROSS"]
+
+
+def test_a_center_line_in_pieces_is_one_axis(rt):
+    pieces = [{"op": "add_line", "start": [a, 0], "end": [b, 0], "layer": "CENTER", "linetype": "CENTER"}
+              for a, b in ((-8, 60), (70, 140), (150, 208))]
+    r = draw(rt, "pieces.dxf", [SHAFT[0], *pieces, SHAFT[2], *CHAMFERS])
+    assert codes(r) == ["TURNED_EDGE_MISSING"]
+
+
+def test_a_tiny_center_line_does_not_break_validation(rt):
+    r = draw(rt, "tiny.dxf", SHAFT + CHAMFERS + SHOULDERS +
+             [{"op": "add_line", "start": [10, 0], "end": [10.000001, 0], "layer": "CENTER"}])
+    assert codes(r) == []
+
+
+def test_a_bore_diameter_does_not_make_a_plate_turned(rt):
+    """A Ø dimension between the hidden lines of a bore, not between points of the outline (review of #82)."""
+    bore = [{"op": "add_line", "start": [0, y], "end": [200, y], "layer": "HIDDEN"} for y in (-5, 5)]
+    plate = [SHAFT[0], SHAFT[1], *bore,
+             {"op": "add_linear_dim", "p1": [25, -5], "p2": [25, 5], "orientation": "vertical", "offset": 0,
+              "text": "%%c<>", "layer": "DIM"}]
+    assert "TURNED_EDGE_MISSING" not in codes(draw(rt, "bore.dxf", plate + CHAMFERS))
