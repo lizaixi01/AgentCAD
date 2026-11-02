@@ -46,8 +46,7 @@ class ViewError(Exception):
 def _document_shape(path):
     """The part in a FreeCAD document: every Body, else every visible top-level shape that is not a construction
     aid (a Part workbench model, or a script's result added with Part.show)."""
-    doc = App.openDocument(path)
-    doc.recompute()
+    doc = App.openDocument(path)  # not recomputed: the saved shapes are shown as they are, no feature runs
     objs = [o for o in doc.Objects if o.TypeId == "PartDesign::Body" and not o.Shape.isNull()]
     if not objs:
         objs = [o for o in doc.Objects if hasattr(o, "Shape") and not o.Shape.isNull()
@@ -63,6 +62,8 @@ def _document_shape(path):
 def load(path):
     """("brep", shape) or ("mesh", (points, triangles)) for the file at ``path``."""
     ext = Path(path).suffix.lower()
+    if not os.path.getsize(path):
+        raise ViewError("EMPTY_FILE", "Nothing to show: the file is empty", category="file")
     if ext == ".fcstd":
         return "brep", _document_shape(path)
     if ext in (".step", ".stp", ".brep", ".brp", ".iges", ".igs"):

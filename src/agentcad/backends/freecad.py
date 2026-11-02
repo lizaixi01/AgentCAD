@@ -85,33 +85,49 @@ def available() -> bool:
     return find_freecad() is not None
 
 
-MEMO = "freecad.txt"  # <workspace>/.agentcad/freecad.txt: the AGENTCAD_FREECAD an agent app was configured with
+def memo_path() -> Path:
+    """Where the FreeCAD an agent app was configured with is remembered: per user, never in a workspace (a folder
+    someone shared or a repository the agent works in must not choose which program AgentCAD starts)."""
+    if os.name == "nt":
+        base = Path(os.environ.get("LOCALAPPDATA") or Path.home() / "AppData" / "Local")
+    else:
+        base = Path(os.environ.get("XDG_STATE_HOME") or Path.home() / ".local" / "state")
+    return base / "AgentCAD" / "freecad.txt"
 
 
-def remember(state_dir: Path) -> None:
-    """Keep this process's AGENTCAD_FREECAD for the workspace: a viewer opened from the desktop icon does not get the
-    environment the agent apps start AgentCAD with (the MCP server calls this at start)."""
+def _install_dir(path: str) -> Path | None:
+    """``path`` if it is an absolute local folder that holds a FreeCAD install (see _from_dir), else None."""
+    p = Path(path)
+    if not p.is_absolute() or str(p).startswith(("\\\\", "//")) or not p.is_dir() or _from_dir(p) is None:
+        return None
+    return p
+
+
+def remember() -> None:
+    """Keep this process's AGENTCAD_FREECAD for later: a viewer opened from the desktop icon does not get the
+    environment the agent apps start AgentCAD with (the MCP server calls this at start). Only a FreeCAD install
+    folder is kept."""
     path = os.environ.get("AGENTCAD_FREECAD")
-    if not path or find_freecad() is None:
+    if not path or _install_dir(path) is None:
         return
     try:
-        memo = state_dir / MEMO
+        memo = memo_path()
         if not memo.is_file() or memo.read_text("utf-8").strip() != path:
-            state_dir.mkdir(parents=True, exist_ok=True)
+            memo.parent.mkdir(parents=True, exist_ok=True)
             memo.write_text(path, "utf-8")
     except OSError:
         pass
 
 
-def recall(state_dir: Path) -> None:
-    """Use the workspace's remembered FreeCAD when this process has none of its own."""
+def recall() -> None:
+    """Use the remembered FreeCAD when this process has none of its own."""
     if os.environ.get("AGENTCAD_FREECAD") or os.environ.get("FREECAD_LIB") or find_freecad() is not None:
         return
     try:
-        path = (state_dir / MEMO).read_text("utf-8").strip()
+        path = memo_path().read_text("utf-8").strip()
     except OSError:
         return
-    if path and Path(path).exists():
+    if path and _install_dir(path) is not None:
         os.environ["AGENTCAD_FREECAD"] = path
 
 

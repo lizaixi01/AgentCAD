@@ -15,8 +15,13 @@ AgentCAD 不建三维模型：Agent 用自己的代码（CadQuery、build123d �
 - 只读的查看器（`--read-only`）不记版本，只显示当前文件。两个查看器看同一个工作区时，每个版本只记一次（写锁）。
 - 显示要用 FreeCAD（`backends/freecad.py` 在单独的 FreeCAD 进程里运行 `backends/_fc_view.py`，只读文件、
   三角化和出缩略图，不建模）。查找顺序：`AGENTCAD_FREECAD`、`FREECAD_LIB`、常见安装位置、`PATH` 上的
-  `freecadcmd`。从桌面图标打开的查看器拿不到 Agent 应用配置里的 `AGENTCAD_FREECAD`，所以 MCP 服务器启动时（以及带着它的
-  查看器）把这个位置记在 `<工作区>/.agentcad/freecad.txt`，查看器自己找不到 FreeCAD 时用它。
+  `freecadcmd`。从桌面图标打开的查看器拿不到 Agent 应用配置里的 `AGENTCAD_FREECAD`，所以 MCP 服务器启动时把这个位置记在
+  每个用户自己的文件里（Windows `%LOCALAPPDATA%\AgentCAD\freecad.txt`，其他系统 `~/.local/state/AgentCAD/`），
+  查看器自己找不到 FreeCAD 时用它。只接受本机上一个真的装着 FreeCAD 的文件夹；不放在工作区里，免得别人给的文件夹
+  决定 AgentCAD 启动哪个程序。
+- 查看器启动时看到的零件，由后台线程补记版本（不拖慢启动）；超过 200 MB 的文件只显示、不存版本；记不进去
+  （文件被占着）的版本 5 秒后再试。Agent 改回以前的内容时也算一个新版本，指向已存的那份。FCStd 按存盘时的形状显示，
+  不重新计算（不运行文件里的特征或脚本）。
 
 ## 怎么打开
 
@@ -162,8 +167,10 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。
   所以磁盘上还存着的任何版本都能显示。要显示的版本先整体读进工作区外的缓存（系统临时目录下
   `agentcad-viewer/<root 的哈希>/<sha256>.dxf`），校验 sha256 后再解析；渲染结果按 sha 缓存，
   旧版本的响应可以被浏览器长期缓存。
-- **只读**：查看器用 `read_only` 策略，不加写锁、不写 journal、不调用会写文件的工具。唯一写到根目录下的是 `.agentcad/viewer.json`。
-  测试 `test_viewer_never_writes_the_workspace` 检查请求所有版本前后工作区文件的哈希不变。
+- **只读**：查看器用 `read_only` 策略，不改图纸和零件文件、不调用会写文件的工具。写到根目录下的只有
+  `.agentcad/viewer.json`，页面添加的文件，以及三维零件的版本记录（`.agentcad/drawings/<零件>/` 下的检查点和
+  journal，见“三维零件”；`--read-only` 时不记）。测试 `test_viewer_never_writes_the_workspace` 检查请求所有版本前后
+  工作区文件的哈希不变。
 - **不会让 Agent 的提交失败**：Windows 上一个文件被任何进程打开着（查看器、杀毒软件、搜索索引、资源管理器预览），
   就不能被 `os.replace` 替换，加 `FILE_SHARE_DELETE` 共享也不行（实测）。所以存储层的原子替换（图纸、`committed.*`、
   `head.json`）遇到这种 `PermissionError` 会退避重试，最多 2 s（`store.replace_file`）；查看器读文件只要几毫秒。

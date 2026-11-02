@@ -483,8 +483,7 @@ def serve_stdio(policy: Policy | None = None) -> None:
     policy = policy or Policy()
     SESSION = sessions.Session(policy)  # the viewer lists this process until it exits
     from .backends import freecad
-    from .policy import STATE_DIR
-    freecad.remember(policy.root / STATE_DIR)  # for a viewer started without this app's environment (3D view)
+    freecad.remember()  # for a viewer started without this app's environment (3D view)
     build_server(policy).run("stdio")
 
 

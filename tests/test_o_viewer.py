@@ -668,6 +668,25 @@ def test_saved_3d_files_become_versions(ws, cache):
     assert [(e["tool"], e["drawing"], e["state"]) for e in log] == [("save", "arm.step", "done")] * 2
     # the files listed include the part, as a part; the part itself was never written by the viewer
     assert {"arm.step"} <= set(v.ws.list_drawings()) and part.read_bytes() == b"ISO-10303-21; second"
+    # back to the first content: a third version, pointing at the copy already stored (no new checkpoint)
+    part.write_bytes(b"ISO-10303-21; first")
+    _settle(part)
+    v.feed.poll()
+    recs = v.ws.timeline("arm.step")["records"]
+    assert len(recs) == 3 and recs[2]["version"] == recs[0]["version"] and recs[2]["before"] == recs[1]["version"]
+    assert len(v.ws.store("arm.step").list_checkpoints()) == 2
+    v.httpd.server_close()
+
+
+def test_parts_already_there_are_recorded_after_start(ws, cache):
+    """What exists when the viewer starts is recorded by the feed's later polls, not while it starts."""
+    part = ws / "old.stl"
+    part.write_bytes(b"solid old")
+    _settle(part)
+    v = Viewer(Policy(root=ws, read_only=False), port=0, interval=0.05, cache_dir=cache)
+    assert v.ws.timeline("old.stl")["records"] == []
+    v.feed.poll()
+    assert [r["tool"] for r in v.ws.timeline("old.stl")["records"]] == ["save"]
     v.httpd.server_close()
 
 
@@ -725,17 +744,40 @@ def test_3d_part_mesh_thumbnail_and_change(ws, cache):
 
 def test_freecad_location_is_remembered_for_the_desktop_viewer(tmp_path, monkeypatch):
     """The agent apps start AgentCAD with AGENTCAD_FREECAD; the viewer the desktop icon opens has no such setting,
-    so the location is kept in the workspace's state folder and used from there."""
+    so the location is kept per user (never in a workspace) and used from there, only if it is a FreeCAD folder."""
     from agentcad.backends import freecad
     fc = tmp_path / "FreeCAD"
     (fc / "bin").mkdir(parents=True)
     (fc / "bin" / ("freecadcmd.exe" if os.name == "nt" else "freecadcmd")).write_text("", "utf-8")
+    memo = tmp_path / "user" / "AgentCAD" / "freecad.txt"
+    monkeypatch.setattr(freecad, "memo_path", lambda: memo)
     monkeypatch.delenv("FREECAD_LIB", raising=False)
     monkeypatch.setenv("AGENTCAD_FREECAD", str(fc))
-    state = tmp_path / "ws" / ".agentcad"
-    freecad.remember(state)
-    assert (state / "freecad.txt").read_text("utf-8") == str(fc)
+    freecad.remember()
+    assert memo.read_text("utf-8") == str(fc)
     monkeypatch.delenv("AGENTCAD_FREECAD")
     monkeypatch.setattr(freecad, "find_freecad", lambda: None)  # as on a computer where it is not installed normally
-    freecad.recall(state)
+    freecad.recall()
     assert os.environ["AGENTCAD_FREECAD"] == str(fc)
+    # a remembered program file, a folder without FreeCAD, a relative or network path is not used
+    evil = tmp_path / "evil.bat"
+    evil.write_text("echo hi", "utf-8")
+    for bad in (str(evil), str(tmp_path), "FreeCAD", "//server/share/FreeCAD"):
+        monkeypatch.delenv("AGENTCAD_FREECAD", raising=False)
+        memo.write_text(bad, "utf-8")
+        freecad.recall()
+        assert "AGENTCAD_FREECAD" not in os.environ, bad
+
+
+def test_a_workspace_cannot_choose_the_program_the_viewer_runs(ws, cache, monkeypatch):
+    """A freecad.txt inside a workspace (a shared folder, a cloned repository) is ignored."""
+    from agentcad.backends import freecad
+    monkeypatch.setattr(freecad, "memo_path", lambda: ws.parent / "no-memo" / "freecad.txt")
+    monkeypatch.delenv("AGENTCAD_FREECAD", raising=False)
+    monkeypatch.delenv("FREECAD_LIB", raising=False)
+    evil = ws / "evil.bat"
+    evil.write_text("echo hi > pwned.txt", "utf-8")
+    (ws / ".agentcad").mkdir(exist_ok=True)
+    (ws / ".agentcad" / "freecad.txt").write_text(str(evil), "utf-8")
+    Workspace(Policy(root=ws, read_only=True), cache)._find_freecad()
+    assert os.environ.get("AGENTCAD_FREECAD") != str(evil)

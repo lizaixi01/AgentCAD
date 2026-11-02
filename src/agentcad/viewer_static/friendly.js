@@ -65,7 +65,7 @@
       readyBody: "Ask it to draw something. The drawing appears here and updates as it works.",
       by: "by {who}",
       try1: "Draw a 200 × 100 mounting plate with R8 corners and four 12 mm holes 15 mm from the edges. Save it as plate.dxf.",
-      try2: "Make a flange: 120 mm across, 14 mm thick, with six 12 mm bolt holes on a 90 mm circle.",
+      try2: "Draw a flange 120 mm across with six 12 mm bolt holes on a 90 mm circle. Save it as flange.dxf.",
       try3: "Make an A3 sheet for plate.dxf with a title block.",
     },
     zh: {
@@ -123,7 +123,7 @@
       readyBody: "让它画点什么，图纸会出现在这里，并随着工作实时更新。",
       by: "{who}",
       try1: "画一块 200×100 的安装板，四个角倒圆 R8，四个 Ø12 的孔离边 15 毫米。保存为 plate.dxf。",
-      try2: "做一个法兰：直径 120 毫米、厚 14 毫米，在直径 90 的圆上均布六个 Ø12 螺栓孔。",
+      try2: "画一个法兰：直径 120 毫米，在直径 90 的圆上均布六个 Ø12 螺栓孔。保存为 flange.dxf。",
       try3: "给 plate.dxf 做一张 A3 图纸，带标题栏。",
     },
   };

@@ -2,7 +2,8 @@
 
     agentcad viewer --root <dir> [--port 8770]
 
-It only reads the workspace. Every commit goes through the store (checkpoint, atomic replace, journal), so a
+It only reads drawings and parts (the one thing it writes besides viewer.json and files the page adds is the
+version history of 3D parts, below, in the state directory). Every commit goes through the store (checkpoint, atomic replace, journal), so a
 thread polls each drawing's file and journal (``stat`` only, no open) and pushes a change event to the page over
 Server-Sent Events. Versions are addressed by sha256: a commit's journal record carries the sha of the file it
 wrote, and each checkpoint the sha of the content it holds, so any committed version still on disk can be shown.
@@ -85,6 +86,8 @@ UI_TYPES = {".css": "text/css; charset=utf-8", ".js": "text/javascript; charset=
             ".woff2": "font/woff2", ".svg": "image/svg+xml", ".md": "text/markdown; charset=utf-8"}
 FREECAD_JOBS = threading.BoundedSemaphore(2)  # thumbnails of many parts must not start FreeCAD for each at once
 SETTLE = 1.0  # seconds a 3D file must stay unchanged before it counts as saved (the agent may still be writing it)
+MAX_PART_BYTES = 200 * 1024 * 1024  # larger 3D files are shown but not copied into the version history
+RETRY = 5.0  # seconds before trying again to record a version that could not be recorded
 INFO_FILE = "viewer.json"  # <root>/.agentcad/viewer.json: where a running viewer listens (see viewer_url)
 LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})
 COLORS = {"added": "#16a34a", "modified": "#ea580c", "other": "#b8bcc4"}
@@ -447,18 +450,18 @@ class Workspace:
 
     def _find_freecad(self) -> None:
         from .backends import freecad
-        state = self.policy.root / STATE_DIR
-        if self.record:
-            freecad.remember(state)
-        freecad.recall(state)
+        freecad.remember()
+        freecad.recall()
 
     def _summary(self, rel: str, sha: str) -> dict[str, Any]:
         src = self.snapshot(rel, sha)[1]
         return self._memo(("summary", sha), lambda: self._fc({"action": "summary"}, src)["summary"])
 
     def record_save(self, rel: str) -> bool:
-        """Record the 3D file's current content as a version (checkpoint + journal record 'save'), once it has stayed
-        unchanged for SETTLE seconds and is not recorded yet. True when a version was added."""
+        """Record the 3D file's current content as a version (journal record 'save' and, for content not stored yet,
+        a checkpoint), once it has stayed unchanged for SETTLE seconds and differs from the last recorded version.
+        Content seen before (the agent went back) is recorded again, pointing at its stored copy. True when a version
+        was added."""
         if not self.record or not _is_part(rel):
             return False
         st = self.store(rel)
@@ -466,19 +469,23 @@ class Workspace:
             s = st.path.stat()
         except OSError:
             return False
-        if not s.st_size or time.time() - s.st_mtime < SETTLE:
+        if not s.st_size or s.st_size > MAX_PART_BYTES or time.time() - s.st_mtime < SETTLE:
             return False
         from .locking import drawing_lock
         with drawing_lock(st.dir):  # two viewers on one workspace record each version once
+            saved = [r["sha256"] for r in st.read_journal() if r.get("ok") and r.get("sha256")]
+            last = saved[-1] if saved else None
+            stored = {c["sha256"]: c["id"] for c in st.list_checkpoints() if c.get("sha256")}
             sha = sha256_file(st.path)
-            cps = st.list_checkpoints()
-            if any(c.get("sha256") == sha for c in cps):
+            if sha == last:
                 return False
-            before = cps[-1]["id"] if cps else None
-            cid = st.checkpoint("saved")
-            if cid is None:
-                return False
-            st.journal({"tool": "save", "ok": True, "sha256": sha, "checkpoint_before": before,
+            if sha not in stored:
+                if st.checkpoint("saved") is None:
+                    return False
+                sha = st.list_checkpoints()[-1]["sha256"]  # what the copy holds, should the file have changed since
+                if sha == last:
+                    return False
+            st.journal({"tool": "save", "ok": True, "sha256": sha, "checkpoint_before": stored.get(last),
                         "bytes": s.st_size})
         progress.Activity(self.policy, "save", rel).emit("done", bytes=s.st_size)
         return True
@@ -533,7 +540,7 @@ class Workspace:
             data["image"] = "data:image/png;base64," + base64.b64encode(self.png(rel, sha).read_bytes()).decode()
             try:
                 d = self.diff(rel, sha)
-                data["diff"] = {k: d[k] for k in ("parameters", "shape", "features") if d.get(k)}
+                data["diff"] = {k: d[k] for k in ("shape",) if d.get(k)}
             except AgentCADError:
                 pass
         else:
@@ -605,7 +612,8 @@ class ChangeFeed:
         self._next_id = 0
         self.cond = threading.Condition()
         self.sigs: dict[str, tuple] = {}
-        self.unsaved: set[str] = set()  # 3D files whose current content may not be recorded as a version yet
+        self.unsaved: dict[str, float] = {}  # 3D files whose content may not be recorded yet -> when to try
+        self._polling = threading.Lock()  # the feed thread and a caller (tests) never poll at the same time
         self.drawings: list[str] = []
         self._last_scan = 0.0
         self._stop = threading.Event()
@@ -665,6 +673,10 @@ class ChangeFeed:
             return self._next_id
 
     def poll(self) -> None:
+        with self._polling:
+            self._poll()
+
+    def _poll(self) -> None:
         try:
             self._read_activity()
         except (OSError, ValueError):
@@ -690,21 +702,23 @@ class ChangeFeed:
                 self._emit(rel, "removed")
         for rel, sig in now.items():
             if _is_part(rel) and (first or self.sigs.get(rel, (None,))[0] != sig[0]):
-                self.unsaved.add(rel)  # new content of a 3D file (or one seen at start): a version to record
+                self.unsaved[rel] = 0.0  # new content of a 3D file (or one seen at start): a version to record
         self.sigs = now
-        for rel in sorted(self.unsaved):
+        if first:
+            return  # recorded by the feed thread, not while the viewer (or the MCP server's first call) starts
+        for rel, when in sorted(self.unsaved.items()):
             try:
                 age = time.time() - (self.ws.policy.root / rel).stat().st_mtime
-            except OSError:
-                self.unsaved.discard(rel)
+            except OSError:  # gone (deleted or renamed): nothing to record
+                del self.unsaved[rel]
                 continue
-            if age < SETTLE:
-                continue  # still being written: wait until it settles
-            self.unsaved.discard(rel)
+            if age < SETTLE or time.monotonic() < when:
+                continue  # still being written, or waiting to try again
+            del self.unsaved[rel]
             try:
                 self.ws.record_save(rel)  # its journal changes, so the next poll sends the page a 'changed' event
             except (AgentCADError, OSError):
-                pass
+                self.unsaved[rel] = time.monotonic() + RETRY
 
     def since(self, last: int, progress: bool = False) -> list[dict[str, Any]]:
         """Events after id ``last``: file events, and with ``progress`` the progress events too."""

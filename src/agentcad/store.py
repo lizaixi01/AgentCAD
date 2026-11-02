@@ -203,7 +203,8 @@ class DrawingStore:
         cid = f"cp-{n:04d}"
         cp = self.cp_dir / f"{cid}{self.ext}"
         shutil.copy2(self.path, cp)
-        head["checkpoints"].append({"id": cid, "ts": now(), "label": label, "sha256": sha256_file(self.path)})
+        # the copy's own hash: a writer outside the runtime may have changed the file since it was copied
+        head["checkpoints"].append({"id": cid, "ts": now(), "label": label, "sha256": sha256_file(cp)})
         try:
             self._write_head(head)
         except PermissionError:
