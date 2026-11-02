@@ -14,6 +14,7 @@ from ..errors import AgentCADError
 from ..model import circle_wcs, get_tag
 from ..tolerances import check_dimension_tolerance
 from ..units import unit_from_insunits
+from .drafting import drafting_issues
 from .features import Features, measure_dimension
 
 NUM_RE = re.compile(r"[-+]?\d+(?:\.\d+)?")
@@ -456,6 +457,7 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
     out.extend(plot_text_issues(doc, layout))
     out.extend(printed_text_issues(doc))
     out.extend(layout_viewport_issues(doc))
+    out.extend(drafting_issues(doc, feats, layout))
 
     # Tolerance declarations are document integrity, including nested/unreferenced
     # blocks. Walk stored entities once, not virtual INSERT copies (which can be

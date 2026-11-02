@@ -456,6 +456,8 @@ curl -X POST localhost:8765/v1/validate_drawing -H "Content-Type: application/js
 | DWG 命令返回 `DEPENDENCY_MISSING` | 没找到 AutoCAD。设置 `AGENTCAD_ACCORECONSOLE`。 |
 | 建筑平面等大尺寸图纸出图后箭头看不见、点画线像实线 | 用 `create --annotation-scale 50`（1:50 出图）新建图纸，或对已有图纸执行操作 `{"op": "set_annotation_scale", "scale": 50}`。验证器会用 `ANNOTATION_TOO_SMALL` 提醒。 |
 | 直径标注显示成 "ØØ12" | 标注文字里的 `<>` 已经带 Ø / R 前缀，写 `4X <>` 即可，不要写 `Ø<>`。验证器会报 `DIMENSION_DOUBLE_PREFIX`。 |
+| 法兰上三个直径标注都穿过圆心（`DIMENSION_LINES_CROSS`） | 保留两个穿过圆心的直径，其余的用 `add_diameter_dim` 加 `"outside": true`：文字在圆外，只画一段指向圆的引线。角度避开螺栓孔。 |
+| 阶梯轴台阶处少了线（`TURNED_EDGE_MISSING`） | 回转体每个台阶、倒角都是一圈棱边，主视图里要画一条横跨零件的线；按警告里 `details.lines` 的坐标 `add_line` 补上。 |
 | 想看图纸实际出图效果 | 不需要 AutoCAD：`agentcad --root work export 图纸.dxf 预览.png`（MCP：`export_drawing(..., "png")`，图片直接返回给 Agent），和 PDF 出图同一个渲染。字体里没有的字符（例如黑体里的 µ、−）会显示成方框，验证器用 `TEXT_PLOTS_AS_BOXES` 提醒。装有 AutoCAD 时也可以：`python examples/trials/render_png.py 输出目录 图纸.dxf`（在 PowerShell 中运行），用 AutoCAD 打印成 PNG。 |
 | 真实图纸改完后，打印出来的图纸还是旧的 | 很多真实图纸有打印用的图纸空间布局，里面有零件的缩放副本。`read_drawing` 的 `layouts` 会列出它们，`validate` 会用 `LAYOUT_NOT_VALIDATED` 提醒。操作加 `"layout": "布局名"` 即可在布局里编辑，`validate --layout 布局名` 检查它。 |
 | 要出一张打印用的图纸（A3 图框 + 1:2 视口） | `{"op": "create_layout", "name": "A3"}` 新建布局；图框、标题栏用普通绘图操作加 `"layout": "A3"`；`{"op": "add_viewport", "layout": "A3", "center": [220, 160], "scale": 0.5}` 开 1:2 视口。验证器的 `PRINTED_TEXT_TOO_SMALL` 会提醒缩小后字太小（例如 3.5 mm 标注在 1:2 下只有 1.75 mm）。 |

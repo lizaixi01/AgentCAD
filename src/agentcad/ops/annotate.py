@@ -188,13 +188,25 @@ def add_radius_dim(ctx: Ctx, target, center, radius, angle, text, text_height, l
     return _finish_dim(ctx, d, p, text)
 
 
-@op("add_diameter_dim", "annotate", "Diameter dimension of a circle/arc.", RAD_PARAMS, common_draw=True)
-def add_diameter_dim(ctx: Ctx, target, center, radius, angle, text, text_height, length_factor, **p):
+@op("add_diameter_dim", "annotate", "Diameter dimension of a circle/arc.",
+    {**RAD_PARAMS, "outside": P("bool", default=False, description=(
+        "Text outside the circle along 'angle', one arrow on the circle and no line through the center. Use it "
+        "for a third diameter of concentric circles: full diameter lines would all cross at the center"))},
+    common_draw=True)
+def add_diameter_dim(ctx: Ctx, target, center, radius, angle, text, text_height, length_factor, outside, **p):
     if (s := check_tag(ctx, p)) is not None:
         return {"created": [], "skipped": True, "existing": s}
     c, r = _circle_of(ctx, target, center, radius)
-    d = ctx.msp.add_diameter_dim(center=c, radius=r, angle=angle, dimstyle=_dimstyle(ctx),
-                                 override=_override(text_height, length_factor), dxfattribs=ctx.attribs(p))
+    ov = _override(text_height, length_factor)
+    if outside:  # ezdxf (like AutoCAD with DIMTOFL off) then draws only the line from the circle to the text
+        st = ctx.doc.dimstyles.get(_dimstyle(ctx)).dxf
+        h = text_height or st.get("dimtxt", 2.5) * (st.get("dimscale", 1.0) or 1.0)
+        d = ctx.msp.add_diameter_dim(center=c, radius=r, location=G.polar(tuple(c)[:2], r + 4 * h, angle),
+                                     dimstyle=_dimstyle(ctx), override={**ov, "dimtofl": 0},
+                                     dxfattribs=ctx.attribs(p))
+    else:
+        d = ctx.msp.add_diameter_dim(center=c, radius=r, angle=angle, dimstyle=_dimstyle(ctx), override=ov,
+                                     dxfattribs=ctx.attribs(p))
     return _finish_dim(ctx, d, p, text)
 
 

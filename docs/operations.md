@@ -58,6 +58,7 @@ Diameter dimension of a circle/arc.
 | `tolerance` | object |  |  | Signed lower/upper deviations in displayed drawing units (or unit strings); optional precision=3 and mode=deviations\|limits. Linear/radius/diameter dimensions only. |
 | `text_height` | length >0 |  |  | Override text height |
 | `length_factor` | number >0 |  |  | DIMLFAC: displayed value = measured length x factor, e.g. 1/0.325 on a sheet that shows the part at scale 0.325 |
+| `outside` | bool |  | False | Text outside the circle along 'angle', one arrow on the circle and no line through the center. Use it for a third diameter of concentric circles: full diameter lines would all cross at the center |
 | `layer` | string |  |  | Layer name (created on the fly if missing) |
 | `color` | int ≥0 ≤257 |  |  | ACI color (256 = BYLAYER) |
 | `linetype` | string |  |  | Linetype name, e.g. CONTINUOUS, CENTER, DASHED |
