@@ -771,22 +771,30 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
         def do_POST(self):  # noqa: N802
             """Add a file, or show the folder: only for the page itself (see the module notes)."""
             self.close_connection = True  # a refused request may leave its body unread
-            try:
-                self._unread = max(int(self.headers.get("Content-Length") or 0), 0)
-            except ValueError:
-                self._unread = 0
+            try:  # -1: chunked, absent or invalid, the body's size is unknown
+                self._unread = max(int(self.headers["Content-Length"]), -1)
+            except (KeyError, TypeError, ValueError):
+                self._unread = -1
             try:
                 self._post()
             finally:
                 # Closing a socket with received data still unread makes Windows reset the connection, and the
                 # reset can throw away the answer before the client reads it (WinError 10053). So a refused
-                # request's small body is read before the connection closes; a large one is never read.
-                if 0 < self._unread <= MAX_DRAIN:
-                    try:
+                # request's small body is read before the connection closes; a large one is never read. A body
+                # of unknown size is read after a half-close, until the client closes or MAX_DRAIN.
+                try:
+                    if 0 < self._unread <= MAX_DRAIN:
                         self.connection.settimeout(2)
                         self._read(self._unread)
-                    except OSError:
-                        pass
+                    elif self._unread < 0:
+                        self.wfile.flush()
+                        self.connection.shutdown(socket.SHUT_WR)
+                        self.connection.settimeout(2)
+                        left = MAX_DRAIN
+                        while left > 0 and (chunk := self.rfile.read1(min(left, 65536))):
+                            left -= len(chunk)
+                except OSError:
+                    pass
 
         def _read(self, n: int) -> bytes:
             data = self.rfile.read(n)
