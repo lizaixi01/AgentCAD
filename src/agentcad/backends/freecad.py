@@ -58,9 +58,12 @@ def find_freecad() -> tuple[list[str], dict[str, str]] | None:
             if hit:
                 return hit
         return [sys.executable, "-I"], {"AGENTCAD_FREECAD_LIB": lib}
-    pats = [r"C:\Program Files\FreeCAD *", os.path.expandvars(r"%LOCALAPPDATA%\Programs\FreeCAD *"),
+    local = os.environ.get("LOCALAPPDATA")
+    pats = [r"C:\Program Files\FreeCAD *", *([str(Path(local) / "Programs" / "FreeCAD *")] if local else []),
             "/Applications/FreeCAD.app", "/usr/lib/freecad", "/usr/lib/freecad-python3", "/opt/freecad*"]
     for pat in pats:
+        if not Path(pat).is_absolute():  # never relative to the current folder (a project could plant a program)
+            continue
         for d in sorted(glob.glob(pat), reverse=True):
             hit = _from_dir(Path(d))
             if hit:

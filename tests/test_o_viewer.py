@@ -797,3 +797,18 @@ def test_a_freecadcmd_in_the_current_folder_is_not_run(tmp_path, monkeypatch):
     assert freecad._on_path("freecadcmd") is None
     hit = freecad.find_freecad()
     assert hit is None or Path(hit[0][0]).parent != tmp_path
+
+
+def test_install_folder_search_is_never_relative(tmp_path, monkeypatch):
+    """Without LOCALAPPDATA the per-user install pattern would stay '%LOCALAPPDATA%\\Programs\\FreeCAD *' and
+    match folders under the current one."""
+    from agentcad.backends import freecad
+    planted = tmp_path / "%LOCALAPPDATA%" / "Programs" / "FreeCAD 9" / "bin"
+    planted.mkdir(parents=True)
+    (planted / ("freecadcmd.exe" if os.name == "nt" else "freecadcmd")).write_text("", "utf-8")
+    monkeypatch.chdir(tmp_path)
+    for var in ("LOCALAPPDATA", "AGENTCAD_FREECAD", "FREECAD_LIB"):
+        monkeypatch.delenv(var, raising=False)
+    monkeypatch.setenv("PATH", "")
+    hit = freecad.find_freecad()
+    assert hit is None or Path(hit[0][0]).is_absolute() and tmp_path not in Path(hit[0][0]).resolve().parents
