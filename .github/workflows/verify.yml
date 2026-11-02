@@ -160,7 +160,9 @@ jobs:
           echo "Linux/Windows: $others; macOS: $mac"
 
           carried=""
+          earlier=""
           if [ "$mac" = no-runner ]; then
+            earlier=$(status_of "$SHA" agentcad/macos)
             parent=$(gh api "repos/$GH_REPO/commits/$SHA" --jq '.parents[0].sha') || exit 1
             for c in "$SHA" "$parent"; do
               if [ "$(status_of "$c" agentcad/macos)" = failure ]; then carried=$c; fi
@@ -169,7 +171,10 @@ jobs:
           case "$mac" in
             success) mstate=success; mdesc="macOS passed" ;;
             no-runner)
-              if [ -n "$carried" ]; then
+              if [ "$earlier" = success ]; then
+                # An earlier run of this commit passed macOS, and that covers its parent too.
+                mstate=success; mdesc="macOS passed earlier on this commit (this run had no runner)"
+              elif [ -n "$carried" ]; then
                 mstate=failure; mdesc="macOS failed at ${carried:0:7} and has not passed since (this run had no runner)"
               else
                 mstate=pending; mdesc="macOS not verified: no runner (exception logged on the PR)"
