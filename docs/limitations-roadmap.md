@@ -37,7 +37,7 @@
 
 ## 路线图
 
-- **三维零件不做**（2026-11-02）：已移除 FreeCAD 后端和三维操作，三维零件让 Agent 直接写 CadQuery / build123d 代码。原因见 [decision-record.md](decision-record.md#adr-003移除三维零件)。
+- **三维零件不做**（2026-11-02）：已移除 FreeCAD 后端和三维操作，三维零件让 Agent 直接写 CadQuery / build123d 代码；实时查看器显示 Agent 存下的三维文件和每次保存的版本（需要 FreeCAD）。原因见 [decision-record.md](decision-record.md#adr-003移除三维零件)。
 
 
 - **实测暴露的问题**（[trials-report.md](trials-report.md)、[comparison-hard-tasks.md](comparison-hard-tasks.md)）：图纸空间读取、脚本出口和 DIMENSION 修改已实现；判断图纸副本与模型是否一致、标注重叠检测、保留动态块数据仍待补齐。历史实测保持原记录。

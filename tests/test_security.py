@@ -120,7 +120,7 @@ def test_no_shell_or_arbitrary_execution_surface():
     import agentcad
     from pathlib import Path
     pkg = Path(agentcad.__file__).parent
-    launchers = {pkg / "backends" / "autocad.py", pkg / "scripting.py",
+    launchers = {pkg / "backends" / "autocad.py", pkg / "backends" / "freecad.py", pkg / "scripting.py",
                  pkg / "install.py", pkg / "desktop.py"}
     # the script runners execute an agent's script (run_script and inspect_image code, opt-in), each in exactly
     # one place
@@ -137,6 +137,11 @@ def test_no_shell_or_arbitrary_execution_surface():
     # process launchers: fixed executables, no shell
     backend = (pkg / "backends" / "autocad.py").read_text("utf-8")
     assert "shell=False" in backend and "shell=True" not in backend and "Popen(args" in backend
+    fc = (pkg / "backends" / "freecad.py").read_text("utf-8")
+    assert "shell=False" in fc and "shell=True" not in fc and "timeout=limit" in fc
+    # besides FreeCAD it runs only taskkill, to stop FreeCAD's process tree after a timeout (Windows)
+    assert fc.count("subprocess.run(") == 1 and 'subprocess.run([taskkill, "/F", "/T", "/PID", str(p.pid)]' in fc
+    assert '"System32" / "taskkill.exe"' in fc
     scripting = (pkg / "scripting.py").read_text("utf-8")
     # two launchers (ezdxf scripts, image scripts), each without a shell and with the time limit
     assert scripting.count("shell=False") == 2 and "shell=True" not in scripting
