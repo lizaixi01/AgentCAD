@@ -57,7 +57,8 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。
 只有带这个标记的文件夹才会被清空重来。桌面上的「AgentCAD 演示」图标运行的就是它（`agentcad demo --shortcut`）。
 
 仓库带的 `.claude/launch.json` 里有 `agentcad-viewer` 配置，在 Claude 桌面应用的内置浏览器里启动查看器（根目录
-`playground`，端口 8770）。它用的是 Windows venv 路径 `.venv/Scripts/python.exe`，macOS/Linux 改成 `.venv/bin/python`。
+`playground`，端口 8781，不和桌面图标开的 8770 抢），`viewer-prototype` 配置启动 `web/viewer` 的开发服务器（端口 5180，
+把 `/api` 转给 8781 上的查看器）。它们用的是 Windows venv 路径 `.venv/Scripts/python.exe`，macOS/Linux 改成 `.venv/bin/python`。
 
 ### 安全
 

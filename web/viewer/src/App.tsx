@@ -160,9 +160,11 @@ export default function App() {
 
   const followRef = useRef(follow)
   followRef.current = follow
+  const drawingsRef = useRef<string[]>([])
   const { ws, loadList } = useWorkspace({
     onActivity(ev: ProgressEvent, run: Run) {
-      if (ev.drawing && ev.drawing !== pathRef.current && ev.state === "working" && followRef.current) open(ev.drawing)
+      // only to a file that exists: a call that creates one reports "working" before the file is there
+      if (ev.drawing && ev.drawing !== pathRef.current && ev.state === "working" && followRef.current && drawingsRef.current.includes(ev.drawing)) open(ev.drawing)
       if (ev.state === "done" && ev.tool !== "validate_drawing" && Date.now() / 1000 - ev.ts < 15 && celebrated.current !== run.run) {
         celebrated.current = run.run
         const ok = ev.passed !== false
@@ -178,6 +180,7 @@ export default function App() {
     },
   })
 
+  drawingsRef.current = ws.drawings
   // the open file follows the address (#path), so a link opens it and Back works
   useEffect(() => {
     const on = () => setPath(decodeURIComponent(location.hash.slice(1)) || null)
