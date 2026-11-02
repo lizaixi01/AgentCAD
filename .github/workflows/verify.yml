@@ -18,15 +18,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-latest
-            python: "3.10"
-          - os: ubuntu-latest
-            python: "3.12"
-          - os: windows-latest
-            python: "3.11"
-          - os: macos-latest
-            python: "3.12"
+        # Pull requests: Linux 3.12 and Windows. Pushes to main and manual runs: all four.
+        include: ${{ fromJSON(github.event_name == 'pull_request'
+          && '[{"os":"ubuntu-latest","python":"3.12"},{"os":"windows-latest","python":"3.11"}]'
+          || '[{"os":"ubuntu-latest","python":"3.10"},{"os":"ubuntu-latest","python":"3.12"},{"os":"windows-latest","python":"3.11"},{"os":"macos-latest","python":"3.12"}]') }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 25
     env:
