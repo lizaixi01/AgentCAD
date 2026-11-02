@@ -16,6 +16,8 @@ import hashlib
 import json
 import os
 import shutil
+import subprocess
+import time
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parents[2]
@@ -48,6 +50,12 @@ def server_env(root: str, scripts: bool = False) -> dict[str, str]:
     return env
 
 
+# Seconds an agent waits for the MCP server to list its tools. Codex's default is 10 s; a fresh venv's first import
+# took longer when several sessions started at once, and those sessions ran with no agentcad tools (T1, T3 and H1
+# round 1 of the 2026-11-02 rerun).
+STARTUP_SEC = 120
+
+
 def codex_cmd(arm: str, root: str, effort: str, scripts: bool = False, images: list[str] = ()) -> list[str]:
     """``images``: files attached to the prompt (Codex cannot open images itself in the mcp arm)."""
     attach = [a for img in images for a in ("-i", img)]
@@ -62,6 +70,7 @@ def codex_cmd(arm: str, root: str, effort: str, scripts: bool = False, images: l
             "-c", 'mcp_servers.agentcad.args=["-m","agentcad.mcp_server"]',
             "-c", f"mcp_servers.agentcad.env={{{env}}}",
             "-c", 'mcp_servers.agentcad.default_tools_approval_mode="approve"',
+            "-c", f"mcp_servers.agentcad.startup_timeout_sec={STARTUP_SEC}",
             "-c", "mcp_servers.agentcad.tool_timeout_sec=300", *attach, "-"]
 
 
@@ -115,4 +124,46 @@ def agent_env() -> dict[str, str]:
     env = {k: v for k, v in os.environ.items()
            if k in SESSION_ENV_KEEP or not k.upper().startswith(SESSION_ENV_PREFIXES)}
     env["CLAUDE_CODE_DISABLE_GIT_INSTRUCTIONS"] = "1"
+    env["MCP_TIMEOUT"] = str(STARTUP_SEC * 1000)  # Claude Code's MCP startup timeout, in ms
     return env
+
+
+def reached_agentcad(log: Path) -> bool:
+    """Whether a session's JSON log shows a call to an AgentCAD tool. Codex logs its own list_mcp_resources under
+    the server's name too, so that call does not count."""
+    for line in log.read_text(encoding="utf-8", errors="replace").splitlines():
+        try:
+            d = json.loads(line)
+        except ValueError:
+            continue
+        item = d.get("item") or {}
+        if item.get("type") == "mcp_tool_call" and item.get("server") == "agentcad" \
+                and not str(item.get("tool", "")).startswith("list_mcp_resource"):
+            return True
+        for c in (d.get("message") or {}).get("content") or []:
+            if isinstance(c, dict) and c.get("type") == "tool_use" and c.get("name", "").startswith("mcp__agentcad__"):
+                return True
+    return False
+
+
+def run_session(cmd: list[str], prompt: str, log: Path, cwd: Path, timeout: int, mcp: bool, tries: int = 3) -> dict:
+    """Run one agent session, logging stdout to ``log`` and stderr next to it. A session of the mcp arm that never
+    reached the AgentCAD server (it did not start in time) changed nothing, so it runs again. Its logs go to
+    ``noserver/<name>.try<n>.*`` beside ``log``, where the graders, which read only the folder itself, do not count
+    them. ``seconds`` is the recorded (last) session's time; ``reached`` is False when every try missed the server."""
+    kept = log.parent / "noserver"
+    for old in kept.glob(f"{log.stem}.try*"):  # an earlier batch's failures are not this run's
+        old.unlink()
+    for n in range(1, tries + 1):
+        t0 = time.time()
+        with open(log, "wb") as out, open(log.with_suffix(".stderr.log"), "wb") as err:
+            p = subprocess.run(cmd, input=prompt.encode("utf-8"), stdout=out, stderr=err, shell=False,
+                               timeout=timeout, cwd=cwd, env=agent_env())
+        seconds = round(time.time() - t0, 1)
+        reached = not mcp or reached_agentcad(log)
+        if reached or n == tries:
+            break
+        kept.mkdir(exist_ok=True)
+        log.replace(kept / f"{log.stem}.try{n}.jsonl")
+        log.with_suffix(".stderr.log").replace(kept / f"{log.stem}.try{n}.stderr.log")
+    return {"exit": p.returncode, "seconds": seconds, "retries": n - 1, "reached": reached}

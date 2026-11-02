@@ -15,15 +15,13 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-import subprocess
 import sys
-import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from agents import agent_env, command  # noqa: E402
+from agents import command, run_session  # noqa: E402
 
 REPO = HERE.parents[1]
 SAMPLE_DWG = Path(r"D:\Apps\AutoCAD\AutoCAD 2027\Sample\Mechanical Sample\Mechanical - Multileaders.dwg")
@@ -73,11 +71,7 @@ def run(task: str, effort: str, arm: str = "mcp", code_root: Path | None = None,
     runs = HERE / (f"runs{sfx}" if arm == "mcp" else f"runs{sfx}_code")
     runs.mkdir(exist_ok=True)
     cmd = command(agent, arm, ws.as_posix(), effort, runs / "_mcp", python)
-    t0 = time.time()
-    with open(runs / f"{task}.jsonl", "wb") as out, open(runs / f"{task}.stderr.log", "wb") as err:
-        p = subprocess.run(cmd, input=prompt.encode("utf-8"), stdout=out, stderr=err,
-                           shell=False, timeout=3600, cwd=ws, env=agent_env())
-    return {"task": task, "arm": arm, "exit": p.returncode, "seconds": round(time.time() - t0, 1)}
+    return {"task": task, "arm": arm, **run_session(cmd, prompt, runs / f"{task}.jsonl", ws, 3600, arm == "mcp")}
 
 
 def main() -> None:
