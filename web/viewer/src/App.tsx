@@ -212,7 +212,7 @@ export default function App() {
             </div>
 
             {/* the canvas */}
-            <div className="relative min-h-[320px] flex-1 overflow-hidden rounded-lg border bg-canvas max-md:h-[56vh] max-md:flex-none"
+            <div className="@container relative min-h-[320px] flex-1 overflow-hidden rounded-lg border bg-canvas max-md:h-[56vh] max-md:flex-none"
                  style={{ backgroundImage: "radial-gradient(var(--canvas-dot) 1px, transparent 1.2px)", backgroundSize: "16px 16px" }}>
               <div className={cn("absolute inset-0 grid place-items-center p-10", compare && "grid-cols-2 gap-0 p-6")}>
                 {compare ? (
@@ -222,7 +222,7 @@ export default function App() {
                   </>
                 ) : <div className="h-full w-full max-w-[560px]"><BadgeModel zoom={zoom} /></div>}
               </div>
-              <div className="absolute bottom-4 left-4 flex gap-4 text-xs text-muted-foreground max-lg:hidden">
+              <div className="absolute bottom-4 left-4 flex gap-4 text-xs text-muted-foreground @max-[600px]:hidden">
                 <span className="flex items-center gap-1.5"><Rotate3d className="size-3.5" />拖动旋转</span>
                 <span className="flex items-center gap-1.5"><Move className="size-3.5" />右键拖动平移</span>
                 <span className="flex items-center gap-1.5"><MousePointer2 className="size-3.5" />滚轮缩放</span>
