@@ -1503,7 +1503,7 @@ def _plot_text_warnings(doc, layouts: list[str]) -> list[dict[str, Any]]:
 
 def _min_model_text(doc) -> float | None:
     from .validate.checks import _model_text_heights
-    hs = [h for _, _, h, _ in _model_text_heights(doc) if h > 0]
+    hs = [h for _, _, h, *_ in _model_text_heights(doc) if h > 0]
     return min(hs) if hs else None
 
 

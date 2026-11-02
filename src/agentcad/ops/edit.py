@@ -25,17 +25,33 @@ def _vec(v) -> G.Vec:
 def rerender_dimension(ctx: Ctx, dim) -> None:
     from ..tolerances import check_dimension_tolerance
     check_dimension_tolerance(dim, ctx.unit)
-    old = dim.dxf.get("geometry")
     from .annotate import render_dimension
-    render_dimension(dim.override())
+    blocks = [dim.dxf.get("geometry")]
+    keep = None
+    if dim.dxf.dimtype & 128:  # text placed by hand (AutoCAD): its middle stays where it was
+        flat = abs(dim.dxf.get("extrusion", (0, 0, 1))[2] - 1) < 1e-9
+        if flat and dim.dxf.hasattr("text_midpoint"):
+            keep = dim.dxf.text_midpoint
+        else:  # mirrored (extrusion -Z, text_midpoint in OCS): back to the default place, as before
+            dim.dxf.dimtype &= ~128
+    loc = keep
+    for _ in range(2 if keep is not None else 1):
+        ov = dim.override()
+        if loc is not None:  # the style's DIMTMOVE (leader or not) applies as it did
+            ov.user_location_override(loc)
+        render_dimension(ov)
+        blocks.append(dim.dxf.get("geometry"))
+        if keep is None or (shift := dim.dxf.text_midpoint - keep).magnitude < 1e-9:
+            break
+        loc = loc - shift  # ezdxf places the text's anchor at the location, not its middle
     from .annotate import store_measurement
     store_measurement(dim)
-    new = dim.dxf.get("geometry")
-    if old and old != new and old in ctx.doc.blocks:
-        try:
-            ctx.doc.blocks.delete_block(old, safe=False)
-        except Exception:
-            pass
+    for old in blocks[:-1]:
+        if old and old != blocks[-1] and old in ctx.doc.blocks:
+            try:
+                ctx.doc.blocks.delete_block(old, safe=False)
+            except Exception:
+                pass
 
 
 def normalize_extrusion(e) -> None:
@@ -485,6 +501,7 @@ def stretch(ctx: Ctx, window, delta):
             if hit:
                 if x.hasattr("text_midpoint"):
                     x.discard("text_midpoint")
+                x.dimtype &= ~128  # the text goes back to its default place, no longer placed by hand
                 rerender_dimension(ctx, e)
         elif t in ("CIRCLE", "ARC", "ELLIPSE"):
             if _inside(circle_wcs(e)[0] if t != "ELLIPSE" else x.center, lo, hi):
