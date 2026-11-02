@@ -11,7 +11,7 @@ from ezdxf.math import Vec3
 
 from .. import geom as G
 from ..errors import AgentCADError
-from ..model import circle_wcs, get_tag
+from ..model import circle_wcs, get_tag, is_main_viewport
 from ..tolerances import check_dimension_tolerance
 from ..units import unit_from_insunits
 from .drafting import drafting_issues
@@ -555,6 +555,8 @@ def run_generic_checks(doc: Drawing, feats: Features, *, bounds: list | None = N
     if bounds:
         (bx0, by0), (bx1, by1) = bounds
         for e in msp:
+            if is_main_viewport(e):  # the sheet itself, larger than the paper and never printed (H6 rerun)
+                continue
             try:
                 ext = bbox.extents([e], fast=True)
             except Exception:

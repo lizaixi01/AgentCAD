@@ -389,6 +389,20 @@ def test_main_viewport_is_not_deleted(rt, ws):
     assert lay.main_viewport().dxf.handle == main
 
 
+def test_sheet_bounds_leave_out_the_main_viewport(rt, ws):
+    """The H6 rerun checked its A3 sheet against the paper (bounds 0..420 x 0..297) and strict validation refused
+    the batch: the main viewport, the sheet itself, extends past the paper. It is never printed."""
+    name, main, view = sheet_with_view(rt, ws)
+    paper = [[0, 0], [420, 297]]
+    v = ok(rt.validate_drawing(name, layout="A3", bounds=paper))["validation"]
+    assert not [i for i in v["issues"] if i["code"] == "OUT_OF_BOUNDS"]
+    r = ok(rt.apply_operations(name, [{"op": "add_viewport", "center": [410, 150], "width": 60, "height": 40,
+                                       "scale": 0.5, "layout": "A3"}]))
+    out = r["results"][0]["created"][0]  # a view that does stick out is still reported
+    v = ok(rt.validate_drawing(name, layout="A3", bounds=paper))["validation"]
+    assert [i["entities"] for i in v["issues"] if i["code"] == "OUT_OF_BOUNDS"] == [[out]]
+
+
 def test_main_viewport_is_the_one_the_layout_points_at(rt, ws):
     """AutoCAD follows the layout's handle, not the id: drawings from other tools need not number it 1."""
     name, main, view = sheet_with_view(rt, ws)
