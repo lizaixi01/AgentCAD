@@ -173,7 +173,7 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。
 - **只读**：查看器用 `read_only` 策略，不改图纸和零件文件、不调用会写文件的工具。写到根目录下的只有
   `.agentcad/viewer.json`，页面添加的文件，三维零件的版本记录（`.agentcad/drawings/<零件>/` 下的检查点和
   journal，见“三维零件”），以及缓存 `.agentcad/viewer-cache/`（`--read-only` 时这两样都不写，缓存放系统临时目录）。
-  缓存目前不自动清理，删掉整个 `viewer-cache` 文件夹是安全的，用到时会重新生成。测试 `test_viewer_never_writes_the_workspace` 检查请求所有版本前后
+  缓存目前不自动清理；查看器没在运行时，删掉整个 `viewer-cache` 文件夹是安全的，用到时会重新生成。测试 `test_viewer_never_writes_the_workspace` 检查请求所有版本前后
   工作区文件的哈希不变。
 - **不会让 Agent 的提交失败**：Windows 上一个文件被任何进程打开着（查看器、杀毒软件、搜索索引、资源管理器预览），
   就不能被 `os.replace` 替换，加 `FILE_SHARE_DELETE` 共享也不行（实测）。所以存储层的原子替换（图纸、`committed.*`、
