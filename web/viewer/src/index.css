@@ -1,0 +1,110 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+@import "@fontsource-variable/geist";
+@import "@fontsource-variable/geist-mono";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+    --font-heading: var(--font-sans);
+    --font-sans: 'Geist Variable', 'PingFang SC', 'Microsoft YaHei UI', 'Microsoft YaHei', sans-serif;
+    --font-mono: 'Geist Mono Variable', ui-monospace, 'Cascadia Mono', Consolas, monospace;
+    --color-success: var(--success);
+    --color-warning: var(--warning);
+    --color-canvas: var(--canvas);
+    --color-canvas-dot: var(--canvas-dot);
+    --color-ring: var(--ring);
+    --color-input: var(--input);
+    --color-border: var(--border);
+    --color-destructive: var(--destructive);
+    --color-accent-foreground: var(--accent-foreground);
+    --color-accent: var(--accent);
+    --color-muted-foreground: var(--muted-foreground);
+    --color-muted: var(--muted);
+    --color-secondary-foreground: var(--secondary-foreground);
+    --color-secondary: var(--secondary);
+    --color-primary-foreground: var(--primary-foreground);
+    --color-primary: var(--primary);
+    --color-popover-foreground: var(--popover-foreground);
+    --color-popover: var(--popover);
+    --color-card-foreground: var(--card-foreground);
+    --color-card: var(--card);
+    --color-foreground: var(--foreground);
+    --color-background: var(--background);
+    --radius-sm: calc(var(--radius) * 0.6);
+    --radius-md: calc(var(--radius) * 0.8);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) * 1.4);
+    --radius-2xl: calc(var(--radius) * 1.8);
+    --radius-3xl: calc(var(--radius) * 2.2);
+    --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+:root {
+    /* shadcn "zinc" with a blue primary: white cards on a light grey page */
+    --background: oklch(0.967 0.003 264.5);
+    --foreground: oklch(0.21 0.006 285.9);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.21 0.006 285.9);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.21 0.006 285.9);
+    --primary: oklch(0.546 0.215 262.9);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.967 0.001 286.4);
+    --secondary-foreground: oklch(0.21 0.006 285.9);
+    --muted: oklch(0.967 0.001 286.4);
+    --muted-foreground: oklch(0.552 0.016 285.9);
+    --accent: oklch(0.955 0.003 286.4);
+    --accent-foreground: oklch(0.21 0.006 285.9);
+    --destructive: oklch(0.577 0.245 27.325);
+    --success: oklch(0.627 0.17 149.2);
+    --warning: oklch(0.705 0.17 61.5);
+    --border: oklch(0.92 0.004 286.3);
+    --input: oklch(0.92 0.004 286.3);
+    --ring: oklch(0.708 0.12 262.9);
+    --canvas: oklch(0.955 0.004 264.5);
+    --canvas-dot: oklch(0.21 0.006 285.9 / 12%);
+    --radius: 0.625rem;
+}
+
+.dark {
+    /* a slate dark, not black: the page, then cards one step lighter */
+    --background: oklch(0.185 0.008 264);
+    --foreground: oklch(0.94 0.004 264);
+    --card: oklch(0.225 0.009 264);
+    --card-foreground: oklch(0.94 0.004 264);
+    --popover: oklch(0.25 0.01 264);
+    --popover-foreground: oklch(0.94 0.004 264);
+    --primary: oklch(0.62 0.19 259.8);
+    --primary-foreground: oklch(0.985 0 0);
+    --secondary: oklch(0.275 0.01 264);
+    --secondary-foreground: oklch(0.94 0.004 264);
+    --muted: oklch(0.275 0.01 264);
+    --muted-foreground: oklch(0.7 0.012 264);
+    --accent: oklch(0.29 0.011 264);
+    --accent-foreground: oklch(0.94 0.004 264);
+    --destructive: oklch(0.704 0.191 22.216);
+    --success: oklch(0.72 0.17 149.2);
+    --warning: oklch(0.8 0.15 75);
+    --border: oklch(1 0 0 / 9%);
+    --input: oklch(1 0 0 / 13%);
+    --ring: oklch(0.62 0.15 259.8);
+    --canvas: oklch(0.205 0.009 264);
+    --canvas-dot: oklch(1 0 0 / 9%);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+    }
+  body {
+    @apply bg-background text-foreground;
+    }
+  button:not(:disabled), [role="button"]:not(:disabled) {
+    cursor: pointer;
+    }
+  html {
+    @apply font-sans;
+    }
+}
