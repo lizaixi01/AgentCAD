@@ -16,6 +16,7 @@ from .features import Features, dimension_direction, measure_dimension
 
 Seg = tuple[G.Vec, G.Vec]
 MAX_DIMENSIONS = 2000  # pairwise checks; a sheet with more is a survey drawing, not a part
+MAX_CROSSINGS = 20  # more are reported as one warning
 CHAR_WIDTH = 0.6  # of the text height: an average glyph, narrower than most fonts so overlaps are real ones
 CENTER_RE = re.compile(r"CENT(?:ER|RE)|AXIS|中心|轴线", re.I)
 DIAMETER_RE = re.compile(r"%%c|Ø|⌀", re.I)
@@ -172,6 +173,7 @@ def _dimension_overlaps(dims: list[dict], issue) -> list[dict[str, Any]]:
     boxes = sorted(((_bbox(d), d) for d in dims), key=lambda bd: bd[0][0])
     overlaps: list[tuple[str, str, str]] = []
     crossings: list[dict] = []
+    cells: dict[tuple[int, int], list[dict]] = {}  # crossings by grid cell of the text height: no scan of them all
     pad = max((d["tol"] for d in dims), default=0.0)
     for i, (ba, a) in enumerate(boxes):
         for bb, b in boxes[i + 1:]:
@@ -196,10 +198,13 @@ def _dimension_overlaps(dims: list[dict], issue) -> list[dict[str, Any]]:
                     p = _cross_point(s, t, h * 0.5)
                     if p is None:
                         continue
-                    c = next((c for c in crossings if G.dist(c["at"], p) <= h), None)
+                    kx, ky = int(p[0] // h), int(p[1] // h)
+                    c = next((c for dx in (-1, 0, 1) for dy in (-1, 0, 1) for c in cells.get((kx + dx, ky + dy), ())
+                              if G.dist(c["at"], p) <= h), None)
                     if c is None:
                         c = {"at": p, "ids": set(), "centers": True}
                         crossings.append(c)
+                        cells.setdefault((kx, ky), []).append(c)
                     c["ids"].update((a["id"], b["id"]))
                     c["centers"] &= all(d["center"] is not None and G.dist(d["center"], p) <= h for d in (a, b))
     # One warning per group of dimensions piled on one another: 50 lengths of 1 mm steps are one problem, not 144
@@ -224,14 +229,16 @@ def _dimension_overlaps(dims: list[dict], issue) -> list[dict[str, Any]]:
                          hint="Move one: another angle for a diameter or radius dimension, another offset "
                               "for a linear one (modify, or delete and add it again); steps too short to "
                               "dimension one by one take a single dimension or a table"))
-    for c in crossings:
-        # Two diameters of concentric circles have to meet at the common center; a third there is clutter.
-        if c["centers"] and len(c["ids"]) <= 2:
-            continue
+    # Two diameters of concentric circles have to meet at the common center; a third there is clutter.
+    crossed = [c for c in crossings if not (c["centers"] and len(c["ids"]) <= 2)]
+    places = len(crossed)
+    if places > MAX_CROSSINGS:  # a sheet of crossing lines is one problem, said once
+        crossed = [{"ids": {h for c in crossed for h in c["ids"]}, "at": None}]
+    for c in crossed:
         ids = sorted(c["ids"])
-        at = [round(v, 3) for v in c["at"]]
+        where = f"cross at {[round(v, 3) for v in c['at']]}" if c["at"] else f"cross in {places} places"
         out.append(issue("DIMENSION_LINES_CROSS", "warning",
-                         f"The dimension lines of {len(ids)} dimensions cross at {at}", ids,
+                         f"The dimension lines of {len(ids)} dimensions {where}", ids[:50],
                          hint="Dimension lines should not cross. Concentric circles: keep at most two diameter "
                               "dimensions through the center and add the others with add_diameter_dim(outside=true) "
                               "at angles clear of the holes; linear dimensions: put the shorter ones nearer the "
@@ -259,7 +266,8 @@ def _axes(doc: Drawing, space) -> list[tuple[G.Vec, G.Vec, float, float]]:
         off = G.cross(u, s)
         o = G.mul((-u[1], u[0]), off)
         ends = [G.dot(G.sub(p, o), u) for p in (s, q)]
-        a = lines.setdefault((round(G.angle_of(u), 4), round(off, 6)), [o, u, min(ends), max(ends)])
+        ang = round(G.angle_of(u) % 180, 4) % 180  # 179.99995 and 0 are one direction
+        a = lines.setdefault((ang, round(off, 6)), [o, u, min(ends), max(ends)])
         a[2], a[3] = min(a[2], *ends), max(a[3], *ends)
     return [tuple(a) for a in lines.values()]
 

@@ -171,3 +171,25 @@ def test_a_bore_diameter_does_not_make_a_plate_turned(rt):
              {"op": "add_linear_dim", "p1": [25, -5], "p2": [25, 5], "orientation": "vertical", "offset": 0,
               "text": "%%c<>", "layer": "DIM"}]
     assert "TURNED_EDGE_MISSING" not in codes(draw(rt, "bore.dxf", plate + CHAMFERS))
+
+
+def test_a_grid_of_crossing_dimensions_is_one_warning(rt):
+    """An imported sheet of crossing lines: one warning, found without comparing every crossing with every other
+    (400 such dimensions took 184 s; review of #82)."""
+    import time
+    grid = [{"op": "add_linear_dim", "p1": [0, 10 * i], "p2": [300, 10 * i], "offset": 0, "layer": "DIM"}
+            for i in range(30)]
+    grid += [{"op": "add_linear_dim", "p1": [10 * i + 5, 0], "p2": [10 * i + 5, 300], "orientation": "vertical",
+             "offset": 0, "layer": "DIM"} for i in range(30)]
+    t0 = time.time()
+    r = draw(rt, "grid.dxf", grid)
+    cross = [i for i in r["validation"]["issues"] if i["code"] == "DIMENSION_LINES_CROSS"]
+    assert len(cross) == 1 and "places" in cross[0]["message"] and time.time() - t0 < 30
+
+
+def test_a_center_line_either_side_of_horizontal_is_one_axis(rt):
+    """(-8, 0)-(100, -1e-9) and (100, 0)-(208, 1e-9): 359.9999 and 0.0000 degrees, one line."""
+    pieces = [{"op": "add_line", "start": [-8, 0], "end": [100, -1e-9], "layer": "CENTER"},
+              {"op": "add_line", "start": [100, 0], "end": [208, 1e-9], "layer": "CENTER"}]
+    r = draw(rt, "wrap.dxf", [SHAFT[0], *pieces, SHAFT[2], *CHAMFERS])
+    assert codes(r) == ["TURNED_EDGE_MISSING"]
