@@ -735,26 +735,40 @@ function renderFileList() {
 }
 // A 3D thumbnail costs a FreeCAD run: fetch only those on screen, two at a time, so the part being viewed never
 // waits behind a screenful of thumbnails for one of the few connections a browser opens to a site.
-const thumbQ = { queue: [], busy: 0 };
+// queue: images on screen waiting for their turn (one scrolled away leaves it); busy: images loading now, each counted
+// once however often its picture changes meanwhile (the newer one waits until it finishes)
+const thumbQ = { queue: [], busy: new Set() };
 thumbQ.seen = new IntersectionObserver((entries) => {
-  for (const e of entries) if (e.isIntersecting) { thumbQ.seen.unobserve(e.target); thumbQ.queue.push(e.target); }
+  for (const e of entries) {
+    const i = thumbQ.queue.indexOf(e.target);
+    if (e.isIntersecting && i < 0) thumbQ.queue.push(e.target);
+    else if (!e.isIntersecting && i >= 0) thumbQ.queue.splice(i, 1);
+  }
   pumpThumbs();
 });
 function pumpThumbs() {
-  while (thumbQ.busy < 2 && thumbQ.queue.length) {
-    const img = thumbQ.queue.shift();
+  for (const b of thumbQ.busy) if (!b.isConnected) thumbQ.busy.delete(b);  // a row removed while it loaded
+  while (thumbQ.busy.size < 2 && thumbQ.queue.length) {
+    const img = thumbQ.queue.pop();  // newest first: what was just scrolled into view
     const url = img.dataset.want;
-    if (!url || !img.isConnected) continue;
+    if (!url || !img.isConnected || thumbQ.busy.has(img)) continue;
     delete img.dataset.want;
-    thumbQ.busy++;
-    img.onload = img.onerror = () => { img.onload = img.onerror = null; thumbQ.busy--; pumpThumbs(); };
+    thumbQ.seen.unobserve(img);
+    thumbQ.busy.add(img);
+    img.onload = img.onerror = () => {
+      img.onload = img.onerror = null;
+      thumbQ.busy.delete(img);
+      if (img.dataset.want) thumbQ.seen.observe(img);  // a newer picture arrived while this one loaded
+      pumpThumbs();
+    };
+    img.loading = "eager";  // it is on screen now; a lazy image the browser defers would hold its slot
     img.src = url;
   }
 }
 function setThumb(img, url, part) {
   if (!part) { img.src = url; return; }  // 2D thumbnails are cheap SVGs
   img.dataset.want = url;
-  thumbQ.seen.observe(img);
+  if (!thumbQ.busy.has(img)) thumbQ.seen.observe(img);
 }
 function updateTitle() {
   if (!S.path) { $("fileTitle").textContent = ""; return; }

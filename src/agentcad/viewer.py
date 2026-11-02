@@ -2,8 +2,8 @@
 
     agentcad viewer --root <dir> [--port 8770]
 
-It only reads drawings and parts (the one thing it writes besides viewer.json and files the page adds is the
-version history of 3D parts, below, in the state directory). Every commit goes through the store (checkpoint, atomic replace, journal), so a
+It only reads drawings and parts. Besides viewer.json and files the page adds, it writes only in the state
+directory: the version history of 3D parts (below) and its cache. Every commit goes through the store (checkpoint, atomic replace, journal), so a
 thread polls each drawing's file and journal (``stat`` only, no open) and pushes a change event to the page over
 Server-Sent Events. Versions are addressed by sha256: a commit's journal record carries the sha of the file it
 wrote, and each checkpoint the sha of the content it holds, so any committed version still on disk can be shown.
@@ -154,6 +154,9 @@ def _workspace_cache(root: Path) -> Path | None:
     d = root / STATE_DIR / CACHE_DIR
     try:
         d.mkdir(parents=True, exist_ok=True)
+        probe = d / f".probe-{uuid.uuid4().hex[:8]}"
+        probe.write_bytes(b"")
+        probe.unlink()
     except OSError:
         return None
     return d
@@ -637,7 +640,9 @@ class ChangeFeed:
         self.cond = threading.Condition()
         self.sigs: dict[str, tuple] = {}
         self.unsaved: dict[str, float] = {}  # 3D files whose content may not be recorded yet -> when to try
-        self.found: set[str] = set()  # of those, the ones already there at start: recorded without an announcement
+        # of those, the ones already there at start, with their file's (mtime, size) then: recorded without an
+        # announcement while the file is still what the viewer found
+        self.found: dict[str, tuple] = {}
         self._polling = threading.Lock()  # the feed thread and a caller (tests) never poll at the same time
         self.drawings: list[str] = []
         self._last_scan = 0.0
@@ -732,9 +737,9 @@ class ChangeFeed:
             if _is_part(rel) and (first or self.sigs.get(rel, (None,))[0] != sig[0]):
                 self.unsaved[rel] = 0.0  # new content of a 3D file (or one seen at start): a version to record
                 if first:
-                    self.found.add(rel)
+                    self.found[rel] = sig[0]
                 else:
-                    self.found.discard(rel)
+                    self.found.pop(rel, None)
         self.sigs = now
         if first:
             return  # recorded by the feed thread, not while the viewer (or the MCP server's first call) starts
@@ -748,8 +753,9 @@ class ChangeFeed:
                 continue  # still being written, or waiting to try again
             del self.unsaved[rel]
             try:  # its journal changes, so the next poll sends the page a 'changed' event
-                self.ws.record_save(rel, announce=rel not in self.found)
-                self.found.discard(rel)
+                st = (self.ws.policy.root / rel).stat()
+                self.ws.record_save(rel, announce=self.found.get(rel) != (st.st_mtime_ns, st.st_size))
+                self.found.pop(rel, None)
             except Exception:  # noqa: BLE001 - any failure: try again later, never stop the feed
                 self.unsaved[rel] = time.monotonic() + RETRY
 
