@@ -102,7 +102,7 @@ def test_setup_runs_and_reports_each_step(wizard, home):
     assert code == 200 and out["ok"], out
     st = _wait(wizard)
     assert st["phase"] == "done", st
-    assert [s["id"] for s in st["steps"]] == ["workspace", "freecad", "autocad", "cursor", "codex",
+    assert [s["id"] for s in st["steps"]] == ["workspace", "autocad", "cursor", "codex",
                                                  "shortcut"]
     assert all(s["state"] == "done" for s in st["steps"])
     assert st["steps"][0]["info"]["path"] == str(home / "AgentCAD")
@@ -156,7 +156,7 @@ def test_bad_requests(wizard):
 def test_setup_progress_callback(home):
     seen = []
     install.setup(["cursor"], launcher="python", progress=lambda step, state, info: seen.append((step, state)))
-    assert seen == [("workspace", "run"), ("workspace", "done"), ("freecad", "run"), ("freecad", "done"),
+    assert seen == [("workspace", "run"), ("workspace", "done"),
                     ("autocad", "run"), ("autocad", "done"), ("cursor", "run"), ("cursor", "done")]
 
 
@@ -180,7 +180,7 @@ def test_doctor_page(wizard, home):
     code, r = _call(wizard, "GET", "/api/doctor")
     assert code == 200 and "self_cmd" not in r
     names = {c["name"] for c in r["checks"]}
-    assert {"Python", "AgentCAD", "Workspace", "FreeCAD", "Cursor config"} <= names
+    assert {"Python", "AgentCAD", "Workspace", "Cursor config"} <= names
     assert next(c for c in r["checks"] if c["name"] == "Workspace")["status"] == "missing"  # not set up yet
 
 

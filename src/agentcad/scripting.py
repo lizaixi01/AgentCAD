@@ -7,7 +7,6 @@ than letting the agent edit files directly, ``Runtime.run_script`` takes Python 
   2. runs it in a separate Python process (``-I``, no shell, time limit) on a copy of the drawing,
   3. hands the result back to the runtime, which re-reads it strictly and commits it like any batch: checkpoint,
      journal (with the full script), diff, independent validation, optional ``strict``.
-3D parts (``.FCStd``) take CadQuery or FreeCAD Part scripts that build a solid (``LANGUAGES``, part/service.py).
 ``inspect_image(..., code=...)`` takes read-only numpy scripts that measure an image's pixels (images.py).
 It is disabled unless the policy allows scripts (``AGENTCAD_ALLOW_SCRIPTS=1``). The checks guard against mistakes;
 they are not a security sandbox: only enable scripts for agents you would let run Python as your user.
@@ -44,7 +43,7 @@ _ESCAPE_ATTRS = {"gi_frame", "cr_frame", "ag_frame", "tb_frame", "f_back", "f_gl
                  "get_referents", "pickle", "_pickle", "Unpickler", "linecache", "settrace", "setprofile",
                  "singledispatch", "singledispatchmethod", "get_type_hints", "ForwardRef", "_eval_type", "_evaluate",
                  "_create_fn", "get_annotations"}
-# numpy file access and native code: numpy is importable in the part and image languages, and ezdxf carries it as
+# numpy file access and native code: numpy is importable in the image language, and ezdxf carries it as
 # an attribute (ezdxf.npshapes.np). NpzFile(path) reads any zip; its .zip extracts files, and type(.zip)(path, 'w')
 # writes a zip.
 _NUMPY_FILE_ATTRS = {"load", "dump", "loadtxt", "savetxt", "fromfile", "tofile", "savez", "savez_compressed",
@@ -53,39 +52,20 @@ _NUMPY_FILE_ATTRS = {"load", "dump", "loadtxt", "savetxt", "fromfile", "tofile",
 BANNED_ATTRS = {"saveas", "save", "readfile", "readzip", "write", "write_text", "write_bytes", "unlink", "rmdir",
                 "system", "popen", "spawn", "odafc"} | _ESCAPE_ATTRS | _NUMPY_FILE_ATTRS
 RUNNER = Path(__file__).with_name("_script_runner.py")
-CQ_RUNNER = Path(__file__).parent / "part" / "_cq_runner.py"
 IMAGE_RUNNER = Path(__file__).with_name("_image_runner.py")
 
-# 3D part scripts (run_script on a .FCStd): the program builds a solid and sets ``result``; the runtime stores it.
-# Each runs in a process of its own: CadQuery in a child of this interpreter (cadquery is the optional extra
-# agentcad-runtime[cadquery]), FreeCAD Part code in a FreeCAD process with no document open. The names below reject
-# the usual ways of reading, writing, importing or exporting files and of reaching FreeCAD's documents and settings.
-# They are not complete (numpy and OCP offer more ways): like the 2D check, this guards against mistakes; the
-# boundary is that scripts are off unless the policy allows them.
+# Image scripts (inspect_image code=): the names below reject the usual ways of reading, writing, importing or
+# exporting files. They are not complete (numpy offers more ways): like the 2D check, this guards against mistakes;
+# the boundary is that scripts are off unless the policy allows them.
 _DATA = {"math", "cmath", "itertools", "functools", "collections", "re", "statistics", "fractions", "decimal",
          "operator", "copy", "typing", "dataclasses", "enum"}
 _FILE_ATTRS = {"save", "saveas", "saveAs", "write", "write_text", "write_bytes", "read_text", "read_bytes", "unlink",
-               "rmdir", "mkdir", "system", "popen", "spawn", "export", "exporters", "importers", "exportStep",
-               "exportStl", "exportBrep", "exportBin", "exportBinary", "exportSvg", "exportDXF", "exportIges",
-               "importStep", "importBrep", "importStl", "importDXF", "importBin", "importBinary", "importSvg", "read",
-               "readfile", "open",
-               # OCP file access
-               "Write", "Read", "Write_s", "Read_s",
-               # FreeCAD: documents and settings belong to the runtime, not to the script
-               "openDocument", "newDocument", "closeDocument", "getDocument", "listDocuments", "ActiveDocument",
-               "activeDocument", "setActiveDocument", "loadFile", "ParamGet",
-               # cadquery.vis opens a window and would wait for it until the time limit
-               "vis"} | _ESCAPE_ATTRS | _NUMPY_FILE_ATTRS
+               "rmdir", "mkdir", "system", "popen", "spawn", "export", "exporters", "importers", "read",
+               "readfile", "open"} | _ESCAPE_ATTRS | _NUMPY_FILE_ATTRS
 LANGUAGES: dict[str, dict] = {
     "ezdxf": {"imports": ALLOWED_IMPORTS, "attrs": BANNED_ATTRS,
               "hint": "Scripts get the drawing as `doc` (and `msp`); edit it in place, do not open, save or import "
                       "other files."},
-    "cadquery": {"imports": _DATA | {"cadquery", "numpy"}, "attrs": _FILE_ATTRS,
-                 "hint": "Build the part with CadQuery (`cq` is imported) and set `result` to a cq.Workplane or "
-                         "Shape (show_object(x) also works); do not import, export or open files."},
-    "freecad": {"imports": _DATA | {"Part", "FreeCAD", "numpy"}, "attrs": _FILE_ATTRS,
-                "hint": "Build the part with FreeCAD's Part module (`Part`, `App`, `Vector` are given) and set "
-                        "`result` to a Part.Shape; do not open, save or export documents or files."},
     # numpy alone on the pixels of one image, drawing through helpers the runner injects: no PIL (ImageGrab and
     # Image.core capture the screen and clipboard, ImageShow starts a viewer, plugins read and write files) and no
     # scipy (scipy.io and sparse read and write files). Private names are off too: numpy's private modules hold its
@@ -163,29 +143,6 @@ def run(source: Path, code: str, job: Path, timeout: float) -> dict[str, Any]:
     except subprocess.TimeoutExpired:
         raise AgentCADError("SCRIPT_TIMEOUT", f"The script ran longer than {timeout:g} s and was stopped",
                             category="input", hint="Simplify the script or split the work into several runs")
-    res_file = job / "result.json"
-    if not res_file.is_file():
-        raise AgentCADError("SCRIPT_CRASHED", "The script process ended without a result", category="internal",
-                            details={"returncode": proc.returncode,
-                                     "stderr": proc.stderr.decode("utf-8", "replace")[-2000:]})
-    res = json.loads(res_file.read_text(encoding="utf-8"))
-    res["seconds"] = round(time.perf_counter() - t0, 3)
-    return res
-
-
-def run_cadquery(code: str, job: Path, timeout: float) -> dict[str, Any]:
-    """Run a CadQuery program (already checked) in a child process of this interpreter, with the job folder as
-    working directory. On success ``job / 'result.brep'`` holds the solid and the result dict describes it."""
-    job.mkdir(parents=True, exist_ok=True)
-    (job / "script.py").write_text(code, encoding="utf-8")
-    t0 = time.perf_counter()
-    try:
-        proc = subprocess.run([sys.executable, "-I", str(CQ_RUNNER), str(job)], cwd=job, shell=False,
-                              stdin=subprocess.DEVNULL, capture_output=True, timeout=timeout)
-    except subprocess.TimeoutExpired:
-        raise AgentCADError("SCRIPT_TIMEOUT", f"The script ran longer than {timeout:g} s and was stopped",
-                            category="input", hint="Simplify the script (CadQuery itself takes a few seconds to "
-                                                   "load), or raise AGENTCAD_SCRIPT_TIMEOUT")
     res_file = job / "result.json"
     if not res_file.is_file():
         raise AgentCADError("SCRIPT_CRASHED", "The script process ended without a result", category="internal",

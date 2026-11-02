@@ -1,6 +1,6 @@
 """Progress events: what the runtime is doing right now, in a form the live viewer can show in plain words.
 
-Every tool call that changes (or checks) a drawing or part appends a few short JSON lines to
+Every tool call that changes (or checks) a drawing appends a few short JSON lines to
 ``<root>/.agentcad/activity.jsonl``::
 
     {"run": "1f3a9c20", "n": 1, "ts": 1761730000.12, "tool": "apply_operations", "drawing": "plate.dxf",

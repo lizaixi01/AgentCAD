@@ -27,7 +27,6 @@ from .metadata import all_meta, get_meta, set_meta
 from .model import entity_to_dict, get_tag, is_model, layout_spaces, select
 from .ops import catalog
 from .ops.annotate import DIMSTYLE, apply_annotation_scale, setup_text_style
-from .part import service as part
 from .policy import Policy
 from .store import DrawingStore, busy_error, finalize, read_dxf, now, sha256_file
 from .units import UNITS, normalize_unit, unit_from_insunits
@@ -193,12 +192,8 @@ class Runtime:
         self._viewer_retry = 0.0
 
     # --- helpers ---------------------------------------------------------------------------
-    def _drawing(self, path: str, must_exist: bool = True, part_ok: bool = False) -> tuple[Path, DrawingStore]:
-        """``part_ok``: the tool works on 3D parts (.FCStd) too, through the store alone."""
-        if part_ok and part.is_part(path):
-            return part.store_for(self, path, must_exist)
-        p = self.policy.resolve(path, must_exist=must_exist, suffixes=(".dxf",),
-                                hint_suffix=" (3D parts: .FCStd)")
+    def _drawing(self, path: str, must_exist: bool = True) -> tuple[Path, DrawingStore]:
+        p = self.policy.resolve(path, must_exist=must_exist, suffixes=(".dxf",))
         return p, DrawingStore(self.policy, p)
 
     @contextmanager
@@ -303,45 +298,22 @@ class Runtime:
         Claude Code trials failed on their first list_operations call (docs/comparison-claude-code.md)."""
         from .ops import REGISTRY
         from .ops.registry import COMMON_ALL, COMMON_DRAW
-        from .part.ops import PART_CONVENTIONS, PART_REGISTRY, part_schema
         ops = _op_names(ops)
-        if category is not None and (category == "part" or category.startswith("part_")):
-            names = ops or sorted(PART_REGISTRY)
-            unknown = [o for o in names if o not in PART_REGISTRY]
-            if unknown:
-                raise input_error("UNKNOWN_OPERATION", f"Unknown part operation(s) {unknown}",
-                                  hint=f"Part operations: {sorted(PART_REGISTRY)}")
-            full = [part_schema(PART_REGISTRY[o]) for o in names
-                    if category == "part" or PART_REGISTRY[o].category == category]
-            return {"operations": full, "count": len(full), "detail": True, "kind": "part",
-                    "conventions": PART_CONVENTIONS}
         constraints = {"check": sorted(CHECK_TYPES), "enforce": sorted(ENFORCE_TYPES)}
         cats = sorted({d.category for d in REGISTRY.values()})
         if category is not None and category not in cats:
             raise input_error("UNKNOWN_CATEGORY", f"No operation category {category!r}", hint=f"Categories: {cats}")
         if ops:
-            # Names are looked up among drawing and part operations alike; fillet, chamfer and mirror exist for
-            # both, and then both schemas come back, the part one marked kind='part'.
-            unknown = [o for o in ops if o not in REGISTRY and o not in PART_REGISTRY]
+            unknown = [o for o in ops if o not in REGISTRY]
             if unknown:
                 raise input_error("UNKNOWN_OPERATION", f"Unknown operation(s) {unknown}",
-                                  hint=f"Drawing operations: {sorted(REGISTRY)}; part operations: "
-                                       f"{sorted(PART_REGISTRY)}")
-            full: list[dict[str, Any]] = []
-            for o in ops:
-                if o in REGISTRY and (category is None or REGISTRY[o].category == category):
-                    full.append(REGISTRY[o].schema())
-                if o in PART_REGISTRY and category is None:
-                    full.append({**part_schema(PART_REGISTRY[o]), "kind": "part"})
+                                  hint=f"Drawing operations: {sorted(REGISTRY)}")
+            full = [REGISTRY[o].schema() for o in ops if category is None or REGISTRY[o].category == category]
             if not full:
-                where = {o: ("part" if o not in REGISTRY else REGISTRY[o].category) for o in ops}
+                where = {o: REGISTRY[o].category for o in ops}
                 raise input_error("UNKNOWN_OPERATION", f"None of {ops} is a {category!r} operation",
-                                  hint=f"Their categories: {where}. Leave out the category to get them; part "
-                                       f"operations also come with category='part'")
-            out = {"operations": full, "count": len(full), "detail": True, "constraint_types": constraints}
-            if any(s.get("kind") == "part" for s in full):
-                out["conventions"] = PART_CONVENTIONS
-            return out
+                                  hint=f"Their categories: {where}. Leave out the category to get them")
+            return {"operations": full, "count": len(full), "detail": True, "constraint_types": constraints}
         if detail or category is not None:
             full = [o for o in catalog() if category is None or o["category"] == category]
             return {"operations": full, "count": len(full), "detail": True, "constraint_types": constraints}
@@ -353,13 +325,7 @@ class Runtime:
                   "color": "ACI color, 256 = BYLAYER", "linetype": "e.g. CONTINUOUS, CENTER, DASHED",
                   "lineweight": "1/100 mm, -1 = BYLAYER", "tag": "name for later reference as 'tag:<name>'",
                   "if_tag_exists": "error | skip | replace"}
-        part_index: dict[str, list[str]] = {}  # names only: a 3D task fetches category='part' anyway
-        for d in PART_REGISTRY.values():
-            part_index.setdefault(d.category, []).append(d.name)
         return {"operations": index, "count": len(index), "detail": False, "categories": cats,
-                "part_operations": part_index,
-                "part_hint": "3D parts (.FCStd, FreeCAD) take part_operations in apply_operations; their "
-                             "summaries and schemas: list_operations(category='part')",
                 "common_params": {"all_ops": sorted(COMMON_ALL), "draw_params": sorted(COMMON_DRAW),
                                   "meaning": common},
                 "constraint_types": constraints,
@@ -370,8 +336,6 @@ class Runtime:
     @tool
     def create_drawing(self, path: str, units: str = "mm", template: str = "mechanical", dxf_version: str = "R2010",
                        overwrite: bool = False, annotation_scale: float = 1.0) -> dict[str, Any]:
-        if part.is_part(path):
-            return part.create(self, path, units, overwrite)
         self.policy.check_write()
         u = normalize_unit(units)
         p, store = self._drawing(path, must_exist=False)
@@ -405,8 +369,6 @@ class Runtime:
 
     @tool
     def read_drawing(self, path: str) -> dict[str, Any]:
-        if part.is_part(path):
-            return part.read(self, path)
         p, store = self._drawing(path)
         doc = store.load()
         msp = doc.modelspace()
@@ -440,8 +402,6 @@ class Runtime:
                          limit: int = 200, offset: int = 0, detail: bool = True,
                          window: list | None = None, layout: str | None = None,
                          selection_mode: str = "crossing", polygon: list | None = None) -> dict[str, Any]:
-        if part.is_part(path):
-            return part.inspect(self, path, filter, limit, offset)
         p, store = self._drawing(path)
         doc = store.load()
         if ids:
@@ -472,10 +432,6 @@ class Runtime:
         so a new drawing needs one call. The returned validation is the same independent re-read of the saved file
         as validate_drawing (``requirements``, ``bounds``, ``layout``), so a separate validate_drawing call is only
         needed for its detail=true report."""
-        if part.is_part(path):
-            if expected_revision is not None or preconditions is not None:
-                raise input_error("UNSUPPORTED_GUARD", "Revision guards currently support DXF drawings")
-            return part.apply(self, path, operations, dry_run, requirements, strict, label, create)
         if not dry_run:
             self.policy.check_write()
         created = None
@@ -564,7 +520,7 @@ class Runtime:
                 raise input_error("UNKNOWN_PARAM", f"jobs[{i}]: unknown field(s) {bad}", hint=f"Fields: {sorted(allowed)}")
             if j.get("create") is not None:
                 self._check_create(j["create"], f"jobs[{i}].create")
-            resolved.append(str(self._drawing(str(j["path"]), must_exist=False, part_ok=True)[0]).lower())
+            resolved.append(str(self._drawing(str(j["path"]), must_exist=False)[0]).lower())
         dup = sorted({j["path"] for j, r in zip(jobs, resolved) if resolved.count(r) > 1})
         if dup:
             raise input_error("DUPLICATE_PATH", f"jobs name the same drawing more than once: {dup}",
@@ -595,23 +551,11 @@ class Runtime:
 
     @tool
     def run_script(self, path: str, code: str, label: str | None = None, dry_run: bool = False,
-                   requirements: list[dict] | None = None, strict: bool = False, language: str | None = None,
-                   keep_features: bool = False) -> dict[str, Any]:
+                   requirements: list[dict] | None = None, strict: bool = False) -> dict[str, Any]:
         """Run an ezdxf script on the drawing as one transaction (opt-in; see scripting.py). The script edits the
         document given as ``doc`` in place; it may set ``result`` to return a JSON value. Its output is re-read
-        strictly, diffed, validated and committed with a checkpoint; the journal keeps the full script.
-
-        3D part (.FCStd): a CadQuery (``language`` 'cadquery', default) or FreeCAD Part ('freecad') program that
-        sets ``result`` to the solid; it becomes the part's base solid, which later part ops build on
-        (``keep_features``: rebuild the Body's existing features on the new solid). See part.service.run_script."""
+        strictly, diffed, validated and committed with a checkpoint; the journal keeps the full script."""
         from . import scripting
-        if part.is_part(path):
-            return part.run_script(self, path, code, language, keep_features, dry_run, requirements, strict, label)
-        if language not in (None, "ezdxf"):
-            raise input_error("BAD_LANGUAGE", f"language {language!r}: drawings (.dxf) take ezdxf scripts",
-                              hint="CadQuery and FreeCAD scripts build 3D parts (.FCStd)")
-        if keep_features:
-            raise input_error("UNKNOWN_PARAM", "keep_features applies to 3D parts (.FCStd)")
         self.policy.check_scripts_allowed()
         if not dry_run:
             self.policy.check_write()
@@ -676,8 +620,6 @@ class Runtime:
         explicit requirements are given, requirements are re-derived from that spec (not from the plan).
         ``layout``: check a paper-space sheet instead of model space (the stored spec describes model space).
         ``detail``: the full report (see compact_report for the default)."""
-        if part.is_part(path):
-            return part.validate(self, path, requirements, detail)
         p, store = self._drawing(path)
         report = self._drawing_validation(p, requirements, use_stored_spec, bounds, tolerance,
                                           contour_layers, layout)
@@ -863,8 +805,6 @@ class Runtime:
         """Diff the drawing against 'previous' (latest checkpoint), a checkpoint id, or another .dxf path.
         Modified entities always list their changed fields (old/new); added and deleted entities are listed by
         id/type/layer/tag unless ``detail`` asks for their full geometry."""
-        if part.is_part(path):
-            return part.diff(self, path, against)
         p, store = self._drawing(path)
         cur = store.load()
         if against == "previous":
@@ -892,7 +832,7 @@ class Runtime:
         even when a checkpoint of the unchanged file was left behind, e.g. by a FILE_BUSY attempt). The
         pre-rollback state is checkpointed too."""
         self.policy.check_write()
-        p, store = self._drawing(path, must_exist=False, part_ok=True)
+        p, store = self._drawing(path, must_exist=False)
         cps = store.list_checkpoints()
         if not cps:
             raise input_error("NO_CHECKPOINT", "Drawing has no checkpoints")
@@ -907,14 +847,14 @@ class Runtime:
 
     @tool
     def list_checkpoints(self, path: str) -> dict[str, Any]:
-        p, store = self._drawing(path, must_exist=False, part_ok=True)
+        p, store = self._drawing(path, must_exist=False)
         return {"drawing": self._rel(p), "checkpoints": store.list_checkpoints()}
 
     @tool
     def history(self, path: str, limit: int = 50, detail: bool = False, seq: list[int] | None = None) -> dict[str, Any]:
         """Operation journal, oldest first. By default one line per record (what ran, what changed, checkpoint);
         ``seq`` returns those records in full (operations with their parameters, scripts, errors), ``detail`` all."""
-        p, store = self._drawing(path, must_exist=False, part_ok=True)
+        p, store = self._drawing(path, must_exist=False)
         if seq:
             want = set(seq)
             recs = [r for r in store.read_journal() if r.get("seq") in want]
@@ -929,10 +869,10 @@ class Runtime:
     def recover(self, path: str) -> dict[str, Any]:
         """Crash recovery. A commit interrupted after its pending marker (e.g. FILE_BUSY with partial_changes) is
         settled first: recorded if its content is in the file, dropped if not. Otherwise, if the file is unreadable
-        or an older marker left it inconsistent, restore the most recent checkpoint whose content is a valid DXF (or
-        FreeCAD file, for a part). Older runtimes' lock markers require manual offline handling;
+        or an older marker left it inconsistent, restore the most recent checkpoint whose content is a valid DXF.
+        Older runtimes' lock markers require manual offline handling;
         recover never deletes them based on a PID check."""
-        p, store = self._drawing(path, must_exist=False, part_ok=True)
+        p, store = self._drawing(path, must_exist=False)
         if (store.dir / "lock").exists():
             from .locking import refuse_legacy_marker
             refuse_legacy_marker(self._rel(store.dir / "lock"))
@@ -978,8 +918,8 @@ class Runtime:
     def export_drawing(self, path: str, output: str, format: str = "dxf",  # noqa: A002
                        dxf_version: str | None = None, overwrite: bool = False, layout: str | None = None,
                        paper: str | None = None, scale: float | None = None, orientation: str = "auto",
-                       monochrome: bool = False, views: list | None = None, image_size: int | None = None,
-                       fit: str | None = None, reference: str | None = None, table: str = "entities") -> dict[str, Any]:
+                       monochrome: bool = False, image_size: int | None = None,
+                       table: str = "entities") -> dict[str, Any]:
         """Export to dxf (optionally another DXF version, incl. R12 via ezdxf.addons.r12export), svg, json,
         pdf, csv/xlsx, or dwg (optional AutoCAD backend; ``dxf_version`` then selects the DWG release, default 2018).
         CSV/XLSX tables: entities (text/attributes), pid_lines, or bom, reconstructed from the saved drawing.
@@ -990,16 +930,9 @@ class Runtime:
         fits ``paper`` (A0-A4 or 'auto').
 
         png: a raster of one layout drawn like the pdf (``layout``, default as for pdf; ``image_size`` the longer
-        side in pixels, default 1600), to look at what was drawn.
-
-        3D parts (.FCStd): step, iges, brep, stl, obj, or png (shaded preview: ``views``, ``image_size``,
-        ``fit``; ``reference``: compare with a reference image of the same views; see part.service.export)."""
+        side in pixels, default 1600), to look at what was drawn."""
         if table not in {"entities", "pid_lines", "bom"} or table != "entities" and format.lower() not in {"csv", "xlsx"}:
             raise input_error("INVALID_TABLE", "pid_lines and bom tables require CSV or XLSX export")
-        if part.is_part(path):
-            return part.export(self, path, output, format, overwrite, views, image_size, fit, reference)
-        if views or fit or reference:
-            raise input_error("UNKNOWN_PARAM", "views, fit and reference apply to png previews of 3D parts")
         if image_size and format.lower() != "png":
             raise input_error("UNKNOWN_PARAM", "image_size applies to png export")
         if image_size is not None and (isinstance(image_size, bool) or not isinstance(image_size, int)
@@ -1370,16 +1303,7 @@ class Runtime:
 
     @tool
     def measure_entities(self, path: str, target: Any) -> dict[str, Any]:
-        """Exact DXF entity measurements by handle/selector; or final 3D solid measurements in mm.
-
-        FCStd target={kind:"planar_levels", axis:"z"} lists plane positions, normals and gaps.
-        target={kind:"face_distance", from:"Face1", to:"Face2"} measures parallel plane spacing.
-        from/to also accept face selectors; multiple faces must be coplanar. Default is the final
-        Body; optional feature names an intermediate feature for diagnosis. Inspect actual faces
-        with inspect_entities(filter={kind:"faces"}); never infer a measured gap from parameters.
-        """
-        if part.is_part(path):
-            return part.measure(self, path, target)
+        """Exact DXF entity measurements by handle/selector."""
         from .measure import measure_entity
         p, store = self._drawing(path)
         doc = store.load()

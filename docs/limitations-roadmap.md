@@ -9,10 +9,8 @@
 | pypdf ≥4（实测 6.21） | BSD-3 | PDF 文字提取 | |
 | Pillow ≥10 | MIT-CMU | SVG 导出（ezdxf drawing 插件需要）、图片预览 | 核心依赖（uvx/pipx 直接安装也能导出 SVG）；`[preview]` extra 保留以兼容旧命令 |
 
-| FreeCAD 1.1（可选，实测 1.1.4） | LGPL-2.1+ | 三维参数化零件（`.FCStd`）的几何内核 | 独立进程运行（`backends/freecad.py`），不链接；见 [part-3d.md](part-3d.md) |
-| CadQuery ≥2.3（可选，实测 2.8.0） | Apache-2.0 | `run_script` 用 CadQuery 脚本建三维零件 | `[cadquery]` extra；在 AgentCAD 自己的解释器的子进程里运行，实体以 BREP 交给 FreeCAD |
 
-核心不依赖 AutoCAD、ODA、FreeCAD，也不调用任何模型 API。**可选**：安装了 AutoCAD 时（自动发现，或设置 `AGENTCAD_ACCORECONSOLE`），可以启用 DWG 导入/导出和 AutoCAD AUDIT（`backends/autocad.py`，通过无头的 accoreconsole 运行）。
+核心不依赖 AutoCAD、ODA，也不调用任何模型 API。**可选**：安装了 AutoCAD 时（自动发现，或设置 `AGENTCAD_ACCORECONSOLE`），可以启用 DWG 导入/导出和 AutoCAD AUDIT（`backends/autocad.py`，通过无头的 accoreconsole 运行）。
 
 ## 已知限制
 
@@ -36,17 +34,16 @@
 16. **版面与制图规范不检查**：标注互相重叠、文字压线、轴类的台阶/倒角轮廓线等，验证器发现不了，需要出图目视检查（`examples/trials/render_png.py`）。
 17. **字体**：新图默认 `gbenor.shx` + `gbcbig.shx`。没有安装这两个字体的 CAD 软件会做字体替换。
 
-19. **三维零件**（2026-10-29；实验列表 2026-10-31 更新）：一个零件一个 Body，没有装配；不能从三维生成二维工程图（预览图已有：`export_drawing` 的 png）；Agent 三维实验都是小样本，不是官方排行榜成绩：BenchCAD Vision2Code 的 100 题试点（每题一次，见 [examples/benchcad/README.md](../examples/benchcad/README.md)）、BenchCAD 2 的 9 个公开开发样例（其中 1 个是图纸到零件 T1；T6 只考模型推理，T2/T4/T5 的装配定位经评测适配器提交，见 [examples/benchcad2/README.md](../examples/benchcad2/README.md)）和 Parametric CAD Bench V3 的 6 题本地试点（见 [examples/parametric_cad_bench/README.md](../examples/parametric_cad_bench/README.md)），汇总见 [benchmarks.md](benchmarks.md)。详见 [part-3d.md](part-3d.md)。
-20. **三维脚本与参考图比较**（2026-10-30）：`run_script` 可以用 CadQuery / FreeCAD Part 脚本建零件的基体，之后的操作建在它上面；基体本身不是特征树（`SCRIPT_BASE_SOLID` 警告，CADBench 会拒收），只能整段重跑脚本来改。和二维脚本一样默认关闭，检查只防误操作，不是沙箱。`export_drawing(..., reference=...)` 比较轮廓和轮廓里的边线（整体尺寸不比较），看不到任何视图都看不出的差别（空心内部、正面背后的壁厚）；参考图必须按预览的网格排法，且有大小上限（32 MB、2500 万像素、每格不超过 8:1，每格先缩到 1024 px）。Agent 实测见 [examples/benchcad/README.md](../examples/benchcad/README.md)。
 
 ## 路线图
 
-- **三维**：从模型投影出二维工程图（DXF，接现有标注和出图）；装配；用 CADBench / BenchCAD 测 Agent，包括"CadQuery 脚本 + 参考图比较"这条路线和纯代码对照组的对比；参考图比较可加不按轮廓、保留整体尺寸的对齐方式。
+- **三维零件不做**（2026-11-02）：已移除 FreeCAD 后端和三维操作，三维零件让 Agent 直接写 CadQuery / build123d 代码。原因见 [decision-record.md](decision-record.md#adr-003移除三维零件)。
+
 
 - **实测暴露的问题**（[trials-report.md](trials-report.md)、[comparison-hard-tasks.md](comparison-hard-tasks.md)）：图纸空间读取、脚本出口和 DIMENSION 修改已实现；判断图纸副本与模型是否一致、标注重叠检测、保留动态块数据仍待补齐。历史实测保持原记录。
 - **P1 收尾**：HATCH、MLEADER、坐标标注已实现；两线角度标注创建及更多 mirror/偏移的 AutoCAD 差分验证仍待补齐。
 - **P2**：更多零件族（法兰、L 形支架、长圆孔、孔阵列图案）；ISO/ANSI 标注样式与图层标准模板；块属性模板库；批量处理多图纸的工具；增量读取（按 handle 范围或修改时间）；规格修订时检测"手工修改过的标签实体"并要求确认。
-- **P3**：不依赖 AutoCAD 的 DWG 方案（ODA File Converter，许可证由用户自行确认）；为 mirror 作用于标注/椭圆、HATCH 等补充 AutoCAD 差分用例；联立约束求解（可评估 SolveSpace 求解库，GPL，需要隔离）；3D 与参数化建模。
+- **P3**：不依赖 AutoCAD 的 DWG 方案（ODA File Converter，许可证由用户自行确认）；为 mirror 作用于标注/椭圆、HATCH 等补充 AutoCAD 差分用例；联立约束求解（可评估 SolveSpace 求解库，GPL，需要隔离）。
 
 ## 实时 AutoCAD 会话（2026-10-29）
 

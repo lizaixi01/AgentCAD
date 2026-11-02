@@ -37,14 +37,14 @@ def _die(msg: str) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    ap = argparse.ArgumentParser(prog="agentcad", description="Headless agent-native CAD runtime: 2D drawings (DXF) "
-                                 "and 3D parts (FreeCAD). New here? Run 'agentcad setup', then 'agentcad doctor'.")
+    ap = argparse.ArgumentParser(prog="agentcad", description="Headless agent-native CAD runtime for 2D drawings "
+                                 "(DXF). New here? Run 'agentcad setup', then 'agentcad doctor'.")
     ap.add_argument("--root", help="Workspace root (default: $AGENTCAD_ROOT, else the current folder; 'mcp', 'setup' "
                                    "and 'doctor' use ~/AgentCAD instead of the current folder); all paths must be "
                                    "inside it")
     ap.add_argument("--read-only", action="store_true", help="Refuse every modification")
     ap.add_argument("--allow-scripts", action="store_true", help="Enable the 'script' command (agent-written ezdxf "
-                                                                 "scripts; CadQuery / FreeCAD scripts for 3D parts)")
+                                                                 "scripts)")
     ap.add_argument("--compact", action="store_true", help="Single-line JSON output")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
@@ -56,9 +56,9 @@ def build_parser() -> argparse.ArgumentParser:
     s = sub.add_parser("inspect", help="Drawing summary: units, extents, layers, counts, tags, metadata")
     s.add_argument("path")
 
-    s = sub.add_parser("measure", help="Exact DXF entity or 3D plane/distance measurements")
+    s = sub.add_parser("measure", help="Exact DXF entity measurements")
     s.add_argument("path")
-    s.add_argument("--target", required=True, help="JSON entity selector, planar_levels or face_distance target")
+    s.add_argument("--target", required=True, help="JSON entity selector")
 
     s = sub.add_parser("image", help="Inspect/magnify a workspace image; JSON contains a base64 PNG")
     s.add_argument("path"); s.add_argument("--region", help="JSON [left,top,right,bottom] in source pixels")
@@ -80,15 +80,11 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--strict", action="store_true", help="Do not save if post-validation fails")
     s.add_argument("--label")
 
-    s = sub.add_parser("script", help="Run an ezdxf script on a drawing, or a CadQuery / FreeCAD script that builds a "
-                                      "3D part's solid, as one transaction (needs --allow-scripts)")
-    s.add_argument("path"); s.add_argument("--file", required=True, help="Python file; a drawing is `doc`, a part's "
-                                                                         "script sets `result`")
+    s = sub.add_parser("script", help="Run an ezdxf script on a drawing as one transaction "
+                                      "(needs --allow-scripts)")
+    s.add_argument("path"); s.add_argument("--file", required=True, help="Python file; the drawing is `doc`")
     s.add_argument("--requirements-file"); s.add_argument("--dry-run", action="store_true")
     s.add_argument("--strict", action="store_true"); s.add_argument("--label")
-    s.add_argument("--language", choices=["ezdxf", "cadquery", "freecad"],
-                   help="Default: ezdxf for .dxf, cadquery for .FCStd")
-    s.add_argument("--keep-features", action="store_true", help="3D part: rebuild the Body's features on the new solid")
 
     s = sub.add_parser("validate", help="Independent validation of the file on disk")
     s.add_argument("path"); s.add_argument("--requirements-file"); s.add_argument("--requirements")
@@ -157,15 +153,13 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("mcp", help="Run the MCP server on stdio (workspace: --root, $AGENTCAD_ROOT or ~/AgentCAD)")
     s = sub.add_parser("setup", help="Connect AgentCAD to Claude Code, Codex, Claude Desktop or Cursor",
                        description="Writes the MCP config of the chosen apps (keeping their other servers), creates "
-                                   "the workspace folder, looks for FreeCAD and AutoCAD and prints what to do next. "
+                                   "the workspace folder, looks for AutoCAD and prints what to do next. "
                                    "Safe to run again.")
     s.add_argument("--client", action="append", choices=("claude-code", "codex", "claude-desktop", "cursor", "all"),
                    help="App to configure (repeatable; 'all' = all four). Default: ask, or every app found when "
                         "--yes is given or input is not a terminal")
     s.add_argument("--root", dest="setup_root", metavar="FOLDER",
                    help="Workspace folder for drawings (default: $AGENTCAD_ROOT, else ~/AgentCAD)")
-    s.add_argument("--freecad", metavar="PATH", help="FreeCAD 1.1 install folder (or its bin folder / python), if "
-                                                     "it is not found automatically")
     s.add_argument("--launcher", choices=("auto", "uvx", "pipx", "python"), default="auto",
                    help="How the app starts the server: uvx or pipx (fetch AgentCAD from GitHub) or this Python. "
                         "auto: uvx (else pipx) when this copy runs from a uvx/pipx cache, else this Python")
@@ -181,7 +175,7 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--no-browser", action="store_true", help="With --gui: print the link, do not open a browser")
     s.add_argument("--port", type=int, default=0, help="With --gui: port to listen on (default: any free one)")
     s.add_argument("--json", action="store_true", help="Print the result as JSON")
-    s = sub.add_parser("doctor", help="Check Python, AgentCAD, FreeCAD, AutoCAD, Pillow and each app's MCP config",
+    s = sub.add_parser("doctor", help="Check Python, AgentCAD, AutoCAD, Pillow and each app's MCP config",
                        description="Each check says ok, missing or skip, with a one-line fix.")
     s.add_argument("--root", dest="setup_root", metavar="FOLDER", help="Workspace folder to check")
     s.add_argument("--json", action="store_true", help="Print the result as JSON")
@@ -216,7 +210,7 @@ def _setup_or_doctor(a: argparse.Namespace) -> tuple[dict[str, Any], int]:
     if a.gui:
         from .setup_gui import Wizard
         try:
-            wiz = Wizard(root, dry_run=a.dry_run, launcher=a.launcher, source=a.source, freecad=a.freecad,
+            wiz = Wizard(root, dry_run=a.dry_run, launcher=a.launcher, source=a.source,
                          name=a.name, read_only=a.read_only, allow_scripts=a.allow_scripts, port=a.port)
         except OSError as exc:
             return {"ok": False, "error": {"code": "PORT_IN_USE", "message": str(exc)}}, 2
@@ -233,7 +227,7 @@ def _setup_or_doctor(a: argparse.Namespace) -> tuple[dict[str, Any], int]:
             clients = install.ask_clients(detected)
     try:
         res = install.setup(list(dict.fromkeys(clients)), root, launcher=a.launcher, source=a.source,
-                            freecad=a.freecad, dry_run=a.dry_run, read_only=a.read_only,
+                            dry_run=a.dry_run, read_only=a.read_only,
                             allow_scripts=a.allow_scripts, name=a.name, shortcut=a.shortcut)
     except AgentCADError as exc:
         return {"ok": False, "error": exc.to_dict()}, EXIT.get(exc.category, 5)
@@ -323,8 +317,7 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         except OSError as exc:
             _die(f"cannot read script {a.file}: {exc}")
         r = rt.run_script(a.path, code, label=a.label, dry_run=a.dry_run, strict=a.strict,
-                          requirements=_json_arg(None, a.requirements_file, "requirements"), language=a.language,
-                          keep_features=a.keep_features)
+                          requirements=_json_arg(None, a.requirements_file, "requirements"))
     elif c == "apply":
         ops = _json_arg(a.ops, a.ops_file, "operations")
         if ops is None:

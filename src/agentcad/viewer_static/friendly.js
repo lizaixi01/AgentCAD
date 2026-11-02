@@ -33,24 +33,21 @@
       theme: "Theme", themeAuto: "Automatic", themeLight: "Light", themeDark: "Dark", language: "中文",
       layers: "Layers", details: "Technical details", connected: "Live", disconnected: "Reconnecting…",
       justNow: "just now", minAgo: "{n} min ago", hAgo: "{n} h ago",
-      part: "3D part", drawing: "Drawing", loading: "Loading…", meshing: "Building the 3D view…",
+      drawing: "Drawing", loading: "Loading…",
       removed: "This file was removed.", zoomHint: "Scroll to zoom · drag to move · double-click to see it all", zoomAll: "See it all (double-click works too)", zoomIn: "Zoom in", zoomOut: "Zoom out",
       folderLbl: "Your drawings are in", openFolder: "Open", copyPath: "Copy path", pathCopied: "Folder path copied",
       showInFolder: "Show in folder", addFiles: "Add files…", addHint: "or drag them here, or copy and press Ctrl+V",
-      dropTitle: "Drop to add to your drawings", dropBody: "DXF and FCStd open here; DWG, STEP, STL, pictures and PDFs wait in the folder for the assistant",
+      dropTitle: "Drop to add to your drawings", dropBody: "DXF opens here; DWG, pictures and PDFs wait in the folder for the assistant",
       adding: "Adding {f}…", addFailed: "Could not add {f}: {m}", addedShown: "Added {f}", addedMany: "Added {n} files",
       addedDwg: "{f} is in the folder. Ask the assistant to convert it to DXF to see it here.",
       addedKept: "{f} is in the folder. The assistant can use it, e.g. “draw this part from {f}”.",
       renamed: "(a file with that name was there already, so this one got a number)",
       readOnlyAdd: "AgentCAD is read-only here: files cannot be added.",
-      why_UNSUPPORTED_FILE: "AgentCAD does not use this kind of file. It takes drawings (DXF, DWG), parts (FCStd, STEP, STL) and reference pictures (PNG, JPG, PDF).",
+      why_UNSUPPORTED_FILE: "AgentCAD does not use this kind of file. It takes drawings (DXF, DWG) and reference pictures (PNG, JPG, PDF).",
       why_FILE_TOO_LARGE: "the file is larger than 100 MB.", why_READ_ONLY: "AgentCAD is read-only here.",
       show_DXF_PARSE_ERROR: "This file cannot be opened: it is not a valid DXF drawing, or it is damaged. The assistant can check it.",
       show_FILE_NOT_FOUND: "This file is not there any more.",
-      show_DEPENDENCY_MISSING: "3D parts need FreeCAD (free) on this computer to be shown. Drawings work without it.",
-      show_FREECAD_TIMEOUT: "FreeCAD took too long to draw this part. Try again in a moment.",
       show_other: "This file cannot be shown right now ({c}).", cannotOpen: "Could not open the folder: {m}",
-      orbitHint: "Drag to turn · right-drag to move · scroll to zoom",
       exportedFrom: "Saved from AgentCAD on {d}", shownVersion: "this picture",
       changesSummary: "{a} new · {m} changed · {d} removed", whatChanged: "What changed",
       historyTitle: "Change history", failed: "did not work", madeWith: "Made with AgentCAD",
@@ -65,7 +62,7 @@
       readyBody: "Ask it to draw something. The drawing appears here and updates as it works.",
       by: "by {who}",
       try1: "Draw a 200 × 100 mounting plate with R8 corners and four 12 mm holes 15 mm from the edges. Save it as plate.dxf.",
-      try2: "Make a flange: 120 mm across, 14 mm thick, with six 12 mm bolt holes on a 90 mm circle.",
+      try2: "Draw a flange: 120 mm across, a 30 mm bore and six 12 mm bolt holes on a 90 mm circle. Save it as flange.dxf.",
       try3: "Make an A3 sheet for plate.dxf with a title block.",
     },
     zh: {
@@ -91,24 +88,21 @@
       theme: "外观", themeAuto: "自动", themeLight: "浅色", themeDark: "深色", language: "English",
       layers: "图层", details: "技术细节", connected: "实时", disconnected: "正在重新连接…",
       justNow: "刚刚", minAgo: "{n} 分钟前", hAgo: "{n} 小时前",
-      part: "三维零件", drawing: "图纸", loading: "加载中…", meshing: "正在生成三维视图…",
+      drawing: "图纸", loading: "加载中…",
       removed: "这个文件已被删除。", zoomHint: "滚轮缩放 · 拖动平移 · 双击看全图", zoomAll: "看全图（双击画布也可以）", zoomIn: "放大", zoomOut: "缩小",
       folderLbl: "图纸保存在", openFolder: "打开", copyPath: "复制路径", pathCopied: "已复制文件夹路径",
       showInFolder: "在文件夹中显示", addFiles: "添加文件…", addHint: "也可以直接拖进来，或者复制后按 Ctrl+V",
-      dropTitle: "松开，放进“我的图纸”", dropBody: "DXF 和 FCStd 会直接在这里打开；DWG、STEP、STL、图片和 PDF 先放进文件夹，交给助手用",
+      dropTitle: "松开，放进“我的图纸”", dropBody: "DXF 会直接在这里打开；DWG、图片和 PDF 先放进文件夹，交给助手用",
       adding: "正在添加 {f}…", addFailed: "没能添加 {f}：{m}", addedShown: "已添加 {f}", addedMany: "已添加 {n} 个文件",
       addedDwg: "{f} 已放进文件夹。让助手把它转成 DXF，就能在这里看了。",
       addedKept: "{f} 已放进文件夹。可以让助手用它，比如“照着 {f} 画这个零件”。",
       renamed: "（文件夹里已有同名文件，这个自动加了编号）",
       readOnlyAdd: "这里的 AgentCAD 是只读的，不能添加文件。",
-      why_UNSUPPORTED_FILE: "AgentCAD 用不上这种文件。可以放图纸（DXF、DWG）、零件（FCStd、STEP、STL）或参考图（PNG、JPG、PDF）。",
+      why_UNSUPPORTED_FILE: "AgentCAD 用不上这种文件。可以放图纸（DXF、DWG）或参考图（PNG、JPG、PDF）。",
       why_FILE_TOO_LARGE: "文件超过了 100 MB。", why_READ_ONLY: "这里的 AgentCAD 是只读的。",
       show_DXF_PARSE_ERROR: "这个文件打不开：它不是有效的 DXF 图纸，或者已经损坏。可以让助手检查一下。",
       show_FILE_NOT_FOUND: "这个文件已经不在了。",
-      show_DEPENDENCY_MISSING: "显示 3D 零件需要这台电脑装有 FreeCAD（免费）。二维图纸不需要它。",
-      show_FREECAD_TIMEOUT: "FreeCAD 画这个零件用的时间太长了，稍后再试一次。",
       show_other: "这个文件现在显示不了（{c}）。", cannotOpen: "没能打开文件夹：{m}",
-      orbitHint: "拖动旋转 · 右键拖动平移 · 滚轮缩放",
       exportedFrom: "由 AgentCAD 保存于 {d}", shownVersion: "本图",
       changesSummary: "新增 {a} · 修改 {m} · 删除 {d}", whatChanged: "改了什么",
       historyTitle: "修改记录", failed: "未成功", madeWith: "由 AgentCAD 生成",
@@ -123,7 +117,7 @@
       readyBody: "让它画点什么，图纸会出现在这里，并随着工作实时更新。",
       by: "{who}",
       try1: "画一块 200×100 的安装板，四个角倒圆 R8，四个 Ø12 的孔离边 15 毫米。保存为 plate.dxf。",
-      try2: "做一个法兰：直径 120 毫米、厚 14 毫米，在直径 90 的圆上均布六个 Ø12 螺栓孔。",
+      try2: "画一个法兰：外径 120 毫米，中心孔 Ø30，在直径 90 的圆上均布六个 Ø12 螺栓孔。保存为 flange.dxf。",
       try3: "给 plate.dxf 做一张 A3 图纸，带标题栏。",
     },
   };
@@ -155,8 +149,7 @@
     add_surface_finish: ["add", "surface finish mark", "surface finish marks", "粗糙度符号"],
     create_layer: ["add", "layer", "layers", "图层"], create_layout: ["add", "sheet", "sheets", "图纸布局"],
     create_text_style: ["add", "text style", "text styles", "文字样式"], define_block: ["add", "block", "blocks", "图块"],
-    insert_block: ["add", "block", "blocks", "图块"], add_sketch: ["add", "sketch", "sketches", "草图"],
-    hole: ["add", "hole", "holes", "孔"],
+    insert_block: ["add", "block", "blocks", "图块"],
   };
   const PHRASE = {
     delete: ["Removed items", "removing items", "删除对象"], delete_layer: ["Removed a layer", "removing a layer", "删除图层"],
@@ -175,18 +168,7 @@
     set_attributes: ["Filled in block fields", "filling in block fields", "填写属性"],
     set_annotation_scale: ["Set the annotation scale", "setting the annotation scale", "设置注释比例"],
     purge: ["Cleaned up unused items", "cleaning up unused items", "清理未使用项"],
-    pad: ["Built up a solid", "building up a solid", "拉伸成实体"],
-    pocket: ["Cut a pocket", "cutting a pocket", "挖槽"], revolve: ["Turned a profile into a solid", "turning a profile into a solid", "旋转成形"],
-    groove: ["Cut a groove", "cutting a groove", "旋转切槽"], thickness: ["Hollowed it out", "hollowing it out", "抽壳"],
-    linear_pattern: ["Repeated features in a row", "repeating features in a row", "线性阵列"],
-    polar_pattern: ["Repeated features around a circle", "repeating features around a circle", "环形阵列"],
-    loft: ["Blended between shapes", "blending between shapes", "放样"], sweep: ["Swept a profile along a path", "sweeping a profile along a path", "扫掠"],
-    helix: ["Made a spiral", "making a spiral", "螺旋扫掠"], modify_feature: ["Changed a feature", "changing a feature", "修改特征"],
-    delete_feature: ["Removed a feature", "removing a feature", "删除特征"],
-    set_parameters: ["Set the sizes", "setting the sizes", "设置尺寸"],
   };
-  const SOLID = { box: ["box", "长方体"], cylinder: ["cylinder", "圆柱"], cone: ["cone", "圆锥"], sphere: ["ball", "球"],
-                  torus: ["ring", "圆环"], prism: ["prism", "棱柱"], wedge: ["wedge", "楔形"] };
   const TOOL = {
     create_drawing: ["Started a new {k}", "starting a new {k}", "新建{k}"],
     draw_from_spec: ["Drew it from the specification", "drawing it from the specification", "按规格绘图"],
@@ -206,18 +188,14 @@
 
   function detail(b) {
     const d = [];
-    if (b.op === "set_parameters" && b.params) {
-      return Object.entries(b.params).slice(0, 4).map(([k, v]) => `${k} = ${num(v)}`).join(", ");
-    }
     if (b.thread) d.push(b.thread);
     else if (b.size) d.push(b.size);
     if (b.diameter != null) d.push("Ø" + num(b.diameter));
-    else if (b.radius != null && /circle|arc|hole|cylinder|sphere|fillet|primitive/.test(b.op)) {
+    else if (b.radius != null && /circle|arc|hole|fillet/.test(b.op)) {
       d.push(b.op === "fillet" ? "R" + num(b.radius) : "Ø" + num(b.radius * 2));
     }
-    if (b.width != null && b.height != null && b.op !== "primitive") d.push(`${num(b.width)} × ${num(b.height)}`);
-    if (b.length != null && /pad|linear_pattern/.test(b.op)) d.push(num(b.length));
-    if (b.depth != null && /pocket|hole/.test(b.op)) d.push(num(b.depth));
+    if (b.width != null && b.height != null) d.push(`${num(b.width)} × ${num(b.height)}`);
+    if (b.depth != null && /hole/.test(b.op)) d.push(num(b.depth));
     if (b.occurrences != null) d.push("× " + num(b.occurrences));
     if (b.rows != null && b.cols != null) d.push(`${num(b.rows)} × ${num(b.cols)}`);
     if (b.op === "array_polar" && b.count != null) d.push("× " + num(b.count));
@@ -234,11 +212,6 @@
     const n = b.n || (b.op === "add_standard_hole" && b.count) || 1;
     const det = detail(b);
     if (b.op === "...") return lang === "zh" ? `还有 ${n} 步` : `and ${n} more steps`;
-    if (b.op === "primitive") {
-      const s = SOLID[b.kind] || [b.kind || "shape", b.kind || "形体"];
-      if (lang === "zh") return (mode === "doing" ? "正在" : "") + `添加${n > 1 ? " " + n + " 个" : ""}${s[1]}${det ? " " + det : ""}`;
-      return `${mode === "doing" ? "adding" : "Added"} ${n > 1 ? n + " " + s[0] + "s" : "a " + s[0]}${det ? " " + det : ""}`;
-    }
     const noun = NOUN[b.op];
     if (noun) {
       if (lang === "zh") return (mode === "doing" ? "正在" : "") + `添加${n > 1 ? " " + n + " 个" : ""}${det ? " " + det + " " : ""}${noun[3]}`;
@@ -249,7 +222,7 @@
     const ph = PHRASE[b.op];
     const times = n > 1 ? (lang === "zh" ? `（${n} 次）` : ` (×${n})`) : "";
     if (ph) {
-      const d = det ? (b.op === "set_parameters" ? (lang === "zh" ? "：" : ": ") + det : ` (${det})`) : "";
+      const d = det ? ` (${det})` : "";
       if (lang === "zh") return (mode === "doing" ? "正在" : "") + ph[2] + d + times;
       return (mode === "doing" ? ph[1] : ph[0]) + d + times;
     }
@@ -257,10 +230,10 @@
     return (mode === "doing" ? (lang === "zh" ? "正在执行 " : "doing: ") + raw : (lang === "zh" ? "执行了 " : "Did: ") + raw) + times;
   }
 
-  function toolText(tool, kind, lang, mode) {
+  function toolText(tool, lang, mode) {
     lang = lang || pick();
     const t = TOOL[tool];
-    const k = kind === "part" ? (lang === "zh" ? "零件" : "part") : (lang === "zh" ? "图纸" : "drawing");
+    const k = lang === "zh" ? "图纸" : "drawing";
     if (!t) return String(tool || "").replace(/_/g, " ");
     const s = lang === "zh" ? (mode === "doing" ? "正在" : "") + t[2] : mode === "doing" ? t[1] : t[0];
     return fill(s, { k });
@@ -269,17 +242,7 @@
   // one sentence for a finished call (progress event "done"/"error", or a history record)
   function summary(ev, lang) {
     lang = lang || pick();
-    const kind = /\.fcstd$/i.test(ev.drawing || ev.name || "") ? "part" : "drawing";
-    let steps = ev.ops || ev.steps;
-    // sketches are scaffolding for the 3D feature that follows: the feature tells the story
-    if (steps && steps.some((s) => s.op !== "add_sketch")) {
-      const merged = [], same = (a, b) => JSON.stringify({ ...a, n: 0 }) === JSON.stringify({ ...b, n: 0 });
-      for (const s of steps.filter((x) => x.op !== "add_sketch")) {
-        const last = merged[merged.length - 1];
-        if (last && same(last, s)) last.n = (last.n || 1) + (s.n || 1); else merged.push({ ...s });
-      }
-      steps = merged;
-    }
+    const steps = ev.ops || ev.steps;
     if (steps && steps.length && ev.tool === "apply_operations") {
       const parts = steps.slice(0, 3).map((s, i) => {
         const t = opText(s, lang, "done");
@@ -289,7 +252,7 @@
       if (steps.length > 3) s += lang === "zh" ? ` 等 ${steps.length} 项` : ` and ${steps.length - 3} more`;
       return s;
     }
-    return toolText(ev.tool, kind, lang, "done");
+    return toolText(ev.tool, lang, "done");
   }
 
   function verdict(ev, lang) {

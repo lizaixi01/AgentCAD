@@ -8,8 +8,6 @@ State for ``<root>/path/to/part.dxf`` lives in
     journal.jsonl     one JSON record per committed (or failed) operation
     checkpoints/      cp-0001.dxf ... byte-exact copies taken before each change
 
-The same store serves 3D parts (``.FCStd``): checkpoints keep the file's own
-suffix and ``reader`` is the format's strict reader (``read_dxf`` by default).
 """
 from __future__ import annotations
 
@@ -241,7 +239,7 @@ class DrawingStore:
 
     def commit_bytes(self, data: bytes, *, label: str, overwrite_ok: bool = True,
                      attempt: dict[str, Any] | None = None) -> dict[str, Any]:
-        """``commit`` for a file already serialised (a 3D part saved by FreeCAD)."""
+        """``commit`` for a file already serialised."""
         self.policy.check_write()
         if len(data) > self.policy.max_file_bytes:
             raise file_error("FILE_TOO_LARGE", f"Result would be {len(data)} bytes")

@@ -120,13 +120,11 @@ def test_no_shell_or_arbitrary_execution_surface():
     import agentcad
     from pathlib import Path
     pkg = Path(agentcad.__file__).parent
-    launchers = {pkg / "backends" / "autocad.py", pkg / "backends" / "freecad.py", pkg / "scripting.py",
+    launchers = {pkg / "backends" / "autocad.py", pkg / "scripting.py",
                  pkg / "install.py", pkg / "desktop.py"}
     # the script runners execute an agent's script (run_script and inspect_image code, opt-in), each in exactly
     # one place
-    exec_sites = {pkg / "_script_runner.py": ["main"], pkg / "part" / "_cq_runner.py": ["main"],
-                  pkg / "_image_runner.py": ["main"],
-                  pkg / "part" / "_fc_runner.py": ["_exec_freecad_script"]}
+    exec_sites = {pkg / "_script_runner.py": ["main"], pkg / "_image_runner.py": ["main"]}
     for f in pkg.rglob("*.py"):
         text = f.read_text("utf-8")
         assert "os.system" not in text and "eval(" not in text, f
@@ -139,15 +137,10 @@ def test_no_shell_or_arbitrary_execution_surface():
     # process launchers: fixed executables, no shell
     backend = (pkg / "backends" / "autocad.py").read_text("utf-8")
     assert "shell=False" in backend and "shell=True" not in backend and "Popen(args" in backend
-    fc = (pkg / "backends" / "freecad.py").read_text("utf-8")
-    assert "shell=False" in fc and "shell=True" not in fc and "timeout=limit" in fc
-    # besides FreeCAD it runs only taskkill, to stop FreeCAD's process tree after a timeout (Windows)
-    assert fc.count("subprocess.run(") == 1 and 'subprocess.run([taskkill, "/F", "/T", "/PID", str(p.pid)]' in fc
-    assert '"System32" / "taskkill.exe"' in fc
     scripting = (pkg / "scripting.py").read_text("utf-8")
-    # three launchers (ezdxf scripts, CadQuery scripts, image scripts), each without a shell and with the time limit
-    assert scripting.count("shell=False") == 3 and "shell=True" not in scripting
-    assert scripting.count("timeout=timeout") == 3 and scripting.count("subprocess.run(") == 3
+    # two launchers (ezdxf scripts, image scripts), each without a shell and with the time limit
+    assert scripting.count("shell=False") == 2 and "shell=True" not in scripting
+    assert scripting.count("timeout=timeout") == 2 and scripting.count("subprocess.run(") == 2
     # install.py runs only the user's own 'claude mcp' CLI and the file manager, from 'agentcad setup' (and its
     # --gui wizard). Modules that serve tools may import nothing from it but ensure_workspace, nor the wizard.
     # desktop.py opens the file manager (the viewer's "Show in folder"): fixed programs, no shell
@@ -162,6 +155,5 @@ def test_no_shell_or_arbitrary_execution_surface():
         assert _install_imports(f.read_text("utf-8")) <= {"ensure_workspace"}, f
         assert "setup_gui" not in f.read_text("utf-8"), f
     assert "check_script(code)" in (pkg / "service.py").read_text("utf-8")
-    assert "scripting.check_script(code, lang)" in (pkg / "part" / "service.py").read_text("utf-8")
     assert Policy(root=Path.cwd()).allow_scripts in (False,) or __import__("os").environ.get("AGENTCAD_ALLOW_SCRIPTS")
     assert all(callable(d.fn) for d in REGISTRY.values())
