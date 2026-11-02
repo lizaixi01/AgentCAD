@@ -882,6 +882,9 @@ def _server(host: str):
         # On Windows SO_REUSEADDR lets a second socket bind a port that is already listening: a viewer of another
         # root would then answer on "our" port. Bind exclusively there, so a busy port fails and the next is tried.
         allow_reuse_address = os.name != "nt"
+        # A page loads its thumbnails and the change feed at once; the default backlog of 5 overflowed under 16
+        # concurrent requests and Linux reset some before they were accepted (CI run for PR #80).
+        request_queue_size = 128
 
         def server_bind(self):
             if os.name == "nt" and hasattr(_socket, "SO_EXCLUSIVEADDRUSE"):
