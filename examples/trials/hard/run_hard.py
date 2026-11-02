@@ -22,9 +22,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
-import subprocess
 import sys
-import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -37,7 +35,7 @@ SAMPLE = Path(r"D:\Apps\AutoCAD\AutoCAD 2027\Sample\Sheet Sets\Manufacturing\VW2
 TASKS = HERE / "tasks"
 sys.path.insert(0, str(REPO / "src"))
 sys.path.insert(0, str(TRIALS))
-from agents import agent_env, command  # noqa: E402
+from agents import command, run_session  # noqa: E402
 from bases2 import make_h4_base, make_h5_base, make_h6_base  # noqa: E402
 
 SINGLE = {"H4": ("H4_cleanup.md", make_h4_base), "H5": ("H5_dimension.md", make_h5_base),
@@ -109,11 +107,7 @@ def codex(arm: str, task: str, ws: Path, prompt: str, log: Path, b_python: str =
     cmd = command(AGENT, "mcp" if arm == "A" else "code", ws.as_posix(), "high", RUNS / "_mcp", b_python,
                   ALLOW_SCRIPTS)
     log.parent.mkdir(parents=True, exist_ok=True)
-    t0 = time.time()
-    with open(log, "wb") as out, open(log.with_suffix(".stderr.log"), "wb") as err:
-        p = subprocess.run(cmd, input=prompt.encode("utf-8"), stdout=out, stderr=err, shell=False, timeout=5400,
-                           cwd=ws, env=agent_env())
-    return {"exit": p.returncode, "seconds": round(time.time() - t0, 1)}
+    return run_session(cmd, prompt, log, ws, 5400, arm == "A")
 
 
 def unit(arm: str, task: str, rep: int, a_root: Path, b_root: Path, b_python: str) -> dict:
