@@ -53,7 +53,7 @@ A PR is merged when all of these hold:
    only when GitHub reports a conflict, or when `main` has changed the same files since the PR's last
    CI run.
 2. **`main` is green**: its latest CI run passed (`gh run list --branch main --limit 1`). If not, fix
-   `main` first.
+   `main` first (the PR that fixes it is exempt from this rule).
 3. **GitHub reports the PR mergeable.**
 4. **Independent review**, unless the PR changes only docs, tests, write-ups of results, or fixes
    `src/` in about 50 lines or fewer and comes with a test. Never skip it for code that guards the
