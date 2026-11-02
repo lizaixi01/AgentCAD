@@ -202,7 +202,7 @@ def add_diameter_dim(ctx: Ctx, target, center, radius, angle, text, text_height,
     ov = _override(text_height, length_factor, ctx)
     if outside:  # ezdxf (like AutoCAD with DIMTOFL off) then draws only the line from the circle to the text
         st = ctx.doc.dimstyles.get(_dimstyle(ctx)).dxf
-        h = (text_height or st.get("dimtxt", 2.5)) * (st.get("dimscale", 1.0) or 1.0)  # drawn size
+        h = (text_height or st.get("dimtxt", 2.5)) * (ov.get("dimscale") or st.get("dimscale", 1.0) or 1.0)
         d = ctx.msp.add_diameter_dim(center=c, radius=r, location=G.polar(tuple(c)[:2], r + 4 * h, angle),
                                      dimstyle=_dimstyle(ctx), override={**ov, "dimtofl": 0},
                                      dxfattribs=ctx.attribs(p))
@@ -411,8 +411,9 @@ def set_annotation_scale(ctx: Ctx, scale):
                 skipped.append({"handle": h, "reason": "DIMSCALE 0 (sized to the viewport)"})
                 continue
             check_dimension_tolerance(d, ctx.unit)
-        except (AgentCADError, Exception) as exc:  # a style missing from the table, a malformed tolerance
-            skipped.append({"handle": h, "reason": str(getattr(exc, "message", exc))})
+        except Exception as exc:  # a style missing from the table, a malformed tolerance
+            reason = exc.message if isinstance(exc, AgentCADError) else f"{type(exc).__name__}: {exc}"
+            skipped.append({"handle": h, "reason": reason})
             continue
         # Our style carries the scale. Others get it per entity, so the style's paper-space and block dimensions
         # (and a per-entity DIMSCALE, which would win over the style) do not stand in the way.

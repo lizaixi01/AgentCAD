@@ -27,12 +27,18 @@ def rerender_dimension(ctx: Ctx, dim) -> None:
     check_dimension_tolerance(dim, ctx.unit)
     from .annotate import render_dimension
     blocks = [dim.dxf.get("geometry")]
-    keep = dim.dxf.text_midpoint if dim.dxf.dimtype & 128 and dim.dxf.hasattr("text_midpoint") else None
+    keep = None
+    if dim.dxf.dimtype & 128:  # text placed by hand (AutoCAD): its middle stays where it was
+        flat = abs(dim.dxf.get("extrusion", (0, 0, 1))[2] - 1) < 1e-9
+        if flat and dim.dxf.hasattr("text_midpoint"):
+            keep = dim.dxf.text_midpoint
+        else:  # mirrored (extrusion -Z, text_midpoint in OCS): back to the default place, as before
+            dim.dxf.dimtype &= ~128
     loc = keep
     for _ in range(2 if keep is not None else 1):
         ov = dim.override()
-        if loc is not None:  # text placed by hand (AutoCAD): its middle stays where it was
-            ov.set_location(loc, leader=ov.get("dimtmove", 0) == 1)
+        if loc is not None:  # the style's DIMTMOVE (leader or not) applies as it did
+            ov.user_location_override(loc)
         render_dimension(ov)
         blocks.append(dim.dxf.get("geometry"))
         if keep is None or (shift := dim.dxf.text_midpoint - keep).magnitude < 1e-9:
@@ -495,6 +501,7 @@ def stretch(ctx: Ctx, window, delta):
             if hit:
                 if x.hasattr("text_midpoint"):
                     x.discard("text_midpoint")
+                x.dimtype &= ~128  # the text goes back to its default place, no longer placed by hand
                 rerender_dimension(ctx, e)
         elif t in ("CIRCLE", "ARC", "ELLIPSE"):
             if _inside(circle_wcs(e)[0] if t != "ELLIPSE" else x.center, lo, hi):

@@ -412,3 +412,38 @@ def test_layout_pointing_at_a_deleted_viewport_fails_validation(srt, ws):
     ok(srt.rollback(name))
     assert not [i for i in ok(srt.validate_drawing(name))["validation"]["issues"]
                 if i["code"] == "LAYOUT_VIEWPORT_MISSING"]
+
+
+def hand_placed(ws, name):
+    doc = ezdxf.new("R2010", setup=True)
+    doc.header["$INSUNITS"] = 4
+    msp = doc.modelspace()
+    msp.add_lwpolyline([(0, 0), (300, 0), (300, 160), (0, 160)], close=True)
+    d = msp.add_linear_dim(base=(0, -20), p1=(0, 0), p2=(300, 0), override={"dimtxt": 3.5})
+    d.set_location((60, -45), leader=True)
+    d.render()
+    doc.saveas(ws / name)
+    return d.dimension.dxf.handle
+
+
+def test_mirrored_hand_placed_text_lands_on_the_mirrored_side(rt, ws):
+    """Review of #83: a mirror leaves text_midpoint in OCS (extrusion -Z), so keeping it put the text across the
+    mirror line. A mirrored dimension's text goes back to its default place, as before."""
+    h = hand_placed(ws, "m.dxf")
+    ok(rt.apply_operations("m.dxf", [{"op": "mirror", "target": h, "p1": [0, 0], "p2": [0, 10],
+                                      "keep_original": False},
+                                     {"op": "set_annotation_scale", "scale": 2}]))
+    d = next(iter(reread(ws, "m.dxf").modelspace().query("DIMENSION")))
+    mtext = next(iter(d.doc.blocks.get(d.dxf.geometry).query("MTEXT")))
+    assert -300 < mtext.dxf.insert.x < 0 and not d.dxf.dimtype & 128  # block geometry is in WCS
+
+
+def test_stretched_dimension_text_is_no_longer_hand_placed(rt, ws):
+    """Review of #83: stretch drops the text position but kept the 'placed by hand' flag, so the next re-render
+    pinned the default place as if a user had dragged it there."""
+    h = hand_placed(ws, "s.dxf")
+    ok(rt.apply_operations("s.dxf", [{"op": "stretch", "window": [[250, -60], [320, 10]], "delta": [-10, 0]},
+                                     {"op": "set_annotation_scale", "scale": 2}]))
+    d = reread(ws, "s.dxf").entitydb[h]
+    mtext = next(iter(d.doc.blocks.get(d.dxf.geometry).query("MTEXT")))
+    assert not d.dxf.dimtype & 128 and abs(mtext.dxf.insert.x - 145) < 1 and mtext.dxf.insert.y > -20
