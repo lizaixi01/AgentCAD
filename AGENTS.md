@@ -48,18 +48,27 @@ Not isolated by a worktree:
 The user has handed review and merge to AI. The tests are the gate; review is added where it pays.
 A PR is merged when all of these hold:
 
-1. **CI passes on the PR.** A PR's CI tests the branch merged with `main` as `main` was when the run
-   started, so there is no need to merge `main` into the branch first. Do that (and let CI run again)
-   only when GitHub reports a conflict, or when `main` has changed the same files since the PR's last
-   CI run.
-2. **`main` is green**: its latest CI run passed (`gh run list --branch main --limit 1`). If not, fix
-   `main` first (the PR that fixes it is exempt from this rule).
+1. **The `merge gate` check passes on the PR.** It needs Linux (Python 3.12) and Windows to pass, and
+   macOS too when the PR touches files that can behave differently there: installer, packaging and
+   dependencies, CI, the backends that run other programs, and the modules that manage processes, the
+   file system or a GUI (`MACOS_PATHS` in `.github/workflows/verify.yml`). For any other change that
+   could differ on macOS, add the label yourself: `gh pr edit <n> --add-label needs-macos`. When macOS
+   is needed, a macOS job that got no runner blocks the merge too; rerun it
+   (`gh run rerun <run id> --failed`). CI tests the branch merged with `main` as `main` was when the
+   run started, so there is no need to merge `main` into the branch first. Do that (and let CI run
+   again) only when GitHub reports a conflict, or when `main` has changed the same files since the
+   PR's last CI run.
+2. **`main` is not red**: `gh api repos/lizaixi01/AgentCAD/commits/main/status --jq .state` is not
+   `failure` (`pending` means `main`'s CI is still running, and merging may go ahead). The `main
+   health` CI job sets it to `failure` when Linux or Windows failed on `main`, or macOS ran and failed.
+   Then fix `main` first (the PR that fixes it is exempt from this rule).
 3. **GitHub reports the PR mergeable.**
 4. **Independent review**, unless the PR changes only docs, tests, write-ups of results, or fixes
    `src/` in about 50 lines or fewer and comes with a test. Never skip it for code that guards the
    user's machine (`run_script` checks, file access, the viewer server, the installer), how drawings
-   are written to disk (DXF, DWG), `scripts/`, dependencies (`pyproject.toml`, `uv.lock`), or anything
-   on the ask-the-user list below.
+   are written to disk (DXF, DWG), core architecture (`service.py`, `store.py`, `engine.py`,
+   `mcp_server.py`, `ops/registry.py`, or moving and removing modules), `scripts/`, dependencies
+   (`pyproject.toml`, `uv.lock`), or anything on the ask-the-user list below.
 
    A reviewer that did not write the change reads the diff: a fresh subagent or session given only
    the PR (not the author's reasoning), `/code-review`, or `codex review`. It reports correctness
@@ -73,8 +82,15 @@ Then the agent that opened the PR, or the session that started that agent, merge
 so checkouts that already have them fast-forward. (Not `--delete-branch`: it tries to delete the local
 branch, which the task's worktree still has checked out.)
 
-Pull requests run CI on Linux (Python 3.12) and Windows. Every push to `main` runs the full matrix
-(adding Linux 3.10 and macOS). If that breaks `main`, fixing it comes before other merges (rule 2).
+Every push to `main`, and a nightly run, test Linux 3.10 and 3.12, Windows and macOS.
+
+**macOS exceptions.** A PR that does not need macOS merges on Linux and Windows alone, and macOS runs
+after the merge, on `main`. When GitHub has no macOS runner for that run, `main` stays green and the
+merged PR gets the `macos-unverified` label and a comment with the run, a retest command and the revert
+command. The nightly run (and every later `main` run) retries macOS. The first macOS pass on `main`
+removes the label from every PR it includes. Open exceptions:
+`gh pr list --state merged --label macos-unverified`. If macOS then fails for real, `main` is red
+(rule 2): fix it, or revert the labelled PRs, newest first (`git revert -m 1 <merge sha>` in a PR).
 
 Ask the user before merging a PR that:
 
