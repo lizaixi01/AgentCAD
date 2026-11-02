@@ -137,7 +137,8 @@ def reached_agentcad(log: Path) -> bool:
         except ValueError:
             continue
         item = d.get("item") or {}
-        if item.get("type") == "mcp_tool_call" and item.get("server") == "agentcad"                 and not str(item.get("tool", "")).startswith("list_mcp_resource"):
+        if item.get("type") == "mcp_tool_call" and item.get("server") == "agentcad" \
+                and not str(item.get("tool", "")).startswith("list_mcp_resource"):
             return True
         for c in (d.get("message") or {}).get("content") or []:
             if isinstance(c, dict) and c.get("type") == "tool_use" and c.get("name", "").startswith("mcp__agentcad__"):
@@ -147,16 +148,22 @@ def reached_agentcad(log: Path) -> bool:
 
 def run_session(cmd: list[str], prompt: str, log: Path, cwd: Path, timeout: int, mcp: bool, tries: int = 3) -> dict:
     """Run one agent session, logging stdout to ``log`` and stderr next to it. A session of the mcp arm that never
-    reached the AgentCAD server (it did not start in time) changed nothing, so it runs again; its logs are kept as
-    ``<name>.noserver<n>.jsonl`` and the result counts the retries."""
-    t0 = time.time()
+    reached the AgentCAD server (it did not start in time) changed nothing, so it runs again. Its logs go to
+    ``noserver/<name>.try<n>.*`` beside ``log``, where the graders, which read only the folder itself, do not count
+    them. ``seconds`` is the recorded (last) session's time; ``reached`` is False when every try missed the server."""
+    kept = log.parent / "noserver"
+    for old in kept.glob(f"{log.stem}.try*"):  # an earlier batch's failures are not this run's
+        old.unlink()
     for n in range(1, tries + 1):
         t0 = time.time()
         with open(log, "wb") as out, open(log.with_suffix(".stderr.log"), "wb") as err:
             p = subprocess.run(cmd, input=prompt.encode("utf-8"), stdout=out, stderr=err, shell=False,
                                timeout=timeout, cwd=cwd, env=agent_env())
-        if not mcp or n == tries or reached_agentcad(log):
+        seconds = round(time.time() - t0, 1)
+        reached = not mcp or reached_agentcad(log)
+        if reached or n == tries:
             break
-        for f in (log, log.with_suffix(".stderr.log")):
-            f.replace(f.with_name(f.name.replace(".", f".noserver{n}.", 1)))
-    return {"exit": p.returncode, "seconds": round(time.time() - t0, 1), "retries": n - 1}
+        kept.mkdir(exist_ok=True)
+        log.replace(kept / f"{log.stem}.try{n}.jsonl")
+        log.with_suffix(".stderr.log").replace(kept / f"{log.stem}.try{n}.stderr.log")
+    return {"exit": p.returncode, "seconds": seconds, "retries": n - 1, "reached": reached}
