@@ -741,3 +741,29 @@ def test_import_needs_a_sane_length_and_the_page_is_not_framed(page_viewer, tmp_
         assert code == 200 and r["path"].startswith("_"), (name, r)
     with urllib.request.urlopen(page_viewer.url) as resp:
         assert resp.headers["X-Frame-Options"] == "DENY" and "frame-ancestors 'none'" in resp.headers["Content-Security-Policy"]
+
+
+def test_a_refused_body_of_unknown_size_does_not_reset_the_answer(page_viewer):
+    """Closing with the body unread made Windows reset the connection, and 1 in ~40 refusals reached the client as
+    WinError 10053 instead of the answer (this file's length test failed now and then)."""
+    import http.client
+    from concurrent.futures import ThreadPoolExecutor
+    from urllib.parse import urlparse
+    u = urlparse(page_viewer.url)
+
+    def refused(headers, body):
+        c = http.client.HTTPConnection(u.hostname, u.port, timeout=10)
+        c.putrequest("POST", "/api/import")
+        for k, v in {"X-AgentCAD-Viewer": "1", "X-AgentCAD-Filename": "len.dxf", **headers}.items():
+            c.putheader(k, v)
+        c.endheaders()
+        c.send(body)
+        try:
+            return c.getresponse().status
+        finally:
+            c.close()
+
+    reqs = [({"Transfer-Encoding": "chunked"}, b"1\r\nx\r\n0\r\n\r\n", 411), ({"Content-Length": "-1"}, b"xyz", 400)]
+    with ThreadPoolExecutor(16) as ex:
+        got = list(ex.map(lambda i: refused(*reqs[i % 2][:2]), range(300)))
+    assert got == [reqs[i % 2][2] for i in range(300)]
