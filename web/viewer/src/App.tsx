@@ -172,6 +172,7 @@ export default function App() {
     },
     onChange(ev: ChangeEvent) {
       if (ev.drawing === pathRef.current) setReload((n) => n + 1)
+      else if (ev.history) return
       else if (ev.kind !== "removed" && followRef.current) open(ev.drawing)
       else if (ev.kind !== "removed") setPing((s) => new Set(s).add(ev.drawing))
     },

@@ -1,6 +1,7 @@
-"""Generate docs/operations.md (op catalog from the registry) and
-docs/op_test_matrix.md (which test files exercise each op). Run after changes:
+"""Generate docs/operations.md (op catalog from the registry). Run after changing ops:
     python scripts/gen_docs.py
+--matrix also regenerates docs/op_test_matrix.md (which test files exercise each op). CI does not
+check the matrix: almost every PR adds tests, so a checked matrix conflicted between parallel PRs.
 """
 from __future__ import annotations
 
@@ -58,16 +59,19 @@ def matrix_md() -> str:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true", help="Fail if generated operation docs are stale")
+    parser.add_argument("--matrix", action="store_true", help="Also generate docs/op_test_matrix.md")
     args = parser.parse_args()
-    files = {"operations.md": ops_md(), "op_test_matrix.md": matrix_md()}
+    files = {"operations.md": ops_md()}
+    if args.matrix:
+        files["op_test_matrix.md"] = matrix_md()
     if args.check:
         stale = [name for name, expected in files.items()
                  if not (DOCS / name).is_file() or (DOCS / name).read_text("utf-8") != expected]
         if stale:
             raise SystemExit("Stale generated documentation: " + ", ".join(stale))
-        print("operation catalog and test matrix match the source")
+        print("generated docs match the source: " + ", ".join(files))
         raise SystemExit(0)
     DOCS.mkdir(exist_ok=True)
     for name, content in files.items():
         (DOCS / name).write_text(content, "utf-8")
-    print("wrote docs/operations.md, docs/op_test_matrix.md")
+    print("wrote " + ", ".join(f"docs/{name}" for name in files))

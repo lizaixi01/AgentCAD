@@ -13,7 +13,8 @@ export interface Workspace {
   stamps: Map<string, number>  // bumps when a file changes, so its thumbnail reloads
 }
 
-export type ChangeEvent = { drawing: string; kind: "changed" | "added" | "removed" }
+// history: only a 3D part's version history moved (the viewer recorded a version it found): no jump, no new thumbnail
+export type ChangeEvent = { drawing: string; kind: "changed" | "added" | "removed"; history?: boolean }
 
 export function useWorkspace(handlers: { onActivity(ev: ProgressEvent, run: Run): void; onChange(ev: ChangeEvent): void }) {
   const runs = useRef(new Map<string, Run>())
@@ -63,6 +64,7 @@ export function useWorkspace(handlers: { onActivity(ev: ProgressEvent, run: Run)
           if (ev.activity?.state === "done") loadSessions()
           return
         }
+        if (ev.history) { h.current.onChange(ev); return }
         stamps.current.set(ev.drawing, (stamps.current.get(ev.drawing) || 0) + 1)
         if (ev.kind !== "changed") loadList()
         bump()
