@@ -303,10 +303,11 @@ def test_sheet_bounds_leave_out_the_main_viewport(rt, ws):
     paper = [[0, 0], [420, 297]]
     v = ok(rt.validate_drawing(name, layout="A3", bounds=paper))["validation"]
     assert not [i for i in v["issues"] if i["code"] == "OUT_OF_BOUNDS"]
-    ok(rt.apply_operations(name, [{"op": "add_viewport", "center": [410, 150], "width": 60, "height": 40,
-                                   "scale": 0.5, "layout": "A3"}]))
+    r = ok(rt.apply_operations(name, [{"op": "add_viewport", "center": [410, 150], "width": 60, "height": 40,
+                                       "scale": 0.5, "layout": "A3"}]))
+    out = r["results"][0]["created"][0]  # a view that does stick out is still reported
     v = ok(rt.validate_drawing(name, layout="A3", bounds=paper))["validation"]
-    assert [i["entities"] for i in v["issues"] if i["code"] == "OUT_OF_BOUNDS"] and         main not in [h for i in v["issues"] if i["code"] == "OUT_OF_BOUNDS" for h in i["entities"]]
+    assert [i["entities"] for i in v["issues"] if i["code"] == "OUT_OF_BOUNDS"] == [[out]]
 
 
 def test_main_viewport_is_the_one_the_layout_points_at(rt, ws):
