@@ -84,6 +84,10 @@ Then the agent that opened the PR, or the session that started that agent, merge
 so checkouts that already have them fast-forward. (Not `--delete-branch`: it tries to delete the local
 branch, which the task's worktree still has checked out.)
 
+GitHub enforces rule 1: the ruleset "main: merge gate" refuses to merge a PR whose `merge gate` has
+not passed. Admins may bypass it, and agents work under the user's admin account, so never pass
+`--admin` to `gh pr merge` unless the user said so for that PR. The other rules are ours to follow.
+
 Every push to `main`, and a nightly run, test Linux 3.10 and 3.12, Windows and macOS.
 
 **macOS exceptions.** A PR that does not need macOS merges on Linux and Windows alone, and macOS runs
