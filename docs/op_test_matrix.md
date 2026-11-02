@@ -42,7 +42,7 @@
 | `block_from_entities` | block | test_t_workflow_guards.py |
 | `break` | edit | test_i_common_ops.py |
 | `chamfer` | edit | test_h_operations.py, test_r_part_scripts.py |
-| `change_space` | layout | **无** |
+| `change_space` | layout | test_layouts_and_scripts.py |
 | `copy` | edit | test_h_operations.py, test_layouts_and_scripts.py |
 | `create_layer` | layer | test_f_repro_recovery.py, test_h_operations.py, test_q_viewer_progress.py |
 | `create_layout` | layout | test_k_pdf.py, test_l_fewer_turns.py, test_layouts_and_scripts.py |
@@ -96,4 +96,4 @@
 | `sweep` | part_feature | test_n_parts.py |
 | `thickness` | part_feature | test_n_parts.py |
 
-共 90 个操作，未被任何测试调用: ['change_space (layout)', 'set_page_setup (layout)', 'trace_boundary (draw)']
+共 90 个操作，未被任何测试调用: ['set_page_setup (layout)', 'trace_boundary (draw)']
