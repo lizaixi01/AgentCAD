@@ -108,8 +108,7 @@ def test_setup_all_clients_idempotent(home):
     assert cfg["model"] == "gpt" and cfg["mcp_servers"]["other"] == {"command": "y", "args": ["z"]}
     codex = cfg["mcp_servers"]["agentcad"]
     assert Path(codex["command"]).samefile(PY) and codex["default_tools_approval_mode"] == "approve"
-    assert codex["env"] == {"AGENTCAD_ROOT": root.as_posix(), "PYTHONIOENCODING": "utf-8",
-                            **{k: os.environ[k] for k in ("AGENTCAD_FREECAD", "FREECAD_LIB") if os.environ.get(k)}}
+    assert codex["env"] == {"AGENTCAD_ROOT": root.as_posix(), "PYTHONIOENCODING": "utf-8"}
 
     before = {c: p[c].read_bytes() for c in install.CLIENTS}
     again = install.setup(list(install.CLIENTS))
@@ -324,26 +323,6 @@ def test_ephemeral_detection(monkeypatch):
     assert install.choose_launcher("uvx", {"ephemeral": False}) == "uvx"
     monkeypatch.setattr(install.shutil, "which", lambda name, *a, **k: f"/bin/{name}" if name == "pipx" else None)
     assert install.choose_launcher("auto", {"ephemeral": True}) == "pipx"
-
-
-def test_freecad_option(home, tmp_path, monkeypatch):
-    for k in ("AGENTCAD_FREECAD", "FREECAD_LIB"):
-        monkeypatch.delenv(k, raising=False)
-    with pytest.raises(install.AgentCADError) as ei:
-        install.setup(["cursor"], freecad=str(tmp_path / "nope"))
-    assert ei.value.code == "FREECAD_NOT_FOUND" and not _paths(home)["cursor"].exists()
-    fc = tmp_path / "FreeCAD" / "bin"
-    fc.mkdir(parents=True)
-    (fc / ("freecadcmd.exe" if os.name == "nt" else "freecadcmd")).write_text("", "utf-8")
-    res = install.setup(["cursor"], freecad=str(tmp_path / "FreeCAD"))
-    assert res.entry["env"]["AGENTCAD_FREECAD"] == (tmp_path / "FreeCAD").as_posix()
-    assert res.freecad == str(tmp_path / "FreeCAD")
-    monkeypatch.setattr(install, "find_freecad_path", lambda: None)  # as on a machine without a standard install
-    again = install.setup(["cursor", "codex"])  # a later run without --freecad keeps it
-    assert [c["status"] for c in again.clients] == ["unchanged", "added"]
-    assert again.entry["env"]["AGENTCAD_FREECAD"] == (tmp_path / "FreeCAD").as_posix()
-    by = {c["name"]: c for c in install.doctor()["checks"]}
-    assert by["FreeCAD"]["status"] == "ok" and "app configs" in by["FreeCAD"]["detail"]
 
 
 def test_ask_clients():

@@ -125,7 +125,7 @@ def self_command(info: dict[str, Any]) -> str:
     return f'"{Path(sys.executable)}" -m agentcad.cli'
 
 
-def server_entry(root: Path, launcher: str, source: str | None = None, *, freecad: str | None = None,
+def server_entry(root: Path, launcher: str, source: str | None = None, *,
                  read_only: bool = False, allow_scripts: bool = False) -> dict[str, Any]:
     command, args = launcher_command(launcher, source)
     env = {"AGENTCAD_ROOT": root.as_posix(), "PYTHONIOENCODING": "utf-8"}
@@ -133,11 +133,6 @@ def server_entry(root: Path, launcher: str, source: str | None = None, *, freeca
         env["AGENTCAD_READ_ONLY"] = "1"
     if allow_scripts:
         env["AGENTCAD_ALLOW_SCRIPTS"] = "1"
-    if freecad:
-        env["AGENTCAD_FREECAD"] = Path(freecad).as_posix()
-    for key in ("AGENTCAD_FREECAD", "FREECAD_LIB"):
-        if key not in env and os.environ.get(key):
-            env[key] = os.environ[key]
     return {"command": command, "args": args, "env": env}
 
 
@@ -555,7 +550,7 @@ def create_shortcut(root: Path, launcher: str, source: str | None = None, *, pla
 SKILL_MARK = "<!-- written by agentcad setup -->"
 SKILL = """---
 name: agentcad
-description: Check that AgentCAD (CAD drawings and 3D parts) is connected, name this conversation in AgentCAD's live viewer, and give the user the viewer link. Use when the user types /agentcad or $agentcad, or asks whether AgentCAD works.
+description: Check that AgentCAD (CAD drawings) is connected, name this conversation in AgentCAD's live viewer, and give the user the viewer link. Use when the user types /agentcad or $agentcad, or asks whether AgentCAD works.
 ---
 """ + SKILL_MARK + """
 
@@ -606,7 +601,6 @@ class SetupResult:
     entry: dict[str, Any]
     dry_run: bool
     clients: list[dict[str, Any]] = field(default_factory=list)
-    freecad: str | None = None
     autocad: str | None = None
     self_cmd: str = "agentcad"
     shortcut: dict[str, Any] | None = None
@@ -618,38 +612,8 @@ class SetupResult:
 
     def to_dict(self) -> dict[str, Any]:
         return {"ok": self.ok, "dry_run": self.dry_run, "workspace": str(self.root), "launcher": self.launcher,
-                "server": self.entry, "clients": self.clients, "freecad": self.freecad, "autocad": self.autocad,
+                "server": self.entry, "clients": self.clients, "autocad": self.autocad,
                 "shortcut": self.shortcut, "demo_shortcut": self.demo_shortcut}
-
-
-def find_freecad_path() -> str | None:
-    from .backends import freecad
-    hit = freecad.find_freecad()
-    return hit[0][0] if hit else None
-
-
-def freecad_at(path: str) -> bool:
-    """Is there a usable FreeCAD at this AGENTCAD_FREECAD value?"""
-    from .backends import freecad as fc
-    old = os.environ.get("AGENTCAD_FREECAD")
-    os.environ["AGENTCAD_FREECAD"] = path
-    try:
-        return fc.find_freecad() is not None
-    finally:
-        if old is None:
-            del os.environ["AGENTCAD_FREECAD"]
-        else:
-            os.environ["AGENTCAD_FREECAD"] = old
-
-
-def configured_freecad(root: Path) -> str | None:
-    """A working AGENTCAD_FREECAD from any app's agentcad entry."""
-    for client in CLIENTS:
-        _, entry = _client_entry(client, root)
-        path = ((entry or {}).get("env") or {}).get("AGENTCAD_FREECAD")
-        if path and freecad_at(path):
-            return path
-    return None
 
 
 def find_autocad_path() -> str | None:
@@ -661,32 +625,23 @@ def find_autocad_path() -> str | None:
 
 
 def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher: str = "auto",
-          source: str | None = None, freecad: str | None = None, dry_run: bool = False, read_only: bool = False,
+          source: str | None = None, dry_run: bool = False, read_only: bool = False,
           allow_scripts: bool = False, name: str = NAME, runner: Runner | None = None,
           progress: Callable[[str, str, dict[str, Any]], None] | None = None, shortcut: bool = False) -> SetupResult:
     """``progress(step, state, info)`` is told when each step starts ('run') and ends ('done' / 'error'); steps:
-    'workspace', 'freecad', 'autocad', one per client, then 'shortcut' (the setup wizard draws its progress bar from
+    'workspace', 'autocad', one per client, then 'shortcut' (the setup wizard draws its progress bar from
     them). ``shortcut`` also puts an AgentCAD icon on the desktop that opens the drawings (create_shortcut)."""
     tell = progress or (lambda step, state, info: None)
     info = install_info()
     launcher = choose_launcher(launcher, info)
-    if freecad and not freecad_at(freecad):
-        raise input_error("FREECAD_NOT_FOUND", f"No FreeCAD found at {freecad}",
-                          hint="Give FreeCAD's install folder, its bin folder or its python / freecadcmd")
     root_path = workspace_root(root)
     tell("workspace", "run", {})
     if not dry_run:
         root_path.mkdir(parents=True, exist_ok=True)
     tell("workspace", "done", {"path": str(root_path)})
-    tell("freecad", "run", {})
-    found = find_freecad_path()
-    if not freecad and not found:  # keep a FreeCAD that an earlier 'setup --freecad' wrote
-        freecad = configured_freecad(root_path)
-    tell("freecad", "done", {"path": freecad or found})
-    entry = server_entry(root_path, launcher, source or info["source"], freecad=freecad, read_only=read_only,
+    entry = server_entry(root_path, launcher, source or info["source"], read_only=read_only,
                          allow_scripts=allow_scripts)
     res = SetupResult(root_path, launcher, entry, dry_run, self_cmd=self_command(info))
-    res.freecad = freecad or found
     tell("autocad", "run", {})
     res.autocad = find_autocad_path()
     tell("autocad", "done", {"path": res.autocad})
@@ -778,11 +733,6 @@ def render_setup(res: SetupResult) -> str:
     if not res.clients:
         L.append("  No client chosen. Pass --client claude-code|codex|claude-desktop|cursor|all.")
     L.append("")
-    if res.freecad:
-        L.append(f"FreeCAD found: {res.freecad}  (3D parts work)")
-    else:
-        L.append("FreeCAD not found: 2D drawings work; for 3D parts install FreeCAD 1.1 (freecad.org), then run "
-                 "setup again with --freecad <FreeCAD folder>.")
     if res.autocad:
         L.append(f"AutoCAD found: {res.autocad}  (DWG import/export)")
     else:
@@ -892,12 +842,6 @@ def doctor(root: str | os.PathLike | None = None) -> dict[str, Any]:
     else:
         add("Workspace", "missing", f"{ws} does not exist or is not writable",
             "Run agentcad setup (it creates the folder), or set AGENTCAD_ROOT to a folder you own")
-    fc = find_freecad_path()
-    if not fc:
-        fc = configured_freecad(ws)
-        fc = f"{fc} (set in the app configs)" if fc else None
-    add("FreeCAD", "ok" if fc else "missing", fc or "not found: 3D parts (.FCStd) will not work",
-        "" if fc else "Install FreeCAD 1.1 from freecad.org, then: agentcad setup --freecad <FreeCAD folder>")
     if os.name == "nt":
         ac = find_autocad_path()
         add("AutoCAD", "ok" if ac else "missing", ac or "not found (optional: DWG import/export)",

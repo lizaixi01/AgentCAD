@@ -2,7 +2,6 @@
 from __future__ import annotations
 
 import json
-import math
 import os
 import socket
 import threading
@@ -13,13 +12,10 @@ from pathlib import Path
 
 import pytest
 
-from agentcad.backends import freecad
 from agentcad.policy import Policy
 from agentcad.store import sha256_file
 from agentcad.viewer import COLORS, ChangeFeed, Viewer, Workspace
 from conftest import ok
-
-needs_freecad = pytest.mark.skipif(not freecad.available(), reason="FreeCAD not installed (set AGENTCAD_FREECAD)")
 
 
 def line(rt, path, start, end, layer="OUTLINE", tag=None):
@@ -231,118 +227,6 @@ def test_cli_reports_a_busy_port(ws):
     assert code == 2 and r["error"]["code"] == "PORT_IN_USE"
 
 
-# --- 3D parts ---------------------------------------------------------------------------------------------------
-
-PLATE = [
-    {"op": "set_parameters", "params": {"width": 80, "depth": 50, "thickness": 6}},
-    {"op": "add_sketch", "plane": "XY",
-     "shapes": [{"type": "rectangle", "corner": [0, 0], "width": "=Params.width", "height": "=Params.depth"}]},
-    {"op": "pad", "sketch": "$1", "length": "=Params.thickness", "tag": "base"},
-]
-
-
-@needs_freecad
-def test_part_mesh_png_and_diff(rt, ws, viewer):
-    ok(rt.apply_operations("plate.FCStd", PLATE, create={"units": "mm"}))
-    ok(rt.apply_operations("plate.FCStd", [{"op": "set_parameters", "params": {"width": 120}}]))
-    before = files_state(ws)
-    code, r = get_json(viewer, "/api/drawings")
-    assert {"path": "plate.FCStd", "kind": "part"} in r["drawings"]
-    code, m = get_json(viewer, "/api/mesh", path="plate.FCStd")
-    assert code == 200 and len(m["indices"]) % 3 == 0 and m["indices"] and len(m["edges"]) == 12
-    xs = m["positions"][0::3]
-    assert max(xs) - min(xs) == pytest.approx(120, abs=1e-3)
-    tl = get_json(viewer, "/api/timeline", path="plate.FCStd")[1]
-    assert tl["kind"] == "part"
-    first = [x for x in tl["records"] if x.get("version")][0]["version"]
-    old = get_json(viewer, "/api/mesh", path="plate.FCStd", v=first)[1]
-    xs = old["positions"][0::3]
-    assert max(xs) - min(xs) == pytest.approx(80, abs=1e-3)
-    code, d = get_json(viewer, "/api/diff", path="plate.FCStd")
-    assert code == 200 and d["parameters"]["width"] == {"old": 80, "new": 120}
-    code, ctype, png = get(viewer, "/api/png", path="plate.FCStd")
-    assert code == 200 and png[:8] == b"\x89PNG\r\n\x1a\n"
-    assert files_state(ws) == before
-
-
-@needs_freecad
-def test_part_mesh_covers_every_face(rt, viewer):
-    """The viewer once lost one filleted corner of a phone body (Shape.tessellate dropped a face it failed to mesh):
-    the triangles must add up to the whole surface of a part with rounded corners."""
-    w, h, r, t = 78.0, 160.0, 12.0, 8.0
-    b = math.tan(math.radians(22.5))  # bulge of a 90-degree arc
-    x0, x1, y0, y1 = -w / 2, w / 2, -h / 2, h / 2
-    outline = [[x0 + r, y0], [x1 - r, y0, b], [x1, y0 + r], [x1, y1 - r, b],
-               [x1 - r, y1], [x0 + r, y1, b], [x0, y1 - r], [x0, y0 + r, b]]
-    ok(rt.apply_operations("phone.FCStd", [{"op": "add_sketch", "plane": "XY",
-                                            "shapes": [{"type": "polygon", "points": outline}]},
-                                           {"op": "pad", "sketch": "$0", "length": t}], create={"units": "mm"}))
-    code, m = get_json(viewer, "/api/mesh", path="phone.FCStd")
-    assert code == 200
-    p, ix = m["positions"], m["indices"]
-    area = 0.0
-    for i in range(0, len(ix), 3):
-        a, c, d = (p[3 * ix[i + k]:3 * ix[i + k] + 3] for k in range(3))
-        u, v = [c[j] - a[j] for j in range(3)], [d[j] - a[j] for j in range(3)]
-        area += math.hypot(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]) / 2
-    face = w * h - (4 - math.pi) * r * r
-    side = 2 * (w + h) - 8 * r + 2 * math.pi * r
-    assert area == pytest.approx(2 * face + side * t, rel=2e-3)
-
-
-TESSELLATE_STUBS = r'''
-import importlib.util, json
-spec = importlib.util.spec_from_file_location("fc_runner", RUNNER)
-runner = importlib.util.module_from_spec(spec)
-spec.loader.exec_module(runner)
-
-class Face:
-    """first: triangles of the first meshing; again: of a copy meshed from scratch"""
-    def __init__(self, first, again):
-        self.first, self.again, self.calls = first, again, []
-    def tessellate(self, d):
-        self.calls.append(d)
-        return [f"p{i}" for i in range(3 * len(self.first))], self.first
-    def copy(self):
-        return Face(self.again, self.again)
-
-class Shape:
-    def __init__(self, faces):
-        self.Faces = faces
-    def tessellate(self, d):
-        return [], []
-
-ok, dropped, lost = Face([(0, 1, 2)], []), Face([], [(0, 1, 2), (2, 1, 0)]), Face([], [])
-pts, tris, missing = runner.tessellate(Shape([ok, dropped, lost]), 0.4)
-json.dump({"points": len(pts), "tris": tris, "missing": missing}, open(OUT, "w"))
-'''
-
-
-@needs_freecad
-def test_tessellate_meshes_a_dropped_face_again(tmp_path):
-    """A face Shape.tessellate left without triangles is meshed again on its own; one that still has none is named."""
-    import subprocess
-    cmd, env = freecad.find_freecad()
-    out = tmp_path / "out.json"
-    script = tmp_path / "stubs.py"
-    script.write_text(f"RUNNER = {str(freecad.RUNNER)!r}\nOUT = {str(out)!r}\n" + TESSELLATE_STUBS, "utf-8")
-    env = {**os.environ, **env}
-    env.pop("AGENTCAD_FC_JOB", None)
-    p = subprocess.run(cmd + [str(script)], env=env, cwd=tmp_path, capture_output=True, text=True, timeout=120)
-    assert out.is_file(), f"the FreeCAD script failed (exit {p.returncode}):\n{p.stdout[-2000:]}\n{p.stderr[-2000:]}"
-    r = json.loads(out.read_text("utf-8"))
-    assert r["missing"] == ["Face3"]
-    assert r["points"] == 3 + 6  # Face1's points, then the re-meshed Face2's
-    assert r["tris"] == [[0, 1, 2], [3, 4, 5], [5, 4, 3]]  # Face2's indices shifted past Face1's points
-
-
-@needs_freecad
-def test_part_mesh_reports_no_missing_faces(rt, viewer):
-    ok(rt.apply_operations("plate.FCStd", PLATE, create={"units": "mm"}))
-    code, m = get_json(viewer, "/api/mesh", path="plate.FCStd")
-    assert code == 200 and m["missing_faces"] == []
-
-
 # --- commits are never blocked by the viewer -------------------------------------------------------------------
 
 @pytest.mark.skipif(os.name != "nt", reason="POSIX rename never fails on an open target")
@@ -534,28 +418,6 @@ def test_create_drawing_does_not_load_the_http_server(ws):
     assert out.stdout.strip() == "False", out.stderr
 
 
-@needs_freecad
-@pytest.mark.parametrize("extra", [
-    {"op": "primitive", "kind": "sphere", "dims": {"radius": 10}, "position": [0, 0, 40]},
-    {"op": "primitive", "kind": "cone", "dims": {"radius1": 6, "radius2": 0, "height": 12}, "position": [0, 0, 40]},
-])
-def test_mesh_skips_degenerate_edges(rt, workspace, extra):
-    """A sphere's or cone's pole is an edge without a curve: the viewer's mesh leaves it out instead of failing."""
-    ok(rt.create_drawing("knob.FCStd"))
-    ok(rt.apply_operations("knob.FCStd", [
-        {"op": "primitive", "kind": "cylinder", "dims": {"radius": 3, "height": 40}}, extra]))
-    m = json.loads(workspace.mesh("knob.FCStd", None).read_text("utf-8"))
-    assert m["indices"] and all(len(e) >= 6 for e in m["edges"])
-
-
-def test_page_shows_only_the_layer_for_the_file_kind():
-    """The transparent 3D layer used to stay on top of a 2D drawing and took every wheel, drag and double-click."""
-    from agentcad.viewer import STATIC
-    page = (STATIC / "index.html").read_text("utf-8")
-    assert '$("stage").hidden = isPart(S.path); $("three").hidden = !isPart(S.path);' in page
-    assert '$("three").hidden = false' not in page
-
-
 def test_viewer_serves_the_ui_kit_and_nothing_else(tmp_path):
     import urllib.error
     import urllib.request
@@ -619,13 +481,14 @@ def test_page_adds_files_without_overwriting(page_viewer, tmp_path):
     assert (tmp_path / "板 plate.dxf").read_bytes() == data  # the first one is untouched
     # a name is only its last part: nothing lands outside the workspace
     for name, want in (("../../evil.dxf", "evil.dxf"), (r"..\..\x\evil2.png", "evil2.png"), ("C:/Windows/w.pdf", "w.pdf"),
-                       ("con.dxf", "_con.dxf"), ("a<b>c|d?.STEP", "a_b_c_d_.step")):
+                       ("con.dxf", "_con.dxf"), ("a<b>c|d?.PDF", "a_b_c_d_.pdf")):
         code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": quote(name)})
         assert code == 200 and r["path"] == want and (tmp_path / want).is_file(), (name, r)
         assert r["shown"] == want.endswith(".dxf")  # a drawing opens; the rest wait for the assistant
     assert not (tmp_path.parent / "evil.dxf").exists()
-    code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": "virus.exe"})
-    assert code == 400 and r["error"]["code"] == "UNSUPPORTED_FILE"
+    for name in ("virus.exe", "part.FCStd", "part.step", "part.stl"):  # no 3D parts: agents write CAD code for those
+        code, r = _post(page_viewer.url, "/api/import", b"x", {"X-AgentCAD-Filename": name})
+        assert code == 400 and r["error"]["code"] == "UNSUPPORTED_FILE", name
     # the page learns where the drawings are and that it may add files; the new drawing is listed
     with __import__("urllib.request").request.urlopen(page_viewer.url + "api/drawings") as resp:
         d = json.loads(resp.read())

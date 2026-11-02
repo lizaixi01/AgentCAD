@@ -162,7 +162,7 @@ const TOKEN = new URLSearchParams(location.search).get("t") || "";
 const T = {
   en: {
     title: "AgentCAD Setup", other: "中文",
-    welcome: "Welcome to AgentCAD", welcomeLead: "Let your AI assistant draw engineering drawings and 3D parts for you. Setup takes 3 steps and about a minute.",
+    welcome: "Welcome to AgentCAD", welcomeLead: "Let your AI assistant draw engineering drawings for you. Setup takes 3 steps and about a minute.",
     w1: "Pick your apps", w1s: "Claude, Codex or Cursor", w2: "We set it up", w2s: "Nothing to type", w3: "Start talking", w3s: "Just say what to draw",
     start: "Start", demo: "Demo mode: nothing on this computer will be changed.",
     s1: "Choose apps", s2: "Install", s3: "Done",
@@ -171,9 +171,8 @@ const T = {
     folderTitle: "Your drawings will be saved in", noneFound: "We didn't find an AI app on this computer. Install Claude or Codex first, then tap “Look again”. You can also tick an app now and install it later.",
     lookAgain: "Look again", back: "Back", install: "Install now", pickOne: "Choose at least one app",
     working: "Setting things up…", almost: "Almost there…", allDone: "Finished",
-    stWorkspace: "Prepare your drawings folder", stFreecad: "Look for FreeCAD (3D parts)", stAutocad: "Look for AutoCAD (DWG files)", stApp: "Connect {app}",
+    stWorkspace: "Prepare your drawings folder", stAutocad: "Look for AutoCAD (DWG files)", stApp: "Connect {app}",
     waiting: "Waiting", running: "Working on it…", folderReady: "Ready: {p}",
-    fcYes: "Found. 3D parts will work.", fcNo: "Not found. 2D drawings work fine; FreeCAD is optional.",
     acYes: "Found. DWG files will work.", acNo: "Not found. That's fine, it's optional.",
     connected: "Connected", already: "Already connected", wouldConnect: "Demo: would connect here", failed: "Didn't work",
     doneTitle: "All set!", doneLead: "AgentCAD is ready. A few easy steps left:",
@@ -183,14 +182,12 @@ const T = {
     allGood: "Everything works", someBad: "{n} things need a look", oneBad: "1 thing needs a look",
     ckCore: "AgentCAD itself", ckCoreOk: "Working (version {v})", ckCoreBad: "Some parts are missing. Download the installer again and run it.",
     ckFolder: "Your drawings folder", ckFolderBad: "Missing or can't be written to. Tap “Fix it for me”.",
-    ckFc: "3D parts (FreeCAD, optional)", ckFcBad: "Not installed. 2D drawings still work.",
     ckAc: "DWG files (AutoCAD, optional)", ckAcBad: "Not installed. That's fine.", ckAcSkip: "Only on Windows.",
     ckApp: "{app}", ckAppOk: "Connected", ckAppBad: "Installed, but not connected. Tap “Fix it for me”.", ckAppSkip: "Not on this computer",
     fixIt: "Fix it for me", checkAgain: "Check again",
     stShortcut: "Put AgentCAD icons on your desktop", scOk: "Done: “AgentCAD” shows your drawings, “AgentCAD Demo” shows people what it does.",
     scDemo: "Demo: would put the icon here", scFail: "Couldn't add the icon. Everything else still works.",
     iconTip: "From now on, double-click the AgentCAD icon on your desktop to see all your drawings, live. To show someone what it does, double-click “AgentCAD Demo”.",
-    getFreecad: "Get FreeCAD (free)", fcTip: "Want 3D parts too? Install the free FreeCAD 1.1. Afterwards, open this installer again and tap “Already installed? Check it”.",
     restart_claude_code: "Open a new Claude Code session.", restart_codex: "Open a new Codex session.",
     restart_claude_desktop: "Quit Claude completely (also the icon next to the clock) and open it again.",
     restart_cursor: "Restart Cursor. If AgentCAD is switched off, turn it on in Settings → MCP.",
@@ -210,12 +207,11 @@ const T = {
     err_WRITE_FAILED: "We couldn't save {app}'s settings. Close {app} and tap “Try again”.",
     err_TIMEOUT: "{app} took too long to answer. Wait a moment and tap “Try again”.",
     err_CLAUDE_CLI_FAILED: "Claude Code didn't accept the connection. Check that Claude Code opens normally, then tap “Try again”.",
-    err_FREECAD_NOT_FOUND: "FreeCAD wasn't found in the folder that was given.",
     err_other: "Something unexpected went wrong. Tap “Try again”. If it keeps happening, send us what is under “Technical details”.",
   },
   zh: {
     title: "AgentCAD 安装", other: "English",
-    welcome: "欢迎使用 AgentCAD", welcomeLead: "让 AI 助手帮你画工程图和 3D 零件。安装只要 3 步，大约 1 分钟。",
+    welcome: "欢迎使用 AgentCAD", welcomeLead: "让 AI 助手帮你画工程图。安装只要 3 步，大约 1 分钟。",
     w1: "选应用", w1s: "Claude、Codex 或 Cursor", w2: "自动安装", w2s: "不用敲任何命令", w3: "开口就画", w3s: "用平常说话的方式告诉它",
     start: "开始安装", demo: "演示模式：不会改动这台电脑上的任何设置。",
     s1: "选择应用", s2: "安装", s3: "完成",
@@ -224,9 +220,8 @@ const T = {
     folderTitle: "你的图纸会保存在", noneFound: "这台电脑上没找到 AI 应用。可以先安装 Claude 或 Codex，再点「重新查找」；也可以现在先勾上，以后再装。",
     lookAgain: "重新查找", back: "返回", install: "马上安装", pickOne: "请至少选一个应用",
     working: "正在为你安装…", almost: "马上就好…", allDone: "完成",
-    stWorkspace: "准备图纸文件夹", stFreecad: "查找 FreeCAD（做 3D 零件用）", stAutocad: "查找 AutoCAD（打开 DWG 文件用）", stApp: "连接 {app}",
+    stWorkspace: "准备图纸文件夹", stAutocad: "查找 AutoCAD（打开 DWG 文件用）", stApp: "连接 {app}",
     waiting: "等待中", running: "正在进行…", folderReady: "已准备好：{p}",
-    fcYes: "找到了，可以做 3D 零件。", fcNo: "没找到。二维图纸照样能用，FreeCAD 是可选的。",
     acYes: "找到了，可以打开 DWG 文件。", acNo: "没找到。没关系，这是可选的。",
     connected: "已连接", already: "之前已经连好了", wouldConnect: "演示：会在这里连接", failed: "没有成功",
     doneTitle: "装好了！", doneLead: "AgentCAD 已经准备好了，最后几步很简单：",
@@ -236,14 +231,12 @@ const T = {
     allGood: "一切正常", someBad: "有 {n} 项需要处理", oneBad: "有 1 项需要处理",
     ckCore: "AgentCAD 本体", ckCoreOk: "正常（版本 {v}）", ckCoreBad: "缺了一些组件。请重新下载安装程序，再运行一次。",
     ckFolder: "图纸文件夹", ckFolderBad: "不存在或者不能写入。点「帮我修好」。",
-    ckFc: "3D 零件（FreeCAD，可选）", ckFcBad: "没有安装。二维图纸照样能用。",
     ckAc: "DWG 文件（AutoCAD，可选）", ckAcBad: "没有安装。没关系。", ckAcSkip: "只在 Windows 上可用。",
     ckApp: "{app}", ckAppOk: "已连接", ckAppBad: "装了，但还没连上。点「帮我修好」。", ckAppSkip: "这台电脑上没有",
     fixIt: "帮我修好", checkAgain: "重新检查",
     stShortcut: "在桌面放 AgentCAD 图标", scOk: "放好了：「AgentCAD」看你的图纸，「AgentCAD 演示」给别人演示。",
     scDemo: "演示：会在这里放图标", scFail: "没能放上图标，其他功能都不受影响。",
     iconTip: "以后双击桌面上的 AgentCAD 图标，就能看到你所有的图纸，助手改图时会实时更新。想给别人看看它能做什么，双击「AgentCAD 演示」。",
-    getFreecad: "下载 FreeCAD（免费）", fcTip: "还想做 3D 零件？装上免费的 FreeCAD 1.1 就行。装好后再打开一次安装程序，点「已经装过了？检查一下」。",
     restart_claude_code: "打开一个新的 Claude Code 会话。", restart_codex: "打开一个新的 Codex 会话。",
     restart_claude_desktop: "完全退出 Claude（包括屏幕右下角托盘里的图标），再重新打开。",
     restart_cursor: "重启 Cursor。如果 AgentCAD 是关着的，在 设置 → MCP 里把它打开。",
@@ -263,12 +256,10 @@ const T = {
     err_WRITE_FAILED: "没能保存 {app} 的设置。请先关掉 {app}，再点「再试一次」。",
     err_TIMEOUT: "{app} 太久没有回应。稍等一会儿，再点「再试一次」。",
     err_CLAUDE_CLI_FAILED: "Claude Code 没有接受这次连接。请确认 Claude Code 能正常打开，再点「再试一次」。",
-    err_FREECAD_NOT_FOUND: "在指定的文件夹里没有找到 FreeCAD。",
     err_other: "遇到了意外的问题。请点「再试一次」；如果一直这样，把「技术细节」里的内容发给我们。",
   },
 };
 const REPO = "https://github.com/lizaixi01/AgentCAD";
-const FREECAD = "https://www.freecad.org/downloads.php";
 const COLORS = { "claude-code": "#d97757", "codex": "#4b5563", "claude-desktop": "#b8613f", "cursor": "#2f6fdf" };
 const INITIALS = { "claude-code": "CC", "codex": "Cx", "claude-desktop": "C", "cursor": "Cu" };
 const ICON = {
@@ -349,13 +340,12 @@ function render() {
 
 function stepText(s) {
   const app = (info.apps.find(a => a.id === s.id) || {}).label;
-  const name = s.id === "workspace" ? t("stWorkspace") : s.id === "freecad" ? t("stFreecad") : s.id === "autocad" ? t("stAutocad") : s.id === "shortcut" ? t("stShortcut") : t("stApp", { app });
+  const name = s.id === "workspace" ? t("stWorkspace") : s.id === "autocad" ? t("stAutocad") : s.id === "shortcut" ? t("stShortcut") : t("stApp", { app });
   let sub = t("waiting"), st = s.state;
   if (st === "run") sub = t("running");
   else if (st === "done" || st === "error") {
     const p = s.info && s.info.path;
     if (s.id === "workspace") sub = t("folderReady", { p });
-    else if (s.id === "freecad") { sub = p ? t("fcYes") : t("fcNo"); if (!p) st = "opt"; }
     else if (s.id === "shortcut") { sub = st === "error" ? t("scFail") : (s.info.status || "").startsWith("would") ? t("scDemo") : t("scOk"); if (st === "error") st = "opt"; }
     else if (s.id === "autocad") { sub = p ? t("acYes") : t("acNo"); if (!p) st = "opt"; }
     else {
@@ -388,8 +378,7 @@ function checkRows(r) {
     rows.push({ name: t("ckApp", { app: a.label }), s: c.status === "ok" ? "ok" : c.status === "skip" ? "skip" : "bad",
       sub: c.status === "ok" ? t("ckAppOk") : c.status === "skip" ? t("ckAppSkip") : t("ckAppBad"), app: a.id });
   }
-  const fc = by.FreeCAD || {}, ac = by.AutoCAD || {};
-  rows.push({ name: t("ckFc"), s: fc.status === "ok" ? "ok" : "opt", sub: fc.status === "ok" ? fc.detail : t("ckFcBad"), freecad: fc.status !== "ok" });
+  const ac = by.AutoCAD || {};
   rows.push({ name: t("ckAc"), s: ac.status === "ok" ? "ok" : ac.status === "skip" ? "skip" : "opt",
     sub: ac.status === "ok" ? ac.detail : ac.status === "skip" ? t("ckAcSkip") : t("ckAcBad") });
   return rows;
@@ -409,8 +398,7 @@ function renderCheck() {
   const ic = { ok: ICON.check, bad: ICON.x, opt: ICON.dash, skip: ICON.dot };
   card.innerHTML = demo() + `<div class="yay"><div class="ring ${bad.length ? "bad" : ""} pop">${bad.length ? ICON.x : ICON.check}</div>
     <h1>${esc(bad.length ? (bad.length === 1 ? t("oneBad") : t("someBad", { n: bad.length })) : t("allGood"))}</h1></div>
-    <ul class="steps">${rows.map(r => `<li data-s="${st[r.s]}"><span class="ic">${ic[r.s]}</span><div><b>${esc(r.name)}</b><span>${esc(r.sub)}</span>
-      ${r.freecad ? `<br><button class="btn small" type="button" data-freecad style="margin-top:8px">${esc(t("getFreecad"))}</button>` : ""}</div></li>`).join("")}</ul>
+    <ul class="steps">${rows.map(r => `<li data-s="${st[r.s]}"><span class="ic">${ic[r.s]}</span><div><b>${esc(r.name)}</b><span>${esc(r.sub)}</span></div></li>`).join("")}</ul>
     <div class="actions">${bad.length ? `<button class="btn primary" id="fix" type="button">${esc(t("fixIt"))} ${ICON.arrow}</button>` : ""}
       <button class="btn" id="again" type="button">${ICON.redo} ${esc(t("checkAgain"))}</button>
       <button class="btn" id="back" type="button">${esc(t("back"))}</button></div>`;
@@ -419,11 +407,6 @@ function renderCheck() {
   };
   $("again").onclick = runCheck;
   $("back").onclick = () => { view = "welcome"; render(); };
-  wireFreecad(card);
-}
-
-function wireFreecad(root) {
-  root.querySelectorAll("[data-freecad]").forEach(b => b.onclick = () => window.open(FREECAD, "_blank", "noopener"));
 }
 
 // Plain sentences for setup errors; the raw message stays under "Technical details".
@@ -467,7 +450,6 @@ function renderProgress() {
       <h1>${esc(ok ? t("doneTitle") : t("errTitle"))}</h1><p class="lead">${esc(ok ? t("doneLead") : t("errLead"))}</p></div>
       ${ok ? "" : `<ul class="steps">${steps.map(stepText).join("")}</ul>${state.error ? `<p class="none">${esc(friendlyError(state.error.code))}</p>` : ""}`}
       ${ok && res.shortcut && !/^(error|would)/.test(res.shortcut.status) ? `<div class="folder"><img src="/logo.svg" alt="" width="44" height="44" style="border-radius:10px;flex:none"><div>${esc(t("iconTip"))}</div></div>` : ""}
-      ${ok && !res.freecad ? `<div class="folder">${ICON.arrow}<div>${esc(t("fcTip"))}<br><button class="btn small" type="button" data-freecad style="margin-top:8px">${esc(t("getFreecad"))}</button></div></div>` : ""}
       ${todo ? `<h2>${esc(t("lastStep"))}</h2><ol class="todo">${todo}<li>${esc(t("sayThis"))}</li></ol><div class="prompts" style="margin-top:12px">${prompts}</div>` : ""}
       <div class="actions">${ok ? "" : `<button class="btn primary" id="retry" type="button">${ICON.redo} ${esc(t("retry"))}</button>`}
         <button class="btn" id="folder" type="button">${ICON.folder} ${esc(t("openFolder"))}</button>
@@ -480,7 +462,6 @@ function renderProgress() {
   });
   $("folder").onclick = async () => { const r = await api("/api/open-folder", {}); if (!r.ok) toast(t("noFolder", { m: r.error.message })); };
   $("share").onclick = share;
-  wireFreecad(card);
   if ($("retry")) $("retry").onclick = () => { view = "pick"; render(); };
   if ($("finish")) $("finish").onclick = async () => { try { await api("/api/quit", {}); } catch (e) {} ended = true; render(); };
   if (ok && !renderProgress.celebrated) { renderProgress.celebrated = true; confetti(); }

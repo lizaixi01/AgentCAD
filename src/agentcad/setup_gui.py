@@ -37,11 +37,11 @@ STATIC_FILES = {"/": ("setup.html", "text/html; charset=utf-8"), "/logo.svg": ("
 
 class Wizard:
     def __init__(self, root: str | None = None, *, dry_run: bool = False, launcher: str = "auto",
-                 source: str | None = None, freecad: str | None = None, name: str = install.NAME,
+                 source: str | None = None, name: str = install.NAME,
                  read_only: bool = False, allow_scripts: bool = False,
                  runner: install.Runner | None = None, host: str = "127.0.0.1", port: int = 0) -> None:
         self.root = install.workspace_root(root)
-        self.opts = dict(launcher=launcher, source=source, freecad=freecad, dry_run=dry_run, name=name,
+        self.opts = dict(launcher=launcher, source=source, dry_run=dry_run, name=name,
                          read_only=read_only, allow_scripts=allow_scripts, runner=runner)
         self.token = secrets.token_urlsafe(18)
         self.lock = threading.Lock()
@@ -75,7 +75,7 @@ class Wizard:
         with self.lock:
             if self.state["phase"] == "running":
                 return {"ok": False, "error": {"code": "BUSY", "message": "Setup is already running"}}
-            steps = ["workspace", "freecad", "autocad", *clients, "shortcut"]
+            steps = ["workspace", "autocad", *clients, "shortcut"]
             self.state = {"phase": "running", "result": None, "error": None,
                           "steps": [{"id": s, "state": "wait", "info": {}} for s in steps]}
         threading.Thread(target=self._run, args=(clients,), name="agentcad-setup", daemon=True).start()

@@ -12,13 +12,10 @@ from pathlib import Path
 import pytest
 
 from agentcad import progress
-from agentcad.backends import freecad
 from agentcad.policy import Policy
 from agentcad.service import Runtime
 from agentcad.viewer import ChangeFeed, Viewer, Workspace
 from conftest import ok
-
-needs_freecad = pytest.mark.skipif(not freecad.available(), reason="FreeCAD not installed (set AGENTCAD_FREECAD)")
 
 OPS = [{"op": "add_rectangle", "corner": [0, 0], "width": 100, "height": 60, "layer": "OUTLINE"},
        {"op": "add_circle", "center": [20, 20], "diameter": 8, "layer": "HOLES"},
@@ -155,21 +152,6 @@ def test_feed_starts_from_the_existing_log_and_follows_rotation(rt, ws, blank, c
     assert [e["activity"]["state"] for e in feed.progress_events][-1] == "done"
 
 
-@needs_freecad
-def test_a_3d_batch_reports_each_operation(rt, ws):
-    ops = [{"op": "set_parameters", "params": {"w": 40}},
-           {"op": "add_sketch", "plane": "XY", "shapes": [{"type": "rectangle", "corner": [0, 0], "width": "=Params.w",
-                                                           "height": 30}]},
-           {"op": "pad", "sketch": "$1", "length": 5},
-           {"op": "fillet", "edges": {"type": "line", "direction": "z"}, "radius": 2}]
-    ok(rt.apply_operations("p.FCStd", ops, create={"units": "mm"}))
-    evs = events(ws)
-    assert [e["state"] for e in evs][-2:] == ["checking", "done"]
-    steps = [e["step"] for e in evs if e["state"] == "working" and e["step"]]
-    assert steps and steps == sorted(steps) and steps[-1] == 4 and len(steps) >= 2  # relayed while FreeCAD runs
-    assert evs[-1]["ops"][0] == {"op": "set_parameters", "params": {"w": 40}, "n": 1}
-
-
 # --- the viewer the MCP server starts --------------------------------------------------------------------------
 
 def test_mcp_runtime_starts_a_viewer_on_the_first_change(ws, monkeypatch):
@@ -258,17 +240,6 @@ def test_thumbnail_of_a_drawing(rt, blank, viewer):
     ok(rt.apply_operations(blank, OPS))
     code, headers, body = get(viewer, "/api/thumb", path=blank)
     assert code == 200 and headers["Content-Type"] == "image/svg+xml" and body.startswith(b"<svg")
-
-
-@needs_freecad
-def test_part_export_and_thumbnail(rt, ws, viewer):
-    ops = [{"op": "add_sketch", "plane": "XY", "shapes": [{"type": "rectangle", "corner": [0, 0], "width": 40, "height": 30}]},
-           {"op": "pad", "sketch": "$0", "length": 5}]
-    ok(rt.apply_operations("p.FCStd", ops, create={"units": "mm"}))
-    code, headers, png = get(viewer, "/api/thumb", path="p.FCStd")
-    assert code == 200 and headers["Content-Type"] == "image/png" and png[:8] == b"\x89PNG\r\n\x1a\n"
-    page = get(viewer, "/api/export", path="p.FCStd")[2].decode("utf-8")
-    assert '"image": "data:image/png;base64,' in page and str(ws) not in page
 
 
 # --- ports: a viewer never answers for another workspace ------------------------------------------------------

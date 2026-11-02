@@ -6,7 +6,6 @@ import base64
 import hashlib
 from io import BytesIO
 import json
-import math
 import os
 import subprocess
 import sys
@@ -15,7 +14,6 @@ from PIL import Image
 import pytest
 
 from agentcad import images
-from agentcad.backends import freecad
 from agentcad.policy import Policy
 from agentcad.service import Runtime
 
@@ -144,30 +142,6 @@ def test_mcp_returns_metadata_and_inline_image(ws, profile):
     assert Image.open(BytesIO(base64.b64decode(result.content[1].data))).size == (80, 160)
 
 
-@pytest.mark.skipif(not freecad.available(), reason="FreeCAD not installed")
-def test_native_pocket_and_pad_honor_opposite_face_levels(ws):
-    """Separate cut depth, remaining wall and boss extension: bbox/hole count alone misses this."""
-    runtime = Runtime(Policy(root=ws))
-    result = runtime.apply_operations("layered.FCStd", [
-        {"op": "add_sketch", "plane": "XY", "shapes": [
-            {"type": "rectangle", "center": [0, 0], "width": 20, "height": 20}]},
-        {"op": "pad", "sketch": "$0", "length": 4},
-        {"op": "add_sketch", "plane": "XY", "offset": 4, "shapes": [
-            {"type": "rectangle", "center": [0, 0], "width": 10, "height": 10}]},
-        {"op": "pocket", "sketch": "$2", "depth": 1.5},
-        {"op": "add_sketch", "plane": "XY", "offset": 0, "shapes": [
-            {"type": "circle", "center": [0, 0], "radius": 3}]},
-        {"op": "pad", "sketch": "$4", "length": 1.5, "reversed": True},
-        {"op": "add_sketch", "plane": "XY", "offset": 4, "shapes": [
-            {"type": "circle", "center": [0, 0], "radius": 1}]},
-        {"op": "pocket", "sketch": "$6", "through_all": True},
-    ], create={"units": "mm"})
-    assert result["ok"], result
-    shape = result["validation"]["shape"]
-    assert shape["bbox"] == [[-10, -10, -1.5], [10, 10, 4]]
-    assert shape["volume"] == pytest.approx(20 * 20 * 4 - 10 * 10 * 1.5 + math.pi * 3**2 * 1.5 - math.pi * 4)
-
-
 @pytest.mark.parametrize("profile", ["full", "discovery"])
 def test_png_export_preserves_inline_image_through_sdk(ws, monkeypatch, profile):
     """Mixed media must use MCP content, not a JSON output-model serializer."""
@@ -178,7 +152,7 @@ def test_png_export_preserves_inline_image_through_sdk(ws, monkeypatch, profile)
     server = build_server(Policy(root=ws), profile=profile)
 
     async def run():
-        args = {"path": "part.FCStd", "output": "preview.png", "format": "png"}
+        args = {"path": "part.dxf", "output": "preview.png", "format": "png"}
         if profile == "discovery":
             return await server.call_tool("call_tool", {"name": "export_drawing", "arguments": args})
         return await server.call_tool("export_drawing", args)

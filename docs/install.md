@@ -34,7 +34,7 @@ English or Chinese.
 
 Already installed, or something stopped working? Run the installer again and tap **Already installed? Check it**.
 Every part gets a green tick or a sentence saying what to do, and **Fix it for me** reconnects the apps that need
-it. Without FreeCAD, the page has a button to its free download; 2D drawings work without it.
+it.
 
 The first run downloads uv and Python (about a minute). On macOS and Linux the installer shows its progress as text
 in a Terminal window instead of a progress window. It does the same as `agentcad setup` below, so running it
@@ -89,7 +89,7 @@ The first run takes up to a minute while it downloads. Then it:
 - adds AgentCAD to each app's settings, keeping the other tools you already set up there;
 - creates the folder where your drawings will be saved: `AgentCAD` in your home folder
   (`C:\Users\<you>\AgentCAD` on Windows, `/Users/<you>/AgentCAD` on macOS, `/home/<you>/AgentCAD` on Linux);
-- looks for FreeCAD and AutoCAD (see below);
+- looks for AutoCAD (see below);
 - prints what to do next.
 
 Running it again is safe: it only changes what is out of date. To see what it would change without changing
@@ -126,7 +126,7 @@ Open your `AgentCAD` folder: `plate.svg` opens in any web browser, and `plate.dx
 uvx --from git+https://github.com/lizaixi01/AgentCAD agentcad doctor
 ```
 
-It checks Python, AgentCAD, Pillow, FreeCAD, AutoCAD, your drawings folder and each app's settings. Every line says
+It checks Python, AgentCAD, Pillow, AutoCAD, your drawings folder and each app's settings. Every line says
 `ok`, `missing` or `skip` (app not installed), and every problem comes with a one-line fix.
 
 ## Save drawings in another folder
@@ -140,18 +140,6 @@ uvx --from git+https://github.com/lizaixi01/AgentCAD agentcad setup --root "D:\D
 The agent can only read and write files inside this folder. Without `--root`, AgentCAD uses the `AGENTCAD_ROOT`
 environment variable if you set one, and otherwise `AgentCAD` in your home folder. It never uses whatever folder the
 app happened to start in.
-
-## 3D parts: FreeCAD
-
-2D drawings (DXF) work right away. 3D parts (`.FCStd`, STEP, STL) need **FreeCAD 1.1**: download it from
-[freecad.org](https://www.freecad.org/downloads.php) and install it. Setup finds FreeCAD in its usual install folder.
-If you put it somewhere else, or doctor says it is missing, tell setup where it is:
-
-```bash
-uvx --from git+https://github.com/lizaixi01/AgentCAD agentcad setup --freecad "D:\Tools\FreeCAD 1.1"
-```
-
-Give the FreeCAD folder (the one that holds `bin`), its `bin` folder, or the `freecadcmd` program.
 
 ## DWG files: AutoCAD (optional, Windows)
 

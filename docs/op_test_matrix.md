@@ -1,7 +1,7 @@
 # 操作 × 测试矩阵 (自动生成)
 
 统计每个操作在哪些测试文件中以 `"op": "<name>"` 形式被调用。
-这只说明“被执行过”，断言质量见各测试本身。三维零件操作只统计 test_n_parts.py（二维和三维有同名操作）。
+这只说明“被执行过”，断言质量见各测试本身。
 
 | 操作 | 类别 | 测试文件 |
 |---|---|---|
@@ -41,7 +41,7 @@
 | `array_rect` | edit | test_h_operations.py, test_security.py |
 | `block_from_entities` | block | test_t_workflow_guards.py |
 | `break` | edit | test_i_common_ops.py |
-| `chamfer` | edit | test_h_operations.py, test_r_part_scripts.py |
+| `chamfer` | edit | test_h_operations.py |
 | `change_space` | layout | test_layouts_and_scripts.py |
 | `copy` | edit | test_h_operations.py, test_layouts_and_scripts.py |
 | `create_layer` | layer | test_f_repro_recovery.py, test_h_operations.py, test_q_viewer_progress.py |
@@ -57,7 +57,7 @@
 | `edit_hatch` | edit | test_t_workflow_guards.py |
 | `explode` | edit | test_h_operations.py |
 | `extend` | edit | test_h_operations.py |
-| `fillet` | edit | test_h_operations.py, test_q_viewer_progress.py, test_r_part_scripts.py |
+| `fillet` | edit | test_h_operations.py, test_q_viewer_progress.py |
 | `insert_block` | block | test_autocad_findings.py, test_h_operations.py, test_i_common_ops.py, test_t_workflow_guards.py |
 | `join` | edit | test_i_common_ops.py |
 | `mirror` | edit | test_autocad_findings.py, test_h_operations.py, test_layouts_and_scripts.py |
@@ -76,24 +76,5 @@
 | `stretch` | edit | test_b_revision.py, test_h_operations.py, test_layouts_and_scripts.py, test_y_tolerances.py |
 | `trace_boundary` | draw | **无** |
 | `trim` | edit | test_autocad_findings.py, test_d_errors.py, test_h_operations.py |
-| `add_sketch` | part_sketch | test_n_parts.py |
-| `chamfer` | part_feature | test_n_parts.py |
-| `delete_feature` | part_edit | test_n_parts.py |
-| `fillet` | part_feature | test_n_parts.py |
-| `groove` | part_feature | test_n_parts.py |
-| `helix` | part_feature | test_n_parts.py |
-| `hole` | part_feature | test_n_parts.py |
-| `linear_pattern` | part_feature | test_n_parts.py |
-| `loft` | part_feature | test_n_parts.py |
-| `mirror` | part_feature | test_n_parts.py |
-| `modify_feature` | part_edit | test_n_parts.py |
-| `pad` | part_feature | test_n_parts.py |
-| `pocket` | part_feature | test_n_parts.py |
-| `polar_pattern` | part_feature | test_n_parts.py |
-| `primitive` | part_feature | test_n_parts.py |
-| `revolve` | part_feature | test_n_parts.py |
-| `set_parameters` | part_edit | test_n_parts.py |
-| `sweep` | part_feature | test_n_parts.py |
-| `thickness` | part_feature | test_n_parts.py |
 
-共 90 个操作，未被任何测试调用: ['set_page_setup (layout)', 'trace_boundary (draw)']
+共 71 个操作，未被任何测试调用: ['set_page_setup (layout)', 'trace_boundary (draw)']

@@ -445,3 +445,32 @@ AgentCAD 在 T2/case1 仍较高（38.74 对 17.33）；复杂 T4 两边都低于
 的 Linux 容器及原生资源限制。因此结论针对完整工作流，不针对孤立内核组件。
 完整逐题数据、1,302 份原始文件哈希及复现约束见
 [原生对照报告](../examples/benchcad2/comparison-native-astra-2026-10-31.md)。
+
+---
+
+# ADR-003：移除三维零件
+
+日期：2026-11-02　状态：已采纳
+
+## 背景与证据
+
+- 三维路线（FreeCAD 后端、19 个零件操作、CadQuery / FreeCAD 脚本、参考图比较）约 4,500 行，加上安装、查看器和测试。
+- 同一 Agent 对照（见 [benchmarks.md](benchmarks.md)）结果不一致：BenchCAD Vision2Code 100 题，Claude Code 经
+  AgentCAD 0.745、自己写 CadQuery 0.682；Codex 经 AgentCAD 0.876、自己写 CadQuery 0.918。BenchCAD 2 的 9 个开发样例，
+  原生工具 71.77、AgentCAD 56.79，五类任务都是原生较高。
+- 2026-11-01 决定收窄到二维 MVP，与 AutoCAD 对比。
+
+## 决策
+
+移除三维零件：`part/`、`backends/freecad.py`、`.FCStd` 分支、`run_script` 的 CadQuery / FreeCAD 语言、
+`export_drawing` 的三维预览与参考图比较、`measure_entities` 的平面测量、安装程序的 FreeCAD 步骤、查看器的三维显示，
+以及 `cadquery` 可选依赖。三维零件交给 Agent 直接写 CadQuery / build123d 代码，AgentCAD 不在中间加一层。
+
+## 后果
+
+- AgentCAD 只处理二维图纸（DXF，有 AutoCAD 时含 DWG）。
+- 三维实验记录（`examples/benchcad`、`examples/benchcad2`、`examples/parametric_cad_bench`、`research/shahe-benchmark`、
+  `research/iphone18-comparison` 及上面的评估追加）保留为历史，
+  其测试框架依赖移除前的代码，不再随当前代码运行。
+- 以后若需要从三维模型出二维工程图，应作为二维功能的输入（例如读入投影出的 DXF），不恢复三维建模层。
+

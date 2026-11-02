@@ -1,7 +1,7 @@
 [project]
 name = "agentcad-runtime"
 version = "0.1.0"
-description = "Agent-native, headless CAD runtime: 2D drawings (DXF) and 3D parametric parts (FreeCAD), with CLI, MCP and Python API"
+description = "Agent-native, headless CAD runtime for 2D drawings (DXF), with CLI, MCP and Python API"
 readme = "README.md"
 requires-python = ">=3.10"
 license = { text = "MIT" }
@@ -10,15 +10,13 @@ dependencies = [
     "mcp>=1.20,<2",
     "pypdf>=4",
     "pillow>=10",  # SVG export and image previews; a core dependency so a plain uvx/pipx install can do them
-    "numpy",  # comparing previews with reference images (part/compare.py); ezdxf requires it as well
+    "numpy",  # image scripts (inspect_image code=); ezdxf requires it as well
     "tomli>=2; python_version < '3.11'",  # validate user configuration on every supported Python
 ]
 
 [project.optional-dependencies]
 preview = ["pillow>=10"]
 live = ["pywin32>=306; sys_platform == 'win32'"]
-# run_script on 3D parts (.FCStd) in CadQuery; runs in AgentCAD's own interpreter, not in FreeCAD's
-cadquery = ["cadquery>=2.3"]
 dev = ["pytest>=8", "pillow>=10", "pywin32>=306; sys_platform == 'win32'"]
 
 [project.scripts]

@@ -1,9 +1,7 @@
 # 实时查看器（viewer）
 
-Agent 改图纸或零件时，人可以在浏览器里实时看到它在变：正在做哪一步、做完了没有、有没有问题，还能把结果存成一个
+Agent 改图纸时，人可以在浏览器里实时看到它在变：正在做哪一步、做完了没有、有没有问题，还能把结果存成一个
 网页或一张图片发给别人。查看器只读工作区，不依赖是哪个 Agent 在改（Claude Code、Codex、CLI、HTTP API 都一样）。
-
-![一个 56 步的三维批处理进行到第 26 步](assets/viewer/progress-en-light.png)
 
 ## 怎么打开
 
@@ -25,8 +23,7 @@ agentcad --root playground viewer --port 9000
 ```
 
 Windows 上是 `.venv\Scripts\agentcad.exe`。启动后打印一行 JSON（`{"ok": true, "viewer": "http://127.0.0.1:8770/", ...}`），
-Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。三维零件要用 FreeCAD 出网格，启动查看器的环境里同样要设
-`AGENTCAD_FREECAD`（见 [part-3d.md](part-3d.md)）。
+Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。
 
 `--open` 是给桌面上的 AgentCAD 图标用的：如果这个根目录已经有查看器在运行，就直接在浏览器里打开它；否则从 8770 起找
 一个空闲端口启动查看器，再打开。安装向导（`agentcad setup --gui`）和 `agentcad setup --shortcut` 会在桌面放上这个
@@ -54,7 +51,7 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。三维零
 
 **我的图纸**下面显示图纸文件夹的位置，带“打开”（在资源管理器或 Finder 里打开）和“复制路径”。鼠标停在一张图纸上时有
 “在文件夹中显示”按钮。往里加文件有三种办法：点“添加文件…”选文件，把文件拖进页面（拖进来时整页提示“松开，放进我的
-图纸”），或者在资源管理器里复制文件后按 Ctrl+V。DXF 和 FCStd 加进来就打开；DWG、STEP、STL、PNG/JPG/PDF 放进文件夹，
+图纸”），或者在资源管理器里复制文件后按 Ctrl+V。DXF 加进来就打开；DWG、PNG/JPG/PDF 放进文件夹，
 页面说明下一步让助手做什么。加文件只放在文件夹顶层，从不覆盖：同名的变成“plate (2).dxf”；单个文件最大 100 MB。
 
 这是查看器唯一写入、唯一启动外部程序的地方（`POST /api/import`、`POST /api/reveal`）。它们只回应页面本身：Host 是
@@ -81,18 +78,15 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。三维零
     和一小阵彩纸（系统设了“减少动态效果”就不放彩纸）。
   - 出了问题（红色）：错误信息，并说明文件没有被修改。
   - 点状态栏跳到那个文件。
-- **我的图纸**（左栏）：根目录下所有 `.dxf` 和 `.FCStd`（跳过 `.agentcad`、`.git`、`.venv` 等目录，最多 2000 个），
-  每个带缩略图（二维是 SVG，三维是 FreeCAD 渲染的等轴测图，按内容缓存）和最后修改时间。**跟随助手**（默认开）：
+- **我的图纸**（左栏）：根目录下所有 `.dxf`（跳过 `.agentcad`、`.git`、`.venv` 等目录，最多 2000 个），
+  每个带缩略图（SVG，按内容缓存）和最后修改时间。**跟随助手**（默认开）：
   助手开始改哪个文件就切到哪个。
 - **中间**：
   - 二维图纸：ezdxf 渲染的 SVG（和 `export_drawing(..., "svg")` 同一个渲染器），滚轮缩放、拖动平移、双击复位。
     图层多于一个时上方有图层开关，隐藏图层不会改变取景。
-  - 三维零件：three.js 显示 FreeCAD 三角化的实体和 B-rep 边，左键旋转、右键平移、滚轮缩放、双击复位。零件更新时
-    保持视角，尺寸变化超过 20% 才重新取景。three.js 0.160.0 从 jsDelivr CDN 加载，import map 带 SRI 哈希；离线时
-    退回到四视图 PNG 预览（同 `export_drawing(..., "png")` 的渲染器）。
   - **标出修改**（默认开）：这一版新增的实体绿色、修改的橙色、其余灰色。
   - **前后对比**：二维是左右拖动的分割线，左边修改前、右边修改后（开着“标出修改”时右边着色）；两版用同一个取景
-    （两版范围的并集），所以对得齐。三维是修改前后两张等轴测图并排。
+    （两版范围的并集），所以对得齐。
 
 ![前后对比](assets/viewer/compare-en-light.png)
 
@@ -102,18 +96,17 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。三维零
   - **版本**：journal 的每条记录，用同样的说法，带增改删数量和 label。点一条提交就看它产生的那一版（只读，顶部提示
     “你正在看一个较早的版本”，带“回到最新”按钮）。失败的调用标红并带错误信息。文件在 AgentCAD 之外被改过时，
     “现在”下面会提示。
-  - **技术细节**（折叠）：和 `get_diff` 相同的结果，对比的是这次提交开始时的版本。二维列出实体（id、类型、图层、tag、
-    改了哪些字段）和图层增删；三维列出参数（`width: 80 → 120`）和形状（体积、尺寸、孔）的变化。三维对比要起两次
-    FreeCAD，约几秒。
+  - **技术细节**（折叠）：和 `get_diff` 相同的结果，对比的是这次提交开始时的版本。列出实体（id、类型、图层、tag、
+    改了哪些字段）和图层增删。
 
 ## 保存和分享
 
 右上角 **保存和分享**：
 
 - **网页（.html）**：一个自包含的文件，任何浏览器离线都能打开，可以直接发给别人。里面有当前看的这一版的图
-  （二维：图、标出修改的图、可拖动的前后对比；三维：四视图），以及这个文件的完整修改记录（同样的说法、时间、增改删
+  （图、标出修改的图、可拖动的前后对比），以及这个文件的完整修改记录（同样的说法、时间、增改删
   数量、失败的调用）。语言按打开它的人的浏览器选。不引用任何外部脚本、样式或图片。
-- **图片（.png）**：当前看到的画面（二维按当前的着色和图层开关重新渲染成 2000 px 宽；三维是当前视角），底部印上文件名、
+- **图片（.png）**：当前看到的画面（按当前的着色和图层开关重新渲染成 2000 px 宽），底部印上文件名、
   日期和“由 AgentCAD 生成”。在浏览器里生成，不经过服务器。
 
 导出不带工作区之外的任何路径：网页里只有相对根目录的文件名；label 和错误信息里的绝对路径，根目录下的变成相对路径，
@@ -139,8 +132,6 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。三维零
   `done`（增改删数量、按操作归并的摘要、校验结论）或 `error`（错误码和去掉绝对路径的信息）。
 - `op` 只带让一句话可读的几个参数（直径、尺寸、数量、文字……），不带坐标和几何，一行约 200 字节。说法（中英文）在页面里
   （`viewer_static/friendly.js`），Runtime 只写数据。
-- 三维：一批操作在一个 FreeCAD 进程里跑。runner 每执行一个操作向作业目录的 `progress.jsonl` 追加一行，父进程等
-  FreeCAD 时每 0.1 s 读新行转发，所以三维也有“第 26 步，共 56 步：正在挖槽”。
 - 嵌套调用（`apply_operations(create=...)` 里的 `create_drawing`）不单独报告；`dry_run` 和只读 Runtime 不写。
 - **不会让提交失败**：写一行是一次追加，任何异常都吞掉（测试 `test_progress_never_fails_a_commit` 把日志换成目录，提交照常成功）。
   文件超过 512 KB 时，下一次调用开始前改名为 `activity.jsonl.1`；改名失败（Windows 上正被读）就继续追加。
@@ -154,10 +145,9 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。三维零
   收到事件后更新状态、动态，并重新拉时间线和当前版本。断线后浏览器自动重连（`Last-Event-ID` 续上）。
 - **版本按内容寻址**：每条成功提交的 journal 记录都有它写出的文件 sha256，每个检查点也记着自己内容的 sha256，
   所以磁盘上还存着的任何版本都能显示。要显示的版本先整体读进工作区外的缓存（系统临时目录下
-  `agentcad-viewer/<root 的哈希>/<sha256>.dxf`），校验 sha256 后再解析或交给 FreeCAD；渲染结果按 sha 缓存，
-  旧版本的响应可以被浏览器长期缓存。同时最多跑两个 FreeCAD 作业（缩略图很多时不会一下起一堆进程）。
-- **只读**：查看器用 `read_only` 策略，不加写锁、不写 journal、不调用会写文件的工具（三维网格用 runner 的
-  `mesh` 动作，在 FreeCAD 作业目录里完成，不经过 `export_drawing`）。唯一写到根目录下的是 `.agentcad/viewer.json`。
+  `agentcad-viewer/<root 的哈希>/<sha256>.dxf`），校验 sha256 后再解析；渲染结果按 sha 缓存，
+  旧版本的响应可以被浏览器长期缓存。
+- **只读**：查看器用 `read_only` 策略，不加写锁、不写 journal、不调用会写文件的工具。唯一写到根目录下的是 `.agentcad/viewer.json`。
   测试 `test_viewer_never_writes_the_workspace` 检查请求所有版本前后工作区文件的哈希不变。
 - **不会让 Agent 的提交失败**：Windows 上一个文件被任何进程打开着（查看器、杀毒软件、搜索索引、资源管理器预览），
   就不能被 `os.replace` 替换，加 `FILE_SHARE_DELETE` 共享也不行（实测）。所以存储层的原子替换（图纸、`committed.*`、
@@ -173,16 +163,14 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。三维零
 | 路径 | 返回 |
 |---|---|
 | `/` | 页面（`/friendly.js`、`/logo.svg` 是它的脚本和图标） |
-| `/api/drawings` | `{"drawings": [{"path", "kind": "drawing" \| "part"}], "last_event"}` |
+| `/api/drawings` | `{"drawings": [{"path", "kind": "drawing"}], "last_event"}` |
 | `/api/timeline?path=` | `{"current", "modified_outside_runtime", "records": [{"seq", "tool", "ok", "label", "ops", "steps", "changes", "error", "version", "available", "before"}]}`（`steps`：按操作归并的摘要，同进度事件的 `ops`） |
 | `/api/svg?path=&v=&diff=1&hide=L1,L2&frame=` | 二维 SVG；`frame` 是另一个版本，两版用同一个取景 |
 | `/api/layers?path=&v=` | 图层和实体数 |
 | `/api/diff?path=&v=` | 这一版的改动（`before` = 起始版本） |
-| `/api/mesh?path=&v=` | 三维：`{"positions", "indices", "edges"}` |
-| `/api/png?path=&v=` | 三维：四视图 PNG |
-| `/api/thumb?path=&v=` | 缩略图：二维 SVG，三维等轴测 PNG（240 px） |
+| `/api/thumb?path=&v=` | 缩略图：SVG |
 | `/api/export?path=&v=` | 自包含的 HTML 快照（`Content-Disposition: attachment`，文件名 `<名字>-<sha 前 8 位>.html`） |
 | `/api/activity` | `{"events": [最近的进度事件，旧的在前], "last_event"}` |
 | `/api/events` | SSE，`data: {"id", "drawing", "kind": "changed" \| "added" \| "removed"}`；`?progress=1` 另有 `{"kind": "activity", "activity": <进度事件>}` |
 
-出错时返回和其他接口相同的错误信封：版本或文件不存在 404，路径在根目录外 403，缺 FreeCAD 503。
+出错时返回和其他接口相同的错误信封：版本或文件不存在 404，路径在根目录外 403。

@@ -2,6 +2,8 @@
 
 Every benchmark and comparison AgentCAD has run, with what it compares, its caveats and links to the full reports, logs and graders. The [README](../README.md#results-at-a-glance) keeps one line per benchmark.
 
+**3D was removed on 2026-11-02** ([ADR-003](decision-record.md#adr-003移除三维零件)). The 3D results below (BenchCAD Vision2Code, BenchCAD 2, Parametric CAD Bench V3) are kept as the record that led to that decision; their harnesses ran against AgentCAD before that date and no longer run against the current code.
+
 The first three sections were moved from the README as of `0b93e9b`, with three more README passages: the paragraph that ends the AutoCAD MCP benchmark section (from "What's inside"), and the first seven rows of the report table and the note below it (from "Documentation"). Their text, numbers, dates, commit pins and caveats are unchanged; only the first heading (it was "Results") and the relative links, which now resolve from this folder, differ.
 
 ## Timed trials and BenchCAD Vision2Code
