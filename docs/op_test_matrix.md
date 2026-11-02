@@ -60,7 +60,7 @@
 | `fillet` | edit | test_h_operations.py, test_q_viewer_progress.py, test_r_part_scripts.py |
 | `insert_block` | block | test_autocad_findings.py, test_h_operations.py, test_i_common_ops.py, test_t_workflow_guards.py |
 | `join` | edit | test_i_common_ops.py |
-| `mirror` | edit | test_autocad_findings.py, test_h_operations.py |
+| `mirror` | edit | test_autocad_findings.py, test_h_operations.py, test_layouts_and_scripts.py |
 | `modify` | edit | test_h_operations.py, test_j_compact_results.py, test_layouts_and_scripts.py, test_y_tolerances.py |
 | `modify_layer` | layer | test_h_operations.py |
 | `move` | edit | test_d_errors.py, test_f_repro_recovery.py, test_h_operations.py, test_j_compact_results.py, test_t_workflow_guards.py, test_y_tolerances.py |
@@ -73,7 +73,7 @@
 | `set_attributes` | block | test_h_operations.py |
 | `set_page_setup` | layout | **无** |
 | `set_properties` | edit | test_h_operations.py |
-| `stretch` | edit | test_b_revision.py, test_h_operations.py, test_y_tolerances.py |
+| `stretch` | edit | test_b_revision.py, test_h_operations.py, test_layouts_and_scripts.py, test_y_tolerances.py |
 | `trace_boundary` | draw | **无** |
 | `trim` | edit | test_autocad_findings.py, test_d_errors.py, test_h_operations.py |
 | `add_sketch` | part_sketch | test_n_parts.py |
