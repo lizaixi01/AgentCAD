@@ -1,8 +1,8 @@
 # Live viewer on shadcn/ui
 
-The live viewer's next page: React, Tailwind CSS 4, shadcn/ui (Radix, "nova" preset), lucide icons and three.js.
-It does what the packaged page (`src/agentcad/viewer_static/index.html`) does, against the same API
-(`agentcad/viewer.py`) and with the same wording (`viewer_static/friendly.js`, both languages):
+The page `agentcad viewer` serves: React, Tailwind CSS 4, shadcn/ui (Radix, "nova" preset), lucide icons and
+three.js. It talks to the viewer's API (`agentcad/viewer.py`) and takes its wording from `viewer_static/friendly.js`
+(both languages):
 
 - the files, with search, a kind filter, a thumbnail on hover, "show in folder", and adding files (the + button,
   dragging them onto the page, or Ctrl+V)
@@ -20,8 +20,12 @@ camera glides to the new framing.
 ```
 npm install
 npm run dev      # http://localhost:5173, forwarding /api to AGENTCAD_VIEWER (default http://localhost:8781)
-npm run build    # type-checks, then writes dist/
+npm run build    # type-checks, then writes the page into src/agentcad/viewer_static/app/
 ```
 
-Start the viewer it talks to with the "agentcad-viewer" entry of `.claude/launch.json` (this checkout's
-`playground/`), or set `AGENTCAD_VIEWER` to another one. Serving `dist/` from the Python package is not done yet.
+The build is committed with the Python package, so installing AgentCAD needs no Node: after changing anything
+here, run `npm run build` and commit `src/agentcad/viewer_static/app/` with the change. The viewer serves its
+`index.html` at `/` and the rest at `/app/assets/`.
+
+For `npm run dev`, start the viewer it talks to with the "agentcad-viewer" entry of `.claude/launch.json` (this
+checkout's `playground/`), or set `AGENTCAD_VIEWER` to another one.
