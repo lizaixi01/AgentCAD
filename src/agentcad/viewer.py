@@ -781,7 +781,7 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                 # Closing a socket with received data still unread makes Windows reset the connection, and the
                 # reset can throw away the answer before the client reads it (WinError 10053). So a refused
                 # request's small body is read before the connection closes; a large one is never read. A body
-                # of unknown size is read after a half-close, until the client closes or MAX_DRAIN.
+                # of unknown size is read after a half-close, until the client closes, MAX_DRAIN, or 2 s without data.
                 try:
                     if 0 < self._unread <= MAX_DRAIN:
                         self.connection.settimeout(2)
