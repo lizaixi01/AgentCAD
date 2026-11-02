@@ -488,7 +488,7 @@ AgentCAD 在 T2/case1 仍较高（38.74 对 17.33）；复杂 T4 两边都低于
   - 五轮修改 4.1 分钟，自己写代码 12.9 分钟；真实 DWG 修改 2.9 对 6.0 分钟。
   - 新会话里撤销早先的修改：AgentCAD 3/3，AutoCAD MCP Pro 0/3。
   - 一批几乎相同的图，一个生成脚本更快、更省。
-  - AgentCAD 会话读入的 token 约为直接写代码的 2 倍。
+  - AgentCAD 会话读入的 token 约多 1 倍。
   - 三维零件，Codex 自己写 CadQuery 更准（0.918 对 0.876），已按 ADR-003 移除。
 - 现有实现有三处把方法定死了：
   1. `run_script` 默认关闭（`policy.allow_scripts`），Agent 只能走操作这一条路。而脚本本来就作为一个事务执行：校验、检查点、可撤销；
