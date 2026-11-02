@@ -48,15 +48,18 @@ Not isolated by a worktree:
 The user has handed review and merge to AI. The tests are the gate; review is added where it pays.
 A PR is merged when all of these hold:
 
-1. **CI passes on the PR.** GitHub tests the PR merged with the current `main`, so there is no need to
-   merge `main` into the branch first. Do that only when GitHub reports a conflict.
-2. **GitHub reports the PR mergeable.**
-3. **Independent review, when the change needs one.**
-   - Needed: more than about 50 changed lines under `src/`; code that guards the user's machine
-     (`run_script` checks, file access, the viewer server, the installer); how drawings are written
-     to disk (DXF, DWG); anything on the ask-the-user list below.
-   - Not needed: docs, tests, write-ups of results, and small fixes (about 50 lines or fewer under
-     `src/`) that come with a test.
+1. **CI passes on the PR.** A PR's CI tests the branch merged with `main` as `main` was when the run
+   started, so there is no need to merge `main` into the branch first. Do that (and let CI run again)
+   only when GitHub reports a conflict, or when `main` has changed the same files since the PR's last
+   CI run.
+2. **`main` is green**: its latest CI run passed (`gh run list --branch main --limit 1`). If not, fix
+   `main` first.
+3. **GitHub reports the PR mergeable.**
+4. **Independent review**, unless the PR changes only docs, tests, write-ups of results, or fixes
+   `src/` in about 50 lines or fewer and comes with a test. Never skip it for code that guards the
+   user's machine (`run_script` checks, file access, the viewer server, the installer), how drawings
+   are written to disk (DXF, DWG), `scripts/`, dependencies (`pyproject.toml`, `uv.lock`), or anything
+   on the ask-the-user list below.
 
    A reviewer that did not write the change reads the diff: a fresh subagent or session given only
    the PR (not the author's reasoning), `/code-review`, or `codex review`. It reports correctness
@@ -71,7 +74,7 @@ so checkouts that already have them fast-forward. (Not `--delete-branch`: it tri
 branch, which the task's worktree still has checked out.)
 
 Pull requests run CI on Linux (Python 3.12) and Windows. Every push to `main` runs the full matrix
-(adding Linux 3.10 and macOS). If that breaks `main`, fixing it comes before other merges.
+(adding Linux 3.10 and macOS). If that breaks `main`, fixing it comes before other merges (rule 2).
 
 Ask the user before merging a PR that:
 
