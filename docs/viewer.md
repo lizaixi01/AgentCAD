@@ -194,7 +194,7 @@ Ctrl+C 退出。端口被占用时返回 `PORT_IN_USE`，退出码 2。
 |---|---|
 | `/` | 页面（`/friendly.js`、`/logo.svg` 是它的脚本和图标） |
 | `/api/drawings` | `{"drawings": [{"path", "kind": "drawing" \| "part"}], "last_event"}` |
-| `/api/timeline?path=` | `{"current", "modified_outside_runtime", "records": [{"seq", "tool", "ok", "label", "ops", "steps", "changes", "error", "version", "available", "before"}]}`（`steps`：按操作归并的摘要，同进度事件的 `ops`）。传 `limit`（1–1000）获取最近一页，再把响应的 `next_before_seq` 作为下一次的 `before_seq`，直到该值为 `null`。 |
+| `/api/timeline?path=` | `{"current", "modified_outside_runtime", "records": [{"seq", "tool", "ok", "label", "ops", "steps", "changes", "error", "version", "available", "before"}]}`（`steps`：按操作归并的摘要，同进度事件的 `ops`）。传 `limit`（1–1000）获取最近一页，再把响应的 `next_cursor` 作为下一次的 `cursor`，直到该值为 `null`。 |
 | `/api/svg?path=&v=&diff=1&hide=L1,L2&frame=` | 二维 SVG；`frame` 是另一个版本，两版用同一个取景 |
 | `/api/layers?path=&v=` | 图层和实体数 |
 | `/api/diff?path=&v=` | 这一版的改动（`before` = 起始版本）；三维零件是 `shape`：尺寸、体积、面积、面数等前后值 |

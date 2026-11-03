@@ -101,6 +101,17 @@ def test_colliding_legacy_names_have_separate_checkpoints(rt):
     assert ok(rt.read_drawing(first))["units"] == "cm"
 
 
+def test_rollback_rejects_a_checkpoint_with_other_bytes(rt, ws):
+    name = "checked.dxf"
+    ok(rt.create_drawing(name))
+    checkpoint = ok(rt.apply_operations(name, PLAN))["checkpoint_before"]
+    _, state = rt._drawing(name)
+    current = (ws / name).read_bytes()
+    state.checkpoint_path(checkpoint).write_bytes(current)
+    assert rt.rollback(name, checkpoint)["error"]["code"] == "CHECKPOINT_CHANGED"
+    assert (ws / name).read_bytes() == current
+
+
 def test_clean_legacy_history_migrates_to_its_owner(rt, ws):
     first, second = "parts/panel.dxf", "parts__panel.dxf"
     ok(rt.create_drawing(first))
@@ -109,13 +120,61 @@ def test_clean_legacy_history_migrates_to_its_owner(rt, ws):
     legacy = ws / ".agentcad" / "drawings" / second
     legacy.parent.mkdir(parents=True)
     state.dir.rename(legacy)
+    # Simulate a colliding writer dying after copying its file but before
+    # adding that checkpoint to head.json.
+    foreign = legacy / "checkpoints" / "cp-0002.dxf"
+    foreign.write_bytes((ws / first).read_bytes())
     assert len(ok(rt.history(first))["records"]) == 2
     ok(rt.create_drawing(second))
     assert len(ok(rt.history(second))["records"]) == 1
+    assert rt.rollback(first, "cp-0002")["error"]["code"] == "CHECKPOINT_NOT_FOUND"
+    assert not (state.cp_dir / foreign.name).exists() and foreign.is_file()
     ok(rt.rollback(first, checkpoint))
     assert geometry(ws, first) == []
     assert len(ok(rt.history(first))["records"]) == 3
     assert legacy.is_dir()
+
+
+def test_clean_legacy_history_matches_case_insensitive_posix_alias(rt, ws, monkeypatch):
+    from pathlib import Path
+    from agentcad import store
+    name = "Parts/Panel.dxf"
+    ok(rt.create_drawing(name))
+    _, state = rt._drawing(name)
+    legacy = ws / ".agentcad" / "drawings" / "Parts__Panel.dxf"
+    legacy.parent.mkdir(parents=True)
+    state.dir.rename(legacy)
+    journal = legacy / "journal.jsonl"
+    journal.write_text(journal.read_text("utf-8").replace(name, name.lower()), "utf-8")
+    samefile = Path.samefile
+    monkeypatch.setattr(store.os.path, "normcase", lambda path: path)
+    monkeypatch.setattr(Path, "samefile", lambda path, other: str(path).casefold() == str(other).casefold()
+                        or samefile(path, other))
+    assert len(ok(rt.history(name))["records"]) == 1
+    ok(rt.apply_operations(name, PLAN))
+    assert len(ok(rt.history(name))["records"]) == 2
+
+
+def test_export_keeps_its_journal_record_during_legacy_migration(rt, ws, monkeypatch):
+    from pathlib import Path
+    from agentcad.service import Runtime
+    name = "parts/panel.dxf"
+    ok(rt.create_drawing(name))
+    _, state = rt._drawing(name)
+    legacy = ws / ".agentcad" / "drawings" / "parts__panel.dxf"
+    legacy.parent.mkdir(parents=True)
+    state.dir.rename(legacy)
+    write_text = Path.write_text
+
+    def during_export(path, *args, **kwargs):
+        if path == ws / "result.json":
+            concurrent = Runtime(rt.policy).apply_operations(name, PLAN)
+            assert concurrent["error"]["code"] == "DRAWING_LOCKED"
+        return write_text(path, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "write_text", during_export)
+    ok(rt.export_drawing(name, "result.json", "json"))
+    assert [r["tool"] for r in ok(rt.history(name))["records"]] == ["create_drawing", "export_drawing"]
 
 
 def test_mixed_legacy_history_is_preserved_but_ineligible_for_rollback(rt, ws):

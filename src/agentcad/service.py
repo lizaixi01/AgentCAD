@@ -13,6 +13,7 @@ import shutil
 import time
 import traceback
 from contextlib import contextmanager
+from contextvars import ContextVar
 from functools import wraps
 from pathlib import Path
 from typing import Any, Callable
@@ -185,6 +186,7 @@ class Runtime:
         """``auto_viewer``: start the live viewer in the background on the first change (the MCP server sets it;
         AGENTCAD_VIEWER=0 in the environment turns it off)."""
         self.policy = policy or Policy()
+        self._held_store: ContextVar[DrawingStore | None] = ContextVar("held_drawing_store", default=None)
         self.metrics: list[dict[str, Any]] = []
         self.auto_viewer = auto_viewer and os.environ.get("AGENTCAD_VIEWER", "1").strip().lower() not in \
             {"0", "false", "no", "off"}
@@ -198,8 +200,17 @@ class Runtime:
 
     @contextmanager
     def _lock(self, store: DrawingStore):
-        with store.lock():
-            yield
+        held = self._held_store.get()
+        if held is not None and held.path == store.path:
+            # Delivery exports the drawing while it holds the source lock.
+            yield held
+            return
+        with store.lock(migrate=not self.policy.read_only):
+            token = self._held_store.set(store)
+            try:
+                yield store
+            finally:
+                self._held_store.reset(token)
 
     def _save_failure(self, store: DrawingStore, data: bytes, label: str) -> str | None:
         try:
@@ -911,8 +922,10 @@ class Runtime:
         candidates += list(reversed(store.list_checkpoints()))
         for cp in candidates:
             try:
-                store.reader(store.committed_path if cp["id"] == "committed" else store.checkpoint_path(cp["id"]),
-                             self.policy)
+                source = store.committed_path if cp["id"] == "committed" else store.checkpoint_path(cp["id"])
+                if cp["id"] != "committed" and sha256_file(source) != cp.get("sha256"):
+                    continue
+                store.reader(source, self.policy)
             except AgentCADError:
                 continue
             with self._lock(store):
@@ -964,101 +977,102 @@ class Runtime:
             raise input_error("FILE_EXISTS", f"{output} exists", hint="overwrite=true")
         if out == p:
             raise input_error("SAME_FILE", "Export target must differ from the source drawing")
-        if fmt == "dwg":
-            from .backends import autocad
-            ver = (dxf_version or "2018").removeprefix("R")
-            if ver not in autocad.DWG_VERSIONS:
-                raise input_error("UNSUPPORTED_DWG_VERSION", f"DWG version {dxf_version!r} not supported",
-                                  hint=f"Use one of {sorted(autocad.DWG_VERSIONS)}")
-            jobs = self.policy.state_dir() / "acad"
-            info = autocad.dxf_to_dwg(p, out, jobs, ver)
-            # read the DWG back through AutoCAD and validate the resulting DXF independently
-            back = jobs / f"readback-{out.stem}.dxf"
-            autocad.dwg_to_dxf(out, back, jobs, "2018")
-            rb = validate_file(back)
-            src_n = len(store.load().modelspace())
-            store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": "dwg"})
-            return {"drawing": self._rel(p), "output": self._rel(out), "format": "dwg", "dwg_version": ver,
-                    "bytes": info["bytes"], "backend": "autocad", "seconds": info["seconds"],
-                    "readback": {"readable": rb["readable"], "entities": rb.get("recognized", {}).get("entity_count"),
-                                 "source_entities": src_n, "issues": rb["issues"][:20]}}
-        doc = store.load()
-        if fmt == "pdf":
-            from . import plot
-            if scale is not None and scale <= 0:
-                raise input_error("INVALID_VALUE", "scale must be > 0", hint="paper mm per drawing unit, 0.5 = 1:2")
-            if orientation not in ("auto", "landscape", "portrait"):
-                raise input_error("INVALID_ENUM", "orientation must be auto | landscape | portrait")
-            names = _plot_layouts(doc, layout)
-            text_warn = _plot_text_warnings(doc, names)  # before plotting, which swaps the SHX styles' fonts
-            res = plot.plot_pdf(doc, out, names, paper=paper, orientation=orientation,
-                                scale=scale, monochrome=monochrome, title=p.stem)
-            warn = [i for i in validate_file(p)["issues"] if i["code"] == "PRINTED_TEXT_TOO_SMALL"] + text_warn
-            small = _min_model_text(doc) if any(pg["layout"] == "Model" for pg in res["pages"]) else None
-            for pg in res["pages"]:
-                if small and pg["layout"] == "Model" and small * pg["scale"] < MIN_PRINTED_TEXT - 1e-9:
-                    warn.append({"code": "PRINTED_TEXT_TOO_SMALL", "severity": "warning", "layout": "Model",
-                                 "message": f"At {pg['scale_text']} the smallest model text prints "
-                                            f"{small * pg['scale']:.2f} mm high (minimum {MIN_PRINTED_TEXT} mm)",
-                                 "hint": "Plot at a larger scale or paper, or enlarge the text"})
-            store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": "pdf"})
-            return {"drawing": self._rel(p), "output": self._rel(out), "format": "pdf", **res,
-                    **({"warnings": warn[:20]} if warn else {})}
-        if fmt == "png":
-            from . import plot
-            names = _plot_layouts(doc, layout)
-            if layout == "*" and len(names) > 1:
-                raise input_error("MULTIPLE_LAYOUTS", "A png shows one layout", hint=f"layout = one of {names}")
-            warn = _plot_text_warnings(doc, names[:1])
-            res = plot.plot_png(doc, out, names[0], size=image_size or 1600, monochrome=monochrome)
-            store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": "png"})
-            return {"drawing": self._rel(p), "output": self._rel(out), "format": "png", **res,
-                    **({"warnings": warn[:20]} if warn else {})}
-        finalize(doc)
-        out.parent.mkdir(parents=True, exist_ok=True)
-        if fmt in {"csv", "xlsx"}:
-            from .tabular import drawing_rows, write_table
-            rows = drawing_rows(doc, table)
-            write_table(out, fmt, rows)
-            extra = {"rows": len(rows) - 1, "formula_policy": "CSV apostrophe; XLSX explicit string cells; numbers preserved"}
-        elif fmt == "dxf":
-            ver = dxf_version or doc.acad_release
-            if ver == "R12":
-                from ezdxf.addons import r12export
-                r12export.saveas(doc, out)
-                clean_r12(out)
+        with self._lock(store) as store:
+            if fmt == "dwg":
+                from .backends import autocad
+                ver = (dxf_version or "2018").removeprefix("R")
+                if ver not in autocad.DWG_VERSIONS:
+                    raise input_error("UNSUPPORTED_DWG_VERSION", f"DWG version {dxf_version!r} not supported",
+                                      hint=f"Use one of {sorted(autocad.DWG_VERSIONS)}")
+                jobs = self.policy.state_dir() / "acad"
+                info = autocad.dxf_to_dwg(p, out, jobs, ver)
+                # read the DWG back through AutoCAD and validate the resulting DXF independently
+                back = jobs / f"readback-{out.stem}.dxf"
+                autocad.dwg_to_dxf(out, back, jobs, "2018")
+                rb = validate_file(back)
+                src_n = len(store.load().modelspace())
+                store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": "dwg"})
+                return {"drawing": self._rel(p), "output": self._rel(out), "format": "dwg", "dwg_version": ver,
+                        "bytes": info["bytes"], "backend": "autocad", "seconds": info["seconds"],
+                        "readback": {"readable": rb["readable"], "entities": rb.get("recognized", {}).get("entity_count"),
+                                     "source_entities": src_n, "issues": rb["issues"][:20]}}
+            doc = store.load()
+            if fmt == "pdf":
+                from . import plot
+                if scale is not None and scale <= 0:
+                    raise input_error("INVALID_VALUE", "scale must be > 0", hint="paper mm per drawing unit, 0.5 = 1:2")
+                if orientation not in ("auto", "landscape", "portrait"):
+                    raise input_error("INVALID_ENUM", "orientation must be auto | landscape | portrait")
+                names = _plot_layouts(doc, layout)
+                text_warn = _plot_text_warnings(doc, names)  # before plotting, which swaps the SHX styles' fonts
+                res = plot.plot_pdf(doc, out, names, paper=paper, orientation=orientation,
+                                    scale=scale, monochrome=monochrome, title=p.stem)
+                warn = [i for i in validate_file(p)["issues"] if i["code"] == "PRINTED_TEXT_TOO_SMALL"] + text_warn
+                small = _min_model_text(doc) if any(pg["layout"] == "Model" for pg in res["pages"]) else None
+                for pg in res["pages"]:
+                    if small and pg["layout"] == "Model" and small * pg["scale"] < MIN_PRINTED_TEXT - 1e-9:
+                        warn.append({"code": "PRINTED_TEXT_TOO_SMALL", "severity": "warning", "layout": "Model",
+                                     "message": f"At {pg['scale_text']} the smallest model text prints "
+                                                f"{small * pg['scale']:.2f} mm high (minimum {MIN_PRINTED_TEXT} mm)",
+                                     "hint": "Plot at a larger scale or paper, or enlarge the text"})
+                store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": "pdf"})
+                return {"drawing": self._rel(p), "output": self._rel(out), "format": "pdf", **res,
+                        **({"warnings": warn[:20]} if warn else {})}
+            if fmt == "png":
+                from . import plot
+                names = _plot_layouts(doc, layout)
+                if layout == "*" and len(names) > 1:
+                    raise input_error("MULTIPLE_LAYOUTS", "A png shows one layout", hint=f"layout = one of {names}")
+                warn = _plot_text_warnings(doc, names[:1])
+                res = plot.plot_png(doc, out, names[0], size=image_size or 1600, monochrome=monochrome)
+                store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": "png"})
+                return {"drawing": self._rel(p), "output": self._rel(out), "format": "png", **res,
+                        **({"warnings": warn[:20]} if warn else {})}
+            finalize(doc)
+            out.parent.mkdir(parents=True, exist_ok=True)
+            if fmt in {"csv", "xlsx"}:
+                from .tabular import drawing_rows, write_table
+                rows = drawing_rows(doc, table)
+                write_table(out, fmt, rows)
+                extra = {"rows": len(rows) - 1, "formula_policy": "CSV apostrophe; XLSX explicit string cells; numbers preserved"}
+            elif fmt == "dxf":
+                ver = dxf_version or doc.acad_release
+                if ver == "R12":
+                    from ezdxf.addons import r12export
+                    r12export.saveas(doc, out)
+                    clean_r12(out)
+                else:
+                    if ver not in DXF_VERSIONS:
+                        raise input_error("UNSUPPORTED_DXF_VERSION", f"Unknown DXF version {ver!r}")
+                    doc.dxfversion = DXF_VERSIONS[ver]
+                    doc.saveas(out)
+                back = validate_file(out)
+                extra = {"dxf_version": ver, "reread_ok": back["readable"]}
+                if ver == "R12":
+                    extra["warnings"] = ["DXF R12 has no $INSUNITS: the unit is not stored in the exported file",
+                                         "LWPOLYLINE exported as POLYLINE; tags/metadata are not guaranteed"]
+            elif fmt == "svg":
+                try:
+                    from ezdxf.addons.drawing import RenderContext, layout, svg
+                    from .drawing_frontend import DrawingFrontend
+                except ImportError as exc:
+                    raise AgentCADError("DEPENDENCY_MISSING", f"SVG preview needs an optional package: {exc}",
+                                        category="dependency",
+                                        hint="pip install -e '.[preview]' (Pillow) in the AgentCAD checkout")
+                from ezdxf.addons.drawing.config import BackgroundPolicy, Configuration
+                backend = svg.SVGBackend()
+                cfg = Configuration(background_policy=BackgroundPolicy.WHITE)
+                DrawingFrontend(RenderContext(doc), backend, config=cfg).draw_layout(doc.modelspace())
+                page = layout.Page(0, 0, layout.Units.mm, margins=layout.Margins.all(5))
+                out.write_text(backend.get_string(page), "utf-8")
+                extra = {}
             else:
-                if ver not in DXF_VERSIONS:
-                    raise input_error("UNSUPPORTED_DXF_VERSION", f"Unknown DXF version {ver!r}")
-                doc.dxfversion = DXF_VERSIONS[ver]
-                doc.saveas(out)
-            back = validate_file(out)
-            extra = {"dxf_version": ver, "reread_ok": back["readable"]}
-            if ver == "R12":
-                extra["warnings"] = ["DXF R12 has no $INSUNITS: the unit is not stored in the exported file",
-                                     "LWPOLYLINE exported as POLYLINE; tags/metadata are not guaranteed"]
-        elif fmt == "svg":
-            try:
-                from ezdxf.addons.drawing import RenderContext, layout, svg
-                from .drawing_frontend import DrawingFrontend
-            except ImportError as exc:
-                raise AgentCADError("DEPENDENCY_MISSING", f"SVG preview needs an optional package: {exc}",
-                                    category="dependency",
-                                    hint="pip install -e '.[preview]' (Pillow) in the AgentCAD checkout")
-            from ezdxf.addons.drawing.config import BackgroundPolicy, Configuration
-            backend = svg.SVGBackend()
-            cfg = Configuration(background_policy=BackgroundPolicy.WHITE)
-            DrawingFrontend(RenderContext(doc), backend, config=cfg).draw_layout(doc.modelspace())
-            page = layout.Page(0, 0, layout.Units.mm, margins=layout.Margins.all(5))
-            out.write_text(backend.get_string(page), "utf-8")
-            extra = {}
-        else:
-            data = {"units": _units_of(doc), "metadata": all_meta(doc),
-                    "entities": [entity_to_dict(e) for e in doc.modelspace()]}
-            out.write_text(json.dumps(data, indent=1, ensure_ascii=False), "utf-8")
-            extra = {"entity_count": len(data["entities"])}
-        store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": fmt})
-        return {"drawing": self._rel(p), "output": self._rel(out), "format": fmt, "bytes": out.stat().st_size, **extra}
+                data = {"units": _units_of(doc), "metadata": all_meta(doc),
+                        "entities": [entity_to_dict(e) for e in doc.modelspace()]}
+                out.write_text(json.dumps(data, indent=1, ensure_ascii=False), "utf-8")
+                extra = {"entity_count": len(data["entities"])}
+            store.journal({"tool": "export_drawing", "ok": True, "output": self._rel(out), "format": fmt})
+            return {"drawing": self._rel(p), "output": self._rel(out), "format": fmt, "bytes": out.stat().st_size, **extra}
 
     @tool
     def import_drawing(self, source: str, output: str, overwrite: bool = False) -> dict[str, Any]:
@@ -1177,8 +1191,9 @@ class Runtime:
                 self.policy.check_live_commands_allowed()
                 if not command or not command.strip():
                     raise input_error("INVALID_STRING", "command must be a non-empty command line")
-                idle = s.command(p, command)
-                store.journal({"tool": "autocad_live", "ok": True, "action": "command", "command": command})
+                with self._lock(store) as locked:
+                    idle = s.command(p, command)
+                    locked.journal({"tool": "autocad_live", "ok": True, "action": "command", "command": command})
                 return {"drawing": rel, "sent": command, "finished": idle,
                         "hint": "The command changed the drawing in AutoCAD only; action='pull' commits its edits"
                                 + ("" if idle else ". AutoCAD is still busy (the command waits for input?)")}

@@ -56,7 +56,6 @@ import threading
 import time
 import uuid
 from collections import OrderedDict, deque
-from itertools import islice
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -278,7 +277,7 @@ class Workspace:
         return out
 
     @_retry
-    def timeline(self, rel: str, *, limit: int | None = None, before_seq: int | None = None) -> dict[str, Any]:
+    def timeline(self, rel: str, *, limit: int | None = None, cursor: int | None = None) -> dict[str, Any]:
         from .service import _journal_line
         st = self.store(rel)
         have = self.versions(st)
@@ -287,10 +286,7 @@ class Workspace:
         if limit is None:
             journal = st.read_journal()
         else:
-            newest = (r for r in st.journal_newest() if before_seq is None or r["seq"] < before_seq)
-            rows = list(islice(newest, limit + 1))
-            journal = list(reversed(rows[:limit]))
-            page["next_before_seq"] = journal[0]["seq"] if len(rows) > limit else None
+            journal, page["next_cursor"] = st.journal_page(limit, cursor)
         records = []
         for r in journal:
             line = _journal_line(r)
@@ -882,13 +878,13 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                 if u.path == "/api/timeline":
                     try:
                         limit = int(q["limit"]) if "limit" in q else None
-                        before = int(q["before_seq"]) if "before_seq" in q else None
+                        cursor = int(q["cursor"]) if "cursor" in q else None
                     except ValueError:
-                        raise input_error("BAD_PARAMETER", "Timeline limit and before_seq must be integers")
+                        raise input_error("BAD_PARAMETER", "Timeline limit and cursor must be integers")
                     if ((limit is not None and not 1 <= limit <= 1000)
-                            or (before is not None and (before < 1 or limit is None))):
-                        raise input_error("BAD_PARAMETER", "Use 1 <= limit <= 1000 and an optional positive before_seq")
-                    return self._json({"ok": True, **ws.timeline(path, limit=limit, before_seq=before)})
+                            or (cursor is not None and (cursor < 1 or limit is None))):
+                        raise input_error("BAD_PARAMETER", "Use 1 <= limit <= 1000 and an optional positive cursor")
+                    return self._json({"ok": True, **ws.timeline(path, limit=limit, cursor=cursor)})
                 if u.path == "/api/layers":
                     return self._json({"ok": True, **ws.layers(path, v)})
                 if u.path == "/api/diff":
