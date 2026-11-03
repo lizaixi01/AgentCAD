@@ -226,9 +226,16 @@ def run(job: dict[str, Any], inputs: dict[str, Path] | None = None,
         res = json.loads(res_path.read_text("utf-8"))
         res["seconds"] = round(time.perf_counter() - t0, 2)
         if res.get("ok"):
+            from ..store import replace_file
+
             for key, dst in (outputs or {}).items():
                 dst.parent.mkdir(parents=True, exist_ok=True)
-                shutil.copyfile(job[key], dst)
+                # The cache is shared by concurrent readers (and viewers).
+                # Publish only after the complete output is on its filesystem.
+                with tempfile.TemporaryDirectory(prefix=".fc-", dir=dst.parent) as staged:
+                    candidate = Path(staged) / "output"
+                    shutil.copyfile(job[key], candidate)
+                    replace_file(candidate, dst)
         done = True
         return res
     finally:

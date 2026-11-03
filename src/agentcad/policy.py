@@ -53,7 +53,7 @@ class Policy:
             raise policy_error("PATH_OUTSIDE_WORKSPACE",
                                f"{path} resolves outside the workspace root {self.root}",
                                hint="Use a path inside the workspace (set AGENTCAD_ROOT to change it)")
-        if STATE_DIR in p.relative_to(self.root).parts:
+        if any(part.casefold() == STATE_DIR for part in p.relative_to(self.root).parts):
             raise policy_error("PATH_RESERVED", f"{path} is inside the runtime state directory {STATE_DIR}/")
         if suffixes and p.suffix.lower() not in suffixes:
             raise input_error("BAD_EXTENSION", f"{path}: expected one of {list(suffixes)}")

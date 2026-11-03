@@ -19,20 +19,10 @@ def fingerprint(entity) -> str:
     return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
 
-def snapshot(store, doc) -> dict:
-    return {
-        "revision": store.head().get("revision", 0),
-        "sha256": sha256_file(store.path),
-        "entities": {e.dxf.handle: fingerprint(e) for lay in doc.layouts for e in lay},
-    }
-
-
-def check(store, doc, expected_revision=None, preconditions=None) -> dict:
-    current = snapshot(store, doc)
+def check(store, doc, expected_revision=None, preconditions=None, *, preview: bool = False) -> dict:
     if expected_revision is not None and (type(expected_revision) is not int or expected_revision < 0):
         raise input_error("BAD_PARAMETER", "expected_revision must be a nonnegative integer")
-    changed = []
-    stale = expected_revision is not None and expected_revision != current["revision"]
+    wanted = {}
     if preconditions is not None:
         if (
             not isinstance(preconditions, dict)
@@ -43,9 +33,17 @@ def check(store, doc, expected_revision=None, preconditions=None) -> dict:
             raise input_error(
                 "BAD_PARAMETER", "preconditions needs sha256 and/or an entities handle-to-fingerprint map"
             )
+        wanted = preconditions.get("entities", {})
+    current = {"revision": store.head().get("revision", 0), "sha256": sha256_file(store.path), "entities": {}}
+    if preview or wanted:
+        current["entities"] = {e.dxf.handle: fingerprint(e) for lay in doc.layouts for e in lay
+                               if preview or e.dxf.handle in wanted}
+    changed = []
+    stale = expected_revision is not None and expected_revision != current["revision"]
+    if preconditions is not None:
         if "sha256" in preconditions:
             stale |= preconditions["sha256"] != current["sha256"]
-        for handle, expected in preconditions.get("entities", {}).items():
+        for handle, expected in wanted.items():
             if expected != current["entities"].get(handle):
                 changed.append(handle)
         stale |= bool(changed)

@@ -76,3 +76,36 @@ def test_external_modification_is_flagged(rt, ws, plate):
     tamper(ws, plate, lambda d: tagged(d, "hole.tr").translate(1, 0, 0))
     st = ok(rt.read_drawing(plate))["status"]
     assert st["modified_outside_runtime"] is True
+
+
+def test_contour_connections_preserve_drawing_order_and_layer():
+    from agentcad.validate.features import extract
+    doc = ezdxf.new()
+    space = doc.modelspace()
+    first = space.add_line((0, 0), (0.000019, 0))
+    space.add_line((0.000019, 0), (2, 2), dxfattribs={"layer": "OTHER"})
+    second = space.add_line((1, 1), (0.000021, 0))
+    closer = space.add_line((0.000019, 0), (3, 3))
+    last = space.add_line((1, 1), (0, 0))
+    feats = extract(doc)
+    assert [c.entities for c in feats.contours] == [[e.dxf.handle for e in (first, second, last)]]
+    assert [closer.dxf.handle] in feats.open_chains
+
+
+def test_disconnected_edges_do_not_require_all_pairs_distance_checks(monkeypatch):
+    from agentcad.validate import features
+    doc = ezdxf.new()
+    space = doc.modelspace()
+    for x in range(500):
+        space.add_line((x * 4, 0), (x * 4 + 1, 0))
+    dist = features.G.dist
+    calls = 0
+
+    def count_dist(a, b):
+        nonlocal calls
+        calls += 1
+        return dist(a, b)
+
+    monkeypatch.setattr(features.G, "dist", count_dist)
+    assert len(features.extract(doc).open_chains) == 500
+    assert calls <= 1000
