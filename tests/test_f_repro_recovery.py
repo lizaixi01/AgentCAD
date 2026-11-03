@@ -157,6 +157,7 @@ def test_clean_legacy_history_migrates_to_its_owner(rt, ws):
 
 
 def test_clean_legacy_history_matches_case_insensitive_posix_alias(rt, ws, monkeypatch):
+    import os
     from pathlib import Path
     from agentcad import store
     name = "Parts/Panel.dxf"
@@ -174,6 +175,19 @@ def test_clean_legacy_history_matches_case_insensitive_posix_alias(rt, ws, monke
         path.exists() and str(path).casefold() == str(other).casefold()) or samefile(path, other))
     assert len(ok(rt.history(name))["records"]) == 2
     (ws / name).unlink()
+    stat = Path.stat
+
+    def separate_volume(path, *args, **kwargs):
+        result = stat(path, *args, **kwargs)
+        if path == (ws / name).parent:
+            fields = list(result)
+            fields[2] = result.st_dev + 1
+            return os.stat_result(fields)
+        return result
+
+    with monkeypatch.context() as patch:
+        patch.setattr(Path, "stat", separate_volume)
+        assert ok(rt.history(name))["records"] == []
     assert ok(rt.recover(name))["restored_checkpoint"] == "committed"
     assert len(ok(rt.history(name))["records"]) == 3
 

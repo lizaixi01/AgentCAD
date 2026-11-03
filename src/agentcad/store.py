@@ -189,8 +189,10 @@ class DrawingStore:
                         return None
                 except FileNotFoundError:
                     # A deleted drawing has no inode to compare. Its legacy
-                    # directory can establish the alias on the same volume.
-                    if self.path.exists() or recorded.exists() or legacy.stat().st_dev != self.policy.root.stat().st_dev:
+                    # directory can establish the alias on the drawing's volume.
+                    parent = self.path.parent
+                    if (self.path.exists() or recorded.exists() or not parent.samefile(recorded.parent)
+                            or legacy.stat().st_dev != parent.stat().st_dev):
                         return None
             except OSError:
                 return None
