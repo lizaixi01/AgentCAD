@@ -333,13 +333,18 @@ function Progressing({ t, label, friendlyError, lost, say, onRetry, onFinish }: 
   const [shown, setShown] = useState(0)
   const shownAt = useRef(Date.now())
   useEffect(() => {
-    let alive = true
-    const id = setInterval(async () => {
-      // stop once it has ended: the finished page stays even if the wizard then exits, and it may reach its idle exit
-      try { const r: Wizard = await api("/api/state"); if (r.phase === "done" || r.phase === "error") clearInterval(id); if (alive) setSt(r) }
-      catch { clearInterval(id); if (alive) lost() }
-    }, 250)
-    return () => { alive = false; clearInterval(id) }
+    // one request at a time, so a late "running" reply never replaces "done"; stop once it has ended: the finished
+    // page stays even if the wizard then exits, and the wizard may reach its idle exit
+    let alive = true, id = 0
+    const poll = async () => {
+      let r: Wizard
+      try { r = await api("/api/state") } catch { if (alive) lost(); return }
+      if (!alive) return
+      setSt(r)
+      if (r.phase !== "done" && r.phase !== "error") id = window.setTimeout(poll, 250)
+    }
+    id = window.setTimeout(poll, 250)
+    return () => { alive = false; clearTimeout(id) }
   }, [lost])
   const over = st.phase === "done" || st.phase === "error"
   const finished = over ? st.steps.length : st.steps.filter(s => s.state === "done" || s.state === "error").length
