@@ -224,6 +224,24 @@ def test_viewer_url_in_create_drawing_only_while_a_viewer_runs(rt, ws, viewer):
     assert "viewer_url" not in ok(rt.create_drawing("hidden.dxf"))
 
 
+def test_open_reuses_the_running_viewer_without_loading_ezdxf(ws, viewer):
+    """The desktop icon while AgentCAD already runs: only the browser opens, and ezdxf (a second to import) is not
+    loaded, so the icon's window closes sooner."""
+    import subprocess
+    import sys
+    code = ("import json, sys, webbrowser\n"
+            "opened = []\n"
+            "webbrowser.open = lambda url, *a, **k: opened.append(url) or True\n"
+            "from agentcad.cli import run\n"
+            "r, code = run(['--root', sys.argv[1], 'viewer', '--open'])\n"
+            "print(json.dumps({'code': code, 'opened': opened, 'ezdxf': 'ezdxf' in sys.modules}))\n")
+    p = subprocess.run([sys.executable, "-c", code, str(ws)], capture_output=True, text=True, timeout=60, check=True)
+    lines = p.stdout.strip().splitlines()
+    printed, result = json.loads(lines[0]), json.loads(lines[-1])
+    assert printed == {"ok": True, "viewer": viewer.url, "root": str(ws), "reused": True}
+    assert result == {"code": 0, "opened": [viewer.url], "ezdxf": False}
+
+
 def test_cli_reports_a_busy_port(ws):
     from agentcad.cli import run
     s = socket.socket()
