@@ -295,9 +295,26 @@ def test_uvx_launcher(home):
     res = install.setup(["codex", "claude-desktop"], launcher="uvx", source="git+https://example.org/x@br")
     e = res.entry
     assert Path(e["command"]).stem.lower() == "uvx" or e["command"] == "uvx"
+    # a git+ source never starts offline: uv cannot resolve git without the network, even right after building it
     assert e["args"] == ["--from", "git+https://example.org/x@br", "agentcad-mcp"]
     cfg = tomllib.loads(_paths(home)["codex"].read_text("utf-8"))["mcp_servers"]["agentcad"]
     assert cfg["startup_timeout_sec"] == 120 and cfg["args"] == e["args"]
+
+
+def test_uvx_starts_offline_only_the_archive_setup_runs_from(home, monkeypatch):
+    # the double-click installers run setup through uvx from a GitHub zip: apps then start that copy with --offline
+    # (seconds, no check against GitHub), the copy the desktop icon refreshes once a day
+    zip_src = "https://github.com/lizaixi01/AgentCAD/archive/refs/heads/main.zip"
+    monkeypatch.setattr(install, "install_info", lambda: {"version": "0", "source": zip_src, "editable": False,
+                                                          "ephemeral": True})
+    e = install.setup(["codex"], launcher="uvx").entry
+    assert e["args"] == ["--offline", "--from", zip_src, "agentcad-mcp"]
+    assert install.generic_mcp_config(home / "AgentCAD")["server"]["args"][0] == "--offline"
+    # another source than the one running: uv may never have downloaded it, so no --offline
+    other = install.setup(["codex"], launcher="uvx", source="https://example.org/other.zip").entry
+    assert "--offline" not in other["args"]
+    assert not install.starts_offline("uvx", "git+https://x", {"ephemeral": True, "source": "git+https://x"})
+    assert not install.starts_offline("python", zip_src, {"ephemeral": True, "source": zip_src})
 
 
 def test_pipx_launcher(home):
