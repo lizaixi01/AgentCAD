@@ -294,6 +294,10 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         from .errors import AgentCADError
         from .mcp_config import mcp_config
         try:
+            if a.client == "generic":  # as setup starts the server: install.py, which mcp_config may not import
+                from .install import generic_mcp_config
+                return generic_mcp_config(policy.root, a.name, a.write, read_only=policy.read_only,
+                                          allow_scripts=policy.allow_scripts), 0
             return mcp_config(policy, a.client, a.name, a.write), 0
         except AgentCADError as exc:
             return {"ok": False, "error": exc.to_dict()}, EXIT.get(exc.category, 5)
