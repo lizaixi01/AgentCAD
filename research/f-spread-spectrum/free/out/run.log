@@ -1,0 +1,7 @@
+code {'source': 'stand-in (附件一缺失)', 'peak': 1000, 'max_sidelobe': 68}
+固定载波 1 m 电缆: lock 20/20  max t_lock 0.142s  max|B'-B| 68.2 ns  (74s)
+固定载波 2 m 电缆: lock 20/20  max t_lock 0.145s  max|B'-B| 54.9 ns  (150s)
+固定载波 低 C/N0 45 dB-Hz: lock 20/20  max t_lock 0.330s  max|B'-B| 76.1 ns  (227s)
+变频 在频率峰值开启: lock 20/20  max t_lock 0.197s  max|B'-B| 40.1 ns  (303s)
+变频 在中心频率开启: lock 20/20  max t_lock 0.186s  max|B'-B| 45.2 ns  (376s)
+long FM {'acq_tries': 1, 't_detect_s': 0.001143683578485143, 't_lock_s': 0.1311464298130381, 'b_err_max_ns': 20.411232335547513, 'b_err_rms_ns': 7.87734772995296, 'a_phase_drift_rad': 0.23044060543179512, 'f_err_max_hz': 0.9035920430906117} (576s)
