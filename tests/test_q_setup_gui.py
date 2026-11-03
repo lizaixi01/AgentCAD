@@ -99,6 +99,14 @@ def test_generic_config_for_other_apps(wizard, home):
     assert not (home / "AgentCAD").exists()  # showing it changes nothing
 
 
+def test_generic_config_failure_is_a_json_error(wizard, monkeypatch):
+    def broken():
+        raise RuntimeError("no launcher")
+    monkeypatch.setattr(wizard, "generic", broken)
+    code, r = _call(wizard, "GET", "/api/generic")
+    assert code == 500 and r["error"]["code"] == "GENERIC_FAILED"  # the page shows a sentence instead of a spinner
+
+
 def test_api_needs_token_and_localhost(wizard):
     assert _call(wizard, "GET", "/api/info", token="")[0] == 403
     assert _call(wizard, "POST", "/api/start", {"clients": ["cursor"]}, token="wrong")[0] == 403

@@ -279,7 +279,7 @@ const ICON = {
 };
 
 let lang = (() => { try { const s = localStorage.getItem("agentcad-lang"); if (s === "en" || s === "zh") return s; } catch (e) {} return /^zh\b/i.test(navigator.language || "") ? "zh" : "en"; })();
-let generic = null, otherOpen = false;  // the config for any other MCP app, fetched when its section opens
+let generic = null, otherOpen = false;  // the config for any other MCP app, fetched once when its section opens
 let info = null, view = "welcome", picked = new Set(), state = null, shown = 0, shownAt = 0, timer = null, ended = false;
 const t = (k, v) => (T[lang][k] || T.en[k] || k).replace(/\{(\w+)\}/g, (_, n) => v && v[n] != null ? v[n] : "");
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -326,8 +326,8 @@ function render() {
       ${none ? `<div class="none">${esc(t("noneFound"))} <button class="btn small" id="again" type="button">${ICON.redo} ${esc(t("lookAgain"))}</button></div>` : ""}
       <div class="folder">${ICON.folder}<div><span>${esc(t("folderTitle"))}</span><code>${esc(info.workspace)}</code></div></div>
       <details id="other" ${otherOpen ? "open" : ""}><summary>${esc(t("otherTitle"))}</summary><p>${esc(t("otherLead"))}</p>
-        ${generic ? `<pre>${esc(JSON.stringify(generic.config, null, 2))}</pre><button class="btn small" id="copyCfg" type="button">${esc(t("copy"))}</button>`
-          : ICON.spin.replace("<svg", '<svg width="22" height="22"')}</details>
+        ${generic && generic.config ? `<pre>${esc(JSON.stringify(generic.config, null, 2))}</pre><button class="btn small" id="copyCfg" type="button">${esc(t("copy"))}</button>`
+          : generic ? `<p>${esc(t("lost"))}</p>` : ICON.spin.replace("<svg", '<svg width="22" height="22"')}</details>
       <div class="actions"><button class="btn" id="back" type="button">${esc(t("back"))}</button>
       <button class="btn primary" id="install" type="button" ${picked.size ? "" : "disabled"}>${esc(picked.size ? t("install") : t("pickOne"))} ${ICON.arrow}</button></div>`;
     if (window.Fluid) Fluid.fluidHover(card.querySelector(".apps"), { item: ".app" });  // the kit's gliding highlight
@@ -343,7 +343,8 @@ function render() {
       otherOpen = $("other").open;
       if (!otherOpen || generic || loadGeneric.busy) return;
       loadGeneric.busy = true;
-      try { await loadGeneric(); } catch (e) {} finally { loadGeneric.busy = false; }
+      // a failure is remembered too: re-rendering an open <details> fires toggle again, which must not refetch
+      try { await loadGeneric(); } catch (e) { generic = { failed: true }; } finally { loadGeneric.busy = false; }
       if (view === "pick") render();
     };
     if ($("copyCfg")) $("copyCfg").onclick = async () => { await copy(JSON.stringify(generic.config, null, 2)); toast(t("copied")); };
@@ -524,7 +525,7 @@ function confetti() {
 
 async function loadGeneric() {
   const r = await api("/api/generic");
-  if (r && r.config) generic = r;
+  generic = r && r.config ? r : { failed: true };
 }
 async function loadInfo() {
   info = await api("/api/info");

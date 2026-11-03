@@ -196,7 +196,10 @@ def _handler(wiz: Wizard):
             if path == "/api/info":
                 return self._json(wiz.info())
             if path == "/api/generic":
-                return self._json(wiz.generic())
+                try:
+                    return self._json(wiz.generic())
+                except Exception as exc:  # noqa: BLE001 - a JSON error the page can show, not a dropped connection
+                    return self._json({"ok": False, "error": {"code": "GENERIC_FAILED", "message": str(exc)}}, 500)
             if path == "/api/doctor":
                 return self._json(wiz.doctor())
             if path == "/api/state":
