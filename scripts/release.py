@@ -38,12 +38,26 @@ def fail(message: str) -> None:
     sys.exit(f"release: {message}")
 
 
-def ci_state(sha: str) -> str:
-    """The combined status the 'main health' job posts on a main commit: success, pending or failure."""
-    res = run("gh", "api", f"repos/{REPO}/commits/{sha}/status", "--jq", ".state", check=False)
+def ci_statuses(sha: str) -> dict[str, str]:
+    """{context: state} of the statuses the 'main health' job posts on a main commit when its run ends:
+    agentcad/main-health (Linux and Windows) and agentcad/macos. None yet while the run is going."""
+    res = run("gh", "api", f"repos/{REPO}/commits/{sha}/status", check=False)
     if res.returncode:
         fail(f"cannot read CI status of {sha[:7]}: {res.stderr.strip()}")
-    return res.stdout.strip()
+    return {s["context"]: s["state"] for s in json.loads(res.stdout)["statuses"]}
+
+
+def ci_problem(statuses: dict[str, str], allow_pending: bool) -> str | None:
+    """Why this commit may not be released yet, or None. Linux and Windows must have passed; macOS too, unless
+    allow_pending and it is only unverified (no runner), never failed."""
+    health, macos = statuses.get("agentcad/main-health"), statuses.get("agentcad/macos")
+    if health != "success":
+        return f"Linux / Windows CI on main is '{health or 'not reported yet'}', not 'success'. Wait for it"
+    if macos == "success" or (allow_pending and macos != "failure"):
+        return None
+    if macos == "failure":
+        return "macOS CI on main failed"
+    return f"macOS CI on main is '{macos or 'not reported'}'. Wait for it, or pass --allow-pending (no macOS runner)"
 
 
 def build(sha: str, out: Path) -> list[Path]:
@@ -71,7 +85,8 @@ def main() -> None:
     ap.add_argument("tag", help="the new release's tag, e.g. v0.2.0")
     ap.add_argument("--ref", default="origin/main", help="commit to release (default origin/main); must be in main")
     ap.add_argument("--allow-pending", action="store_true",
-                    help="release while main's CI is still pending (macOS without a runner); never after a failure")
+                    help="release once Linux and Windows passed while macOS is unverified (no runner); never after a "
+                         "failure")
     ap.add_argument("--dry-run", action="store_true", help="build the files and print where; publish nothing")
     ap.add_argument("--out", type=Path, help="folder for the built files (default: a temporary one)")
     args = ap.parse_args()
@@ -80,10 +95,9 @@ def main() -> None:
     sha = run("git", "rev-parse", "--verify", f"{args.ref}^{{commit}}").stdout.strip()
     if run("git", "merge-base", "--is-ancestor", sha, "origin/main", check=False).returncode:
         fail(f"{args.ref} ({sha[:7]}) is not in origin/main: release only what has been merged")
-    state = ci_state(sha)
-    if state == "failure" or (state != "success" and not args.allow_pending):
-        fail(f"CI on {sha[:7]} is '{state}', not 'success'. Wait for it"
-             + ("" if state == "failure" else ", or pass --allow-pending (macOS without a runner)"))
+    problem = ci_problem(ci_statuses(sha), args.allow_pending)
+    if problem:
+        fail(f"{sha[:7]}: {problem}")
     if not args.dry_run and run("gh", "release", "view", args.tag, "--repo", REPO, check=False).returncode == 0:
         fail(f"release {args.tag} exists already")
 
