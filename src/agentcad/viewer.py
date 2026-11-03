@@ -15,7 +15,8 @@ and save them in the workspace. Each time such a file settles on new content, th
 in that file's store (a checkpoint and a journal record, tool 'save'), so the page's timeline shows how the part
 was built and any saved version can be shown again. FreeCAD (backends/freecad.py) reads them for the page.
 
-    GET /                         the page (viewer_static/index.html)
+    GET /                         the page (viewer_static/app/index.html, built from web/viewer: npm run build)
+    GET /app/assets/<file>        its script, styles and fonts
     GET /ui/<file>                the UI kit (viewer_static/ui): fluid.css, fluid.js, Inter, gallery.html
     GET /api/drawings             drawings (.dxf) and 3D parts (.FCStd, .step, .stl, .brep) under the root
     GET /api/timeline?path=       journal records, each with the version it produced
@@ -831,7 +832,13 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
             pinned = bool(v and v != "current")
             try:
                 if u.path in ("/", "/index.html"):
-                    return self._send(200, (STATIC / "index.html").read_bytes(), "text/html; charset=utf-8")
+                    return self._send(200, (STATIC / "app" / "index.html").read_bytes(), "text/html; charset=utf-8")
+                if u.path.startswith("/app/assets/"):  # names carry a content hash, so they may be kept
+                    name = u.path[len("/app/assets/"):]
+                    f = STATIC / "app" / "assets" / name
+                    if re.fullmatch(r"[A-Za-z0-9._-]+", name) and f.suffix in UI_TYPES and f.is_file():
+                        return self._send(200, f.read_bytes(), UI_TYPES[f.suffix], cache=True)
+                    return self._json({"ok": False, "error": {"code": "NOT_FOUND"}}, 404)
                 if u.path in STATIC_FILES:
                     name, ctype = STATIC_FILES[u.path]
                     return self._send(200, (STATIC / name).read_bytes(), ctype)

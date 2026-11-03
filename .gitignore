@@ -37,3 +37,5 @@ examples/trials/hard/**/H2_r*.stderr.log
 .mcp.json
 # BenchCAD pilot: per-run MCP configs (absolute local paths)
 examples/benchcad/runs/*/*/_mcp/
+# the viewer page's npm packages (web/viewer): hatchling reads only this file, so they stay out of the sdist
+node_modules/
