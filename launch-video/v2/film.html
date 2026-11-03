@@ -1,0 +1,451 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<title>Introducing AgentCAD</title>
+<!-- Every frame is a pure function of time: window.__seek(t) lays the whole film out for second t, and
+     capture.mjs screenshots it 60 times a second. Nothing animates on its own (no CSS transitions). -->
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300..700&family=JetBrains+Mono:wght@400;500&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..500&family=Noto+Sans+SC:wght@300..600&family=Noto+Serif+SC:wght@400..700&display=block" rel="stylesheet">
+<style>
+:root { --bg:#06070a; --ink:#f4f4f2; --muted:#8d939c; --line:rgba(255,255,255,.09); --accent:#8ab4ff; --good:#5ee0a0; --bad:#ff7a7a; }
+* { box-sizing:border-box; margin:0; padding:0; }
+html, body { width:1920px; height:1080px; overflow:hidden; background:var(--bg); }
+body { color:var(--ink); font-family:var(--body); -webkit-font-smoothing:antialiased; }
+#stage { position:absolute; inset:0; overflow:hidden; }
+#bg { position:absolute; inset:-60px; background:
+  radial-gradient(1200px 700px at 50% 42%, rgba(70,90,140,.16), transparent 70%),
+  linear-gradient(var(--line) 1px, transparent 1px) 0 0/80px 80px,
+  linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0/80px 80px; opacity:.55; }
+#vignette { position:absolute; inset:0; background:radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.65)); pointer-events:none; }
+.scene { position:absolute; inset:0; opacity:0; will-change:opacity, transform, filter; }
+.abs { position:absolute; }
+.display { font-family:var(--display); font-weight:400; letter-spacing:-.015em; line-height:1.12; }
+.serif-big { font-size:76px; }
+.sub { font-size:30px; color:var(--muted); font-weight:300; }
+.mono { font-family:'JetBrains Mono', Consolas, monospace; }
+.card { background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.025)); border:1px solid rgba(255,255,255,.1); border-radius:22px; box-shadow:0 30px 80px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.06); backdrop-filter:blur(8px); }
+.center { left:0; right:0; text-align:center; }
+#subs { position:absolute; left:0; right:0; bottom:46px; display:flex; justify-content:center; pointer-events:none; }
+#subs small { display:block; font-size:20px; line-height:1.4; color:#c9ced6; font-family:Inter, sans-serif; margin-top:2px; }
+#subs span { max-width:1740px; text-align:center; font-size:29px; line-height:1.45; font-weight:400; color:#fff; padding:8px 22px; border-radius:12px; background:rgba(0,0,0,.42); text-shadow:0 1px 2px rgba(0,0,0,.6); }
+svg.draw path { fill:none; vector-effect:non-scaling-stroke; }
+/* chat */
+.chat { width:600px; padding:0; overflow:hidden; }
+.chat .hd { display:flex; align-items:center; gap:12px; padding:20px 26px; border-bottom:1px solid rgba(255,255,255,.08); font-size:21px; font-weight:500; }
+.chat .hd i { width:10px; height:10px; border-radius:50%; background:var(--good); box-shadow:0 0 12px var(--good); }
+.chat .hd small { margin-left:auto; color:var(--muted); font-weight:400; font-size:17px; }
+.chat .body { padding:26px; display:flex; flex-direction:column; gap:16px; min-height:120px; }
+.bubble { align-self:flex-end; max-width:92%; background:#f4f4f2; color:#0b0c0f; border-radius:20px 20px 6px 20px; padding:16px 20px; font-size:22px; line-height:1.45; }
+.tool { font-family:'JetBrains Mono', Consolas, monospace; font-size:17px; line-height:1.55; color:#c9ced6; background:rgba(0,0,0,.3); border:1px solid rgba(255,255,255,.07); border-radius:12px; padding:12px 16px; }
+.tool b { color:var(--accent); font-weight:500; }
+.tool .ok { color:var(--good); }
+.reply { font-size:21px; line-height:1.5; color:#e8e8e6; }
+.divider { text-align:center; color:var(--muted); font-size:17px; letter-spacing:.04em; padding:8px 0; border-top:1px dashed rgba(255,255,255,.18); }
+.caret { display:inline-block; width:2px; height:1.05em; background:currentColor; vertical-align:-.15em; margin-left:2px; }
+/* drawings on dark: plotted PNGs inverted, so black lines become light and white paper disappears */
+.plot { filter:drop-shadow(0 0 18px rgba(138,180,255,.10)); }
+.chip { display:inline-flex; align-items:baseline; gap:12px; padding:14px 20px; border-radius:16px; font-size:22px; }
+.chip b { font-size:34px; font-weight:600; font-variant-numeric:tabular-nums; }
+.pill { display:inline-block; padding:6px 14px; border-radius:999px; font-size:17px; border:1px solid rgba(255,255,255,.14); color:var(--muted); }
+table.rows { border-collapse:collapse; font-family:'JetBrains Mono', Consolas, monospace; font-size:21px; }
+table.rows td, table.rows th { padding:7px 18px; text-align:right; }
+table.rows th { color:var(--muted); font-weight:400; font-size:17px; font-family:var(--body); }
+table.rows td:first-child, table.rows th:first-child { text-align:left; }
+.stat b { font-size:96px; font-weight:600; letter-spacing:-.03em; font-variant-numeric:tabular-nums; }
+.stat small { font-size:30px; color:var(--muted); margin-left:12px; }
+.bar { height:34px; border-radius:8px; background:rgba(255,255,255,.12); }
+</style></head>
+<body>
+<div id="stage"><div id="bg"></div><div id="scenes"></div><div id="vignette"></div><div id="subs"><span></span></div></div>
+<div id="preload" style="position:absolute;left:0;top:0;opacity:.01;font-size:12px;width:1900px;pointer-events:none"></div>
+<script>
+const LANG = new URLSearchParams(location.search).get('lang') || 'en'
+document.write(`<script src="data_${LANG}.js"><\/script>`)
+</script>
+<script>
+const D = window.DATA, T = D.t
+document.documentElement.style.setProperty('--display', T.font_display)
+document.documentElement.style.setProperty('--body', T.font_body)
+const A = n => `assets/${LANG}/${n}`
+// each inline copy of the logo gets its own ids: url(#lg) would otherwise resolve to the title's copy, which is
+// display:none by the end card, and the end card's mark would lose its fill and clip
+const logo = k => D.logo.replace(/id="(lg|lc)"/g, `id="$1-${k}"`).replace(/url\(#(lg|lc)\)/g, `url(#$1-${k})`)
+const DW = LANG === 'en' ? 1080 : 940, DH = LANG === 'en' ? 684 : 730
+
+// ---------- easing and helpers ----------
+const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x))
+const lerp = (a, b, x) => a + (b - a) * x
+const E = {
+  out: t => 1 - Math.pow(1 - t, 4),                      // fast in, long soft landing
+  outExpo: t => t >= 1 ? 1 : 1 - Math.pow(2, -10 * t),
+  inOut: t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
+  sine: t => -(Math.cos(Math.PI * t) - 1) / 2,
+  lin: t => t,
+}
+const p = (t, t0, d, e = E.out) => e(clamp((t - t0) / d))
+const $ = (html) => { const d = document.createElement('div'); d.innerHTML = html.trim(); return d.firstElementChild }
+const st = (el, o) => { for (const k in o) el.style[k] = o[k] }
+// reveal: blur-to-sharp rise; exit: soft fade up. Returns visibility so callers can chain.
+function show(el, t, t0, d = 1.1, { y = 26, blur = 14, scale = 1, exit = Infinity, exitD = .6 } = {}) {
+  const a = p(t, t0, d), b = 1 - p(t, exit, exitD, E.inOut)
+  const v = a * b
+  st(el, { opacity: v, filter: `blur(${(1 - a) * blur + (1 - b) * 10}px)`,
+    transform: `translateY(${(1 - a) * y - (1 - b) * 14}px) scale(${lerp(scale, 1, a)})` })
+  return v
+}
+function typed(el, text, t, t0, cps = 38, caret = true) {
+  const n = Math.floor(clamp((t - t0) * cps, 0, text.length))
+  const on = caret && t >= t0 && (n < text.length || Math.floor(t * 2) % 2 === 0) && t < t0 + text.length / cps + 1.2
+  el.innerHTML = escapeHtml(text.slice(0, n)) + (on ? '<span class="caret"></span>' : '')
+}
+const escapeHtml = s => s.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]))
+const count = (a, b, x, digits = 2) => lerp(a, b, x).toFixed(digits)
+function prepDraw(svgEl, color, width = 1.4) {   // every path gets length 1 so dashoffset 1..0 draws it
+  const paths = [...svgEl.querySelectorAll('path')]
+  for (const q of paths) {
+    const filled = q.dataset.fill
+    q.setAttribute('pathLength', 1)
+    if (filled) { q.style.fill = color; q.style.stroke = 'none' }
+    else { q.style.stroke = color; q.style.strokeWidth = width; q.style.strokeDasharray = 1; q.style.strokeDashoffset = 1 }
+  }
+  return paths
+}
+function drawPaths(paths, x, spread = .6) {      // x: 0..1 overall progress; paths start staggered
+  const n = paths.length
+  paths.forEach((q, i) => {
+    const s = (i / n) * spread, k = clamp((x - s) / (1 - spread))
+    if (q.dataset.fill) q.style.opacity = clamp((x - .75) / .25)
+    else q.style.strokeDashoffset = 1 - E.out(k)
+  })
+}
+
+// ---------- timeline from the voice clip lengths ----------
+const LINE = Object.fromEntries(D.lines.map(l => [l.id, l]))
+const SCENES = [
+  { id: 'open', lines: ['open1', 'open2', 'open3'], pre: 1.2, gap: .9, post: .9 },
+  { id: 'title', lines: ['title'], pre: .5, post: 1.4 },
+  { id: 'why', lines: ['why1', 'why2'], pre: .5, gap: .7, post: 1.0 },
+  { id: 'plan', lines: ['plan1', 'plan2'], pre: .4, gap: 1.3, post: 1.2 },
+  { id: 'edit', lines: ['edit1', 'edit2'], pre: .4, gap: 1.0, post: 1.6 },
+  { id: 'batch', lines: ['batch1', 'batch2'], pre: .5, gap: .6, post: 2.0 },
+  { id: 'dwg', lines: ['dwg'], pre: .6, post: 1.6 },
+  { id: 'bench', lines: ['bench1', 'bench2'], pre: .6, gap: .9, post: 3.0 },
+  { id: 'install', lines: ['install'], pre: .5, post: 1.2 },
+  { id: 'close', lines: ['close1', 'close2'], pre: .6, gap: 1.0, post: 3.2 },
+]
+const NOSUB = new Set(['open1', 'open2', 'open3', 'title', 'close1', 'close2'])
+const XF = .7   // scenes overlap by this much; the cross-fade blurs through
+let tcur = 0
+const CUES = []
+for (const s of SCENES) {
+  s.start = tcur
+  let lt = s.pre
+  s.at = {}
+  s.lines.forEach((id, i) => {
+    if (i) lt += s.gap
+    s.at[id] = lt
+    CUES.push({ id, start: s.start + lt, dur: LINE[id].dur, text: LINE[id].text, en: LINE[id].en })
+    lt += LINE[id].dur
+  })
+  s.dur = lt + s.post
+  tcur = s.start + s.dur - XF
+}
+const TOTAL = tcur + XF
+window.__total = TOTAL
+window.__timeline = () => ({ total: TOTAL, cues: CUES, scenes: SCENES.map(s => ({ id: s.id, start: s.start, dur: s.dur })) })
+
+// ---------- scenes ----------
+const root = document.getElementById('scenes')
+const S = {}
+function scene(id, html) { const el = $(`<div class="scene" id="s-${id}">${html}</div>`); root.appendChild(el); S[id] = el; return el }
+const q = (id, sel) => S[id].querySelector(sel)
+const qa = (id, sel) => [...S[id].querySelectorAll(sel)]
+
+// 1 open: the floor plan draws itself, huge and faint, under three lines of type
+scene('open', `<div class="abs" id="o-plan" style="left:160px;top:40px;width:1600px;height:1000px">${D.plan_svg}</div>
+  <div class="abs" style="left:260px;top:330px;width:1400px;height:420px;background:radial-gradient(closest-side, rgba(6,7,10,.92), rgba(6,7,10,0))"></div>
+  ${T.open.map((s, i) => `<div class="abs center display serif-big o-line" style="top:470px">${s}</div>`).join('')}`)
+const oSvg = q('open', '#o-plan svg'); oSvg.classList.add('draw'); oSvg.setAttribute('width', '1600'); oSvg.setAttribute('height', '1000')
+const oPaths = prepDraw(oSvg, 'rgba(190,205,235,.42)', 1.1)
+
+// 2 title
+scene('title', `<div class="abs center" style="top:350px"><div id="t-logo" style="display:inline-block;width:820px">${logo("t")}</div></div>
+  <div class="abs center display" id="t-tag" style="top:620px;font-size:46px;font-style:${LANG === 'en' ? 'italic' : 'normal'};color:#d9dde3">${T.tagline}</div>
+  <div class="abs" id="t-shine" style="left:0;top:330px;width:1920px;height:240px;background:linear-gradient(100deg,transparent 40%,rgba(255,255,255,.22) 50%,transparent 60%);mix-blend-mode:overlay"></div>`)
+q('title', '#t-logo svg').setAttribute('width', '820'); q('title', '#t-logo svg').removeAttribute('height')
+
+// 3 why
+scene('why', `<div class="abs card mono" id="w-code" style="left:250px;top:250px;width:760px;padding:0;font-size:19px;line-height:1.7">
+    <div style="padding:14px 22px;border-bottom:1px solid rgba(255,255,255,.08);color:var(--muted);font-family:var(--body);font-size:17px">${T.script_title}</div>
+    <pre id="w-src" style="padding:20px 24px;color:#b9c0ca;white-space:pre;min-height:330px"></pre></div>
+  <div class="abs display" id="w-head" style="left:1090px;top:270px;font-size:54px;color:#e9e9e6">${T.why_head}</div>
+  ${T.why_fail.map((s, i) => `<div class="abs w-fail" style="left:1094px;top:${400 + i * 92}px;font-size:40px;color:var(--bad);font-weight:500">✕&nbsp;&nbsp;${s}</div>`).join('')}
+  <div class="abs" id="w-pillars" style="left:140px;top:300px;width:1640px;display:grid;grid-template-columns:repeat(4,1fr);gap:28px">
+    ${T.pillars.map(([h, b], i) => `<div class="card w-p" style="padding:38px 32px;min-height:300px"><div class="display" style="font-size:40px;margin-bottom:18px">${h}</div><div style="font-size:23px;line-height:1.5;color:#b5bac2">${b}</div><div style="margin-top:34px;height:3px;width:56px;background:var(--accent);border-radius:2px"></div></div>`).join('')}</div>`)
+const SRC = `import ezdxf
+doc = ezdxf.readfile("plate.dxf")
+msp = doc.modelspace()
+for e in msp.query("CIRCLE"):
+    if abs(e.dxf.radius - 6) < 0.01:
+        e.dxf.radius = 7
+doc.saveas("plate.dxf")   # overwrites`
+
+// shared chat + drawing layout for the two plan scenes
+const chatHtml = id => `<div class="abs card chat" id="${id}-chat" style="left:110px;top:150px"><div class="hd"><i></i>${T.agent}<small>${T.connected}</small></div><div class="body"></div></div>`
+
+// 4 plan
+scene('plan', `${chatHtml('p')}
+  <div class="abs" id="p-draw" style="left:760px;top:120px;width:${DW}px;height:${DH}px"><img class="plot" src="${A('plan1.png')}" style="width:100%"></div>
+  <div class="abs" id="p-scan" style="top:120px;width:3px;height:${DH}px;background:var(--accent);box-shadow:0 0 30px 8px rgba(138,180,255,.6)"></div>
+  <div class="abs" id="p-ring" style="width:150px;height:150px;border-radius:50%;border:2px solid var(--accent);box-shadow:0 0 40px rgba(138,180,255,.5)"></div>
+  <div class="abs card chip" id="p-chip" style="left:110px;top:650px"><b>42.60 m²</b><span style="color:var(--muted)">${T.measured}</span></div>`)
+const pBody = q('plan', '.body')
+pBody.append($(`<div class="bubble"></div>`), $(`<div class="tool"></div>`), $(`<div class="tool"></div>`))
+
+// 5 edit
+scene('edit', `${chatHtml('e')}
+  <div class="abs" id="e-draw" style="left:760px;top:120px;width:${DW}px;height:${DH}px">
+    <img class="plot abs" id="e-v1" src="${A('plan1.png')}" style="width:100%;left:0;top:0"><img class="plot abs" id="e-v2" src="${A('plan2.png')}" style="width:100%;left:0;top:0"></div>
+  <div class="abs" id="e-chips" style="${LANG === 'en' ? `left:760px;top:${120 + DH + 22}px` : 'left:110px;top:760px'};display:flex;gap:18px">
+    ${T.rooms_before_after.map(r => `<div class="card chip e-chip"><span>${r[0]}</span><b>18.66</b><span style="color:var(--muted)">m²</span></div>`).join('')}</div>
+  <div class="abs card" id="e-feed" style="left:1440px;top:150px;width:380px;padding:10px;overflow:hidden"><div style="font-size:15px;color:var(--muted);padding:4px 6px 10px">${T.feed}</div><img src="${A('feed.png')}" style="width:100%;border-radius:12px;display:block"></div>`)
+const eBody = q('edit', '.body')
+
+// 6 batch
+scene('batch', `<div class="abs card" id="b-table" style="left:300px;top:150px;padding:24px 28px">
+    <table class="rows"><tr>${T.table_head.map(h => `<th>${h}</th>`).join('')}<th></th></tr>
+    ${D.table.map(r => `<tr class="b-row" data-no="${r[0]}">${r.map(c => `<td>${c}</td>`).join('')}<td class="b-mark" style="width:60px;text-align:center"></td></tr>`).join('')}</table></div>
+  <div class="abs b-why" data-no="FL-109" style="left:1200px;font-size:24px;color:var(--bad)"><span class="pill" style="border-color:rgba(255,122,122,.5);color:var(--bad);margin-right:12px">FL-109 · ${T.reject}</span>${T.why_109}</div>
+  <div class="abs b-why" data-no="FL-111" style="left:1200px;font-size:24px;color:var(--bad)"><span class="pill" style="border-color:rgba(255,122,122,.5);color:var(--bad);margin-right:12px">FL-111 · ${T.reject}</span>${T.why_111}</div>
+  <div class="abs" id="b-grid" style="left:150px;top:150px;width:1620px;display:grid;grid-template-columns:repeat(5,1fr);gap:26px 30px">
+    ${D.flanges.map(f => `<div class="b-cell" style="text-align:center"><div class="b-svg" style="height:290px;display:flex;justify-content:center">${D.svgs[f]}</div><div class="mono" style="font-size:19px;color:#c9ced6;margin-top:4px">${f}</div></div>`).join('')}</div>
+  <div class="abs center" id="b-stat" style="top:880px;font-size:30px;color:#e9e9e6;letter-spacing:.01em"></div>`)
+const bCells = qa('batch', '.b-cell').map(c => { const s = c.querySelector('svg'); s.classList.add('draw'); s.setAttribute('height', '290'); s.removeAttribute('width'); return prepDraw(s, '#e9edf3', 1.25) })
+qa('batch', '.b-cell svg path.C2, .b-cell svg path.C4').forEach(x => { if (!x.dataset.fill) x.style.stroke = 'rgba(138,180,255,.75)' })
+qa('batch', '.b-cell svg path[data-fill]').forEach(x => { if (!/C5/.test(x.getAttribute('class'))) x.style.fill = 'rgba(138,180,255,.9)' })
+
+// 7 dwg
+scene('dwg', `<div class="abs" id="d-win" style="left:290px;top:110px;width:1340px;border-radius:14px;overflow:hidden;box-shadow:0 50px 120px rgba(0,0,0,.65);border:1px solid rgba(255,255,255,.12)">
+    <div style="height:46px;background:#1d2128;display:flex;align-items:center;gap:9px;padding:0 18px;font-size:17px;color:#aeb4bd"><span style="width:12px;height:12px;border-radius:50%;background:#ff5f57"></span><span style="width:12px;height:12px;border-radius:50%;background:#febc2e"></span><span style="width:12px;height:12px;border-radius:50%;background:#28c840"></span><span style="margin-left:14px">${T.dwg_window}</span></div>
+    <div style="background:#fff;padding:18px;display:flex;justify-content:center"><img src="${A('acad.png')}" style="height:${LANG === 'en' ? 640 : 660}px"></div></div>
+  <div class="abs card mono" id="d-audit" style="left:1180px;top:640px;width:620px;padding:24px 28px;font-size:21px;line-height:1.7">
+    <div style="color:var(--accent)">${T.audit[0]}</div><div class="d-l" style="color:var(--good)"></div><div class="d-l" style="color:#c9ced6"></div></div>`)
+
+// 8 bench
+scene('bench', `<div class="abs center display" id="n-head" style="top:150px;font-size:56px">${T.bench_head}</div>
+  <div class="abs" id="n-stats" style="left:170px;top:330px;width:1580px;display:grid;grid-template-columns:repeat(3,1fr);gap:34px">
+    ${T.stats.map(s => `<div class="card stat n-stat" style="padding:40px 38px"><div><b></b><small>${s[1]}</small></div><div style="font-size:26px;color:var(--accent);margin-top:4px">${s[2]}</div><div style="font-size:21px;color:var(--muted);margin-top:16px;line-height:1.45">${s[3]}</div></div>`).join('')}</div>
+  <div class="abs" id="n-board" style="left:260px;top:240px;width:1400px">
+    <div style="font-size:22px;color:var(--muted);margin-bottom:22px">${T.board_head}</div>
+    ${D.board.map(([n, v], i) => `<div class="n-row" style="display:grid;grid-template-columns:400px 1fr 80px;align-items:center;gap:22px;margin:13px 0">
+      <div style="font-size:${i ? 20 : 24}px;color:${i ? '#c5cad2' : '#fff'};font-weight:${i ? 400 : 600};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${n}</div>
+      <div style="position:relative;height:34px"><div class="bar n-bar" style="position:absolute;left:0;top:0;bottom:0;${i ? '' : 'background:linear-gradient(90deg,#6c8cff,#a8c6ff);box-shadow:0 0 30px rgba(138,180,255,.45)'}"></div></div>
+      <div class="n-val mono" style="font-size:24px;text-align:right;color:${i ? '#c5cad2' : '#fff'}"></div></div>`).join('')}
+    <div id="n-v8" style="margin-top:26px"><span class="pill" style="color:#fff;border-color:rgba(138,180,255,.6);font-size:20px;padding:8px 18px">${T.v8}</span></div></div>
+  <div class="abs center" id="n-foot" style="top:905px;font-size:16px;color:#6f757e;padding:0 240px">${T.foot}</div>`)
+
+// 9 install
+scene('install', `<div class="abs center display" id="i-head" style="top:130px;font-size:60px">${T.install_head}</div>
+  <div class="abs center" id="i-sub" style="top:228px;font-size:26px;color:var(--muted)">${T.install_sub}</div>
+  ${[1, 2, 3].map(i => `<div class="abs i-shot" style="left:${170 + (i - 1) * 545}px;top:330px;width:500px;height:513px;border-radius:18px;overflow:hidden;border:1px solid rgba(255,255,255,.12);box-shadow:0 40px 100px rgba(0,0,0,.55)"><img src="${A('wiz' + i + '.png')}" style="width:100%"></div>`).join('')}`)
+
+// 10 close
+scene('close', `<div class="abs center display" id="c-line" style="top:400px;font-size:84px">${T.close}</div>
+  <div class="abs center" id="c-logo" style="top:330px"><div style="display:inline-block;width:640px">${logo("c")}</div>
+    <div class="display" style="margin-top:34px;font-family:Newsreader,serif;font-style:italic;font-size:46px;color:#e6e8ec">${T.end[0]}</div>
+    <div style="margin-top:44px;font-size:24px;color:var(--muted)">${T.end[1]}</div><div class="display" style="margin-top:14px;font-size:38px">${T.end[2]}</div></div>`)
+q('close', '#c-logo svg').setAttribute('width', '640'); q('close', '#c-logo svg').removeAttribute('height')
+
+// ---------- per-frame rendering ----------
+const R = {}
+R.open = (t, s) => {
+  const x = clamp(t / (s.dur * .85))
+  drawPaths(oPaths, E.sine(x), .7)
+  st(q('open', '#o-plan'), { opacity: .55, transform: `scale(${lerp(1.18, 1.0, E.sine(clamp(t / s.dur)))}) rotate(${lerp(-2.5, 0, E.sine(clamp(t / s.dur)))}deg)` })
+  const ls = qa('open', '.o-line'), ids = ['open1', 'open2', 'open3']
+  ls.forEach((el, i) => show(el, t, s.at[ids[i]] - .2, 1.2, { exit: i < 2 ? s.at[ids[i + 1]] - .5 : Infinity }))
+}
+R.title = (t, s) => {
+  const a = p(t, .2, 1.8)
+  st(q('title', '#t-logo'), { opacity: a, filter: `blur(${(1 - a) * 18}px)`, transform: `scale(${lerp(.9, 1, a)})` })
+  show(q('title', '#t-tag'), t, s.at.title + 1.6, 1.3)
+  const sh = clamp((t - 1.2) / 1.6)
+  st(q('title', '#t-shine'), { transform: `translateX(${lerp(-1400, 1400, E.inOut(sh))}px)`, opacity: sh > 0 && sh < 1 ? 1 : 0 })
+}
+R.why = (t, s) => {
+  const w1 = s.at.why1, w2 = s.at.why2, d1 = LINE.why1.dur
+  const codeOut = w2 - .2
+  show(q('why', '#w-code'), t, w1 - .3, 1, { exit: codeOut })
+  typed(q('why', '#w-src'), SRC, t, w1 + .2, 70)
+  show(q('why', '#w-head'), t, w1 + d1 * .32, 1, { exit: codeOut })
+  qa('why', '.w-fail').forEach((el, i) => show(el, t, w1 + d1 * (.62 + i * .12), .8, { y: 0, scale: 1.12, blur: 8, exit: codeOut }))
+  qa('why', '.w-p').forEach((el, i) => show(el, t, w2 + .4 + i * LINE.why2.dur * .2, 1.1, { y: 60 }))
+}
+function chatRender(body, t, items) {   // items: [{el, at, type: bubble|tool|reply, text, cps}]
+  for (const it of items) {
+    const v = show(it.el, t, it.at, .7, { y: 14, blur: 6, exit: it.exit ?? Infinity })
+    it.el.style.display = v > 0.001 || t < it.at ? '' : 'none'
+    if (t < it.at) it.el.style.display = 'none'
+    if (it.text != null) {
+      if (it.type === 'tool') it.el.innerHTML = it.text.map((ln, i) => t >= it.at + i * .55 ? ln : '').filter(Boolean).join('<br>') || '&nbsp;'
+      else typed(it.el, it.text, t, it.at, it.cps || 40, it.type === 'bubble')
+    }
+  }
+}
+R.plan = (t, s) => {
+  const a1 = s.at.plan1, a2 = s.at.plan2
+  show(q('plan', '#p-chat'), t, 0, .9, { y: 30 })
+  const [bub, t1, t2] = pBody.children
+  chatRender(pBody, t, [
+    { el: bub, at: a1 - .1, type: 'bubble', text: T.p_plan, cps: 52 },
+    { el: t1, at: a2 + .2, type: 'tool', text: [`<b>apply_operations</b> · ${T.t_plan[0]}`] },
+    { el: t2, at: a2 + 2.4, type: 'tool', text: [`<span class="ok">${T.t_plan[1]}</span>`] },
+  ])
+  const w = E.inOut(clamp((t - (a2 + .6)) / 2.6))
+  const draw = q('plan', '#p-draw')
+  st(draw, { opacity: w > 0 ? 1 : 0, webkitMaskImage: `linear-gradient(90deg,#000 ${w * 100}%,transparent ${w * 100 + 6}%)`,
+    transform: `scale(${lerp(1.04, 1, E.out(clamp((t - a2) / s.dur)))})` })
+  const H = DH
+  st(q('plan', '#p-scan'), { left: `${760 + w * DW}px`, opacity: w > 0 && w < 1 ? 1 : 0 })
+  const [rx, ry] = LANG === 'en' ? [.555, .602] : [.683, .604]
+  const r = p(t, a2 + 4.4, 1.4), ring = q('plan', '#p-ring')
+  st(ring, { left: `${760 + rx * DW - 75}px`, top: `${120 + ry * H - 75}px`, opacity: r * (1 - p(t, a2 + 6.4, 1.2)), transform: `scale(${lerp(.4, 1.2, r)})` })
+  show(q('plan', '#p-chip'), t, a2 + 4.8, 1)
+}
+R.edit = (t, s) => {
+  const a1 = s.at.edit1, a2 = s.at.edit2
+  if (!eBody.dataset.ready) {
+    eBody.append($(`<div class="bubble"></div>`), $(`<div class="tool"></div>`), $(`<div class="divider">${T.new_session}</div>`),
+      $(`<div class="bubble"></div>`), $(`<div class="tool"></div>`), $(`<div class="reply"></div>`)); eBody.dataset.ready = 1
+  }
+  const [b1, tl1, dv, b2, tl2, rp] = eBody.children
+  st(q('edit', '#e-chat'), { opacity: 1 })
+  const clear = a2 - .3
+  chatRender(eBody, t, [
+    { el: b1, at: a1 - .1, type: 'bubble', text: T.p_edit, exit: clear },
+    { el: tl1, at: a1 + 1.4, type: 'tool', text: [`<b>apply_operations</b> · ${T.t_edit[0]}`, `<span class="ok">${T.t_edit[1]}</span>`], exit: clear },
+    { el: dv, at: a2 - .1 },
+    { el: b2, at: a2 + .4, type: 'bubble', text: T.p_undo, cps: 55 },
+    { el: tl2, at: a2 + 2.6, type: 'tool', text: T.t_undo.map(x => `<b>${x}</b>`) },
+    { el: rp, at: a2 + 4.6, type: 'reply', text: T.r_undo, cps: 60 },
+  ])
+  const fwd = E.inOut(clamp((t - (a1 + 1.6)) / 1.6)), back = E.inOut(clamp((t - (a2 + 4.0)) / 1.2))
+  const v2 = fwd * (1 - back)
+  st(q('edit', '#e-v1'), { opacity: 1 - v2 }); st(q('edit', '#e-v2'), { opacity: v2 })
+  st(q('edit', '#e-draw'), { filter: `blur(${Math.sin(Math.PI * back) * 6}px)`, transform: `scale(${1 + Math.sin(Math.PI * back) * .015})` })
+  qa('edit', '.e-chip').forEach((el, i) => {
+    show(el, t, a1 + 1.8 + i * .2, .8)
+    const r = T.rooms_before_after[i]
+    el.querySelector('b').textContent = count(+r[1], +r[2], v2)
+    el.style.boxShadow = v2 > .02 && v2 < .98 ? '0 0 30px rgba(138,180,255,.35)' : ''
+  })
+  show(q('edit', '#e-feed'), t, a2 + 3.2, 1.1, { y: 40 })
+}
+R.batch = (t, s) => {
+  const a1 = s.at.batch1, a2 = s.at.batch2, d1 = LINE.batch1.dur
+  const tableOut = a2 - .2
+  show(q('batch', '#b-table'), t, 0, .9, { exit: tableOut })
+  const rows = qa('batch', '.b-row'), tableTop = 150 + 24
+  rows.forEach((tr, i) => {
+    const at = a1 + d1 * (.15 + i * .045)
+    const mark = tr.querySelector('.b-mark'), bad = tr.dataset.no === 'FL-109' || tr.dataset.no === 'FL-111'
+    const v = p(t, at, .4)
+    mark.textContent = v > 0 ? (bad ? '✕' : '✓') : ''
+    mark.style.color = bad ? 'var(--bad)' : 'var(--good)'; mark.style.opacity = v
+    tr.style.background = bad && v > 0 ? `rgba(255,122,122,${.14 * v})` : ''
+    tr.style.color = bad && v > 0 ? '#ffd0d0' : ''
+  })
+  qa('batch', '.b-why').forEach(el => {
+    const tr = rows.find(r => r.dataset.no === el.dataset.no), i = rows.indexOf(tr)
+    el.style.top = `${tr.offsetTop + tableTop + 4}px`
+    show(el, t, a1 + d1 * (.15 + i * .045) + .3, .8, { y: 0, blur: 8, exit: tableOut })
+  })
+  const g = q('batch', '#b-grid')
+  st(g, { opacity: t > a2 - .3 ? 1 : 0 })
+  bCells.forEach((paths, i) => {
+    const x = clamp((t - (a2 + i * .22)) / 1.7)
+    drawPaths(paths, x, .55)
+    const cell = qa('batch', '.b-cell')[i]
+    show(cell.querySelector('.mono'), t, a2 + i * .22 + 1.1, .6, { y: 6, blur: 4 })
+  })
+  const k = p(t, a2 + 2.4, 1.6)
+  const statEl = q('batch', '#b-stat')
+  statEl.innerHTML = `${T.batch_stat[0]} &nbsp;·&nbsp; ${T.batch_stat[1]} &nbsp;·&nbsp; <span style="color:var(--good)">${T.batch_stat[2]}</span>`
+  show(statEl, t, a2 + 2.4, 1)
+}
+R.dwg = (t, s) => {
+  const a = s.at.dwg, w = p(t, a - .3, 1.5)
+  st(q('dwg', '#d-win'), { opacity: w, transform: `perspective(1800px) rotateX(${(1 - w) * 14}deg) translateY(${(1 - w) * 80}px) scale(${lerp(.94, 1, w)})`, filter: `blur(${(1 - w) * 8}px)` })
+  show(q('dwg', '#d-audit'), t, a + LINE.dwg.dur * .55, 1)
+  const ls = qa('dwg', '.d-l')
+  typed(ls[0], T.audit[1], t, a + LINE.dwg.dur * .62, 40, false)
+  typed(ls[1], T.audit[2], t, a + LINE.dwg.dur * .62 + 1.2, 40, false)
+}
+R.bench = (t, s) => {
+  const a1 = s.at.bench1, a2 = s.at.bench2, d1 = LINE.bench1.dur, out1 = a2 - .2
+  show(q('bench', '#n-head'), t, a1 - .3, 1.1, { exit: out1 })
+  const vals = [[0, 4.1, 1], [0, 1.9, 1], [0, 3, 0]]
+  qa('bench', '.n-stat').forEach((el, i) => {
+    const at = a1 + d1 * [.22, .52, .78][i]
+    show(el, t, at, 1, { y: 40, exit: out1 })
+    const k = p(t, at + .1, 1.4, E.outExpo), [x0, x1, dg] = vals[i]
+    el.querySelector('b').textContent = i === 2 ? `${Math.round(lerp(0, 3, k))}/3` : i === 1 ? `${count(x0, x1, k, 1)}×` : count(x0, x1, k, dg)
+  })
+  show(q('bench', '#n-board'), t, a2 - .1, .9, { y: 20 })
+  qa('bench', '.n-row').forEach((row, i) => {
+    const at = a2 + .4 + i * .14, k = p(t, at, 1.5, E.outExpo), v = D.board[i][1]
+    row.querySelector('.n-bar').style.width = `${k * v}%`
+    row.querySelector('.n-val').textContent = Math.round(k * v)
+    row.style.opacity = p(t, at - .1, .5)
+  })
+  show(q('bench', '#n-v8'), t, a2 + LINE.bench2.dur * .15, .9)
+  show(q('bench', '#n-foot'), t, a2 + 1.0, 1.2, { y: 0 })
+}
+R.install = (t, s) => {
+  const a = s.at.install
+  show(q('install', '#i-head'), t, a - .3, 1.1)
+  show(q('install', '#i-sub'), t, a + .7, 1)
+  qa('install', '.i-shot').forEach((el, i) => {
+    const k = p(t, a + .3 + i * .35, 1.4)
+    st(el, { opacity: k, transform: `perspective(1600px) rotateY(${(1 - i) * 10 * (1 - k * .4)}deg) translateY(${(1 - k) * 90 + Math.sin(t * .9 + i) * 6}px)`, filter: `blur(${(1 - k) * 10}px)` })
+  })
+}
+R.close = (t, s) => {
+  const a1 = s.at.close1, a2 = s.at.close2
+  show(q('close', '#c-line'), t, a1 - .2, 1.4, { y: 34, exit: a2 - .5, exitD: .8 })
+  const k = p(t, a2 - .2, 1.8)
+  st(q('close', '#c-logo'), { opacity: k * (1 - p(t, s.dur - 1.2, 1.1, E.inOut)), filter: `blur(${(1 - k) * 16}px)`, transform: `scale(${lerp(.94, 1, k)})` })
+}
+
+function seek(t) {
+  st(document.getElementById('bg'), { transform: `translate(${-t * 6 % 80}px, ${-t * 3 % 80}px)` })
+  for (const s of SCENES) {
+    const lt = t - s.start, el = S[s.id]
+    if (lt < -.01 || lt > s.dur + .01) { el.style.opacity = 0; el.style.display = 'none'; continue }
+    el.style.display = ''
+    const fin = p(lt, 0, XF, E.sine), fout = 1 - p(lt, s.dur - XF, XF, E.sine)
+    const o = Math.min(fin, fout)
+    st(el, { opacity: o, filter: o < .999 ? `blur(${(1 - o) * 10}px)` : 'none', transform: `scale(${1 + (1 - fout) * .03 - (1 - fin) * .02})` })
+    R[s.id](lt, s)
+  }
+  const cue = CUES.find(c => !NOSUB.has(c.id) && t >= c.start - .15 && t < c.start + c.dur + .35)
+  const sub = document.querySelector('#subs span')
+  if (cue) { sub.innerHTML = escapeHtml(cue.text) + (LANG === 'en' ? '' : `<small>${escapeHtml(cue.en)}</small>`); sub.style.opacity = Math.min(p(t, cue.start - .15, .25), 1 - p(t, cue.start + cue.dur + .1, .25)) }
+  else sub.style.opacity = 0
+  // the last second fades to black
+  document.getElementById('stage').style.opacity = 1 - p(t, TOTAL - 1.0, 1.0, E.sine)
+}
+window.__seek = seek
+
+// load every glyph before the first frame (CJK fonts arrive in subsets, only for characters in use)
+document.getElementById('preload').innerHTML = [...D.lines.map(l => l.text), JSON.stringify(T)].join(' ')
+  .replace(/</g, ' ') + `<span style="font-family:var(--display)">${JSON.stringify(T).replace(/</g, ' ')} ${D.lines.map(l => l.text).join(' ')}</span><span class="mono">${SRC} 0123456789</span>`
+window.__ready = (async () => {
+  await document.fonts.ready
+  await Promise.all([...document.images].map(i => i.decode().catch(() => 0)))
+  await new Promise(r => setTimeout(r, 1500))
+  await document.fonts.ready
+  seek(0)
+  return true
+})()
+</script>
+</body></html>
