@@ -391,8 +391,9 @@ def _cmd_line(parts: list[str]) -> str:
 def write_launcher(state: Path, command: str, args: list[str], launcher: str, action: tuple[str, ...]) -> Path:
     """<root>/.agentcad/launch-<action>.ps1 (Windows): a small "Opening AgentCAD..." window instead of a console.
     With uvx it first starts what is already downloaded (--offline, about a second) and downloads only if that fails;
-    once a day, after the page is open, it fetches the latest version for the next start. Next to it goes
-    launch-<action>.js, which the icon runs (see windows_script_host)."""
+    once a day, after the page is open, it fetches the latest version for the next start. The drawings icon first
+    looks for AgentCAD already running for this folder and then only opens its page, with no window. Next to it
+    goes launch-<action>.js, which the icon runs (see windows_script_host)."""
     fast = _cmd_line([command, "--offline", *args]) if launcher == "uvx" else None
     full = _cmd_line([command, *args])
     # uvx --offline keeps starting the copy it has; this refresh (daily, after the page is open) gets the next one
@@ -402,6 +403,7 @@ def write_launcher(state: Path, command: str, args: list[str], launcher: str, ac
     text = (STATIC / "launch.ps1").read_text("utf-8")
     for key, value in (("__FAST__", _ps_quote(fast) if fast else "$null"), ("__FULL__", _ps_quote(full)),
                        ("__UPDATE__", _ps_quote(update) if update else "$null"),
+                       ("__REUSE__", "$true" if action == VIEWER else "$false"),
                        ("'__ZH__'", _ps_quote(zh)), ("'__EN__'", _ps_quote(en))):
         text = text.replace(key, value)
     path = state / f"launch-{action[0]}.ps1"

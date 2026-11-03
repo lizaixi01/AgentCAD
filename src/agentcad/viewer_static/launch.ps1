@@ -1,14 +1,51 @@
 # AgentCAD desktop icon (Windows). install.create_shortcut fills in the commands below and points the icon at this
 # file through launch-<action>.js (wscript, window style 0), so no console window ever shows. A small window says what is happening while
-# AgentCAD starts; it closes once the browser page is open. AgentCAD keeps running in the background.
+# AgentCAD starts; it closes once the browser page is open. AgentCAD keeps running in the background, and then the
+# drawings icon opens its page straight away, with no window.
+$fast = __FAST__   # starts from what is already downloaded (no network), or $null
+$full = __FULL__   # may download first
+$update = __UPDATE__   # fetches the latest AgentCAD for the next start (at most once a day), or $null
+$reuse = __REUSE__   # the drawings icon (not the demo): a running AgentCAD of this folder only needs the browser
+$stamp = Join-Path $PSScriptRoot 'last-update-check'
+
+function Run($line, $out = $log) {
+  $si = New-Object Diagnostics.ProcessStartInfo
+  $si.FileName = 'cmd.exe'; $si.Arguments = '/d /s /c "' + $line + ' > "' + $out + '" 2>&1"'
+  $si.UseShellExecute = $false; $si.CreateNoWindow = $true
+  [Diagnostics.Process]::Start($si)
+}
+# Once a day, fetch the latest AgentCAD in the background, so the next start has it.
+function UpdateIfDue {
+  if (-not $update) { return }
+  $due = -not (Test-Path -LiteralPath $stamp) -or ((Get-Date) - (Get-Item -LiteralPath $stamp).LastWriteTime).TotalHours -ge 24
+  if ($due) { Set-Content -LiteralPath $stamp (Get-Date -Format o); [void](Run $update 'nul') }
+}
+
+# AgentCAD already running for this folder: the address in viewer.json, and only one on this computer whose
+# /api/ping answers with this folder (as agentcad.viewer_link.running_url checks), so an edited file cannot send
+# the browser anywhere else. Anything else (no file, no answer, another folder) starts AgentCAD below.
+if ($reuse) {
+  try {
+    $u = [Uri]((Get-Content -LiteralPath (Join-Path $PSScriptRoot 'viewer.json') -Raw -ErrorAction Stop | ConvertFrom-Json).url)
+    if ($u.Scheme -eq 'http' -and $u.IsLoopback -and $u.Port -gt 0) {
+      $rq = [Net.WebRequest]::Create($u.GetLeftPart('Authority') + '/api/ping')
+      $rq.Timeout = 1000; $rq.Proxy = $null
+      $rs = $rq.GetResponse()
+      try { $ping = (New-Object IO.StreamReader($rs.GetResponseStream())).ReadToEnd() | ConvertFrom-Json } finally { $rs.Close() }
+      $here = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot)).TrimEnd('\')
+      if ($ping.root -and [IO.Path]::GetFullPath([string]$ping.root).TrimEnd('\') -eq $here) {
+        Start-Process $u.AbsoluteUri
+        UpdateIfDue
+        exit
+      }
+    }
+  } catch { }
+}
+
 Add-Type -AssemblyName System.Windows.Forms, System.Drawing
 [System.Windows.Forms.Application]::EnableVisualStyles()
 $zh = (Get-Culture).Name -like 'zh*'
 function L($z, $e) { if ($zh) { $z } else { $e } }
-$fast = __FAST__   # starts from what is already downloaded (no network), or $null
-$full = __FULL__   # may download first
-$update = __UPDATE__   # fetches the latest AgentCAD for the next start (at most once a day), or $null
-$stamp = Join-Path $PSScriptRoot 'last-update-check'
 # logs of earlier starts: a running AgentCAD still holds its own (that delete fails quietly), the rest go
 Get-ChildItem -LiteralPath $PSScriptRoot -Filter 'open-*.log' -ErrorAction SilentlyContinue | Remove-Item -ErrorAction SilentlyContinue
 $log = Join-Path $PSScriptRoot ('open-' + [guid]::NewGuid().ToString('N') + '.log')
@@ -33,12 +70,6 @@ $bar.Location = New-Object Drawing.Point(30, 116); $bar.Size = New-Object Drawin
 $bar.Style = 'Marquee'; $bar.MarqueeAnimationSpeed = 30
 $form.Controls.AddRange(@($title, $sub, $bar))
 
-function Run($line, $out = $log) {
-  $si = New-Object Diagnostics.ProcessStartInfo
-  $si.FileName = 'cmd.exe'; $si.Arguments = '/d /s /c "' + $line + ' > "' + $out + '" 2>&1"'
-  $si.UseShellExecute = $false; $si.CreateNoWindow = $true
-  [Diagnostics.Process]::Start($si)
-}
 $script:proc = if ($fast) { Run $fast } else { Run $full }
 $script:usedFull = -not $fast
 
@@ -49,13 +80,9 @@ $timer.Add_Tick({
   $text = if (Test-Path -LiteralPath $log) { Get-Content -LiteralPath $log -Raw -ErrorAction SilentlyContinue } else { '' }
   if ($text -match '"viewer":\s*"') {
     $timer.Stop(); $form.Close()
-    # The start above used what was already downloaded. Once a day, fetch the latest AgentCAD in the background, so
-    # the next double-click has it; a start that just downloaded is already the latest.
-    if ($update) {
-      $due = -not (Test-Path -LiteralPath $stamp) -or ((Get-Date) - (Get-Item -LiteralPath $stamp).LastWriteTime).TotalHours -ge 24
-      if ($script:usedFull) { Set-Content -LiteralPath $stamp (Get-Date -Format o) }
-      elseif ($due) { Set-Content -LiteralPath $stamp (Get-Date -Format o); [void](Run $update 'nul') }
-    }
+    # The start above used what was already downloaded; a start that just downloaded is already the latest.
+    if ($script:usedFull) { if ($update) { Set-Content -LiteralPath $stamp (Get-Date -Format o) } }
+    else { UpdateIfDue }
     return
   }
   if ($exited) {
