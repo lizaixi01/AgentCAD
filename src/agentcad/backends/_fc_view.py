@@ -117,6 +117,19 @@ def _is_seam(shape, e):
         any(type(f.Surface).__name__ in ("Cylinder", "Cone") for f in fs)
 
 
+def _seams(shape):
+    """For each of the shape's edges, whether _is_seam calls it a seam, without asking it about every edge: it
+    searches every face for the edge's faces, and a part with thousands of faces took most of a minute. An edge
+    two different faces share is never a seam, so one pass over the faces settles almost every edge. A degenerated
+    edge (a sphere's pole) has no curve to ask about; geometry leaves it out anyway."""
+    faces = {}
+    for i, f in enumerate(shape.Faces):
+        for e in f.Edges:
+            faces.setdefault(e.hashCode(), []).append((i, e))
+    return [not e.Degenerated and len({i for i, x in faces.get(e.hashCode(), []) if x.isSame(e)}) < 2
+            and _is_seam(shape, e) for e in shape.Edges]
+
+
 def geometry(kind, data):
     """(points, triangles, edge polylines, faces left out, span) for either kind of file."""
     if kind == "mesh":
@@ -128,8 +141,8 @@ def geometry(kind, data):
     span = max(tight_box(sh).DiagonalLength, 1e-9)
     pts, tris, missing = tessellate(sh, span / 600)
     edges = []
-    for e in sh.Edges:
-        if not (e.Degenerated or _is_seam(sh, e)):
+    for e, seam in zip(sh.Edges, _seams(sh)):
+        if not (e.Degenerated or seam):
             edges.append([(q.x, q.y, q.z) for q in e.discretize(Deflection=span / 1000)])
     return pts, tris, edges, missing, span
 

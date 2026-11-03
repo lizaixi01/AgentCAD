@@ -767,6 +767,44 @@ def test_3d_part_mesh_thumbnail_and_change(ws, cache):
         v.stop()
 
 
+@needs_freecad
+def test_seams_match_the_per_edge_check_without_asking_it_about_shared_edges(tmp_path):
+    """_is_seam searches every face for each edge (a 9 MB STEP with 2181 faces took 50 s of a 55 s mesh); _seams
+    gives the same answers and asks it only about edges fewer than two faces share."""
+    import subprocess
+    from agentcad.backends import freecad
+    cmd, extra = freecad.require()
+    script = tmp_path / "seams.py"
+    script.write_text(
+        "import json, os, sys\n"
+        "sys.path.insert(0, os.environ['VIEW_DIR'])\n"
+        "import _fc_view as v\n"
+        "import FreeCAD, Part\n"
+        "plate = Part.makeBox(100, 100, 4)\n"
+        "for i in range(8):\n"
+        "    for j in range(8):\n"
+        "        plate = plate.cut(Part.makeCylinder(2, 4, FreeCAD.Vector(8 + 12 * i, 8 + 12 * j, 0)))\n"
+        "shapes = {'cylinder': Part.makeCylinder(5, 10), 'cone': Part.makeCone(5, 2, 8), 'sphere': Part.makeSphere(4),\n"
+        "          'open_face': Part.makeCylinder(5, 10).Faces[0], 'plate': plate}\n"
+        "asked, check = [], v._is_seam\n"
+        "v._is_seam = lambda s, e: asked.append(1) or check(s, e)\n"
+        "out = {}\n"
+        "for name, sh in shapes.items():\n"
+        "    asked.clear()\n"
+        "    new = v._seams(sh)\n"
+        "    out[name] = {'same': new == [not e.Degenerated and check(sh, e) for e in sh.Edges],\n"
+        "                 'seams': sum(new), 'edges': len(sh.Edges), 'asked': len(asked)}\n"
+        "open(os.environ['OUT'], 'w').write(json.dumps(out))\n", "utf-8")
+    out = tmp_path / "seams.json"
+    view_dir = Path(freecad.__file__).parent
+    subprocess.run(cmd + [str(script)], env={**os.environ, **extra, "VIEW_DIR": str(view_dir), "OUT": str(out)},
+                   check=True, capture_output=True, timeout=120)
+    r = json.loads(out.read_text("utf-8"))
+    assert all(c["same"] for c in r.values()), r
+    assert [r[k]["seams"] for k in ("cylinder", "cone", "sphere", "open_face")] == [1, 1, 0, 1]
+    assert r["plate"]["seams"] == 64 and r["plate"]["asked"] == 64 and r["plate"]["edges"] > 3 * 64, r["plate"]
+
+
 def test_freecad_location_is_remembered_for_the_desktop_viewer(tmp_path, monkeypatch):
     """The agent apps start AgentCAD with AGENTCAD_FREECAD; the viewer the desktop icon opens has no such setting,
     so the location is kept per user (never in a workspace) and used from there, only if it is a FreeCAD folder."""
