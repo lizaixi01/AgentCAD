@@ -7,6 +7,7 @@ setup-wizard screenshots. Text strings for both languages live here and in narra
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 from pathlib import Path
@@ -16,7 +17,8 @@ from PIL import Image
 HERE = Path(__file__).parent
 FILM = HERE.parent
 REPO = FILM.parent
-PLAY = Path("D:/Projects/AgentCAD/playground")
+# the AgentCAD workspace the demo drawings were made in (the MCP server's --root)
+PLAY = Path(os.environ.get("AGENTCAD_PLAYGROUND", REPO / "playground"))
 LIVE = FILM / "frames" / "live"
 V2 = FILM / "frames" / "v2"
 VOICE = "en"   # the voice both films are cut to
@@ -64,9 +66,9 @@ TEXT = {
         "stats": [["4.1", "min", "vs 12.9", "five-round revision, vs the same agent writing code"],
                   ["1.9×", "", "faster", "than AutoCAD MCP Pro, with AutoCAD open"],
                   ["3/3", "", "vs 0/3", "undo across sessions, vs AutoCAD MCP Pro"]],
-        "board_head": "Source-capability review · 9 CAD MCP servers", "v8": "U-C4N AutoCAD MCP benchmark v8 · 31 / 31",
+        "board_head": "Source-capability review · 9 CAD MCP servers", "v8": "U-C4N AutoCAD MCP benchmark v8 · 31 / 31, tied with AutoCAD MCP Pro",
         "foot": "Our own timed trials (2–3 runs per task) and AI reviews we requested, pinned sources, 2026-10-31. Not an official ranking. Reports, logs and where it did not win: docs/benchmarks.md",
-        "install_head": "Open source. Installs in about a minute.", "install_sub": "Claude Code · Codex · any MCP app",
+        "install_head": "Open source. Set up in about two minutes.", "install_sub": "Claude Code · Codex · any MCP app",
         "close": "Your agent can already write code.<br>Now it can draft.",
         "end": ["The CAD runtime built for AI agents", "Open source · MIT", "github.com/lizaixi01/AgentCAD"],
     },
@@ -97,9 +99,9 @@ TEXT = {
         "stats": [["4.1", "分钟", "对比 12.9", "五轮改图，对比同一 Agent 自己写代码"],
                   ["1.9×", "", "更快", "对比 AutoCAD MCP Pro（AutoCAD 同时打开）"],
                   ["3/3", "", "对比 0/3", "跨会话撤销，对比 AutoCAD MCP Pro"]],
-        "board_head": "源码能力评审 · 9 个 CAD MCP 服务", "v8": "U-C4N AutoCAD MCP 基准 v8 · 31 / 31",
+        "board_head": "源码能力评审 · 9 个 CAD MCP 服务", "v8": "U-C4N AutoCAD MCP 基准 v8 · 31 / 31，与 AutoCAD MCP Pro 并列",
         "foot": "数据来自我们自己的计时试验（每题 2–3 次）和我们委托的 AI 评审，源码版本固定，2026-10-31。非官方排名。报告、日志以及没赢的地方：docs/benchmarks.md",
-        "install_head": "开源，大约一分钟装好。", "install_sub": "Claude Code · Codex · 任何 MCP 应用",        "close": "你的 Agent 已经会写代码。<br>现在，它也会画图了。",
+        "install_head": "开源，两分钟左右装好。", "install_sub": "Claude Code · Codex · 任何 MCP 应用",        "close": "你的 Agent 已经会写代码。<br>现在，它也会画图了。",
         "end": ["The CAD runtime built for AI agents", "开源 · MIT", "github.com/lizaixi01/AgentCAD"],
     },
 }
@@ -154,15 +156,16 @@ def main() -> None:
             "plan1.png": PLAY / "launch_video" / ("apartment_v1.png" if lang == "en" else "plan_zh.png"),
             "plan2.png": PLAY / "launch_video" / ("apartment_v2.png" if lang == "en" else "plan_zh_v2.png"),
             "acad.png": V2 / "acad" / f"acad__plan_{lang}.png",
-            "wiz1.png": LIVE / ("wiz_1.png" if lang == "en" else "zh_wiz_1.png"),
-            "wiz2.png": LIVE / ("wiz_2.png" if lang == "en" else "zh_wiz_2.png"),
-            "wiz3.png": LIVE / ("wiz_3.png" if lang == "en" else "zh_wiz_3.png"),
         }
         for name, src in copy.items():
             if name.startswith("plan"):
                 light_on_clear(src, out / name)
             else:
                 shutil.copyfile(src, out / name)
+        # the wizard (setup_shots.mjs): pick apps, installing (a frame mid-way), all set; the middle of the window
+        pre = "" if lang == "en" else "zh_"
+        for i, shot in enumerate(["setup_2", "setup_3_03", "setup_4"], 1):
+            Image.open(LIVE / f"{pre}{shot}.png").crop((500, 0, 2060, 1600)).save(out / f"wiz{i}.png")
         # the viewer's "what happened" feed and version list after the new-session undo
         Image.open(V2 / lang / "plan_04_undone.png").crop((2770, 140, 3400, 1440)).save(out / "feed.png")
         Image.open(V2 / lang / "plan_04_undone.png").save(out / "viewer.png")

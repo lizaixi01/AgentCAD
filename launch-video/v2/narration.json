@@ -1,5 +1,5 @@
 {
- "_note": "One line per narration beat. 'id' ties a line to its scene in timeline.js. Edit the text here, then rerun voice.py to regenerate the reference voice.",
+ "_note": "One line per narration beat. 'id' ties a line to its scene in film.html (SCENES). Edit the text here, then rerun voice.py to regenerate the reference voice.",
  "lines": [
   {"id": "open1", "en": "For four decades, CAD has been built for one thing: a hand on a mouse.",
                   "zh": "四十年来，CAD 一直是为一只握着鼠标的手而设计的。"},
@@ -29,10 +29,10 @@
                   "zh": "它也懂 AutoCAD。真实的 DWG 文件，由 AutoCAD 2027 打开并审核：零错误。"},
   {"id": "bench1","en": "Same agent, same model. Only the tools change. A five-round revision in four minutes instead of thirteen. Up to one point nine times faster than AutoCAD MCP Pro. Undo across sessions: three for three.",
                   "zh": "同一个 Agent，同一个模型，只换工具。五轮改图，四分钟完成，而不是十三分钟。比 AutoCAD MCP Pro 最多快 1.9 倍。跨会话撤销，三次全部成功。"},
-  {"id": "bench2","en": "Thirty-one out of thirty-one on the AutoCAD MCP benchmark. And the top score among nine CAD servers on a source-capability review.",
-                  "zh": "AutoCAD MCP 基准测试，31 项全部通过。在九个 CAD 服务的源码能力评审中，得分第一。"},
-  {"id": "install","en": "Open source. Installs in about a minute. Works with Claude Code, Codex, or any MCP app.",
-                  "zh": "开源，大约一分钟装好。支持 Claude Code、Codex，以及任何 MCP 应用。"},
+  {"id": "bench2","en": "Thirty-one out of thirty-one on the AutoCAD MCP benchmark, tied with AutoCAD MCP Pro. And the top score among nine CAD servers on a source-capability review.",
+                  "zh": "AutoCAD MCP 基准测试，31 项全部通过，与 AutoCAD MCP Pro 并列。在九个 CAD 服务的源码能力评审中，得分第一。"},
+  {"id": "install","en": "Open source. Set up in about two minutes. Works with Claude Code, Codex, or any MCP app.",
+                  "zh": "开源，两分钟左右就能装好。支持 Claude Code、Codex，以及任何 MCP 应用。"},
   {"id": "close1","en": "Your agent can already write code. Now it can draft.",
                   "zh": "你的 Agent 已经会写代码。现在，它也会画图了。"},
   {"id": "close2","en": "AgentCAD.",

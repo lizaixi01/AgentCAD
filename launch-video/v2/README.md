@@ -1,6 +1,6 @@
 # Introducing AgentCAD, v2 (English and Chinese)
 
-Two films of 2:38, 1080p60, both cut to the same English voice-over:
+Two films of 2:41, 1080p60, both cut to the same English voice-over:
 `out/introducing-agentcad-en.mp4` (English subtitles) and `out/introducing-agentcad-zh.mp4` (Chinese screens,
 Chinese and English subtitles), each with an `.srt` and a music-only version for recording a real voice over it.
 
@@ -43,12 +43,14 @@ Needs Python with Pillow and numpy, Node 22+, Chrome started with `--remote-debu
 
 Only the scripts are committed (`launch-video/.gitignore`). The inputs `build.py` reads stay local: the drawings
 and exports in the playground, viewer and wizard screenshots in `../frames/` (taken with `../cdp.mjs` and
-`../setup_shots.mjs`), the flange jobs from `../batch_jobs.py`, and the music in `../assets/music/`.
+`../setup_shots.mjs`), the flange jobs from `../batch_jobs.py`, and the music in `../assets/music/`. `build.py` reads the drawings from
+`AGENTCAD_PLAYGROUND` (default: the checkout's `playground/`).
 
 ```bash
 python voice.py                  # reference voice and durations (skips clips that exist)
 python build.py                  # assets/<lang>/ and data_<lang>.js from the captures
 node capture.mjs en video 60     # out/en_video.mp4 and out/en_timeline.json (about 15 min)
+node capture.mjs en cover        # out/cover_en.png: the title card, embedded as cover art; also for upload sites
 python mix.py en                 # out/introducing-agentcad-en.mp4 and .srt
 python mix.py en --no-voice      # music only, to record over
 ```

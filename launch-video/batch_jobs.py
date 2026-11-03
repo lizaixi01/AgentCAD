@@ -3,6 +3,7 @@ for the valid ones (English and Chinese labels) and list the rejected rows with 
 import json
 import math
 import sys
+from pathlib import Path
 
 ROWS = """FL-101,150,60,110,6,12,Q235
 FL-102,180,75,135,8,14,Q235
@@ -68,6 +69,7 @@ def build(lang):
 if __name__ == "__main__":
     lang = sys.argv[1]
     jobs, rejected = build(lang)
+    Path("frames/v2").mkdir(parents=True, exist_ok=True)
     json.dump({"jobs": jobs, "rejected": rejected}, open(f"frames/v2/batch_{lang}.json", "w", encoding="utf-8"),
               ensure_ascii=False, indent=1)
     sys.stdout.reconfigure(encoding="utf-8")

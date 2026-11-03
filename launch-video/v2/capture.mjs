@@ -32,7 +32,10 @@ const frame = async (sec, fmt = 'jpeg') => {
   const r = await send('Page.captureScreenshot', fmt === 'png' ? { format: 'png' } : { format: 'jpeg', quality: 93, optimizeForSpeed: true })
   return Buffer.from(r.result.data, 'base64')
 }
-if (mode === 'stills') {
+if (mode === 'cover') {   // the title card, for the file's cover art and for upload sites
+  fs.writeFileSync(`out/cover_${lang}.png`, await frame(await js('window.__cover'), 'png'))
+  console.log(`out/cover_${lang}.png`)
+} else if (mode === 'stills') {
   fs.mkdirSync(`out/stills_${lang}`, { recursive: true })
   for (const s of rest) { fs.writeFileSync(`out/stills_${lang}/t${String(s).padStart(6, '0')}.png`, await frame(+s, 'png')); console.log('still', s) }
 } else {

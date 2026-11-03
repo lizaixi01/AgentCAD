@@ -1,8 +1,11 @@
-// Screenshot the setup wizard (demo mode) in a new headless tab: node setup_shots.mjs <url>
+// Screenshot the setup wizard (demo mode) in a new headless tab: node setup_shots.mjs <url> [en|zh]
+// Writes frames/live/setup_*.png (English) or zh_setup_*.png, which v2/build.py reads.
 import fs from 'node:fs'
 const PORT = 9333
 const url = process.argv[2]
-const prefix = process.argv[3] || 'setup'
+const lang = process.argv[3] || 'en'
+const prefix = lang === 'en' ? '' : `${lang}_`
+fs.mkdirSync('frames/live', { recursive: true })
 const t = await (await fetch(`http://127.0.0.1:${PORT}/json/new?about:blank`, { method: 'PUT' })).json()
 const ws = new WebSocket(t.webSocketDebuggerUrl)
 await new Promise(r => ws.addEventListener('open', r))
@@ -12,11 +15,11 @@ ws.addEventListener('message', e => { const m = JSON.parse(e.data); if (m.id && 
 const send = (method, params = {}) => new Promise(r => { const i = ++id; pending.set(i, r); ws.send(JSON.stringify({ id: i, method, params })) })
 const sleep = ms => new Promise(r => setTimeout(r, ms))
 const js = async expr => (await send('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true })).result?.result?.value
-const shot = async name => { const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(`frames/live/${prefix}_${name}`, Buffer.from(r.result.data, 'base64')); console.log('saved', name) }
+const shot = async name => { const r = await send('Page.captureScreenshot', { format: 'png' }); fs.writeFileSync(`frames/live/${prefix}${name}`, Buffer.from(r.result.data, 'base64')); console.log('saved', name) }
 await send('Emulation.setDeviceMetricsOverride', { width: 1280, height: 800, deviceScaleFactor: 2, mobile: false })
 await send('Page.navigate', { url })
 await sleep(3000)
-if (prefix === 'zh') {  // the page keeps its language in localStorage; switch it with its own button
+if (lang === 'zh') {  // the page keeps its language in localStorage; switch it with its own button
   await js(`[...document.querySelectorAll('button')].find(b => b.innerText.trim() === '中文')?.click()`)
   await sleep(800)
 }

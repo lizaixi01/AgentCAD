@@ -151,6 +151,7 @@ for (const s of SCENES) {
 }
 const TOTAL = tcur + XF
 window.__total = TOTAL
+window.__cover = SCENES[1].start + SCENES[1].at.title + 3.2   // the title card once the tagline is in
 window.__timeline = () => ({ total: TOTAL, cues: CUES, scenes: SCENES.map(s => ({ id: s.id, start: s.start, dur: s.dur })) })
 
 // ---------- scenes ----------

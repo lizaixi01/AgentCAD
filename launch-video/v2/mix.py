@@ -41,7 +41,11 @@ def main(lang: str, voice: bool) -> None:
     else:
         graph = music + ";[mus]loudnorm=I=-20:TP=-1.5[a]"
         out = HERE / "out" / f"introducing-agentcad-{lang}-music-only.mp4"
-    args += ["-filter_complex", graph, "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "192k",
+    # the title card (capture.mjs cover) as the file's cover art, so players and file browsers show it
+    cover = HERE / "out" / f"cover_{lang}.png"
+    n_inputs = args.count("-i")
+    args += ["-i", str(cover), "-filter_complex", graph, "-map", "0:v", "-map", "[a]", "-map", f"{n_inputs}:v",
+             "-c:v:0", "copy", "-c:v:1", "mjpeg", "-disposition:v:1", "attached_pic", "-c:a", "aac", "-b:a", "192k",
              "-ar", "48000", "-t", f"{total:.3f}", "-movflags", "+faststart", str(out)]
     subprocess.run(args, check=True)
     text = (lambda c: c["text"]) if lang == "en" else (lambda c: f"{c['text']}\n{c['en']}")   # Chinese, then English
