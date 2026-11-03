@@ -276,7 +276,8 @@ class Workspace:
         return out
 
     @_retry
-    def timeline(self, rel: str, *, limit: int | None = None, cursor: int | None = None) -> dict[str, Any]:
+    def timeline(self, rel: str, *, limit: int | None = None, cursor: int | None = None,
+                 before_seq: int | None = None) -> dict[str, Any]:
         from .service import _journal_line
         st = self.store(rel)
         have = self.versions(st)
@@ -285,7 +286,8 @@ class Workspace:
         if limit is None:
             journal = st.read_journal()
         else:
-            journal, page["next_cursor"] = st.journal_page(limit, cursor)
+            journal, page["next_cursor"] = st.journal_page(limit, cursor, before_seq)
+            page["next_before_seq"] = journal[0]["seq"] if page["next_cursor"] is not None else None
         records = []
         for r in journal:
             line = _journal_line(r)
@@ -878,12 +880,15 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                     try:
                         limit = int(q["limit"]) if "limit" in q else None
                         cursor = int(q["cursor"]) if "cursor" in q else None
+                        before_seq = int(q["before_seq"]) if "before_seq" in q else None
                     except ValueError:
-                        raise input_error("BAD_PARAMETER", "Timeline limit and cursor must be integers")
+                        raise input_error("BAD_PARAMETER", "Timeline limit and cursors must be integers")
                     if ((limit is not None and not 1 <= limit <= 1000)
-                            or (cursor is not None and (cursor < 1 or limit is None))):
-                        raise input_error("BAD_PARAMETER", "Use 1 <= limit <= 1000 and an optional positive cursor")
-                    return self._json({"ok": True, **ws.timeline(path, limit=limit, cursor=cursor)})
+                            or (cursor is not None and (cursor < 1 or limit is None))
+                            or (before_seq is not None and (before_seq < 1 or limit is None or cursor is not None))):
+                        raise input_error("BAD_PARAMETER", "Use 1 <= limit <= 1000 and one optional positive cursor")
+                    return self._json({"ok": True, **ws.timeline(path, limit=limit, cursor=cursor,
+                                                                before_seq=before_seq)})
                 if u.path == "/api/layers":
                     return self._json({"ok": True, **ws.layers(path, v)})
                 if u.path == "/api/diff":

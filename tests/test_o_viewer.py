@@ -91,6 +91,9 @@ def test_timeline_pages_preserve_order_even_with_legacy_duplicate_sequences(rt, 
     code, earlier = get_json(viewer, "/api/timeline", path=blank, limit=3, cursor=recent["next_cursor"])
     assert code == 200 and [r["seq"] for r in earlier["records"]] == [1, 2, 3]
     assert earlier["next_cursor"] is None and earlier["current"] == recent["current"]
+    code, older_client = get_json(viewer, "/api/timeline", path=blank, limit=1, before_seq=recent["next_before_seq"])
+    assert code == 200 and [r["seq"] for r in older_client["records"]] == [2]
+    assert older_client["next_before_seq"] == 2
     assert get_json(viewer, "/api/timeline", path=blank, limit=0)[0] == 400
     assert get_json(viewer, "/api/timeline", path=blank, limit=1, cursor=1)[0] == 400
 

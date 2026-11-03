@@ -915,18 +915,15 @@ class Runtime:
                 done, seq = settled
                 return {"drawing": self._rel(p), "recovered": True, "pending_commit": done["outcome"],
                         "label": done["pending"]["label"], "sha256": done["sha256"], "journal_seq": seq}
-        from .store import sha256_file
-        candidates = []
-        if store.committed_path.is_file() and sha256_file(store.committed_path) == st["committed_sha256"]:
-            candidates.append({"id": "committed"})  # exact last committed state
+        candidates = [{"id": "committed", "sha256": st["committed_sha256"]}]
         candidates += list(reversed(store.list_checkpoints()))
         for cp in candidates:
             try:
                 source = store.committed_path if cp["id"] == "committed" else store.checkpoint_path(cp["id"])
-                if cp["id"] != "committed" and sha256_file(source) != cp.get("sha256"):
+                if sha256_file(source) != cp.get("sha256"):
                     continue
                 store.reader(source, self.policy)
-            except AgentCADError:
+            except (AgentCADError, OSError):
                 continue
             with self._lock(store):
                 if st["exists"]:

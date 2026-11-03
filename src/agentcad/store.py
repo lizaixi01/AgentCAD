@@ -181,9 +181,17 @@ class DrawingStore:
             # POSIX normcase preserves spelling even on case-insensitive volumes.
             # Match both paths so a distinct hard-linked drawing cannot claim the state.
             try:
-                if (not legacy.samefile(legacy.with_name(owner.replace("/", "__")))
-                        or not self.path.samefile(self.policy.root / owner)):
+                if not legacy.samefile(legacy.with_name(owner.replace("/", "__"))):
                     return None
+                recorded = self.policy.root / owner
+                try:
+                    if not self.path.samefile(recorded):
+                        return None
+                except FileNotFoundError:
+                    # A deleted drawing has no inode to compare. Its legacy
+                    # directory can establish the alias on the same volume.
+                    if self.path.exists() or recorded.exists() or legacy.stat().st_dev != self.policy.root.stat().st_dev:
+                        return None
             except OSError:
                 return None
         if not isinstance(head, dict) or not isinstance(head.get("checkpoints"), list):
@@ -290,8 +298,10 @@ class DrawingStore:
             if raw.strip():
                 yield json.loads(raw)
 
-    def journal_page(self, limit: int, before: int | None = None) -> tuple[list[dict[str, Any]], int | None]:
-        rows = ((offset, json.loads(raw)) for offset, raw in self._journal_tail(before) if raw.strip())
+    def journal_page(self, limit: int, before: int | None = None,
+                     before_seq: int | None = None) -> tuple[list[dict[str, Any]], int | None]:
+        parsed = ((offset, json.loads(raw)) for offset, raw in self._journal_tail(before) if raw.strip())
+        rows = (pair for pair in parsed if before_seq is None or pair[1]["seq"] < before_seq)
         page = list(islice(rows, limit + 1))
         records = [record for _, record in reversed(page[:limit])]
         return records, page[limit - 1][0] if len(page) > limit else None

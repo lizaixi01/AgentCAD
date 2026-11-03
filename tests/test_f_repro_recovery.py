@@ -112,6 +112,27 @@ def test_rollback_rejects_a_checkpoint_with_other_bytes(rt, ws):
     assert (ws / name).read_bytes() == current
 
 
+def test_recover_skips_checkpoint_whose_hash_cannot_be_read(rt, ws, monkeypatch):
+    from agentcad import service
+    name = "busy.dxf"
+    ok(rt.create_drawing(name))
+    older = ok(rt.apply_operations(name, PLAN))["checkpoint_before"]
+    newer = ok(rt.apply_operations(name, [{"op": "add_point", "location": [1, 1]}]))["checkpoint_before"]
+    _, state = rt._drawing(name)
+    state.committed_path.unlink()
+    (ws / name).write_bytes(b"")
+    sha256_file = service.sha256_file
+
+    def hash_if_readable(path):
+        if path.name == f"{newer}.dxf":
+            raise PermissionError("another process has the checkpoint open")
+        return sha256_file(path)
+
+    monkeypatch.setattr(service, "sha256_file", hash_if_readable)
+    assert ok(rt.recover(name))["restored_checkpoint"] == older
+    assert geometry(ws, name) == []
+
+
 def test_clean_legacy_history_migrates_to_its_owner(rt, ws):
     first, second = "parts/panel.dxf", "parts__panel.dxf"
     ok(rt.create_drawing(first))
@@ -140,19 +161,21 @@ def test_clean_legacy_history_matches_case_insensitive_posix_alias(rt, ws, monke
     from agentcad import store
     name = "Parts/Panel.dxf"
     ok(rt.create_drawing(name))
+    ok(rt.apply_operations(name, PLAN))
     _, state = rt._drawing(name)
     legacy = ws / ".agentcad" / "drawings" / "Parts__Panel.dxf"
     legacy.parent.mkdir(parents=True)
     state.dir.rename(legacy)
     journal = legacy / "journal.jsonl"
-    journal.write_text(journal.read_text("utf-8").replace(name, name.lower()), "utf-8")
+    journal.write_text(journal.read_text("utf-8").replace(name, name.lower(), 1), "utf-8")
     samefile = Path.samefile
     monkeypatch.setattr(store.os.path, "normcase", lambda path: path)
-    monkeypatch.setattr(Path, "samefile", lambda path, other: str(path).casefold() == str(other).casefold()
-                        or samefile(path, other))
-    assert len(ok(rt.history(name))["records"]) == 1
-    ok(rt.apply_operations(name, PLAN))
+    monkeypatch.setattr(Path, "samefile", lambda path, other: (
+        path.exists() and str(path).casefold() == str(other).casefold()) or samefile(path, other))
     assert len(ok(rt.history(name))["records"]) == 2
+    (ws / name).unlink()
+    assert ok(rt.recover(name))["restored_checkpoint"] == "committed"
+    assert len(ok(rt.history(name))["records"]) == 3
 
 
 def test_export_keeps_its_journal_record_during_legacy_migration(rt, ws, monkeypatch):
