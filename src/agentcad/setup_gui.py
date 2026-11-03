@@ -65,9 +65,9 @@ class Wizard:
     def generic(self) -> dict[str, Any]:
         """The server entry setup would write, for an app it has no installer for (the user pastes it)."""
         info = install.install_info()
-        entry = install.server_entry(self.root, install.choose_launcher(self.opts["launcher"], info),
-                                     self.opts["source"] or info["source"], read_only=self.opts["read_only"],
-                                     allow_scripts=self.opts["allow_scripts"])
+        launcher, src = install.choose_launcher(self.opts["launcher"], info), self.opts["source"] or info["source"]
+        entry = install.server_entry(self.root, launcher, src, offline=install.starts_offline(launcher, src, info),
+                                     read_only=self.opts["read_only"], allow_scripts=self.opts["allow_scripts"])
         return generic_config(self.opts["name"], entry)
 
     def doctor(self) -> dict[str, Any]:

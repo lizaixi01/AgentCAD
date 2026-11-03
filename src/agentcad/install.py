@@ -125,14 +125,21 @@ def self_command(info: dict[str, Any]) -> str:
     return f'"{Path(sys.executable)}" -m agentcad.cli'
 
 
-def server_entry(root: Path, launcher: str, source: str | None = None, *,
+def starts_offline(launcher: str, source: str | None, info: dict[str, Any]) -> bool:
+    """Whether an app may start AgentCAD with ``uvx --offline``: only the copy this setup runs from (so uv has
+    it), and only from an archive, since uv cannot resolve a git+ source offline even right after building it.
+    Without --offline, uvx asks GitHub on every start and rebuilds whenever main has changed, which took over 10 s,
+    and Codex leaves out a server that has not answered when the first message runs. The installer and the desktop
+    icon's daily refresh fetch new versions."""
+    return (launcher == "uvx" and bool(info["ephemeral"]) and bool(source) and source == info["source"]
+            and not source.startswith("git+"))
+
+
+def server_entry(root: Path, launcher: str, source: str | None = None, *, offline: bool = False,
                  read_only: bool = False, allow_scripts: bool = False) -> dict[str, Any]:
     command, args = launcher_command(launcher, source)
-    if launcher == "uvx":
-        # Start the copy setup already downloaded: without --offline, uvx asks GitHub on every start and rebuilds
-        # whenever main has changed, which took over 10 s, and Codex leaves out a server that has not answered when
-        # the first message runs. The installer and the desktop icon's daily refresh fetch new versions.
-        args = ["--offline", *args]
+    if offline and launcher == "uvx":
+        args = ["--offline", *args]  # see starts_offline
     env = {"AGENTCAD_ROOT": root.as_posix(), "PYTHONIOENCODING": "utf-8"}
     if read_only:
         env["AGENTCAD_READ_ONLY"] = "1"
@@ -154,8 +161,9 @@ def generic_mcp_config(root: Path, name: str = NAME, write: str | None = None, *
                           hint="Paste the printed config into your app's MCP settings, "
                                "or use --client claude --write PATH for an mcpServers JSON file")
     info = install_info()
-    entry = server_entry(root, choose_launcher("auto", info), info["source"], read_only=read_only,
-                         allow_scripts=allow_scripts)
+    launcher = choose_launcher("auto", info)
+    entry = server_entry(root, launcher, info["source"], offline=starts_offline(launcher, info["source"], info),
+                         read_only=read_only, allow_scripts=allow_scripts)
     return {"ok": True, **generic_config(name, entry)}
 
 
@@ -672,7 +680,8 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
     if not dry_run:
         root_path.mkdir(parents=True, exist_ok=True)
     tell("workspace", "done", {"path": str(root_path)})
-    entry = server_entry(root_path, launcher, source or info["source"], read_only=read_only,
+    src = source or info["source"]
+    entry = server_entry(root_path, launcher, src, offline=starts_offline(launcher, src, info), read_only=read_only,
                          allow_scripts=allow_scripts)
     res = SetupResult(root_path, launcher, entry, dry_run, self_cmd=self_command(info))
     tell("autocad", "run", {})

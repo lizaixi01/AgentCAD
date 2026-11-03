@@ -97,10 +97,12 @@ Running it again is safe: it only changes what is out of date. To see what it wo
 anything, add `--dry-run`. To skip the question, name the apps: `--client claude-code --client cursor`, or
 `--client all`.
 
-How it starts AgentCAD: your app runs `uvx --offline --from git+https://github.com/lizaixi01/AgentCAD agentcad-mcp`
-whenever it needs it. That starts the copy uv already has, in a few seconds and without the internet. New versions
-come when you run the installer (or `agentcad setup`) again, or when the desktop icon fetches one, which it does in
-the background at most once a day.
+How it starts AgentCAD: your app runs `uvx --from git+https://github.com/lizaixi01/AgentCAD agentcad-mcp` whenever it
+needs it. uv keeps a copy, so this takes a couple of seconds, and it picks up new versions of AgentCAD by itself
+(longer on the first start after a new version). The double-click installers instead set up
+`uvx --offline --from <GitHub zip> agentcad-mcp`: it starts the copy uv already has, in a few seconds and without the
+internet, and new versions come when you run the installer again or when the desktop icon fetches one, which it does
+in the background at most once a day.
 
 ### 3. Try it
 
