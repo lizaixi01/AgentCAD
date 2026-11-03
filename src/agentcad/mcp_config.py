@@ -32,6 +32,17 @@ def codex_toml(name: str, entry: dict[str, Any]) -> str:
                       'default_tools_approval_mode = "approve"', ""])
 
 
+GENERIC_HOW = ("Any app that speaks MCP: paste 'config' into its MCP settings (most keep servers under "
+               "\"mcpServers\"), or, where it asks field by field, give it the command, args and env of 'server'. "
+               "Then restart the app.")
+
+
+def generic_config(name: str, entry: dict[str, Any]) -> dict[str, Any]:
+    """For an app AgentCAD has no installer for: the standard ``mcpServers`` block, to paste by hand."""
+    return {"client": "generic", "name": name, "config": {"mcpServers": {name: entry}}, "server": entry,
+            "how": GENERIC_HOW}
+
+
 def mcp_config(policy: Policy, client: str = "claude", name: str = "agentcad", write: str | None = None) -> dict[str, Any]:
     if not policy.root.is_dir():
         raise input_error("ROOT_NOT_FOUND", f"workspace root {policy.root} is not a directory",

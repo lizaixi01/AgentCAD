@@ -136,6 +136,24 @@ def server_entry(root: Path, launcher: str, source: str | None = None, *,
     return {"command": command, "args": args, "env": env}
 
 
+def generic_mcp_config(root: Path, name: str = NAME, write: str | None = None, *, read_only: bool = False,
+                       allow_scripts: bool = False) -> dict[str, Any]:
+    """``agentcad mcp-config --client generic``: the entry setup would write (a uvx/pipx cache's interpreter may
+    vanish, so not always this one), as the standard mcpServers block for an app setup has no installer for."""
+    from .mcp_config import generic_config
+    if not root.is_dir():
+        raise input_error("ROOT_NOT_FOUND", f"workspace root {root} is not a directory",
+                          hint="Create it first, or pass --root")
+    if write is not None:
+        raise input_error("WRITE_UNSUPPORTED", "generic has no config file of its own to write",
+                          hint="Paste the printed config into your app's MCP settings, "
+                               "or use --client claude --write PATH for an mcpServers JSON file")
+    info = install_info()
+    entry = server_entry(root, choose_launcher("auto", info), info["source"], read_only=read_only,
+                         allow_scripts=allow_scripts)
+    return {"ok": True, **generic_config(name, entry)}
+
+
 # --- where each client keeps its config ---------------------------------------------------------------------------
 def claude_desktop_config() -> Path:
     home = Path.home()

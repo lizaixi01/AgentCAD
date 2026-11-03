@@ -5,6 +5,7 @@ bar and plain sentences. It runs ``install.setup`` in a thread and the page poll
 
     GET  /                  the page (viewer_static/setup.html)
     GET  /api/info          workspace folder, apps (found on this computer or not), dry run
+    GET  /api/generic       the mcpServers block for any other MCP app, which the page shows to copy
     POST /api/start         {"clients": [...]}: run setup for these apps
     GET  /api/state         {"phase": ready|running|done|error, "steps": [...], "result": ...}
     GET  /api/doctor        the checks of ``agentcad doctor`` (is everything still working?)
@@ -29,6 +30,7 @@ from urllib.parse import urlparse
 
 from . import install
 from .errors import AgentCADError
+from .mcp_config import generic_config
 from .viewer import LOOPBACK, STATIC, UI_TYPES, _host_name, _server
 
 IDLE_EXIT = 3600.0  # nobody has asked anything for an hour: the page was closed, stop
@@ -58,6 +60,14 @@ class Wizard:
         found = install.detect_clients()
         return {"workspace": str(self.root), "dry_run": self.opts["dry_run"], "platform": sys.platform,
                 "apps": [{"id": c, "label": install.LABELS[c], "found": found[c]} for c in install.CLIENTS]}
+
+    def generic(self) -> dict[str, Any]:
+        """The server entry setup would write, for an app it has no installer for (the user pastes it)."""
+        info = install.install_info()
+        entry = install.server_entry(self.root, install.choose_launcher(self.opts["launcher"], info),
+                                     self.opts["source"] or info["source"], read_only=self.opts["read_only"],
+                                     allow_scripts=self.opts["allow_scripts"])
+        return generic_config(self.opts["name"], entry)
 
     def doctor(self) -> dict[str, Any]:
         r = install.doctor(self.root)
@@ -185,6 +195,11 @@ def _handler(wiz: Wizard):
                     return self._send(200, f.read_bytes(), UI_TYPES[f.suffix])
             if path == "/api/info":
                 return self._json(wiz.info())
+            if path == "/api/generic":
+                try:
+                    return self._json(wiz.generic())
+                except Exception as exc:  # noqa: BLE001 - a JSON error the page can show, not a dropped connection
+                    return self._json({"ok": False, "error": {"code": "GENERIC_FAILED", "message": str(exc)}}, 500)
             if path == "/api/doctor":
                 return self._json(wiz.doctor())
             if path == "/api/state":

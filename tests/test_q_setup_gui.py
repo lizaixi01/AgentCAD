@@ -89,6 +89,24 @@ def test_page_and_info(wizard, home):
     assert all(a["found"] is False for a in info["apps"])  # nothing installed in the fake home
 
 
+def test_generic_config_for_other_apps(wizard, home):
+    """The page's "another app" section: the same server entry setup writes, as an mcpServers block to paste."""
+    code, r = _call(wizard, "GET", "/api/generic")
+    assert code == 200 and r["client"] == "generic"
+    entry = install.server_entry(home / "AgentCAD", "python")
+    assert r["config"] == {"mcpServers": {"agentcad": entry}} and r["server"] == entry
+    assert _call(wizard, "GET", "/api/generic", token="")[0] == 403
+    assert not (home / "AgentCAD").exists()  # showing it changes nothing
+
+
+def test_generic_config_failure_is_a_json_error(wizard, monkeypatch):
+    def broken():
+        raise RuntimeError("no launcher")
+    monkeypatch.setattr(wizard, "generic", broken)
+    code, r = _call(wizard, "GET", "/api/generic")
+    assert code == 500 and r["error"]["code"] == "GENERIC_FAILED"  # the page shows a sentence instead of a spinner
+
+
 def test_api_needs_token_and_localhost(wizard):
     assert _call(wizard, "GET", "/api/info", token="")[0] == 403
     assert _call(wizard, "POST", "/api/start", {"clients": ["cursor"]}, token="wrong")[0] == 403

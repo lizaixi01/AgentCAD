@@ -179,11 +179,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--root", dest="setup_root", metavar="FOLDER", help="Workspace folder to check")
     s.add_argument("--json", action="store_true", help="Print the result as JSON")
     s = sub.add_parser("mcp-config", help="Print (or --write) an MCP client config for this interpreter and --root")
-    s.add_argument("--client", choices=("claude", "codex"), default="claude")
+    s.add_argument("--client", choices=("claude", "codex", "generic"), default="claude",
+                   help="generic: the standard mcpServers block for any other MCP app, to paste into its settings")
     s.add_argument("--name", default="agentcad", help="Server name in the config")
     s.add_argument("--write", nargs="?", const="", metavar="PATH",
                    help="Write it: claude merges into PATH (default ./.mcp.json), keeping other servers; "
-                        "codex appends to PATH (default ~/.codex/config.toml)")
+                        "codex appends to PATH (default ~/.codex/config.toml); generic only prints")
     s = sub.add_parser("serve", help="Run the HTTP JSON API"); s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8765)
     s = sub.add_parser("demo", help="Show people what AgentCAD does: the live viewer opens and a plate is drawn "
@@ -296,6 +297,10 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
         from .errors import AgentCADError
         from .mcp_config import mcp_config
         try:
+            if a.client == "generic":  # as setup starts the server: install.py, which mcp_config may not import
+                from .install import generic_mcp_config
+                return generic_mcp_config(policy.root, a.name, a.write, read_only=policy.read_only,
+                                          allow_scripts=policy.allow_scripts), 0
             return mcp_config(policy, a.client, a.name, a.write), 0
         except AgentCADError as exc:
             return {"ok": False, "error": exc.to_dict()}, EXIT.get(exc.category, 5)
