@@ -128,7 +128,7 @@ def self_command(info: dict[str, Any]) -> str:
 def starts_offline(launcher: str, source: str | None, info: dict[str, Any]) -> bool:
     """Whether an app may start AgentCAD with ``uvx --offline``: only the copy this setup runs from (so uv has
     it), and only from an archive, since uv cannot resolve a git+ source offline even right after building it.
-    Without --offline, uvx asks GitHub on every start and rebuilds whenever main has changed, which took over 10 s,
+    Without --offline, uvx asks GitHub on every start and rebuilds whenever the source has changed, which took over 10 s,
     and Codex leaves out a server that has not answered when the first message runs. The installer and the desktop
     icon's daily refresh fetch new versions."""
     return (launcher == "uvx" and bool(info["ephemeral"]) and bool(source) and source == info["source"]

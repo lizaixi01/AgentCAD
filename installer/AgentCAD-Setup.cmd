@@ -4,7 +4,7 @@ rem Python programs) if this computer has none and downloads AgentCAD, then the 
 rem (agentcad setup --gui). Nothing to type. The PowerShell part below the marker draws that window.
 set "AGENTCAD_SETUP_FILE=%~f0"
 if not "%AGENTCAD_SOURCE%"=="" goto start
-set "AGENTCAD_SOURCE=https://github.com/lizaixi01/AgentCAD/archive/refs/heads/main.zip"
+set "AGENTCAD_SOURCE=https://github.com/lizaixi01/AgentCAD/releases/latest/download/agentcad.zip"
 :start
 rem wscript runs PowerShell with window style 0: no console, also where Windows Terminal is the default console
 rem (it ignores -WindowStyle Hidden). JScript, not VBScript, which Windows is phasing out. Where Windows Script Host
