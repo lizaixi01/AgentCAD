@@ -23,11 +23,15 @@ function UpdateIfDue {
 
 # AgentCAD already running for this folder: the address in viewer.json, and only one on this computer whose
 # /api/ping answers with this folder (as agentcad.viewer_link.running_url checks), so an edited file cannot send
-# the browser anywhere else. Anything else (no file, no answer, another folder) starts AgentCAD below.
+# the browser anywhere else. Anything else (no file, no answer, another folder) starts AgentCAD below. A viewer
+# that did not stop cleanly (the computer restarted) leaves its file; Windows takes a second to give up on a port
+# nobody listens on, so its process is looked for first.
 if ($reuse) {
   try {
-    $u = [Uri]((Get-Content -LiteralPath (Join-Path $PSScriptRoot 'viewer.json') -Raw -ErrorAction Stop | ConvertFrom-Json).url)
-    if ($u.Scheme -eq 'http' -and $u.IsLoopback -and $u.Port -gt 0) {
+    $info = Get-Content -LiteralPath (Join-Path $PSScriptRoot 'viewer.json') -Raw -ErrorAction Stop | ConvertFrom-Json
+    $u = [Uri]$info.url
+    if ($u.Scheme -eq 'http' -and $u.IsLoopback -and $u.Port -gt 0 -and [int]$info.pid -gt 0 -and
+        (Get-Process -Id ([int]$info.pid) -ErrorAction SilentlyContinue)) {
       $rq = [Net.WebRequest]::Create($u.GetLeftPart('Authority') + '/api/ping')
       # Timeout covers the answer's start, ReadWriteTimeout its body (else a stalled port waits five minutes)
       $rq.Timeout = 1000; $rq.ReadWriteTimeout = 1000; $rq.Proxy = $null; $rq.AllowAutoRedirect = $false
