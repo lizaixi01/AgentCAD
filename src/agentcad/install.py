@@ -128,6 +128,11 @@ def self_command(info: dict[str, Any]) -> str:
 def server_entry(root: Path, launcher: str, source: str | None = None, *,
                  read_only: bool = False, allow_scripts: bool = False) -> dict[str, Any]:
     command, args = launcher_command(launcher, source)
+    if launcher == "uvx":
+        # Start the copy setup already downloaded: without --offline, uvx asks GitHub on every start and rebuilds
+        # whenever main has changed, which took over 10 s, and Codex leaves out a server that has not answered when
+        # the first message runs. The installer and the desktop icon's daily refresh fetch new versions.
+        args = ["--offline", *args]
     env = {"AGENTCAD_ROOT": root.as_posix(), "PYTHONIOENCODING": "utf-8"}
     if read_only:
         env["AGENTCAD_READ_ONLY"] = "1"

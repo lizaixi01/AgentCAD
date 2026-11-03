@@ -295,7 +295,8 @@ def test_uvx_launcher(home):
     res = install.setup(["codex", "claude-desktop"], launcher="uvx", source="git+https://example.org/x@br")
     e = res.entry
     assert Path(e["command"]).stem.lower() == "uvx" or e["command"] == "uvx"
-    assert e["args"] == ["--from", "git+https://example.org/x@br", "agentcad-mcp"]
+    # --offline: the copy setup downloaded starts in seconds, with no check against GitHub on every start
+    assert e["args"] == ["--offline", "--from", "git+https://example.org/x@br", "agentcad-mcp"]
     cfg = tomllib.loads(_paths(home)["codex"].read_text("utf-8"))["mcp_servers"]["agentcad"]
     assert cfg["startup_timeout_sec"] == 120 and cfg["args"] == e["args"]
 
