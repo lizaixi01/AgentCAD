@@ -156,6 +156,24 @@ def test_mcp_config_launches_server(ws):
     assert code == 2 and r["error"]["code"] == "ROOT_NOT_FOUND"
 
 
+def test_generic_mcp_config_for_any_app(ws):
+    """--client generic prints the standard mcpServers block for apps setup does not know (OpenCode, ...):
+    pasted as is, it starts a working server; it never writes a file."""
+    root = ws / "root"
+    root.mkdir()
+    code, r = cli(root, "--read-only", "mcp-config", "--client", "generic", "--name", "cad")
+    assert code == 0 and r["client"] == "generic" and r["how"]
+    entry = r["config"]["mcpServers"]["cad"]
+    assert entry == r["server"] and entry["args"] == ["-m", "agentcad.mcp_server"]  # a clone: this Python
+    assert Path(entry["command"]).samefile(PY) and Path(entry["env"]["AGENTCAD_ROOT"]) == root.resolve()
+    assert entry["env"]["AGENTCAD_READ_ONLY"] == "1"
+    code, r = cli(ws, "mcp-config", "--client", "generic")
+    out = anyio.run(_mcp_from_config, r["server"], root)
+    assert out["ok"] and (ws / "c.dxf").is_file()
+    code, r = cli(root, "mcp-config", "--client", "generic", "--write", str(ws / "x.json"))
+    assert code == 2 and r["error"]["code"] == "WRITE_UNSUPPORTED" and not (ws / "x.json").exists()
+
+
 def test_http_api(ws):
     from http.server import ThreadingHTTPServer
     from agentcad.http_api import make_handler

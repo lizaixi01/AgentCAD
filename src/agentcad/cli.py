@@ -180,11 +180,12 @@ def build_parser() -> argparse.ArgumentParser:
     s.add_argument("--root", dest="setup_root", metavar="FOLDER", help="Workspace folder to check")
     s.add_argument("--json", action="store_true", help="Print the result as JSON")
     s = sub.add_parser("mcp-config", help="Print (or --write) an MCP client config for this interpreter and --root")
-    s.add_argument("--client", choices=("claude", "codex"), default="claude")
+    s.add_argument("--client", choices=("claude", "codex", "generic"), default="claude",
+                   help="generic: the standard mcpServers block for any other MCP app, to paste into its settings")
     s.add_argument("--name", default="agentcad", help="Server name in the config")
     s.add_argument("--write", nargs="?", const="", metavar="PATH",
                    help="Write it: claude merges into PATH (default ./.mcp.json), keeping other servers; "
-                        "codex appends to PATH (default ~/.codex/config.toml)")
+                        "codex appends to PATH (default ~/.codex/config.toml); generic only prints")
     s = sub.add_parser("serve", help="Run the HTTP JSON API"); s.add_argument("--host", default="127.0.0.1")
     s.add_argument("--port", type=int, default=8765)
     s = sub.add_parser("demo", help="Show people what AgentCAD does: the live viewer opens and a plate is drawn "

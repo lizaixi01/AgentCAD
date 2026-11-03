@@ -32,10 +32,32 @@ def codex_toml(name: str, entry: dict[str, Any]) -> str:
                       'default_tools_approval_mode = "approve"', ""])
 
 
+GENERIC_HOW = ("Any app that speaks MCP: paste 'config' into its MCP settings (most keep servers under "
+               "\"mcpServers\"), or, where it asks field by field, give it the command, args and env of 'server'. "
+               "Then restart the app.")
+
+
+def generic_config(name: str, entry: dict[str, Any]) -> dict[str, Any]:
+    """For an app AgentCAD has no installer for: the standard ``mcpServers`` block, to paste by hand."""
+    return {"client": "generic", "name": name, "config": {"mcpServers": {name: entry}}, "server": entry,
+            "how": GENERIC_HOW}
+
+
 def mcp_config(policy: Policy, client: str = "claude", name: str = "agentcad", write: str | None = None) -> dict[str, Any]:
     if not policy.root.is_dir():
         raise input_error("ROOT_NOT_FOUND", f"workspace root {policy.root} is not a directory",
                           hint="Create it first, or pass --root")
+    if client == "generic":
+        if write is not None:
+            raise input_error("WRITE_UNSUPPORTED", "generic has no config file of its own to write",
+                              hint="Paste the printed config into your app's MCP settings, "
+                                   "or use --client claude --write PATH for an mcpServers JSON file")
+        # as agentcad setup starts it: a uvx/pipx cache's interpreter may vanish, so not always this one
+        from .install import choose_launcher, install_info, server_entry as setup_entry
+        info = install_info()
+        entry = setup_entry(policy.root, choose_launcher("auto", info), info["source"],
+                            read_only=policy.read_only, allow_scripts=policy.allow_scripts)
+        return {"ok": True, **generic_config(name, entry)}
     entry = server_entry(policy)
     if client == "codex":
         toml = codex_toml(name, entry)

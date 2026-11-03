@@ -57,6 +57,8 @@ uv pip install --python .venv -e ".[dev]"
 .venv/bin/agentcad --root playground mcp-config --client codex --write
 ```
 
+**Another MCP app** (OpenCode, WorkBuddy, ...): `--client generic` prints the standard `mcpServers` block to paste into its MCP settings.
+
 **Then just ask** (more prompts in [playground/README.md](playground/README.md)):
 
 > - Draw a 200×100 mounting plate with R8 corners, four Ø12 holes 15 mm from the edges and a Ø40 hole in the middle. Dimension it, save it as plate.dxf, check it, and export plate.svg.

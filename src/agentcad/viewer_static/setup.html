@@ -163,12 +163,14 @@ const T = {
   en: {
     title: "AgentCAD Setup", other: "中文",
     welcome: "Welcome to AgentCAD", welcomeLead: "Let your AI assistant draw engineering drawings for you. Setup takes 3 steps and about a minute.",
-    w1: "Pick your apps", w1s: "Claude, Codex or Cursor", w2: "We set it up", w2s: "Nothing to type", w3: "Start talking", w3s: "Just say what to draw",
+    w1: "Pick your apps", w1s: "Claude, Codex, Cursor or any MCP app", w2: "We set it up", w2s: "Nothing to type", w3: "Start talking", w3s: "Just say what to draw",
     start: "Start", demo: "Demo mode: nothing on this computer will be changed.",
     s1: "Choose apps", s2: "Install", s3: "Done",
     pickTitle: "Which apps should use AgentCAD?", pickLead: "We ticked the ones we found on this computer. Tap to change.",
     found: "Found on this computer", notFound: "Not found on this computer",
-    folderTitle: "Your drawings will be saved in", noneFound: "We didn't find an AI app on this computer. Install Claude or Codex first, then tap “Look again”. You can also tick an app now and install it later.",
+    folderTitle: "Your drawings will be saved in", noneFound: "We didn't find an AI app on this computer. Install Claude or Codex first, then tap “Look again”. You can also tick an app now and install it later. Using another AI app? See “Using another app” below.",
+    otherTitle: "Using another app? (OpenCode, WorkBuddy, Trae…)",
+    otherLead: "Any app that supports MCP can use AgentCAD. Copy this and paste it into that app's MCP settings, then restart the app. If it asks field by field, use the command, args and env below.",
     lookAgain: "Look again", back: "Back", install: "Install now", pickOne: "Choose at least one app",
     working: "Setting things up…", almost: "Almost there…", allDone: "Finished",
     stWorkspace: "Prepare your drawings folder", stAutocad: "Look for AutoCAD (DWG files)", stApp: "Connect {app}",
@@ -212,12 +214,14 @@ const T = {
   zh: {
     title: "AgentCAD 安装", other: "English",
     welcome: "欢迎使用 AgentCAD", welcomeLead: "让 AI 助手帮你画工程图。安装只要 3 步，大约 1 分钟。",
-    w1: "选应用", w1s: "Claude、Codex 或 Cursor", w2: "自动安装", w2s: "不用敲任何命令", w3: "开口就画", w3s: "用平常说话的方式告诉它",
+    w1: "选应用", w1s: "Claude、Codex、Cursor 或任何支持 MCP 的应用", w2: "自动安装", w2s: "不用敲任何命令", w3: "开口就画", w3s: "用平常说话的方式告诉它",
     start: "开始安装", demo: "演示模式：不会改动这台电脑上的任何设置。",
     s1: "选择应用", s2: "安装", s3: "完成",
     pickTitle: "想在哪些应用里使用 AgentCAD？", pickLead: "我们已经勾上了在这台电脑上找到的应用，点一下可以修改。",
     found: "在这台电脑上找到了", notFound: "这台电脑上没找到",
-    folderTitle: "你的图纸会保存在", noneFound: "这台电脑上没找到 AI 应用。可以先安装 Claude 或 Codex，再点「重新查找」；也可以现在先勾上，以后再装。",
+    folderTitle: "你的图纸会保存在", noneFound: "这台电脑上没找到 AI 应用。可以先安装 Claude 或 Codex，再点「重新查找」；也可以现在先勾上，以后再装。用的是别的 AI 应用？看下面的「用的是别的应用」。",
+    otherTitle: "用的是别的应用？（OpenCode、WorkBuddy、Trae…）",
+    otherLead: "任何支持 MCP 的应用都能用 AgentCAD。复制下面这段，粘贴到那个应用的 MCP 设置里，再重启它。如果它要求逐项填写，就填下面的 command、args 和 env。",
     lookAgain: "重新查找", back: "返回", install: "马上安装", pickOne: "请至少选一个应用",
     working: "正在为你安装…", almost: "马上就好…", allDone: "完成",
     stWorkspace: "准备图纸文件夹", stAutocad: "查找 AutoCAD（打开 DWG 文件用）", stApp: "连接 {app}",
@@ -275,6 +279,7 @@ const ICON = {
 };
 
 let lang = (() => { try { const s = localStorage.getItem("agentcad-lang"); if (s === "en" || s === "zh") return s; } catch (e) {} return /^zh\b/i.test(navigator.language || "") ? "zh" : "en"; })();
+let generic = null, otherOpen = false;  // the config for any other MCP app, fetched when its section opens
 let info = null, view = "welcome", picked = new Set(), state = null, shown = 0, shownAt = 0, timer = null, ended = false;
 const t = (k, v) => (T[lang][k] || T.en[k] || k).replace(/\{(\w+)\}/g, (_, n) => v && v[n] != null ? v[n] : "");
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -320,6 +325,9 @@ function render() {
         <span class="check">${ICON.check}</span></label>`).join("")}</div>
       ${none ? `<div class="none">${esc(t("noneFound"))} <button class="btn small" id="again" type="button">${ICON.redo} ${esc(t("lookAgain"))}</button></div>` : ""}
       <div class="folder">${ICON.folder}<div><span>${esc(t("folderTitle"))}</span><code>${esc(info.workspace)}</code></div></div>
+      <details id="other" ${otherOpen ? "open" : ""}><summary>${esc(t("otherTitle"))}</summary><p>${esc(t("otherLead"))}</p>
+        ${generic ? `<pre>${esc(JSON.stringify(generic.config, null, 2))}</pre><button class="btn small" id="copyCfg" type="button">${esc(t("copy"))}</button>`
+          : ICON.spin.replace("<svg", '<svg width="22" height="22"')}</details>
       <div class="actions"><button class="btn" id="back" type="button">${esc(t("back"))}</button>
       <button class="btn primary" id="install" type="button" ${picked.size ? "" : "disabled"}>${esc(picked.size ? t("install") : t("pickOne"))} ${ICON.arrow}</button></div>`;
     if (window.Fluid) Fluid.fluidHover(card.querySelector(".apps"), { item: ".app" });  // the kit's gliding highlight
@@ -331,6 +339,14 @@ function render() {
     $("back").onclick = () => { view = "welcome"; render(); };
     $("install").onclick = install;
     if ($("again")) $("again").onclick = async () => { await loadInfo(); render(); };
+    $("other").ontoggle = async () => {
+      otherOpen = $("other").open;
+      if (!otherOpen || generic || loadGeneric.busy) return;
+      loadGeneric.busy = true;
+      try { await loadGeneric(); } catch (e) {} finally { loadGeneric.busy = false; }
+      if (view === "pick") render();
+    };
+    if ($("copyCfg")) $("copyCfg").onclick = async () => { await copy(JSON.stringify(generic.config, null, 2)); toast(t("copied")); };
   } else if (view === "check") {
     renderCheck();
   } else {
@@ -506,6 +522,10 @@ function confetti() {
   })(t0);
 }
 
+async function loadGeneric() {
+  const r = await api("/api/generic");
+  if (r && r.config) generic = r;
+}
 async function loadInfo() {
   info = await api("/api/info");
   if (!picked.size) info.apps.filter(a => a.found).forEach(a => picked.add(a.id));
