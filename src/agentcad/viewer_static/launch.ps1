@@ -29,7 +29,8 @@ if ($reuse) {
     $u = [Uri]((Get-Content -LiteralPath (Join-Path $PSScriptRoot 'viewer.json') -Raw -ErrorAction Stop | ConvertFrom-Json).url)
     if ($u.Scheme -eq 'http' -and $u.IsLoopback -and $u.Port -gt 0) {
       $rq = [Net.WebRequest]::Create($u.GetLeftPart('Authority') + '/api/ping')
-      $rq.Timeout = 1000; $rq.Proxy = $null
+      # Timeout covers the answer's start, ReadWriteTimeout its body (else a stalled port waits five minutes)
+      $rq.Timeout = 1000; $rq.ReadWriteTimeout = 1000; $rq.Proxy = $null; $rq.AllowAutoRedirect = $false
       $rs = $rq.GetResponse()
       try { $ping = (New-Object IO.StreamReader($rs.GetResponseStream())).ReadToEnd() | ConvertFrom-Json } finally { $rs.Close() }
       $here = [IO.Path]::GetFullPath((Split-Path -Parent $PSScriptRoot)).TrimEnd('\')

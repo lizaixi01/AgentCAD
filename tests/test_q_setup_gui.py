@@ -421,10 +421,36 @@ def test_drawings_icon_opens_a_running_agentcad_without_its_window(tmp_path):
         assert launch(install.VIEWER, theirs.url) == "window"  # a viewer of another folder answers there
         assert launch(install.VIEWER, "http://example.com:8770/") == "window"  # never off this computer
         assert launch(install.DEMO, mine.url) == "window"  # the demo draws its plate: it always starts
+        # another program on the port: one that sends us on to this folder's viewer is not taken at its word, and
+        # one that starts an answer and then stalls costs a second, not the five minutes .NET waits by default
+        moved = _one_answer(f"HTTP/1.0 302 Found\r\nLocation: {mine.url}api/ping\r\n\r\n")
+        assert launch(install.VIEWER, moved) == "window"
+        stalled = _one_answer("HTTP/1.0 200 OK\r\nContent-Type: application/json\r\nContent-Length: 1000\r\n\r\n{")
+        t = time.monotonic()
+        assert launch(install.VIEWER, stalled) == "window" and time.monotonic() - t < 10
         mine.stop()
         assert launch(install.VIEWER, mine.url) == "window"  # nothing answers any more
     finally:
         theirs.stop()
+
+
+def _one_answer(reply: str) -> str:
+    """A loopback port that answers one request with ``reply`` and then keeps the connection open for a while."""
+    import socket
+    import threading
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    s.listen()
+
+    def serve():
+        c, _ = s.accept()
+        c.recv(4096)
+        c.sendall(reply.encode())
+        time.sleep(15)
+        c.close()
+        s.close()
+    threading.Thread(target=serve, daemon=True).start()
+    return f"http://127.0.0.1:{s.getsockname()[1]}/"
 
 
 def test_launcher_keeps_special_characters_in_their_argument(tmp_path):
