@@ -172,6 +172,11 @@ def test_generic_mcp_config_for_any_app(ws):
     assert out["ok"] and (ws / "c.dxf").is_file()
     code, r = cli(root, "mcp-config", "--client", "generic", "--write", str(ws / "x.json"))
     assert code == 2 and r["error"]["code"] == "WRITE_UNSUPPORTED" and not (ws / "x.json").exists()
+    from agentcad.errors import AgentCADError
+    from agentcad.mcp_config import mcp_config
+    from agentcad.policy import Policy
+    with pytest.raises(AgentCADError, match="generic"):  # never the Claude config by mistake
+        mcp_config(Policy(root=root), "generic")
 
 
 def test_http_api(ws):
