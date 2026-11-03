@@ -1,0 +1,11 @@
+# Captures, generated data, voice clips, renders and the music track stay local. The music's licence does not
+# allow redistributing the track on its own.
+frames/
+assets/
+v2/assets/
+v2/out/
+v2/voice/
+v2/data_*.js
+*.mp3
+*.mp4
+*.pdf
