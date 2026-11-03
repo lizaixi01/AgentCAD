@@ -385,6 +385,74 @@ def test_launcher_tries_the_download_it_has_first(tmp_path):
         assert p.returncode == 0 and p.stdout.strip() == "0", p.stdout + p.stderr
 
 
+@pytest.mark.skipif(os.name != "nt", reason="the Windows icon's PowerShell launcher")
+def test_drawings_icon_opens_a_running_agentcad_without_its_window(tmp_path):
+    """AgentCAD already running for this folder: the icon opens its page and shows no window. Otherwise (a viewer
+    of another folder, an address off this computer, the demo icon, nothing answering) it goes on to the window and
+    starts AgentCAD. Start-Process and Add-Type are replaced by functions (PowerShell runs a function before a
+    cmdlet of the same name), so no browser opens and no window shows."""
+    from agentcad.policy import Policy
+    from agentcad.viewer import Viewer
+    root, other = tmp_path / "My Drawings", tmp_path / "Other"
+    state = root / ".agentcad"
+    state.mkdir(parents=True)
+    other.mkdir()
+    (state / "last-update-check").write_text("today", "utf-8")  # not due: the test never runs the update
+    out = state / "result.txt"
+
+    def launch(action, url):
+        (state / "viewer.json").write_text(json.dumps({"url": url, "pid": 1}), "utf-8")
+        path = install.write_launcher(state, "C:/uv/uvx.exe", ["--from", "https://x/a.zip", "agentcad", "--root",
+                                                                str(root), *action], "uvx", action)
+        stubs = (f"function Start-Process($FilePath) {{ Set-Content -LiteralPath {install._ps_quote(str(out))} "
+                 "('opened ' + $FilePath) }\n"
+                 f"function Add-Type {{ Set-Content -LiteralPath {install._ps_quote(str(out))} 'window'; exit }}\n")
+        test = state / "test-launch.ps1"
+        test.write_text(stubs + path.read_text("utf-8-sig"), "utf-8-sig")
+        out.unlink(missing_ok=True)
+        subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-File",
+                        str(test)], capture_output=True, text=True, timeout=60)
+        return out.read_text("utf-8-sig").strip()
+
+    mine = Viewer(Policy(root=root), port=0).start()
+    theirs = Viewer(Policy(root=other), port=0).start()
+    try:
+        assert launch(install.VIEWER, mine.url) == "opened " + mine.url
+        assert launch(install.VIEWER, theirs.url) == "window"  # a viewer of another folder answers there
+        assert launch(install.VIEWER, "http://example.com:8770/") == "window"  # never off this computer
+        assert launch(install.DEMO, mine.url) == "window"  # the demo draws its plate: it always starts
+        # another program on the port: one that sends us on to this folder's viewer is not taken at its word, and
+        # one that starts an answer and then stalls costs a second, not the five minutes .NET waits by default
+        moved = _one_answer(f"HTTP/1.0 302 Found\r\nLocation: {mine.url}api/ping\r\n\r\n")
+        assert launch(install.VIEWER, moved) == "window"
+        stalled = _one_answer("HTTP/1.0 200 OK\r\nContent-Type: application/json\r\nContent-Length: 1000\r\n\r\n{")
+        t = time.monotonic()
+        assert launch(install.VIEWER, stalled) == "window" and time.monotonic() - t < 10
+        mine.stop()
+        assert launch(install.VIEWER, mine.url) == "window"  # nothing answers any more
+    finally:
+        theirs.stop()
+
+
+def _one_answer(reply: str) -> str:
+    """A loopback port that answers one request with ``reply`` and then keeps the connection open for a while."""
+    import socket
+    import threading
+    s = socket.socket()
+    s.bind(("127.0.0.1", 0))
+    s.listen()
+
+    def serve():
+        c, _ = s.accept()
+        c.recv(4096)
+        c.sendall(reply.encode())
+        time.sleep(15)
+        c.close()
+        s.close()
+    threading.Thread(target=serve, daemon=True).start()
+    return f"http://127.0.0.1:{s.getsockname()[1]}/"
+
+
 def test_launcher_keeps_special_characters_in_their_argument(tmp_path):
     """An account called R&D or a folder D:\\Drawings&Models: cmd must not split the command at the &."""
     root = r"D:\Drawings&Models (v2)^x"
