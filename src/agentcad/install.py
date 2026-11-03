@@ -590,12 +590,13 @@ description: Check that AgentCAD (CAD drawings) is connected, name this conversa
    answers, and the first start after an update can take a minute. Do not report a failure yet:
    - if the app can search for tools (Claude Code's tool search), search for "agentcad": the search waits for servers
      that are still starting;
-   - otherwise wait about 10 seconds (run `sleep 10`, or `Start-Sleep 10` in PowerShell) and look for the tool again,
-     up to 6 times.
+   - if there is no search, or it finds nothing, wait 5 seconds (run `sleep 5`, or `Start-Sleep 5` in PowerShell;
+     shells may stop longer commands) and look for the tool again, up to 12 times.
    Once it is there, go on with step 1.
-4. If there is still no AgentCAD tool after that, AgentCAD is not connected to this app. Say so plainly and how to
-   fix it: run the AgentCAD installer (or open it again and tap "Already installed? Check it", then "Fix it for me"),
-   then start a new conversation.
+4. If there is still no AgentCAD tool after that, it may have started too late for this message: ask the user to send
+   /agentcad ($agentcad in Codex) once more. Only if that also finds no tool is AgentCAD not connected to this app; then
+   say so plainly and how to fix it: run the AgentCAD installer (or open it again and tap "Already installed? Check
+   it", then "Fix it for me"), then start a new conversation.
 """
 
 
