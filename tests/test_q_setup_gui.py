@@ -389,8 +389,9 @@ def test_launcher_tries_the_download_it_has_first(tmp_path):
 def test_drawings_icon_opens_a_running_agentcad_without_its_window(tmp_path):
     """AgentCAD already running for this folder: the icon opens its page and shows no window. Otherwise (a viewer
     of another folder, an address off this computer, the demo icon, nothing answering) it goes on to the window and
-    starts AgentCAD. Start-Process and Add-Type are replaced by functions (PowerShell runs a function before a
-    cmdlet of the same name), so no browser opens and no window shows."""
+    starts AgentCAD; a viewer.json whose process has ended is not asked at all (Windows takes a second to give up on
+    a port nobody listens on). Start-Process and Add-Type are replaced by functions (PowerShell runs a function
+    before a cmdlet of the same name), so no browser opens and no window shows."""
     from agentcad.policy import Policy
     from agentcad.viewer import Viewer
     root, other = tmp_path / "My Drawings", tmp_path / "Other"
@@ -400,8 +401,8 @@ def test_drawings_icon_opens_a_running_agentcad_without_its_window(tmp_path):
     (state / "last-update-check").write_text("today", "utf-8")  # not due: the test never runs the update
     out = state / "result.txt"
 
-    def launch(action, url):
-        (state / "viewer.json").write_text(json.dumps({"url": url, "pid": 1}), "utf-8")
+    def launch(action, url, pid=os.getpid()):  # the viewers run in this process
+        (state / "viewer.json").write_text(json.dumps({"url": url, "pid": pid}), "utf-8")
         path = install.write_launcher(state, "C:/uv/uvx.exe", ["--from", "https://x/a.zip", "agentcad", "--root",
                                                                 str(root), *action], "uvx", action)
         stubs = (f"function Start-Process($FilePath) {{ Set-Content -LiteralPath {install._ps_quote(str(out))} "
@@ -421,6 +422,9 @@ def test_drawings_icon_opens_a_running_agentcad_without_its_window(tmp_path):
         assert launch(install.VIEWER, theirs.url) == "window"  # a viewer of another folder answers there
         assert launch(install.VIEWER, "http://example.com:8770/") == "window"  # never off this computer
         assert launch(install.DEMO, mine.url) == "window"  # the demo draws its plate: it always starts
+        ended = subprocess.Popen([sys.executable, "-c", "pass"])
+        ended.wait()
+        assert launch(install.VIEWER, mine.url, pid=ended.pid) == "window"  # left by a viewer that has stopped
         # another program on the port: one that sends us on to this folder's viewer is not taken at its word, and
         # one that starts an answer and then stalls costs a second, not the five minutes .NET waits by default
         moved = _one_answer(f"HTTP/1.0 302 Found\r\nLocation: {mine.url}api/ping\r\n\r\n")
