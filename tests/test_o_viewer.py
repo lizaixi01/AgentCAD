@@ -80,6 +80,17 @@ def test_timeline_maps_each_commit_to_a_stored_version(rt, ws, blank, workspace)
     assert not tl["modified_outside_runtime"]
 
 
+def test_timeline_pages_preserve_order_without_overlaps(rt, blank, viewer):
+    line(rt, blank, [0, 0], [100, 0])
+    line(rt, blank, [0, 0], [0, 50])
+    code, recent = get_json(viewer, "/api/timeline", path=blank, limit=2)
+    assert code == 200 and [r["seq"] for r in recent["records"]] == [2, 3]
+    code, earlier = get_json(viewer, "/api/timeline", path=blank, limit=2, before_seq=recent["next_before_seq"])
+    assert code == 200 and [r["seq"] for r in earlier["records"]] == [1]
+    assert earlier["next_before_seq"] is None and earlier["current"] == recent["current"]
+    assert get_json(viewer, "/api/timeline", path=blank, limit=0)[0] == 400
+
+
 def test_old_versions_render_and_diff(rt, blank, workspace):
     line(rt, blank, [0, 0], [100, 0], tag="a")
     v1 = workspace.timeline(blank)["current"]
@@ -821,6 +832,34 @@ def test_seams_match_the_per_edge_check_without_asking_it_about_shared_edges(tmp
     assert all(c["same"] for c in r.values()), r
     assert [r[k]["seams"] for k in ("cylinder", "cone", "sphere", "open_face")] == [1, 1, 0, 1]
     assert r["plate"]["seams"] == 64 and r["plate"]["asked"] == 64 and r["plate"]["edges"] > 3 * 64, r["plate"]
+
+
+def test_freecad_does_not_expose_an_incomplete_cache_output(tmp_path, monkeypatch):
+    from agentcad.backends import freecad
+    monkeypatch.setattr(freecad, "require", lambda: (["freecad"], {}))
+    monkeypatch.setattr(freecad.tempfile, "gettempdir", lambda: str(tmp_path))
+    final = tmp_path / "view.mesh.json"
+
+    class Process:
+        def __init__(self, args, cwd, **kwargs):
+            job = json.loads((cwd / "job.json").read_text("utf-8"))
+            Path(job["output"]).write_bytes(b'{"points":[]}')
+            (cwd / "result.json").write_text('{"ok": true}', "utf-8")
+
+        def wait(self, timeout):
+            return 0
+
+    def copy_in_parts(source, destination):
+        with Path(destination).open("wb") as stream:
+            stream.write(b'{"points":')
+            stream.flush()
+            assert not final.exists()
+            stream.write(Path(source).read_bytes()[10:])
+
+    monkeypatch.setattr(freecad.subprocess, "Popen", Process)
+    monkeypatch.setattr(freecad.shutil, "copyfile", copy_in_parts)
+    assert freecad.run({"action": "mesh"}, outputs={"output": final})["ok"]
+    assert json.loads(final.read_bytes()) == {"points": []}
 
 
 def test_freecad_location_is_remembered_for_the_desktop_viewer(tmp_path, monkeypatch):

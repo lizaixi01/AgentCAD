@@ -224,48 +224,80 @@ def snap_points(e) -> list[G.Vec]:
 def _chain_loops(f: Features, loose) -> None:
     """Join LINE/ARC/open-polyline pieces with coincident end points into closed loops."""
     used = [False] * len(loose)
+    tolerance = CONNECT_TOL * 10
+    cell = 2 * tolerance
 
-    def key(p):
-        return (round(p[0] / CONNECT_TOL) * CONNECT_TOL, round(p[1] / CONNECT_TOL) * CONNECT_TOL)
+    def key(layer, p):
+        if not all(math.isfinite(v) for v in p):
+            return None
+        x, y = (v / cell for v in p)
+        # At magnitudes where division overflows, only identical coordinates
+        # can be within tolerance. Use the unscaled coordinate in that case.
+        return layer, math.floor(x) if math.isfinite(x) else p[0], math.floor(y) if math.isfinite(y) else p[1]
+
+    buckets = {}
+    endpoints = []
+    for i, (_, layer, start, end, _) in enumerate(loose):
+        keys = (key(layer, start), key(layer, end))
+        endpoints.append(keys)
+        for side, bucket in enumerate(keys):
+            if bucket is not None:
+                buckets.setdefault(bucket, {})[i, side] = None
+
+    def consume(i):
+        used[i] = True
+        for side, bucket in enumerate(endpoints[i]):
+            if bucket is not None:
+                del buckets[bucket][i, side]
+
+    def matching_endpoint(layer, point):
+        at = key(layer, point)
+        if at is None:
+            return None
+        _, x, y = at
+        best = None
+        for col in {x - 1, x, x + 1}:
+            for row in {y - 1, y, y + 1}:
+                for candidate in buckets.get((layer, col, row), ()):
+                    # Each bucket is in drawing order, with the start before
+                    # the end. Preserve the previous scan's tie-breaking.
+                    if best is not None and candidate >= best:
+                        break
+                    j, side = candidate
+                    if G.dist(loose[j][2 + side], point) < tolerance:
+                        best = candidate
+                        break
+        return best
 
     for i in range(len(loose)):
         if used[i]:
             continue
-        used[i] = True
+        consume(i)
         chain = [i]
+        layer = loose[i][1]
         start, cur = loose[i][2], loose[i][3]
         closed = False
-        progressed = True
-        while progressed:
-            progressed = False
-            if G.dist(start, cur) < CONNECT_TOL * 10 and len(chain) > 1:
+        while True:
+            if len(chain) > 1 and G.dist(start, cur) < tolerance:
                 closed = True
                 break
-            for j in range(len(loose)):
-                if used[j] or loose[j][1] != loose[i][1]:
-                    continue
-                if G.dist(loose[j][2], cur) < CONNECT_TOL * 10:
-                    cur = loose[j][3]
-                elif G.dist(loose[j][3], cur) < CONNECT_TOL * 10:
-                    cur = loose[j][2]
-                else:
-                    continue
-                used[j] = True
-                chain.append(j)
-                progressed = True
+            match = matching_endpoint(layer, cur)
+            if match is None:
                 break
-        if not closed and len(chain) > 1 and G.dist(start, cur) < CONNECT_TOL * 10:
-            closed = True
+            j, side = match
+            cur = loose[j][3 - side]
+            consume(j)
+            chain.append(j)
         if closed:
             poly: list[G.Vec] = []
             last = None
             for j in chain:
                 pts = _flatten(loose[j][4])
-                if last is not None and G.dist(pts[0], last) > CONNECT_TOL * 10:
+                if last is not None and G.dist(pts[0], last) > tolerance:
                     pts.reverse()
                 if last is None and len(chain) > 1:
                     nxt = loose[chain[1]]
-                    if min(G.dist(pts[0], nxt[2]), G.dist(pts[0], nxt[3])) < CONNECT_TOL * 10:
+                    if min(G.dist(pts[0], nxt[2]), G.dist(pts[0], nxt[3])) < tolerance:
                         pts.reverse()
                 poly.extend(pts if not poly else pts[1:])
                 last = pts[-1]

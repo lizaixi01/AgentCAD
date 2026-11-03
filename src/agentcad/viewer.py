@@ -56,6 +56,7 @@ import threading
 import time
 import uuid
 from collections import OrderedDict, deque
+from itertools import islice
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qs, urlparse
@@ -125,6 +126,11 @@ def _retry(fn):
                     raise
                 time.sleep(0.01)
     return wrapper
+
+
+@_retry
+def _cached_bytes(path: Path) -> bytes:
+    return path.read_bytes()
 
 
 def _is_part(rel: str) -> bool:
@@ -271,13 +277,21 @@ class Workspace:
         return out
 
     @_retry
-    def timeline(self, rel: str) -> dict[str, Any]:
+    def timeline(self, rel: str, *, limit: int | None = None, before_seq: int | None = None) -> dict[str, Any]:
         from .service import _journal_line
         st = self.store(rel)
         have = self.versions(st)
         cps = {c["id"]: c.get("sha256") for c in st.list_checkpoints()}
+        page = {}
+        if limit is None:
+            journal = st.read_journal()
+        else:
+            newest = (r for r in st.journal_newest() if before_seq is None or r["seq"] < before_seq)
+            rows = list(islice(newest, limit + 1))
+            journal = list(reversed(rows[:limit]))
+            page["next_before_seq"] = journal[0]["seq"] if len(rows) > limit else None
         records = []
-        for r in st.read_journal():
+        for r in journal:
             line = _journal_line(r)
             if r.get("operations"):
                 line["steps"] = progress.group_ops(r["operations"])
@@ -292,7 +306,7 @@ class Workspace:
         cur = self.current_sha(st)
         return {"drawing": rel, "kind": "part" if _is_part(rel) else "drawing", "current": cur,
                 "modified_outside_runtime": bool(cur and st.head().get("sha256") and cur != st.head()["sha256"]),
-                "records": records}
+                "records": records, **page}
 
     @_retry
     def snapshot(self, rel: str, version: str | None) -> tuple[str, Path]:
@@ -436,7 +450,7 @@ class Workspace:
         """The version the last commit that produced ``sha`` started from (None for a creation)."""
         st = self.store(rel)
         cps = {c["id"]: c.get("sha256") for c in st.list_checkpoints()}
-        for r in reversed(st.read_journal()):
+        for r in st.journal_newest():
             if r.get("ok") and r.get("sha256") == sha:
                 return cps.get(r.get("checkpoint_before")) if r.get("checkpoint_before") else None
         return None
@@ -494,10 +508,8 @@ class Workspace:
             return False
         if not s.st_size or s.st_size > MAX_PART_BYTES or time.time() - s.st_mtime < SETTLE:
             return False
-        from .locking import drawing_lock
-        with drawing_lock(st.dir):  # two viewers on one workspace record each version once
-            saved = [r["sha256"] for r in st.read_journal() if r.get("ok") and r.get("sha256")]
-            last = saved[-1] if saved else None
+        with st.lock():  # two viewers on one workspace record each version once
+            last = next((r["sha256"] for r in st.journal_newest() if r.get("ok") and r.get("sha256")), None)
             stored = {c["sha256"]: c["id"] for c in st.list_checkpoints() if c.get("sha256")}
             sha = sha256_file(st.path)
             if sha == last:
@@ -544,7 +556,7 @@ class Workspace:
         out = self.cache / f"{sha}.thumb.png"
         if not out.is_file():
             self._memo(("thumb", sha), lambda: self._fc({"action": "render", "size": 240}, src, out, lane="thumb"))
-        return out.read_bytes(), "image/png"
+        return _cached_bytes(out), "image/png"
 
     # --- export ---------------------------------------------------------------------------------------
     def export_html(self, rel: str, version: str | None) -> tuple[str, str]:
@@ -564,7 +576,7 @@ class Workspace:
                                 "exported": time.strftime("%Y-%m-%dT%H:%M:%S%z"), "history": hist}
         before = self.before(rel, sha)
         if _is_part(rel):
-            data["image"] = "data:image/png;base64," + base64.b64encode(self.png(rel, sha).read_bytes()).decode()
+            data["image"] = "data:image/png;base64," + base64.b64encode(_cached_bytes(self.png(rel, sha))).decode()
             try:
                 d = self.diff(rel, sha)
                 data["diff"] = {k: d[k] for k in ("shape",) if d.get(k)}
@@ -867,7 +879,15 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                 if not path:
                     raise input_error("MISSING_PATH", "path= is required")
                 if u.path == "/api/timeline":
-                    return self._json({"ok": True, **ws.timeline(path)})
+                    try:
+                        limit = int(q["limit"]) if "limit" in q else None
+                        before = int(q["before_seq"]) if "before_seq" in q else None
+                    except ValueError:
+                        raise input_error("BAD_PARAMETER", "Timeline limit and before_seq must be integers")
+                    if ((limit is not None and not 1 <= limit <= 1000)
+                            or (before is not None and (before < 1 or limit is None))):
+                        raise input_error("BAD_PARAMETER", "Use 1 <= limit <= 1000 and an optional positive before_seq")
+                    return self._json({"ok": True, **ws.timeline(path, limit=limit, before_seq=before)})
                 if u.path == "/api/layers":
                     return self._json({"ok": True, **ws.layers(path, v)})
                 if u.path == "/api/diff":
@@ -885,8 +905,8 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                     return self._send(200, page.encode("utf-8"), "text/html; charset=utf-8",
                                       download=name)
                 if u.path == "/api/mesh":
-                    return self._send(200, ws.mesh(path, v).read_bytes(), "application/json", cache=pinned)
-                return self._send(200, ws.png(path, v).read_bytes(), "image/png", cache=pinned)  # /api/png
+                    return self._send(200, _cached_bytes(ws.mesh(path, v)), "application/json", cache=pinned)
+                return self._send(200, _cached_bytes(ws.png(path, v)), "image/png", cache=pinned)  # /api/png
             except AgentCADError as exc:
                 code = 404 if exc.code in ("FILE_NOT_FOUND", "VERSION_NOT_FOUND") else \
                     503 if exc.category == "dependency" else 403 if exc.category == "policy" else 400

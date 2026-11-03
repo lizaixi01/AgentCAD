@@ -28,7 +28,7 @@ from .model import entity_to_dict, get_tag, is_model, layout_spaces, select
 from .ops import catalog
 from .ops.annotate import DIMSTYLE, apply_annotation_scale, setup_text_style
 from .policy import Policy
-from .store import DrawingStore, busy_error, finalize, read_dxf, now, sha256_file
+from .store import DrawingStore, busy_error, dxf_bytes, finalize, read_dxf, now, sha256_file
 from .units import UNITS, normalize_unit, unit_from_insunits
 from .validate import validate_file
 from .validate.checks import MIN_PRINTED_TEXT, plot_text_issues
@@ -198,16 +198,15 @@ class Runtime:
 
     @contextmanager
     def _lock(self, store: DrawingStore):
-        from .locking import drawing_lock
-        with drawing_lock(store.dir):
+        with store.lock():
             yield
 
-    def _save_failure(self, store: DrawingStore, doc, label: str) -> str | None:
+    def _save_failure(self, store: DrawingStore, data: bytes, label: str) -> str | None:
         try:
             d = store.dir / "failed"
             d.mkdir(parents=True, exist_ok=True)
             fp = d / f"{time.strftime('%Y%m%d-%H%M%S')}-{label}.dxf"
-            doc.saveas(fp)
+            fp.write_bytes(data)
             return str(fp.relative_to(self.policy.root).as_posix())
         except Exception:
             return None
@@ -441,7 +440,7 @@ class Runtime:
         with self._lock(store):
             loaded_sha = sha256_file(p)
             doc = store.load()
-            before = guards.check(store, doc, expected_revision, preconditions)
+            before = guards.check(store, doc, expected_revision, preconditions, preview=dry_run)
             if before["sha256"] != loaded_sha:
                 raise input_error("STALE_REVISION", "Drawing changed while it was being read; retry the preview")
             unit = _units_of(doc)
@@ -455,23 +454,23 @@ class Runtime:
                 return {"drawing": self._rel(p), "dry_run": True, "would_change": _changes(res),
                         "results": res["results"], "preview": {"revision": before["revision"],
                             "preconditions": {"sha256": before["sha256"], "entities": before["entities"]}}}
-            # without strict the pre-commit report is unused; the file is validated once, after the commit
-            tmp_report = self._validate_doc(doc, requirements, bounds, layout) if strict else None
-            if tmp_report is not None and not tmp_report["passed"]:
-                fail = self._save_failure(store, doc, "strict-validation")
+            data = dxf_bytes(doc)
+            report = self._validate_bytes(data, requirements=requirements, bounds=bounds, layout=layout) if strict else None
+            if report is not None and not report["passed"]:
+                fail = self._save_failure(store, data, "strict-validation")
                 store.journal({"tool": "apply_operations", "ok": False, "label": label, "operations": operations,
                                "error": {"code": "VALIDATION_FAILED"}, "failure_snapshot": fail})
                 raise AgentCADError("VALIDATION_FAILED", "Post-operation validation failed; nothing was saved",
                                     category="validation",
-                                    details={"validation": compact_report(tmp_report), "failure_snapshot": fail},
+                                    details={"validation": compact_report(report), "failure_snapshot": fail},
                                     hint="Inspect validation.issues; fix the operations and retry")
             attempt = {"tool": "apply_operations", "label": label, "operations": operations, "changes": _changes(res)}
             # Also refuse an external edit made during geometry computation or strict validation.
-            guards.check(store, store.load(), before["revision"], {"sha256": before["sha256"]})
-            info = store.commit(doc, label=label or "apply_operations", attempt=attempt)
+            guards.check(store, None, before["revision"], {"sha256": before["sha256"]})
+            info = store.commit_bytes(data, label=label or "apply_operations", attempt=attempt)
             seq = store.journal({**attempt, "ok": True, **info})
-        progress.checking()
-        report = validate_file(p, requirements=requirements, bounds=bounds, layout=layout)
+        if report is None:
+            report = self._validate_bytes(data, requirements=requirements, bounds=bounds, layout=layout)
         out = {"drawing": self._rel(p), "changes": _changes(res), "results": res["results"],
                "validation": _brief(report), "journal_seq": seq, **info}
         if created:
@@ -588,28 +587,40 @@ class Runtime:
                    "result": res.get("result"), "stdout": res.get("stdout"), "script_seconds": res.get("seconds")}
             if dry_run:
                 return {**out, "dry_run": True, "diff": {k: diff[k] for k in ("added", "deleted", "modified")}}
-            tmp_report = self._validate_doc(doc, requirements) if strict else None
-            if tmp_report is not None and not tmp_report["passed"]:
-                fail = self._save_failure(store, doc, "strict-validation")
+            data = dxf_bytes(doc)
+            report = self._validate_bytes(data, requirements=requirements) if strict else None
+            if report is not None and not report["passed"]:
+                fail = self._save_failure(store, data, "strict-validation")
                 store.journal({"tool": "run_script", "ok": False, "label": label, "code": code,
                                "error": {"code": "VALIDATION_FAILED"}, "failure_snapshot": fail})
                 raise AgentCADError("VALIDATION_FAILED", "Validation of the script's result failed; nothing was saved",
                                     category="validation",
-                                    details={"validation": compact_report(tmp_report), "failure_snapshot": fail},
+                                    details={"validation": compact_report(report), "failure_snapshot": fail},
                                     hint="Inspect validation.issues; fix the script and retry")
             attempt = {"tool": "run_script", "label": label, "code": code,
                        "code_sha256": hashlib.sha256(code.encode("utf-8")).hexdigest(), "changes": changes}
-            info = store.commit(doc, label=label or "run_script", attempt=attempt)
+            info = store.commit_bytes(data, label=label or "run_script", attempt=attempt)
             seq = store.journal({**attempt, "ok": True, "stdout": res.get("stdout"), **info})
-        report = validate_file(p, requirements=requirements)
+        if report is None:
+            report = self._validate_bytes(data, requirements=requirements)
         return {**out, "validation": _brief(report), "journal_seq": seq, **info}
 
-    def _validate_doc(self, doc, requirements, bounds=None, layout=None):
+    def _validate_bytes(self, data: bytes, **options):
+        """Independently parse the exact commit bytes, even if another writer has since edited the drawing."""
         import tempfile
-        with tempfile.TemporaryDirectory() as td:
-            fp = Path(td) / "candidate.dxf"
-            doc.saveas(fp)
-            return validate_file(fp, requirements=requirements, bounds=bounds, layout=layout)
+        progress.checking()
+        try:
+            with tempfile.TemporaryDirectory(ignore_cleanup_errors=True) as td:
+                fp = Path(td) / "candidate.dxf"
+                fp.write_bytes(data)
+                return validate_file(fp, **options)
+        except OSError as exc:
+            # For ordinary edits the commit has already succeeded. Keep that
+            # result and report the snapshot failure as a validation error.
+            return {"file": "candidate.dxf", "readable": False, "passed": False, "requirements": [],
+                    "summary": {"errors": 1, "warnings": 0, "requirements_failed": 0},
+                    "issues": [{"code": "VALIDATION_SNAPSHOT_ERROR", "severity": "error", "category": "file",
+                                "message": str(exc), "entities": []}]}
 
     @tool
     def validate_drawing(self, path: str, requirements: list[dict] | None = None, use_stored_spec: bool = True,
@@ -707,11 +718,12 @@ class Runtime:
                 raise
             set_meta(doc, "part_spec", spec)
             set_meta(doc, "plan_tags", sorted(engine.plan_tags(compiled["operations"])))
-            info = store.commit(doc, label="draw_from_spec")
+            data = dxf_bytes(doc)
+            info = store.commit_bytes(data, label="draw_from_spec")
             seq = store.journal({"tool": "draw_from_spec", "ok": True, "spec": spec, "plan": compiled["operations"],
                                  "changes": _changes(res), **info})
-        report = validate_file(p, requirements=compiled["requirements"],
-                               contour_layers=["OUTLINE"] if spec.get("kind") == "plate" else None)
+        report = self._validate_bytes(data, requirements=compiled["requirements"],
+                                      contour_layers=["OUTLINE"] if spec.get("kind") == "plate" else None)
         report["file"] = self._rel(p)
         return {"drawing": self._rel(p), "changes": _changes(res), "plan_size": len(compiled["operations"]),
                 "requirements": compiled["requirements"], "validation": report, "journal_seq": seq, **info}
@@ -740,10 +752,11 @@ class Runtime:
                 return {"drawing": self._rel(p), "dry_run": True, "would_change": _changes(res), "spec": new_spec}
             set_meta(doc, "part_spec", new_spec)
             set_meta(doc, "plan_tags", sorted(engine.plan_tags(compiled["operations"])))
-            info = store.commit(doc, label="revise_drawing")
+            data = dxf_bytes(doc)
+            info = store.commit_bytes(data, label="revise_drawing")
             seq = store.journal({"tool": "revise_drawing", "ok": True, "changes_requested": changes, "spec": new_spec,
                                  "changes": _changes(res), **info})
-        report = validate_file(p, requirements=compiled["requirements"], contour_layers=["OUTLINE"])
+        report = self._validate_bytes(data, requirements=compiled["requirements"], contour_layers=["OUTLINE"])
         report["file"] = self._rel(p)
         return {"drawing": self._rel(p), "spec": new_spec, "changes": _changes(res), "unchanged": res["unchanged"],
                 "validation": report, "journal_seq": seq, **info}
