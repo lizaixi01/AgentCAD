@@ -138,7 +138,7 @@ export default function App() {
   const [diff, setDiff] = useState<{ cls: string; text: string }[] | null>(null)
   const [layers, setLayers] = useState<Layer[]>([])
   const [hidden, setHidden] = useState<string[]>([])
-  const [highlight, setHighlight] = useState(true)
+  const [highlight, setHighlight] = useState(false)  // a plain drawing first; "highlight changes" marks them on request
   const [compare, setCompare] = useState(false)
   const [follow, setFollow] = useState(true)
   const [query, setQuery] = useState("")
