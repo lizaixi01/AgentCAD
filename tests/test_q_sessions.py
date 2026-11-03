@@ -156,3 +156,14 @@ def test_a_reused_pid_is_not_a_session(tmp_path, session):
 
 def test_skill_covers_the_short_tool_list():
     assert 'call_tool(name="agentcad_status"' in install.SKILL
+
+
+def test_skill_waits_for_a_server_that_is_still_starting():
+    # Codex leaves out an MCP server that has not answered yet when the first turn runs (its log: "omitting pending
+    # optional MCP server"); the skill must wait for it before telling the user AgentCAD is not connected.
+    # Codex stops shell commands after 10 s by default, so each wait stays shorter; an empty tool search waits too,
+    # and a server that started too late for this turn gets a second message before the installer advice.
+    text = install.SKILL
+    wait, again, fail = (text.index("Start-Sleep 5"), text.index("send\n   /agentcad"),
+                         text.index("not connected to this app"))
+    assert wait < again < fail and "up to 12 times" in text and "or it finds nothing" in text

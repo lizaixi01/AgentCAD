@@ -586,9 +586,17 @@ description: Check that AgentCAD (CAD drawings) is connected, name this conversa
    - one sentence they could try, such as "画一块 200×100 的安装板，四个角倒圆 R8，四个 Ø12 的孔离边 15 毫米。"
    With only `search_tools`, `tool_schema` and `call_tool` (AgentCAD's short tool list), use
    `call_tool(name="agentcad_status", arguments={"label": ...})`: that is connected too.
-3. If there is no AgentCAD tool at all, AgentCAD is not connected to this app. Say so plainly and how to fix it:
-   run the AgentCAD installer (or open it again and tap "Already installed? Check it", then "Fix it for me"), then
-   start a new conversation.
+3. No AgentCAD tool yet? It may still be starting: apps start it with the conversation and leave it out until it
+   answers, and the first start after an update can take a minute. Do not report a failure yet:
+   - if the app can search for tools (Claude Code's tool search), search for "agentcad": the search waits for servers
+     that are still starting;
+   - if there is no search, or it finds nothing, wait 5 seconds (run `sleep 5`, or `Start-Sleep 5` in PowerShell;
+     shells may stop longer commands) and look for the tool again, up to 12 times.
+   Once it is there, go on with step 1.
+4. If there is still no AgentCAD tool after that, it may have started too late for this message: ask the user to send
+   /agentcad ($agentcad in Codex) once more. Only if that also finds no tool is AgentCAD not connected to this app; then
+   say so plainly and how to fix it: run the AgentCAD installer (or open it again and tap "Already installed? Check
+   it", then "Fix it for me"), then start a new conversation.
 """
 
 
