@@ -38,24 +38,27 @@ ezdxf (DXF 内核)
 ## 状态目录（每张图纸一份）
 
 ```
-<root>/.agentcad/drawings/<相对路径用 __ 连接>/
+<root>/.agentcad/drawings/<顶层且不含 __ 的图名>/
+<root>/.agentcad/drawings-v2/<相对父目录>/.agentcad/<图名>/
   head.json        已提交 sha256、pending 标记、检查点列表
   journal.jsonl    每次调用（成功或失败）的输入、变更、版本、哈希、检查点
   checkpoints/     cp-NNNN.dxf：每次修改前的字节级副本
   committed.dxf    最近一次提交的精确副本（崩溃恢复用）
   failed/          严格校验失败或损坏文件的现场
-  lock             写锁（超过 120 s 视为过期）
+  write.lock       操作系统写锁，进程退出后自动释放
 ```
+
+升级前请关闭同一工作区的旧版运行时和查看器。对于原先用 `__` 拼接路径的状态目录，新版在首次写入时只复制能由同一张图的日志确认归属、且没有待结算提交的状态。旧目录保留。混合或无法确认归属的历史保留在旧目录中，需要核对后再恢复。
 
 ## 事务（`apply_operations`）
 
 1. 获取写锁，从磁盘读取图纸。
 2. **预校验**全部操作：操作名（拼写错误时给出相近名称）、白名单、参数类型/范围/单位、未知参数。任何一步失败，整个批次都不执行。
 3. 在内存文档上依次执行。任何一步失败都抛出结构化错误（`op_index`、`partial_changes=false`），内存文档直接丢弃，磁盘文件不变，journal 记录这次失败。
-4. 可选 `strict`：先把候选文档写到临时文件，交给独立验证器检查；不通过就不保存，失败现场写入 `failed/`。
+4. 序列化出最终 DXF 字节。可选 `strict`：用这份字节建立临时快照，交给独立验证器检查；不通过就不保存，失败现场写入 `failed/`。
 5. 提交：为旧文件建检查点 → 在 head 中写入 `pending`（带目标内容的 sha256）→ 临时文件 fsync 后 `os.replace` → 写提交副本 → 清除 `pending` → 写 journal。
    Windows 上目标文件被别的进程打开时 `os.replace` 会失败，所以每次替换最多重试 2 s（`store.replace_file`）。还是失败时（`rollback` 和 `recover` 恢复检查点也走同一个流程，`store._replace_tracked`）：图纸替换之前的任何一步 → `FILE_BUSY`，`retryable=true`，文件不变，这次刚建的检查点也删掉（先改 head.json，改成了才删文件；head.json 本身被占着时检查点留着，文件也留着）。只清这次自己写的 `pending`，前一次没结算的不动；结算前一次时 head.json 被占着，同样返回 `FILE_BUSY`，什么都不改。不带参数的 `rollback` 恢复最近一个和当前文件不同的检查点，所以留下的那个检查点不会让重试变成空操作；提交副本 → 不算失败，结果带 `warnings`；图纸替换之后的 head 更新 → `FILE_BUSY`，`partial_changes=true`、`retryable=false`，改动已在文件里，提示调 `recover`，不要重做。journal 写 head 失败不影响结果，下一条记录的 seq 从 journal 文件末尾接着编。`partial_changes=true` 的那次调用会把它的操作作为一条失败记录写进 journal，结算时 `recover` 记录带上这些操作（`operations`、`changes`、`completed_seq`）。
-6. 从磁盘重新读取，运行验证器，把报告随结果一起返回。
+6. 返回与本次提交哈希对应的校验报告。`strict` 复用提交前的报告。普通模式在解锁后从同一份提交字节的临时快照独立校验。
 
 `run_script`（可选，默认关闭）：对操作目录覆盖不到的编辑，Agent 提交一段 ezdxf 脚本。脚本先做静态检查（只允许导入 ezdxf 和标准数学/数据模块；禁止打开或保存文件、eval/exec、getattr、双下划线访问，以及栈帧（`gi_frame`、`f_back` 等）、`operator.attrgetter`/`methodcaller`，以及允许模块带着的 `sys`/`builtins`/`inspect` 等属性），然后在独立的 Python 进程中（`-I`、不经 shell、有超时）对图纸副本运行。运行结果由 Runtime 严格重读、检查预算、计算 diff，然后按上面第 4–6 步提交：检查点、journal（记录完整脚本和哈希）、校验、`strict`。失败时文件不变，可以 `rollback`。
 

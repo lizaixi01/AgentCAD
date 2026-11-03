@@ -2,7 +2,7 @@
 crash recovery.
 
 State for ``<root>/path/to/part.dxf`` lives in
-``<root>/.agentcad/drawings/path__to__part.dxf/``::
+``<root>/.agentcad/drawings-v2/path/to/.agentcad/part.dxf/``::
 
     head.json         committed sha256 + pending-transaction marker
     journal.jsonl     one JSON record per committed (or failed) operation
@@ -18,9 +18,13 @@ import json
 import os
 import platform
 import shutil
+import sys
+import tempfile
 import time
+from contextlib import contextmanager
+from itertools import islice
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, Iterator
 
 import ezdxf
 from ezdxf.document import Drawing
@@ -28,7 +32,8 @@ from ezdxf.document import Drawing
 from . import sessions
 from . import __version__
 from .errors import AgentCADError, file_error, input_error
-from .policy import Policy
+from .locking import drawing_lock
+from .policy import STATE_DIR, Policy
 
 VERSIONS = {"agentcad": __version__, "ezdxf": ezdxf.__version__, "python": platform.python_version()}
 
@@ -134,12 +139,69 @@ class DrawingStore:
         self.path = path
         self.reader = reader
         self.ext = path.suffix.lower() or ".dxf"
-        rel = path.relative_to(policy.root).as_posix().replace("/", "__")
-        self.dir = policy.state_dir() / "drawings" / rel
+        self.relative = path.relative_to(policy.root)
+        flat = self.relative.as_posix().replace("/", "__")
+        legacy = policy.state_dir() / "drawings" / flat
+        # Unambiguous top-level names keep their existing state directory. For
+        # other names mirror the hierarchy, using a reserved component so a
+        # directory in the workspace cannot overlap a drawing's state files.
+        self._legacy = legacy if "__" in flat else None
+        self._state = (policy.state_dir() / "drawings-v2" / self.relative.parent / STATE_DIR / self.relative.name
+                       if self._legacy else legacy)
+        self._set_dir(self._state)
+        if self._legacy and not self._state.exists() and self._legacy_owned() and not self._state.exists():
+            self._set_dir(self._legacy)
+
+    def _set_dir(self, directory: Path) -> None:
+        self.dir = directory
         self.cp_dir = self.dir / "checkpoints"
         self.journal_path = self.dir / "journal.jsonl"
         self.head_path = self.dir / "head.json"
         self.committed_path = self.dir / f"committed{self.ext}"
+
+    def _legacy_owned(self) -> bool:
+        """Adopt only clean state whose journal accounts for its contents."""
+        legacy = self._legacy
+        try:
+            with (legacy / "journal.jsonl").open(encoding="utf-8") as stream:
+                records = [json.loads(line) for line in stream if line.strip()]
+            head = json.loads((legacy / "head.json").read_text("utf-8"))
+        except (FileNotFoundError, ValueError):
+            return False
+        shown = os.path.normcase(str(self.relative))
+        if not records or any(not isinstance(r, dict) or not isinstance(r.get("drawing"), str)
+                              or os.path.normcase(r["drawing"]) != shown for r in records):
+            return False
+        if not isinstance(head, dict) or not isinstance(head.get("checkpoints"), list):
+            return False
+        hashes = {r.get("sha256") for r in records if r.get("ok") and r.get("sha256")}
+        checkpoints = {r.get("checkpoint_before") for r in records if r.get("ok")}
+        return (not head.get("pending") and (not head.get("sha256") or head["sha256"] in hashes)
+                and all(isinstance(c, dict) and (c.get("id") in checkpoints or c.get("sha256") in hashes)
+                        for c in head["checkpoints"]))
+
+    @contextmanager
+    def lock(self):
+        legacy = self._legacy
+        if legacy and legacy.is_dir() and not self._state.exists():
+            with drawing_lock(legacy):
+                if not self._state.exists() and self._legacy_owned():
+                    if self.policy.read_only:
+                        self._set_dir(legacy)
+                        yield
+                        return
+                    self._state.parent.mkdir(parents=True, exist_ok=True)
+                    with tempfile.TemporaryDirectory(prefix=".migrate-", dir=self._state.parent) as tmp:
+                        staged = Path(tmp) / "state"
+                        shutil.copytree(legacy, staged, ignore=shutil.ignore_patterns("write.lock"))
+                        replace_file(staged, self._state)
+                with drawing_lock(self._state):
+                    self._set_dir(self._state)
+                    yield
+                return
+        self._set_dir(self._state)
+        with drawing_lock(self.dir):
+            yield
 
     # --- head / journal ---------------------------------------------------------
     def head(self) -> dict[str, Any]:
@@ -153,21 +215,43 @@ class DrawingStore:
         tmp.write_text(json.dumps(head, indent=1), "utf-8")
         replace_file(tmp, self.head_path)
 
-    def _last_journal_seq(self) -> int:
-        """seq of the journal's last record, read from the file's tail (the record is appended before head.json
-        is updated, so head's seq can lag behind it)."""
+    def _journal_tail(self) -> Iterator[bytes]:
+        """Read newline-delimited records newest first, including records spanning multiple blocks."""
         try:
-            with open(self.journal_path, "rb") as f:
-                f.seek(0, os.SEEK_END)
-                f.seek(max(0, f.tell() - 65536))
-                lines = f.read().splitlines()
+            stream = self.journal_path.open("rb")
+        except FileNotFoundError:
+            return
+        with stream:
+            position = stream.seek(0, os.SEEK_END)
+            parts = []
+            while position:
+                size = min(position, 65536)
+                position -= size
+                stream.seek(position)
+                lines = stream.read(size).split(b"\n")
+                parts.append(lines[-1])
+                if len(lines) > 1:
+                    yield b"".join(reversed(parts))
+                    yield from reversed(lines[1:-1])
+                    parts = [lines[0]]
+            yield b"".join(reversed(parts))
+
+    def journal_newest(self) -> Iterator[dict[str, Any]]:
+        for raw in self._journal_tail():
+            if raw.strip():
+                yield json.loads(raw)
+
+    def _last_journal_seq(self) -> int:
+        """The record is appended before head.json is updated, so head's seq can lag behind it."""
+        try:
+            for raw in self._journal_tail():
+                if raw.strip():
+                    try:
+                        return int(json.loads(raw)["seq"])
+                    except (ValueError, KeyError, TypeError):
+                        continue
         except OSError:
-            return 0
-        for raw in reversed(lines):
-            try:
-                return int(json.loads(raw)["seq"])
-            except (ValueError, KeyError, TypeError):
-                continue
+            pass
         return 0
 
     def journal(self, record: dict[str, Any]) -> int:
@@ -186,10 +270,13 @@ class DrawingStore:
         return seq
 
     def read_journal(self, limit: int | None = None) -> list[dict[str, Any]]:
-        if not self.journal_path.is_file():
+        if limit is not None and limit > 0:
+            return list(reversed(list(islice(self.journal_newest(), min(limit, sys.maxsize)))))
+        try:
+            with self.journal_path.open(encoding="utf-8") as stream:
+                recs = [json.loads(line) for line in stream if line.strip()]
+        except FileNotFoundError:
             return []
-        lines = self.journal_path.read_text("utf-8").splitlines()
-        recs = [json.loads(x) for x in lines if x.strip()]
         return recs[-limit:] if limit else recs
 
     # --- checkpoints ---------------------------------------------------------------

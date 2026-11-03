@@ -64,6 +64,75 @@ def test_journal_traceability(rt, ws):
     assert d["modified"][0]["changes"]["center"] == {"old": [40.0, 25.0], "new": [45.0, 25.0]}
 
 
+def test_limited_history_reads_long_utf8_records_from_the_tail(rt, monkeypatch):
+    from agentcad import store
+    _, state = rt._drawing("tail.dxf", must_exist=False)
+    with state.lock():
+        for _ in range(8):
+            state.journal({"ok": False})
+        # The record is larger than a read block, and head may lag the journal.
+        with monkeypatch.context() as patch:
+            def busy(_):
+                raise PermissionError
+            patch.setattr(state, "_write_head", busy)
+            assert state.journal({"ok": True, "label": "图\u2028纸" * 12000}) == 9
+        assert state.journal({"ok": True}) == 10
+    loads = store.json.loads
+    parsed = []
+
+    def count_loads(value):
+        parsed.append(value)
+        return loads(value)
+
+    monkeypatch.setattr(store.json, "loads", count_loads)
+    recent = state.read_journal(2)
+    assert [r["seq"] for r in recent] == [9, 10]
+    assert recent[0]["label"] == "图\u2028纸" * 12000
+    assert len(parsed) == 2
+
+
+def test_colliding_legacy_names_have_separate_checkpoints(rt):
+    first, second = "parts/panel.dxf", "parts__panel.dxf"
+    ok(rt.create_drawing(first, units="cm"))
+    checkpoint = ok(rt.apply_operations(first, PLAN))["checkpoint_before"]
+    ok(rt.create_drawing(second, units="mm"))
+    assert rt.rollback(second, checkpoint)["error"]["code"] == "NO_CHECKPOINT"
+    assert ok(rt.read_drawing(second))["units"] == "mm"
+    assert ok(rt.read_drawing(first))["units"] == "cm"
+
+
+def test_clean_legacy_history_migrates_to_its_owner(rt, ws):
+    first, second = "parts/panel.dxf", "parts__panel.dxf"
+    ok(rt.create_drawing(first))
+    checkpoint = ok(rt.apply_operations(first, PLAN))["checkpoint_before"]
+    _, state = rt._drawing(first)
+    legacy = ws / ".agentcad" / "drawings" / second
+    legacy.parent.mkdir(parents=True)
+    state.dir.rename(legacy)
+    assert len(ok(rt.history(first))["records"]) == 2
+    ok(rt.create_drawing(second))
+    assert len(ok(rt.history(second))["records"]) == 1
+    ok(rt.rollback(first, checkpoint))
+    assert geometry(ws, first) == []
+    assert len(ok(rt.history(first))["records"]) == 3
+    assert legacy.is_dir()
+
+
+def test_mixed_legacy_history_is_preserved_but_ineligible_for_rollback(rt, ws):
+    first, second = "parts/panel.dxf", "parts__panel.dxf"
+    ok(rt.create_drawing(first))
+    checkpoint = ok(rt.apply_operations(first, PLAN))["checkpoint_before"]
+    _, state = rt._drawing(first)
+    legacy = ws / ".agentcad" / "drawings" / second
+    legacy.parent.mkdir(parents=True)
+    state.dir.rename(legacy)
+    with (legacy / "journal.jsonl").open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps({"seq": 3, "drawing": second, "ok": False}) + "\n")
+    ok(rt.create_drawing(second))
+    assert rt.rollback(first, checkpoint)["error"]["code"] == "NO_CHECKPOINT"
+    assert (legacy / "checkpoints" / f"{checkpoint}.dxf").is_file()
+
+
 def test_mid_batch_failure_then_rollback(rt, ws):
     ok(rt.create_drawing("f.dxf"))
     ok(rt.apply_operations("f.dxf", PLAN))

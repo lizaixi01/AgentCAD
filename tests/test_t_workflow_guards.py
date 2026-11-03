@@ -40,6 +40,72 @@ def test_stale_preview_and_revision_survive_process_equivalent_reopen(rt):
     assert fresh_rt.read_drawing("a.dxf")["status"]["revision"] == rev + 1
 
 
+def test_validation_reports_the_committed_version_after_another_edit(rt, monkeypatch):
+    from agentcad import service
+    from agentcad.store import sha256_file
+    assert rt.create_drawing("race.dxf")["ok"]
+    other = Runtime(rt.policy)
+    path = rt.policy.root / "race.dxf"
+    validated = []
+    validate = service.validate_file
+
+    def concurrent_edit(snapshot, **options):
+        if not validated:
+            validated.append(sha256_file(snapshot))
+            result = other.apply_operations("race.dxf", [{"op": "add_circle", "center": [3, 0], "radius": 1}])
+            assert result["ok"], result
+        return validate(snapshot, **options)
+
+    monkeypatch.setattr(service, "validate_file", concurrent_edit)
+    first = rt.apply_operations("race.dxf", [{"op": "add_circle", "center": [0, 0], "radius": 1}],
+                                requirements=[{"type": "entity_count", "entity_type": "CIRCLE", "count": 1}])
+    assert first["ok"] and first["validation"]["passed"], first
+    assert first["sha256"] == validated[0] != sha256_file(path)
+
+
+def test_strict_edit_validates_the_commit_once_without_full_entity_fingerprints(rt, monkeypatch):
+    from agentcad import guards, service
+    from agentcad.store import sha256_file
+    assert rt.create_drawing("strict.dxf")["ok"]
+    assert rt.apply_operations("strict.dxf", [{"op": "add_line", "start": [0, 0], "end": [10, 0]}])["ok"]
+    validated = []
+    validate = service.validate_file
+
+    def capture(path, **options):
+        validated.append(sha256_file(path))
+        return validate(path, **options)
+
+    def unexpected_fingerprint(_):
+        pytest.fail("plain edits do not need entity fingerprints")
+
+    monkeypatch.setattr(service, "validate_file", capture)
+    monkeypatch.setattr(guards, "fingerprint", unexpected_fingerprint)
+    res = rt.apply_operations("strict.dxf", [{"op": "add_circle", "center": [3, 3], "radius": 1}], strict=True)
+    assert res["ok"] and res["validation"]["passed"], res
+    assert validated == [res["sha256"]]
+
+
+def test_unavailable_validation_snapshot_preserves_commit_outcome(rt, monkeypatch):
+    from pathlib import Path
+    assert rt.create_drawing("snapshot.dxf")["ok"]
+    write_bytes = Path.write_bytes
+
+    def fail_snapshot(path, data):
+        if path.name == "candidate.dxf":
+            raise OSError("temporary disk is full")
+        return write_bytes(path, data)
+
+    monkeypatch.setattr(Path, "write_bytes", fail_snapshot)
+    ops = [{"op": "add_circle", "center": [3, 3], "radius": 1}]
+    strict = rt.apply_operations("snapshot.dxf", ops, strict=True)
+    assert not strict["ok"] and strict["error"]["code"] == "VALIDATION_FAILED"
+    assert rt.read_drawing("snapshot.dxf")["entity_count"] == 0
+    ordinary = rt.apply_operations("snapshot.dxf", ops)
+    assert ordinary["ok"] and not ordinary["validation"]["passed"]
+    assert ordinary["validation"]["issues"][0]["code"] == "VALIDATION_SNAPSHOT_ERROR"
+    assert rt.read_drawing("snapshot.dxf")["entity_count"] == 1
+
+
 def test_analytic_bulges_hatch_nesting_and_styles(rt):
     rt.create_drawing("a.dxf")
     ops = [
