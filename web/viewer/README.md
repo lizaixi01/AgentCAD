@@ -23,6 +23,12 @@ npm run dev      # http://localhost:5173, forwarding /api to AGENTCAD_VIEWER (de
 npm run build    # type-checks, then writes the page into src/agentcad/viewer_static/app/
 ```
 
+The same build also makes `setup.html`, the setup wizard's page (`agentcad setup --gui`, `agentcad/setup_gui.py`;
+source in `src/setup/`): pick the apps, watch them being connected, the last steps, the health check, and the
+config to paste into any other MCP app. Both pages share React and the components. To work on it with `npm run dev`,
+start the "agentcad-setup-demo" entry of `.claude/launch.json` (a dry run on port 8790), set
+`AGENTCAD_VIEWER=http://localhost:8790` and open `/setup.html?t=<the token it printed>`.
+
 The build is committed with the Python package, so installing AgentCAD needs no Node: after changing anything
 here, run `npm run build` and commit `src/agentcad/viewer_static/app/` with the change. The viewer serves its
 `index.html` at `/` and the rest at `/app/assets/`.

@@ -3,7 +3,8 @@
 The double-click installers (installer/) start it, so people who never open a terminal get big buttons, a progress
 bar and plain sentences. It runs ``install.setup`` in a thread and the page polls its state.
 
-    GET  /                  the page (viewer_static/setup.html)
+    GET  /                  the page (viewer_static/app/setup.html, built from web/viewer: npm run build)
+    GET  /app/assets/<file> its script, styles and fonts
     GET  /api/info          workspace folder, apps (found on this computer or not), dry run
     GET  /api/generic       the mcpServers block for any other MCP app, which the page shows to copy
     POST /api/start         {"clients": [...]}: run setup for these apps
@@ -34,7 +35,7 @@ from .mcp_config import generic_config
 from .viewer import LOOPBACK, STATIC, UI_TYPES, _host_name, _server
 
 IDLE_EXIT = 3600.0  # nobody has asked anything for an hour: the page was closed, stop
-STATIC_FILES = {"/": ("setup.html", "text/html; charset=utf-8"), "/logo.svg": ("logo.svg", "image/svg+xml")}
+STATIC_FILES = {"/": ("app/setup.html", "text/html; charset=utf-8"), "/logo.svg": ("logo.svg", "image/svg+xml")}
 
 
 class Wizard:
@@ -188,9 +189,9 @@ def _handler(wiz: Wizard):
             if path in STATIC_FILES:
                 name, ctype = STATIC_FILES[path]
                 return self._send(200, (STATIC / name).read_bytes(), ctype)
-            if path.startswith("/ui/"):  # the UI kit, as the viewer serves it
-                name = path[4:]
-                f = STATIC / "ui" / name
+            if path.startswith("/app/assets/"):  # the page's build, as the viewer serves it
+                name = path[len("/app/assets/"):]
+                f = STATIC / "app" / "assets" / name
                 if re.fullmatch(r"[A-Za-z0-9._-]+", name) and f.suffix in UI_TYPES and f.is_file():
                     return self._send(200, f.read_bytes(), UI_TYPES[f.suffix])
             if path == "/api/info":
