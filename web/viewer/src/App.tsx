@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react"
 import {
   AlertTriangle, Bot, Box, Check, ChevronDown, ChevronRight, Clock, Columns2, Copy, Cylinder, FileCode2, FileImage, FolderOpen,
   Globe, Highlighter, Loader2, Monitor, Moon, PencilRuler, Plus, Search, Share2, ShieldCheck, Sun, Triangle, Upload,
@@ -280,6 +280,9 @@ export default function App() {
     const r = await post("/api/reveal", JSON.stringify({ path: p }), { "Content-Type": "application/json" })
     if (!r.ok) toast(t("cannotOpen", { m: r.error?.message || "" }))
   }
+  const revealRef = useRef(reveal)
+  revealRef.current = reveal
+  const revealAny = useCallback((p: string) => revealRef.current(p), [])  // stable, so the file rows stay memoized
   const copyPath = async () => {
     try { await navigator.clipboard.writeText(ws.root); toast(t("pathCopied")) } catch { toast(ws.root) }
   }
@@ -308,7 +311,8 @@ export default function App() {
   const latest = runs[runs.length - 1]
   const st = stateOf(latest)
   const kindOf = (p?: string) => (isPart(p) ? "part" : "drawing") as "part" | "drawing"
-  const lastChange = (p: string) => runs.reduce((ts, r) => (r.drawing === p ? Math.max(ts, r.last.ts) : ts), 0)
+  const lastTs = new Map<string, number>()
+  for (const r of runs) if (r.drawing) lastTs.set(r.drawing, Math.max(lastTs.get(r.drawing) || 0, r.last.ts))
   const shown = ws.drawings.filter((p) => (kind === "all" || kindOf(p) === kind) && base(p).toLowerCase().includes(query.trim().toLowerCase()))
   const feed = [...runs].reverse().slice(0, 60)
   const sessions = ws.sessions || []
@@ -410,34 +414,9 @@ export default function App() {
             <ul ref={filesGlide.ref} className="relative flex flex-col gap-0.5 px-2 pb-2">
               <span className="pointer-events-none absolute inset-x-2 top-0 rounded-lg bg-accent/70" style={filesGlide.style} />
               {shown.map((p) => {
-                const { icon: Icon, tone: tile } = formatOf(p), on = p === path, ts = lastChange(p), stamp = String(ws.stamps.get(p) || 0)
-                return (
-                  <li key={p} data-glide className="group relative">
-                    <HoverCard openDelay={500} closeDelay={80}>
-                      <HoverCardTrigger asChild>
-                        <button onClick={() => open(p)} title={p}
-                                className={cn("relative flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors", on && "bg-accent")}>
-                          <span className={cn("grid size-8 shrink-0 place-items-center rounded-lg", tile)}><Icon className="size-4" /></span>
-                          <span className="min-w-0 flex-1 pr-6">
-                            <span className={cn("block truncate text-sm", on && "font-medium")}>{base(p)}</span>
-                            <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                              {t(kindOf(p))}{ts ? ` · ${ago(ts, lang)}` : ""}
-                              {ping.has(p) && <span className="size-1.5 animate-pulse rounded-full bg-primary" />}
-                            </span>
-                          </span>
-                        </button>
-                      </HoverCardTrigger>
-                      <HoverCardContent side="right" align="start" className="w-64 p-2">
-                        <img alt="" src={"/api/thumb?" + new URLSearchParams({ path: p, s: stamp })} className={cn("aspect-[4/3] w-full rounded-md bg-white object-contain", !isPart(p) && "dark:invert-[.88] dark:hue-rotate-180")} />
-                        <div className="mt-2 truncate px-1 text-xs text-muted-foreground">{p}</div>
-                      </HoverCardContent>
-                    </HoverCard>
-                    <Tip label={t("showInFolder")}>
-                      <Button variant="ghost" size="icon-xs" aria-label={t("showInFolder")} onClick={() => reveal(p)}
-                              className="absolute top-1/2 right-2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"><FolderOpen /></Button>
-                    </Tip>
-                  </li>
-                )
+                const ts = lastTs.get(p)
+                return <FileRow key={p} p={p} on={p === path} pinged={ping.has(p)} stamp={String(ws.stamps.get(p) || 0)}
+                                note={t(kindOf(p)) + (ts ? ` · ${ago(ts, lang)}` : "")} t={t} onOpen={open} onReveal={revealAny} />
               })}
               {!shown.length && <li className="px-2 py-6 text-center text-sm text-muted-foreground">{ws.drawings.length ? t("filesNoMatch") : t("filesEmpty")}</li>}
               {ws.canAdd && !empty && (
@@ -651,6 +630,40 @@ export default function App() {
 }
 
 interface Rec { id: string; type: string; layer?: string; tag?: string; changes?: Record<string, unknown>; changed?: Record<string, unknown> }
+
+// One file in the list. Memoized: a workspace holds hundreds of files, and redrawing every row (each with its
+// hover card and tooltip) on each switch kept the page busy for half a second; now only the rows that change redraw.
+const FileRow = memo(function FileRow({ p, on, pinged, stamp, note, t, onOpen, onReveal }:
+    { p: string; on: boolean; pinged: boolean; stamp: string; note: string; t: (k: string) => string; onOpen(p: string): void; onReveal(p: string): void }) {
+  const { icon: Icon, tone: tile } = formatOf(p)
+  return (
+    <li data-glide className="group relative">
+      <HoverCard openDelay={500} closeDelay={80}>
+        <HoverCardTrigger asChild>
+          <button onClick={() => onOpen(p)} title={p}
+                  className={cn("relative flex w-full items-center gap-3 rounded-lg px-2 py-1.5 text-left transition-colors", on && "bg-accent")}>
+            <span className={cn("grid size-8 shrink-0 place-items-center rounded-lg", tile)}><Icon className="size-4" /></span>
+            <span className="min-w-0 flex-1 pr-6">
+              <span className={cn("block truncate text-sm", on && "font-medium")}>{base(p)}</span>
+              <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                {note}
+                {pinged && <span className="size-1.5 animate-pulse rounded-full bg-primary" />}
+              </span>
+            </span>
+          </button>
+        </HoverCardTrigger>
+        <HoverCardContent side="right" align="start" className="w-64 p-2">
+          <img alt="" src={"/api/thumb?" + new URLSearchParams({ path: p, s: stamp })} className={cn("aspect-[4/3] w-full rounded-md bg-white object-contain", !isPart(p) && "dark:invert-[.88] dark:hue-rotate-180")} />
+          <div className="mt-2 truncate px-1 text-xs text-muted-foreground">{p}</div>
+        </HoverCardContent>
+      </HoverCard>
+      <Tip label={t("showInFolder")}>
+        <Button variant="ghost" size="icon-xs" aria-label={t("showInFolder")} onClick={() => onReveal(p)}
+                className="absolute top-1/2 right-2 -translate-y-1/2 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"><FolderOpen /></Button>
+      </Tip>
+    </li>
+  )
+})
 
 function VersionRow({ on, seq, text, time, note, bad, disabled, title, onClick }:
   { on: boolean; seq: string; text: string; time?: string; note?: string; bad?: boolean; disabled?: boolean; title?: string; onClick(): void }) {
