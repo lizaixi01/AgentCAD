@@ -335,7 +335,9 @@ function Progressing({ t, label, friendlyError, lost, say, onRetry, onFinish }: 
   useEffect(() => {
     let alive = true
     const id = setInterval(async () => {
-      try { const r = await api("/api/state"); if (alive) setSt(r) } catch { clearInterval(id); lost() }
+      // stop once it has ended: the finished page stays even if the wizard then exits, and it may reach its idle exit
+      try { const r: Wizard = await api("/api/state"); if (r.phase === "done" || r.phase === "error") clearInterval(id); if (alive) setSt(r) }
+      catch { clearInterval(id); if (alive) lost() }
     }, 250)
     return () => { alive = false; clearInterval(id) }
   }, [lost])
