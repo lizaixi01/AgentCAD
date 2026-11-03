@@ -64,6 +64,7 @@ from . import progress
 from .errors import AgentCADError, input_error
 from .policy import STATE_DIR, Policy
 from .store import DrawingStore, read_dxf, sha256_file
+from .viewer_link import INFO_FILE, LOOPBACK, open_running, serves_root, viewer_url  # noqa: F401
 
 STATIC = Path(__file__).resolve().parent / "viewer_static"
 PART_SUFFIXES = (".fcstd", ".step", ".stp", ".stl", ".brep")
@@ -94,8 +95,6 @@ CACHE_DIR = "viewer-cache"  # <root>/.agentcad/viewer-cache: renders and version
 SETTLE = 1.0  # seconds a 3D file must stay unchanged before it counts as saved (the agent may still be writing it)
 MAX_PART_BYTES = 200 * 1024 * 1024  # larger 3D files are shown but not copied into the version history
 RETRY = 5.0  # seconds before trying again to record a version that could not be recorded
-INFO_FILE = "viewer.json"  # <root>/.agentcad/viewer.json: where a running viewer listens (see viewer_url)
-LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})
 COLORS = {"added": "#16a34a", "modified": "#ea580c", "other": "#b8bcc4"}
 EMPTY_SVG = ('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><rect width="1000" height="600" '
              'fill="#ffffff"/><text x="500" y="300" text-anchor="middle" font-family="sans-serif" font-size="24" '
@@ -1143,14 +1142,7 @@ def start_background(policy: Policy) -> Viewer | None:
 def open_or_serve(policy: Policy, port: int = 8770) -> tuple[dict[str, Any], int]:
     """The desktop icon: open the viewer of this root if one already runs, else start one (``port``, else the next
     free of the following nine, else any) and open it."""
-    import webbrowser
-    try:
-        url = json.loads((policy.state_dir() / INFO_FILE).read_text("utf-8"))["url"]
-    except (OSError, ValueError, KeyError, TypeError):
-        url = None
-    if isinstance(url, str) and serves_root(url, policy):
-        webbrowser.open(url)
-        print(json.dumps({"ok": True, "viewer": url, "root": str(policy.root), "reused": True}), flush=True)
+    if open_running(policy):
         return {"ok": True}, 0
     for p in [*range(port, port + 10), 0]:
         try:
@@ -1160,34 +1152,3 @@ def open_or_serve(policy: Policy, port: int = 8770) -> tuple[dict[str, Any], int
         v.serve(open_browser=True)
         return {"ok": True}, 0
     return {"ok": False, "error": {"code": "PORT_IN_USE", "category": "input", "message": "No free port"}}, 2
-
-
-def serves_root(url: str, policy: Policy) -> bool:
-    """True if ``url`` is a loopback viewer whose /api/ping answers with this policy's root."""
-    try:
-        u = urlparse(url)
-        if u.scheme != "http" or u.hostname not in LOOPBACK or not u.port:
-            return False  # an edited or foreign file must not make the runtime connect elsewhere
-        with socket.create_connection((u.hostname, u.port), timeout=0.2) as c:
-            c.settimeout(1.0)
-            host = f"[{u.hostname}]" if ":" in u.hostname else u.hostname
-            c.sendall(f"GET /api/ping HTTP/1.0\r\nHost: {host}:{u.port}\r\n\r\n".encode())
-            raw = b""
-            while chunk := c.recv(4096):
-                raw += chunk
-                if len(raw) > 65536:
-                    return False
-        body = json.loads(raw.split(b"\r\n\r\n", 1)[1])
-        # a viewer of another root left its file here, or another viewer answers on this port
-        return Path(body["root"]).resolve() == policy.root
-    except (OSError, ValueError, KeyError, TypeError, IndexError):
-        return False
-
-
-def viewer_url(policy: Policy, drawing: str) -> str | None:
-    """The page showing ``drawing`` if a viewer is serving this root (its port answers), else None."""
-    try:
-        url = json.loads((policy.state_dir() / INFO_FILE).read_text("utf-8"))["url"]
-    except (OSError, ValueError, KeyError, TypeError):
-        return None
-    return f"{url}#{drawing}" if isinstance(url, str) and serves_root(url, policy) else None

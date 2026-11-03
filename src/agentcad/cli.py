@@ -11,7 +11,6 @@ from typing import Any
 
 from .errors import AgentCADError
 from .policy import Policy
-from .service import Runtime
 
 REPO_URL = "https://github.com/lizaixi01/AgentCAD"
 EXIT = {"validation": 1, "input": 2, "spec": 2, "geometry": 2, "file": 3, "policy": 4, "internal": 5, "dependency": 6}
@@ -276,6 +275,10 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
             return {"ok": False, "error": exc.to_dict()}, EXIT.get(exc.category, 5)
         return {"ok": True}, 0
     if a.cmd == "viewer":
+        if a.open:
+            from .viewer_link import open_running
+            if open_running(policy):  # the desktop icon, AgentCAD already running: no need to load the viewer
+                return {"ok": True}, 0
         from .errors import AgentCADError
         from .viewer import Viewer, open_or_serve
         if a.open:
@@ -296,6 +299,7 @@ def run(argv: list[str] | None = None) -> tuple[dict[str, Any], int]:
             return mcp_config(policy, a.client, a.name, a.write), 0
         except AgentCADError as exc:
             return {"ok": False, "error": exc.to_dict()}, EXIT.get(exc.category, 5)
+    from .service import Runtime  # loads ezdxf: only the drawing commands need it
     rt = Runtime(policy)
     c = a.cmd
     if c == "create":
