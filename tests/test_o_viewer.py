@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import socket
 import threading
 import urllib.error
@@ -154,7 +155,15 @@ def test_listing_skips_state_and_tool_folders(rt, ws, blank, workspace):
 def test_http_endpoints(rt, ws, blank, viewer):
     line(rt, blank, [0, 0], [100, 0], tag="a")
     code, ctype, body = get(viewer, "/")
-    assert code == 200 and "text/html" in ctype and b"EventSource" in body
+    assert code == 200 and "text/html" in ctype and b'id="root"' in body and b"/friendly.js" in body
+    # the page is the build of web/viewer: its script (with the live feed) and styles are served from /app/assets/
+    assets = re.findall(rb'(?:src|href)="(/app/assets/[^"]+)"', body)
+    assert any(a.endswith(b".js") for a in assets) and any(a.endswith(b".css") for a in assets)
+    for a in assets:
+        code, ctype, data = get(viewer, a.decode())
+        assert code == 200 and data and ctype.startswith("text/javascript" if a.endswith(b".js") else "text/css")
+        if a.endswith(b".js"):
+            assert b"EventSource" in data and b"/api/events" in data
     code, r = get_json(viewer, "/api/drawings")
     assert code == 200 and r["drawings"] == [{"path": blank, "kind": "drawing"}]
     code, tl = get_json(viewer, "/api/timeline", path=blank)
@@ -432,6 +441,12 @@ def test_viewer_serves_the_ui_kit_and_nothing_else(tmp_path):
         for bad in ("../index.html", "..%2Fviewer.py", "%2e%2e/index.html", "nope.css", "NOTICE.exe"):
             try:
                 urllib.request.urlopen(v.url + "ui/" + bad)
+                raise AssertionError(bad + " was served")
+            except urllib.error.HTTPError as e:
+                assert e.code == 404, bad
+        for bad in ("../index.html", "..%2F..%2Fviewer.py", "%2e%2e/app/index.html", "nope.js", "index.html"):
+            try:
+                urllib.request.urlopen(v.url + "app/assets/" + bad)
                 raise AssertionError(bad + " was served")
             except urllib.error.HTTPError as e:
                 assert e.code == 404, bad
