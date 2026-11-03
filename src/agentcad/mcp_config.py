@@ -47,6 +47,8 @@ def mcp_config(policy: Policy, client: str = "claude", name: str = "agentcad", w
     if not policy.root.is_dir():
         raise input_error("ROOT_NOT_FOUND", f"workspace root {policy.root} is not a directory",
                           hint="Create it first, or pass --root")
+    if client not in ("claude", "codex"):  # generic: install.generic_mcp_config (the CLI calls it)
+        raise input_error("BAD_CLIENT", f"no config for client {client!r} here", hint="Use claude or codex")
     entry = server_entry(policy)
     if client == "codex":
         toml = codex_toml(name, entry)

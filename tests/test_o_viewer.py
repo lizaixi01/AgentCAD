@@ -177,11 +177,14 @@ def test_http_endpoints(rt, ws, blank, viewer):
     # the page is the build of web/viewer: its script (with the live feed) and styles are served from /app/assets/
     assets = re.findall(rb'(?:src|href)="(/app/assets/[^"]+)"', body)
     assert any(a.endswith(b".js") for a in assets) and any(a.endswith(b".css") for a in assets)
+    scripts = []
     for a in assets:
         code, ctype, data = get(viewer, a.decode())
         assert code == 200 and data and ctype.startswith("text/javascript" if a.endswith(b".js") else "text/css")
         if a.endswith(b".js"):
-            assert b"EventSource" in data and b"/api/events" in data
+            scripts.append(data)
+    # the page's own script; the others are shared with the setup page (React, the components)
+    assert any(b"EventSource" in d and b"/api/events" in d for d in scripts)
     code, r = get_json(viewer, "/api/drawings")
     assert code == 200 and r["drawings"] == [{"path": blank, "kind": "drawing"}]
     code, tl = get_json(viewer, "/api/timeline", path=blank)

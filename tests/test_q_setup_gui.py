@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import http.client
 import json
+import re
 import shutil
 import subprocess
 import sys
@@ -81,7 +82,17 @@ def _wait(w: Wizard) -> dict:
 
 def test_page_and_info(wizard, home):
     code, page = _call(wizard, "GET", "/")
-    assert code == 200 and b"AgentCAD" in page and b"/api/start" in page
+    assert code == 200 and b"AgentCAD" in page
+    # the page is the build of web/viewer (setup.html): its script, which starts the setup, comes from /app/assets/
+    assets = re.findall(rb'(?:src|href)="(/app/assets/[^"]+)"', page)
+    bodies = []
+    for a in assets:
+        code, body = _call(wizard, "GET", a.decode())
+        assert code == 200, a
+        bodies.append(body)
+    assert any(b"/api/start" in body for body in bodies)
+    for bad in ("../setup.html", "..%2F..%2Fsetup_gui.py", "%2e%2e/app/setup.html", "nope.js"):
+        assert _call(wizard, "GET", "/app/assets/" + bad)[0] == 404
     code, info = _call(wizard, "GET", "/api/info")
     assert code == 200
     assert info["workspace"] == str(home / "AgentCAD")
