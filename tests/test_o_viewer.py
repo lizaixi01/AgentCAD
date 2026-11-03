@@ -80,15 +80,22 @@ def test_timeline_maps_each_commit_to_a_stored_version(rt, ws, blank, workspace)
     assert not tl["modified_outside_runtime"]
 
 
-def test_timeline_pages_preserve_order_without_overlaps(rt, blank, viewer):
+def test_timeline_pages_preserve_order_even_with_legacy_duplicate_sequences(rt, blank, viewer):
     line(rt, blank, [0, 0], [100, 0])
     line(rt, blank, [0, 0], [0, 50])
-    code, recent = get_json(viewer, "/api/timeline", path=blank, limit=2)
-    assert code == 200 and [r["seq"] for r in recent["records"]] == [2, 3]
-    code, earlier = get_json(viewer, "/api/timeline", path=blank, limit=2, before_seq=recent["next_before_seq"])
-    assert code == 200 and [r["seq"] for r in earlier["records"]] == [1]
-    assert earlier["next_before_seq"] is None and earlier["current"] == recent["current"]
+    _, store = rt._drawing(blank)
+    with store.journal_path.open("a", encoding="utf-8") as stream:
+        stream.write(json.dumps({"seq": 3, "tool": "export_drawing", "ok": True, "label": "legacy duplicate"}) + "\n")
+    code, recent = get_json(viewer, "/api/timeline", path=blank, limit=1)
+    assert code == 200 and recent["records"][0]["label"] == "legacy duplicate"
+    code, earlier = get_json(viewer, "/api/timeline", path=blank, limit=3, cursor=recent["next_cursor"])
+    assert code == 200 and [r["seq"] for r in earlier["records"]] == [1, 2, 3]
+    assert earlier["next_cursor"] is None and earlier["current"] == recent["current"]
+    code, older_client = get_json(viewer, "/api/timeline", path=blank, limit=1, before_seq=recent["next_before_seq"])
+    assert code == 200 and [r["seq"] for r in older_client["records"]] == [2]
+    assert older_client["next_before_seq"] == 2
     assert get_json(viewer, "/api/timeline", path=blank, limit=0)[0] == 400
+    assert get_json(viewer, "/api/timeline", path=blank, limit=1, cursor=1)[0] == 400
 
 
 def test_old_versions_render_and_diff(rt, blank, workspace):
@@ -976,6 +983,30 @@ def test_thumbnails_have_their_own_freecad_lane(ws, cache, monkeypatch):
     w.thumb("p.stl", None)
     w.mesh("p.stl", None)
     assert lanes == [["thumb"], ["view"]]
+
+
+def test_writable_viewer_migrates_nested_part_history(ws, cache):
+    name = "parts/arm.step"
+    part = ws / name
+    part.parent.mkdir()
+    part.write_bytes(b"first version")
+    _settle(part)
+    viewer = Viewer(Policy(root=ws), port=0, cache_dir=cache)
+    try:
+        w = viewer.ws
+        assert w.policy.read_only and w.record
+        assert w.record_save(name)
+        state = w.store(name)
+        legacy = ws / ".agentcad" / "drawings" / "parts__arm.step"
+        legacy.parent.mkdir(parents=True)
+        state.dir.rename(legacy)
+        part.write_bytes(b"second version")
+        _settle(part)
+        assert w.record_save(name)
+        assert state.dir.is_dir() and len(w.timeline(name)["records"]) == 2
+        assert len((legacy / "journal.jsonl").read_text("utf-8").splitlines()) == 1
+    finally:
+        viewer.httpd.server_close()
 
 
 def test_a_part_changed_after_start_is_announced(ws, cache):

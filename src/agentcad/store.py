@@ -149,7 +149,8 @@ class DrawingStore:
         self._state = (policy.state_dir() / "drawings-v2" / self.relative.parent / STATE_DIR / self.relative.name
                        if self._legacy else legacy)
         self._set_dir(self._state)
-        if self._legacy and not self._state.exists() and self._legacy_owned() and not self._state.exists():
+        if (self._legacy and not self._state.exists() and self._legacy_head() is not None
+                and not self._state.exists()):
             self._set_dir(self._legacy)
 
     def _set_dir(self, directory: Path) -> None:
@@ -159,41 +160,88 @@ class DrawingStore:
         self.head_path = self.dir / "head.json"
         self.committed_path = self.dir / f"committed{self.ext}"
 
-    def _legacy_owned(self) -> bool:
-        """Adopt only clean state whose journal accounts for its contents."""
+    def _legacy_head(self) -> dict[str, Any] | None:
+        """Read clean legacy state whose journal accounts for its contents."""
         legacy = self._legacy
+        assert legacy is not None
         try:
             with (legacy / "journal.jsonl").open(encoding="utf-8") as stream:
                 records = [json.loads(line) for line in stream if line.strip()]
             head = json.loads((legacy / "head.json").read_text("utf-8"))
         except (FileNotFoundError, ValueError):
-            return False
-        shown = os.path.normcase(str(self.relative))
-        if not records or any(not isinstance(r, dict) or not isinstance(r.get("drawing"), str)
-                              or os.path.normcase(r["drawing"]) != shown for r in records):
-            return False
+            return None
+        if not records or any(not isinstance(r, dict) or not isinstance(r.get("drawing"), str) for r in records):
+            return None
+        shown = self.relative.as_posix()
+        for owner in {r["drawing"] for r in records}:
+            if os.path.normcase(owner) == os.path.normcase(shown):
+                continue
+            if owner.casefold() != shown.casefold():
+                return None
+            # POSIX normcase preserves spelling even on case-insensitive volumes.
+            # Match both paths so a distinct hard-linked drawing cannot claim the state.
+            try:
+                if not legacy.samefile(legacy.with_name(owner.replace("/", "__"))):
+                    return None
+                recorded = self.policy.root / owner
+                try:
+                    if not self.path.samefile(recorded):
+                        return None
+                except FileNotFoundError:
+                    # A deleted drawing has no inode to compare. Its legacy
+                    # directory can establish the alias on the drawing's volume.
+                    parent = self.path.parent
+                    if (self.path.exists() or recorded.exists() or not parent.samefile(recorded.parent)
+                            or legacy.stat().st_dev != parent.stat().st_dev):
+                        return None
+            except OSError:
+                return None
         if not isinstance(head, dict) or not isinstance(head.get("checkpoints"), list):
-            return False
+            return None
         hashes = {r.get("sha256") for r in records if r.get("ok") and r.get("sha256")}
         checkpoints = {r.get("checkpoint_before") for r in records if r.get("ok")}
-        return (not head.get("pending") and (not head.get("sha256") or head["sha256"] in hashes)
-                and all(isinstance(c, dict) and (c.get("id") in checkpoints or c.get("sha256") in hashes)
-                        for c in head["checkpoints"]))
+        if head.get("pending") or (head.get("sha256") and head["sha256"] not in hashes):
+            return None
+        for entry in head["checkpoints"]:
+            cid = entry.get("id") if isinstance(entry, dict) else None
+            if not isinstance(cid, str) or not cid.startswith("cp-") or not cid[3:].isdigit():
+                return None
+            if cid not in checkpoints and entry.get("sha256") not in hashes:
+                return None
+        return head
 
     @contextmanager
-    def lock(self):
+    def lock(self, *, migrate: bool = True):
         legacy = self._legacy
         if legacy and legacy.is_dir() and not self._state.exists():
             with drawing_lock(legacy):
-                if not self._state.exists() and self._legacy_owned():
-                    if self.policy.read_only:
+                head = None if self._state.exists() else self._legacy_head()
+                if head is not None:
+                    if not migrate:
                         self._set_dir(legacy)
                         yield
                         return
                     self._state.parent.mkdir(parents=True, exist_ok=True)
                     with tempfile.TemporaryDirectory(prefix=".migrate-", dir=self._state.parent) as tmp:
                         staged = Path(tmp) / "state"
-                        shutil.copytree(legacy, staged, ignore=shutil.ignore_patterns("write.lock"))
+                        cp_dir = staged / "checkpoints"
+                        cp_dir.mkdir(parents=True)
+                        for name in ("head.json", "journal.jsonl", f"committed{self.ext}"):
+                            if (legacy / name).is_file():
+                                shutil.copy2(legacy / name, staged / name)
+                        live = legacy / "live.json"
+                        if live.is_file() and self.path.is_file():
+                            try:
+                                base = json.loads(live.read_text("utf-8")).get("base_sha256")
+                                if base == sha256_file(self.path):
+                                    shutil.copy2(live, staged / live.name)
+                            except (OSError, ValueError, AttributeError):
+                                pass  # reload can establish the base if the old sidecar is unreadable
+                        for entry in head["checkpoints"]:
+                            name = f"{entry['id']}{self.ext}"
+                            source = legacy / "checkpoints" / name
+                            if source.is_file():
+                                shutil.copy2(source, cp_dir / name)
                         replace_file(staged, self._state)
                 with drawing_lock(self._state):
                     self._set_dir(self._state)
@@ -215,7 +263,7 @@ class DrawingStore:
         tmp.write_text(json.dumps(head, indent=1), "utf-8")
         replace_file(tmp, self.head_path)
 
-    def _journal_tail(self) -> Iterator[bytes]:
+    def _journal_tail(self, before: int | None = None) -> Iterator[tuple[int, bytes]]:
         """Read newline-delimited records newest first, including records spanning multiple blocks."""
         try:
             stream = self.journal_path.open("rb")
@@ -223,6 +271,14 @@ class DrawingStore:
             return
         with stream:
             position = stream.seek(0, os.SEEK_END)
+            if before is not None:
+                if not 0 < before <= position:
+                    raise input_error("BAD_PARAMETER", "Timeline cursor is outside the journal")
+                stream.seek(before - 1)
+                if stream.read(1) != b"\n":
+                    raise input_error("BAD_PARAMETER", "Timeline cursor does not point to a record boundary")
+                position = before
+            end = position
             parts = []
             while position:
                 size = min(position, 65536)
@@ -231,20 +287,31 @@ class DrawingStore:
                 lines = stream.read(size).split(b"\n")
                 parts.append(lines[-1])
                 if len(lines) > 1:
-                    yield b"".join(reversed(parts))
-                    yield from reversed(lines[1:-1])
+                    lines[-1] = b"".join(reversed(parts))
+                    for raw in reversed(lines[1:]):
+                        start = end - len(raw)
+                        yield start, raw
+                        end = start - 1
                     parts = [lines[0]]
-            yield b"".join(reversed(parts))
+            yield 0, b"".join(reversed(parts))
 
     def journal_newest(self) -> Iterator[dict[str, Any]]:
-        for raw in self._journal_tail():
+        for _, raw in self._journal_tail():
             if raw.strip():
                 yield json.loads(raw)
+
+    def journal_page(self, limit: int, before: int | None = None,
+                     before_seq: int | None = None) -> tuple[list[dict[str, Any]], int | None]:
+        parsed = ((offset, json.loads(raw)) for offset, raw in self._journal_tail(before) if raw.strip())
+        rows = (pair for pair in parsed if before_seq is None or pair[1]["seq"] < before_seq)
+        page = list(islice(rows, limit + 1))
+        records = [record for _, record in reversed(page[:limit])]
+        return records, page[limit - 1][0] if len(page) > limit else None
 
     def _last_journal_seq(self) -> int:
         """The record is appended before head.json is updated, so head's seq can lag behind it."""
         try:
-            for raw in self._journal_tail():
+            for _, raw in self._journal_tail():
                 if raw.strip():
                     try:
                         return int(json.loads(raw)["seq"])
@@ -304,9 +371,10 @@ class DrawingStore:
 
     def checkpoint_path(self, cid: str) -> Path:
         p = self.cp_dir / f"{cid}{self.ext}"
-        if not p.is_file():
+        available = [c["id"] for c in self.list_checkpoints()]
+        if cid not in available or not p.is_file():
             raise input_error("CHECKPOINT_NOT_FOUND", f"No checkpoint {cid!r}",
-                              hint=f"Available: {[c['id'] for c in self.list_checkpoints()]}")
+                              hint=f"Available: {available}")
         return p
 
     # --- load / commit --------------------------------------------------------------
@@ -471,6 +539,13 @@ class DrawingStore:
         self.policy.check_write()
         src = self.committed_path if cid == "committed" else self.checkpoint_path(cid)
         data = src.read_bytes()
+        head = self.head()
+        expected = head["sha256"] if cid == "committed" else next(
+            c.get("sha256") for c in head["checkpoints"] if c["id"] == cid
+        )
+        if expected != hashlib.sha256(data).hexdigest():
+            raise file_error("CHECKPOINT_CHANGED", f"Checkpoint {cid!r} no longer matches its recorded hash",
+                             hint="Use another checkpoint or recover")
 
         def checkpoint() -> str | None:
             if not self.path.is_file():
