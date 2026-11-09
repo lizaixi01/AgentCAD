@@ -132,11 +132,17 @@ def test_setup_installs_the_mechanical_drawing_skill_with_its_references(home):
     mine = install.skill_path("codex", "mechanical-drawing")
     mine.write_text("---\nname: mechanical-drawing\n---\nmy own\n", "utf-8")
     assert install.write_bundled_skills("codex") == [] and mine.read_text("utf-8").endswith("my own\n")  # left alone
-    dry = home / "dry"
-    os.environ["CODEX_HOME"] = str(dry)
+    dry, fresh = home / "dry", home / "fresh"
+    own = fresh / "skills" / "mechanical-drawing" / "SKILL.md"
+    own.parent.mkdir(parents=True)
+    own.write_text("---\nname: mechanical-drawing\n---\nmy own\n", "utf-8")
     try:
+        os.environ["CODEX_HOME"] = str(dry)
         assert install.write_bundled_skills("codex", dry_run=True)
         assert not dry.exists()
+        os.environ["CODEX_HOME"] = str(fresh)  # only the user's own skill there: nothing is added next to it
+        assert install.write_bundled_skills("codex") == []
+        assert [p.name for p in own.parent.iterdir()] == ["SKILL.md"]
     finally:
         del os.environ["CODEX_HOME"]
 

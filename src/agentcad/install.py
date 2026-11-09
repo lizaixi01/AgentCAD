@@ -636,8 +636,8 @@ def write_bundled_skills(client: str, dry_run: bool = False) -> list[str]:
             break
         if path.is_file() and SKILL_MARK not in path.read_text("utf-8", "replace"):
             continue
-        if not dry_run:
-            for f in sorted(src.rglob("*.md")):
+        if not dry_run:  # SKILL.md last: an interrupted copy never leaves it linking to missing references
+            for f in sorted(src.rglob("*.md"), key=lambda f: (f.name == "SKILL.md", str(f))):
                 _write(path.parent / f.relative_to(src), f.read_text("utf-8"))
         written.append(str(path))
     return written
@@ -754,7 +754,7 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
                 extra = write_bundled_skills(client, dry_run)
                 if extra:
                     rec["skills"] = extra
-            except OSError:  # the connection works without it
+            except (OSError, ValueError):  # the connection works without it (ValueError: an undecodable file)
                 pass
         res.clients.append(rec)
         tell(client, "error" if rec["status"] == "error" else "done", rec)
