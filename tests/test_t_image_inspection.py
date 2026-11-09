@@ -312,3 +312,11 @@ def test_mcp_returns_measurements_without_an_image(ws):
     result = asyncio.run(run())
     assert [block.type for block in result.content] == ["text"], result
     assert json.loads(result.content[0].text)["script"]["stdout"].split()[1:3] == ["20", "59"]
+
+
+def test_instructions_say_redraw_pictures_not_trace_them():
+    # An agent once vectorised a picture's pixels into 1,800 jagged segments with no dimension, hatch or block.
+    from agentcad.mcp_server import INSTRUCTIONS
+    text = " ".join(INSTRUCTIONS.split())
+    assert "redraw it, never trace its pixels" in text
+    assert "take sizes from the callouts" in text and "compare it with the source" in text
