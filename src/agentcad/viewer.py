@@ -398,7 +398,9 @@ class Workspace:
 
     def _extents(self, rel: str, sha: str):
         from ezdxf import bbox
+        from .plot import _cjk_styles
         _, doc = self._doc(rel, sha)
+        _cjk_styles(doc)  # measure text in the font _svg draws it with, so before/after frames match
         return bbox.extents(doc.modelspace(), fast=True)
 
     def _svg(self, rel: str, sha: str, before: str | None, hide: tuple[str, ...], frame: str | None = None) -> str:
