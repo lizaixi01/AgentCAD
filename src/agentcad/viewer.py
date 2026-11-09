@@ -407,7 +407,9 @@ class Workspace:
         from .drawing_frontend import DrawingFrontend
         from ezdxf.addons.drawing.config import BackgroundPolicy, Configuration
         from ezdxf.math import BoundingBox2d
+        from .plot import _cjk_styles
         _, doc = self._doc(rel, sha)
+        _cjk_styles(doc)  # as in the PDF/PNG plots: SHX styles with Chinese text get a CJK font, not boxes
         msp = doc.modelspace()
         changes = self._change_sets(rel, sha, before)
         added = {e["id"] for e in changes["added"]} if changes else set()

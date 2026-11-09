@@ -119,6 +119,20 @@ def test_old_versions_render_and_diff(rt, blank, workspace):
     assert layers["OUTLINE"] == 1 and layers["HIDDEN_L"] == 1
 
 
+def test_chinese_text_renders_as_glyphs_not_boxes(rt, workspace):
+    # SHX styles (gbenor/gbcbig) fell back to a font without Chinese: every character became the same box.
+    from ezdxf.fonts import fonts
+    from agentcad.plot import CJK_FONTS
+    if not any(fonts.font_manager.has_font(f) for f in CJK_FONTS):
+        pytest.skip("no CJK font installed")
+    svgs = []
+    for name, char in (("zh_a.dxf", "安"), ("zh_b.dxf", "板")):
+        ok(rt.apply_operations(name, [{"op": "add_text", "text": char, "insert": [0, 0], "height": 5}],
+                               create={"units": "mm"}))
+        svgs.append(workspace.svg(name, None))
+    assert svgs[0] != svgs[1]
+
+
 def test_unknown_version_and_outside_paths_are_refused(blank, workspace):
     from agentcad.errors import AgentCADError
     with pytest.raises(AgentCADError) as e:
