@@ -27,7 +27,7 @@
 - 配合：`add_linear_dim` 的 `text: "%%c<>H7/k6"`，`<>` 显示实际测量值，图画错了标注也会跟着变，能看出来。
 - 偏差：`"tolerance": {"lower": -0.023, "upper": 0.023}`。
 - 尺寸的 p1、p2 要落在几何上（端点、轮廓线上），否则检查会报 DIMENSION_NOT_ATTACHED。
-- 断开画法的轴：尺寸文字写实际长度（`text: "202"`），检查会报 DIMENSION_TEXT_MISMATCH，这是预期的，在报告里说明是断开画法即可。
+- 断开画法的轴：尺寸文字写实际长度（`text: "202"`）。检查会把它报成 DIMENSION_TEXT_MISMATCH 错误，验证不通过（`strict: true` 时不会保存，所以这一批不要用 strict）。在报告里说明这是断开画法造成的。
 
 ## 表格和文字
 
