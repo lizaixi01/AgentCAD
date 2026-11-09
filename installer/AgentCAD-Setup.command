@@ -16,7 +16,7 @@ if ! command -v uv >/dev/null 2>&1; then
   echo "   First time: downloading a small helper tool, about a minute..."
   curl -LsSf https://astral.sh/uv/install.sh | sh >/dev/null 2>&1
 fi
-if command -v uvx >/dev/null 2>&1 && uvx --refresh-package agentcad-runtime --from https://github.com/lizaixi01/AgentCAD/archive/refs/heads/main.zip agentcad setup --gui; then
+if command -v uvx >/dev/null 2>&1 && uvx --refresh-package agentcad-runtime --from https://github.com/lizaixi01/AgentCAD/releases/latest/download/agentcad.zip agentcad setup --gui; then
   exit 0
 fi
 echo

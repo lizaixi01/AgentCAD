@@ -192,7 +192,7 @@ def test_setup_progress_callback(home):
 def test_archive_install_keeps_its_source(monkeypatch):
     """Installed from GitHub's .zip (the double-click installers): the apps start AgentCAD from the same .zip, so
     they need no git."""
-    url = "https://github.com/lizaixi01/AgentCAD/archive/refs/heads/main.zip"
+    url = "https://github.com/lizaixi01/AgentCAD/releases/latest/download/agentcad.zip"
 
     class Dist:
         version = "0.1.0"

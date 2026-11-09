@@ -304,7 +304,7 @@ def test_uvx_launcher(home):
 def test_uvx_starts_offline_only_the_archive_setup_runs_from(home, monkeypatch):
     # the double-click installers run setup through uvx from a GitHub zip: apps then start that copy with --offline
     # (seconds, no check against GitHub), the copy the desktop icon refreshes once a day
-    zip_src = "https://github.com/lizaixi01/AgentCAD/archive/refs/heads/main.zip"
+    zip_src = "https://github.com/lizaixi01/AgentCAD/releases/latest/download/agentcad.zip"
     monkeypatch.setattr(install, "install_info", lambda: {"version": "0", "source": zip_src, "editable": False,
                                                           "ephemeral": True})
     e = install.setup(["codex"], launcher="uvx").entry

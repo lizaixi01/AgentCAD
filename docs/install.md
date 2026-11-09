@@ -30,8 +30,9 @@ English or Chinese.
    The icons open no terminal window. On Windows a small "Opening AgentCAD..." window shows until the page is open;
    once AgentCAD runs in the background, the AgentCAD icon just opens the page (about half a second, no window). On
    macOS the icons are apps (`AgentCAD.app`) and a notification says it is opening. An icon starts the copy of AgentCAD
-   already on the computer, in a few seconds, and fetches the latest version in the background at most once a day, so
-   the next double-click has it. No need to run the installer again for updates.
+   already on the computer, in a few seconds, and fetches the latest release in the background at most once a day, so
+   the next double-click has it. No need to run the installer again for updates. Releases, not every change to
+   `main`, reach installed copies: a release is made only from code whose tests have passed on `main`.
 
 Already installed, or something stopped working? Run the installer again and tap **Already installed? Check it**.
 Every part gets a green tick or a sentence saying what to do, and **Fix it for me** reconnects the apps that need
@@ -39,7 +40,8 @@ it.
 
 The first run downloads uv and Python (about a minute). On macOS and Linux the installer shows its progress as text
 in a Terminal window instead of a progress window. It does the same as `agentcad setup` below, so running it
-again is safe. Under the hood: the installer runs `uvx --from <GitHub zip> agentcad setup --gui`, which serves the page
+again is safe. Under the hood: the installer runs `uvx --from <the latest release's agentcad.zip, about 1 MB>
+agentcad setup --gui`, which serves the page
 on `127.0.0.1` only, behind a random token in its link.
 
 ## With a terminal
