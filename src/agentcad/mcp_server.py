@@ -49,10 +49,10 @@ Drawings
   run_script (only if enabled) covers edits no op can express.
 - Source pictures (a scanned or photographed drawing, a screenshot to turn into CAD): redraw it, never trace
   its pixels. Tracing (thinning, contour or vectorising scripts) gives jagged segments with no dimensions,
-  hatches, blocks or real text. Name the parts first (fits like %%c62K7 name the bearing; gears, keys, caps),
+  hatches, blocks or real text. Name the parts first (a fit like Ø62K7 names the bearing; gears, keys, caps),
   take sizes from the callouts (pictures are rarely to scale: pixels only place what has no callout), then draw
-  with ops: one add_hatch per cut part, add_linear_dim with the callout as text, library parts or define_block
-  for repeated components. inspect_image magnifies a region (rotate=90/180/270 makes text upright;
+  with ops: one add_hatch per cut part, add_linear_dim with text like "%%c<>K7" (<> is the drawn size, so a
+  wrong size shows), library parts or define_block for repeated components. inspect_image magnifies a region (rotate=90/180/270 makes text upright;
   dimensions=[] adds source-coordinate guides; code=... measures pixels with numpy if scripts are enabled).
   Last, export png and compare it with the source.
 
