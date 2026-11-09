@@ -182,6 +182,18 @@ def test_listing_skips_state_and_tool_folders(rt, ws, blank, workspace):
     assert workspace.list_drawings() == [blank]
 
 
+def test_file_list_is_newest_first(ws, workspace):
+    # the page lists files by when they last changed, not by name or folder
+    for name, when in (("a_old.dxf", 1_000_000), ("sub/b_new.step", 3_000_000), ("c_mid.stl", 2_000_000),
+                       ("d_mid.dxf", 2_000_000)):
+        f = ws / name
+        f.parent.mkdir(exist_ok=True)
+        f.write_text("0\nEOF\n")
+        os.utime(f, (when, when))
+    assert workspace.list_by_time() == [("sub/b_new.step", 3_000_000), ("c_mid.stl", 2_000_000),
+                                        ("d_mid.dxf", 2_000_000), ("a_old.dxf", 1_000_000)]
+
+
 # --- HTTP server ------------------------------------------------------------------------------------------------
 
 def test_http_endpoints(rt, ws, blank, viewer):
@@ -200,7 +212,8 @@ def test_http_endpoints(rt, ws, blank, viewer):
     # the page's own script; the others are shared with the setup page (React, the components)
     assert any(b"EventSource" in d and b"/api/events" in d for d in scripts)
     code, r = get_json(viewer, "/api/drawings")
-    assert code == 200 and r["drawings"] == [{"path": blank, "kind": "drawing"}]
+    assert code == 200 and [{k: d[k] for k in ("path", "kind")} for d in r["drawings"]] == [{"path": blank, "kind": "drawing"}]
+    assert r["drawings"][0]["modified"] == pytest.approx((ws / blank).stat().st_mtime, abs=0.01)
     code, tl = get_json(viewer, "/api/timeline", path=blank)
     assert code == 200 and tl["records"][-1]["ops"] == ["add_line"]
     first = tl["records"][0]["version"]

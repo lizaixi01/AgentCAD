@@ -313,7 +313,9 @@ export default function App() {
   const kindOf = (p?: string) => (isPart(p) ? "part" : "drawing") as "part" | "drawing"
   const lastTs = new Map<string, number>()
   for (const r of runs) if (r.drawing) lastTs.set(r.drawing, Math.max(lastTs.get(r.drawing) || 0, r.last.ts))
+  const touched = (p: string) => Math.max(lastTs.get(p) || 0, ws.modified.get(p) || 0)  // newest first
   const shown = ws.drawings.filter((p) => (kind === "all" || kindOf(p) === kind) && base(p).toLowerCase().includes(query.trim().toLowerCase()))
+    .sort((a, b) => touched(b) - touched(a))
   const feed = [...runs].reverse().slice(0, 60)
   const sessions = ws.sessions || []
   const appName = (s?: { client?: string }) => s?.client || t("someApp")
@@ -414,7 +416,7 @@ export default function App() {
             <ul ref={filesGlide.ref} className="relative flex flex-col gap-0.5 px-2 pb-2">
               <span className="pointer-events-none absolute inset-x-2 top-0 rounded-lg bg-accent/70" style={filesGlide.style} />
               {shown.map((p) => {
-                const ts = lastTs.get(p)
+                const ts = touched(p)
                 return <FileRow key={p} p={p} on={p === path} pinged={ping.has(p)} stamp={String(ws.stamps.get(p) || 0)}
                                 note={t(kindOf(p)) + (ts ? ` · ${ago(ts, lang)}` : "")} t={t} onOpen={open} onReveal={revealAny} />
               })}
