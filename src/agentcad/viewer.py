@@ -235,6 +235,17 @@ class Workspace:
                         return out
         return out
 
+    def list_by_time(self) -> list[tuple[str, float]]:
+        """The files with their last-modified time (seconds), most recently changed first (the page's file list)."""
+        root = self.policy.root
+        out = []
+        for rel in self.list_drawings():
+            try:
+                out.append((rel, round((root / rel).stat().st_mtime, 3)))
+            except OSError:  # removed since the listing
+                continue
+        return sorted(out, key=lambda x: (-x[1], x[0]))
+
     def store(self, rel: str) -> DrawingStore:
         p = self.policy.resolve(rel, must_exist=False, suffixes=SUFFIXES)
         if _is_part(rel):
@@ -870,8 +881,8 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                     return self._json({"ok": True, "root": str(ws.policy.root)})
                 if u.path == "/api/drawings":
                     return self._json({"ok": True, "root": str(ws.policy.root), "can_add": can_add(), "drawings": [
-                        {"path": r, "kind": "part" if _is_part(r) else "drawing"} for r in ws.list_drawings()],
-                        "last_event": feed.last_id})
+                        {"path": r, "kind": "part" if _is_part(r) else "drawing", "modified": m}
+                        for r, m in ws.list_by_time()], "last_event": feed.last_id})
                 if u.path == "/api/events":
                     return self._events(int(self.headers.get("Last-Event-ID") or q.get("since") or feed.last_id),
                                         q.get("progress") == "1")
