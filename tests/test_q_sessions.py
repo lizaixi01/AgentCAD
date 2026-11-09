@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import urllib.request
 from pathlib import Path
@@ -115,6 +116,29 @@ def home(tmp_path, monkeypatch):
     monkeypatch.delenv("CODEX_HOME", raising=False)
     assert Path.home() == h
     return h
+
+
+def test_setup_installs_the_mechanical_drawing_skill_with_its_references(home):
+    for c in ("claude-code", "codex"):
+        p = install.skill_path(c, "mechanical-drawing")
+        assert str(p) in install.write_bundled_skills(c)
+        assert p.read_text("utf-8").startswith("---\nname: mechanical-drawing\n")
+        refs = p.parent / "references"
+        assert (refs / "gears.md").is_file() and "轮齿按不剖处理" in (refs / "gears.md").read_text("utf-8")
+        # every link in SKILL.md points to a file that was installed
+        for link in re.findall(r"\]\((references/[^)]+)\)", p.read_text("utf-8")):
+            assert (p.parent / link).is_file(), link
+    assert install.write_bundled_skills("cursor") == []
+    mine = install.skill_path("codex", "mechanical-drawing")
+    mine.write_text("---\nname: mechanical-drawing\n---\nmy own\n", "utf-8")
+    assert install.write_bundled_skills("codex") == [] and mine.read_text("utf-8").endswith("my own\n")  # left alone
+    dry = home / "dry"
+    os.environ["CODEX_HOME"] = str(dry)
+    try:
+        assert install.write_bundled_skills("codex", dry_run=True)
+        assert not dry.exists()
+    finally:
+        del os.environ["CODEX_HOME"]
 
 
 def test_setup_installs_the_agentcad_skill(home):
