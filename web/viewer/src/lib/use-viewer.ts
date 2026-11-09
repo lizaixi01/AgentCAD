@@ -4,7 +4,8 @@ import { useCallback, useEffect, useReducer, useRef, useState } from "react"
 import { api, type ProgressEvent, type Run, type Session } from "@/lib/agentcad"
 
 export interface Workspace {
-  drawings: string[]
+  drawings: string[]    // most recently changed first (the server's order)
+  modified: Map<string, number>  // last-modified time of each file, seconds
   root: string
   canAdd: boolean
   sessions: Session[] | null
@@ -20,6 +21,7 @@ export function useWorkspace(handlers: { onActivity(ev: ProgressEvent, run: Run)
   const runs = useRef(new Map<string, Run>())
   const [, bump] = useReducer((n: number) => n + 1, 0)
   const [files, setFiles] = useState<{ drawings: string[]; root: string; canAdd: boolean }>({ drawings: [], root: "", canAdd: false })
+  const modified = useRef(new Map<string, number>())
   const [sessions, setSessions] = useState<Session[] | null>(null)
   const [live, setLive] = useState(false)
   const stamps = useRef(new Map<string, number>())
@@ -38,7 +40,8 @@ export function useWorkspace(handlers: { onActivity(ev: ProgressEvent, run: Run)
   }
 
   const loadList = useCallback(async () => {
-    const r = await api<{ drawings: { path: string }[]; root: string; can_add: boolean }>("/api/drawings")
+    const r = await api<{ drawings: { path: string; modified?: number }[]; root: string; can_add: boolean }>("/api/drawings")
+    modified.current = new Map(r.drawings.map((d) => [d.path, d.modified || 0]))
     setFiles({ drawings: r.drawings.map((d) => d.path), root: r.root, canAdd: !!r.can_add })
     return r.drawings.map((d) => d.path)
   }, [])
@@ -66,6 +69,7 @@ export function useWorkspace(handlers: { onActivity(ev: ProgressEvent, run: Run)
         }
         if (ev.history) { h.current.onChange(ev); return }
         stamps.current.set(ev.drawing, (stamps.current.get(ev.drawing) || 0) + 1)
+        if (ev.kind === "changed") modified.current.set(ev.drawing, Date.now() / 1000)  // moves it to the top
         if (ev.kind !== "changed") loadList()
         bump()
         h.current.onChange(ev)
@@ -77,6 +81,6 @@ export function useWorkspace(handlers: { onActivity(ev: ProgressEvent, run: Run)
     return () => { stop = true; es?.close(); clearInterval(s); clearInterval(tick) }
   }, [loadList, loadSessions])
 
-  const ws: Workspace = { ...files, sessions, live, runs: [...runs.current.values()], stamps: stamps.current }
+  const ws: Workspace = { ...files, modified: modified.current, sessions, live, runs: [...runs.current.values()], stamps: stamps.current }
   return { ws, loadList }
 }

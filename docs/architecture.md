@@ -8,7 +8,7 @@
    ▼
 service.Runtime          ← 唯一业务层：信封、指标、锁、journal、调用下层
    ├─ engine             ← 批量事务执行（预校验 → 内存执行 → 失败整体丢弃）；spec 修订的就地协调
-   │    └─ ops/*         ← 41 个类型化操作（同一定义生成参数校验 + JSON Schema）
+   │    └─ ops/*         ← 类型化操作（同一定义生成参数校验 + JSON Schema；清单见 operations.md，由注册表生成）
    ├─ validate/*         ← 独立验证器：只读磁盘文件
    ├─ constraints        ← 约束检查 / 顺序直接强制
    ├─ spec / docspec     ← 规格 → 操作计划 + 需求；文档 → 带溯源的规格

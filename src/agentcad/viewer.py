@@ -235,6 +235,17 @@ class Workspace:
                         return out
         return out
 
+    def list_by_time(self) -> list[tuple[str, float]]:
+        """The files with their last-modified time (seconds), most recently changed first (the page's file list)."""
+        root = self.policy.root
+        out = []
+        for rel in self.list_drawings():
+            try:
+                out.append((rel, round((root / rel).stat().st_mtime, 3)))
+            except OSError:  # removed since the listing
+                continue
+        return sorted(out, key=lambda x: (-x[1], x[0]))
+
     def store(self, rel: str) -> DrawingStore:
         p = self.policy.resolve(rel, must_exist=False, suffixes=SUFFIXES)
         if _is_part(rel):
@@ -398,7 +409,9 @@ class Workspace:
 
     def _extents(self, rel: str, sha: str):
         from ezdxf import bbox
+        from .plot import _cjk_styles
         _, doc = self._doc(rel, sha)
+        _cjk_styles(doc)  # measure text in the font _svg draws it with, so before/after frames match
         return bbox.extents(doc.modelspace(), fast=True)
 
     def _svg(self, rel: str, sha: str, before: str | None, hide: tuple[str, ...], frame: str | None = None) -> str:
@@ -407,7 +420,9 @@ class Workspace:
         from .drawing_frontend import DrawingFrontend
         from ezdxf.addons.drawing.config import BackgroundPolicy, Configuration
         from ezdxf.math import BoundingBox2d
+        from .plot import _cjk_styles
         _, doc = self._doc(rel, sha)
+        _cjk_styles(doc)  # as in the PDF/PNG plots: SHX styles with Chinese text get a CJK font, not boxes
         msp = doc.modelspace()
         changes = self._change_sets(rel, sha, before)
         added = {e["id"] for e in changes["added"]} if changes else set()
@@ -866,8 +881,8 @@ def make_handler(ws: Workspace, feed: ChangeFeed, allowed_hosts: frozenset[str] 
                     return self._json({"ok": True, "root": str(ws.policy.root)})
                 if u.path == "/api/drawings":
                     return self._json({"ok": True, "root": str(ws.policy.root), "can_add": can_add(), "drawings": [
-                        {"path": r, "kind": "part" if _is_part(r) else "drawing"} for r in ws.list_drawings()],
-                        "last_event": feed.last_id})
+                        {"path": r, "kind": "part" if _is_part(r) else "drawing", "modified": m}
+                        for r, m in ws.list_by_time()], "last_event": feed.last_id})
                 if u.path == "/api/events":
                     return self._events(int(self.headers.get("Last-Event-ID") or q.get("since") or feed.last_id),
                                         q.get("progress") == "1")

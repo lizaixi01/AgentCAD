@@ -613,13 +613,34 @@ description: Check that AgentCAD (CAD drawings) is connected, name this conversa
 """
 
 
-def skill_path(client: str) -> Path | None:
+SKILLS_DIR = Path(__file__).parent / "skills"  # knowledge skills shipped with AgentCAD, e.g. mechanical-drawing
+
+
+def skill_path(client: str, name: str = NAME) -> Path | None:
     home = Path.home()
     if client == "claude-code":
-        return home / ".claude" / "skills" / NAME / "SKILL.md"
+        return home / ".claude" / "skills" / name / "SKILL.md"
     if client == "codex":
-        return Path(os.environ.get("CODEX_HOME") or home / ".codex") / "skills" / NAME / "SKILL.md"
+        return Path(os.environ.get("CODEX_HOME") or home / ".codex") / "skills" / name / "SKILL.md"
     return None
+
+
+def write_bundled_skills(client: str, dry_run: bool = False) -> list[str]:
+    """Install the skills in agentcad/skills (a SKILL.md and its reference files) next to the agentcad skill. A
+    skill whose SKILL.md the user wrote (no setup mark) is left alone."""
+    written: list[str] = []
+    sources = sorted(p for p in SKILLS_DIR.iterdir() if (p / "SKILL.md").is_file()) if SKILLS_DIR.is_dir() else []
+    for src in sources:
+        path = skill_path(client, src.name)
+        if path is None:
+            break
+        if path.is_file() and SKILL_MARK not in path.read_text("utf-8", "replace"):
+            continue
+        if not dry_run:  # SKILL.md last: an interrupted copy never leaves it linking to missing references
+            for f in sorted(src.rglob("*.md"), key=lambda f: (f.name == "SKILL.md", str(f))):
+                _write(path.parent / f.relative_to(src), f.read_text("utf-8"))
+        written.append(str(path))
+    return written
 
 
 def write_skill(client: str, dry_run: bool = False) -> str | None:
@@ -730,7 +751,10 @@ def setup(clients: list[str], root: str | os.PathLike | None = None, *, launcher
                 skill = write_skill(client, dry_run)
                 if skill:
                     rec["skill"] = skill
-            except OSError:  # the connection works without it
+                extra = write_bundled_skills(client, dry_run)
+                if extra:
+                    rec["skills"] = extra
+            except (OSError, ValueError):  # the connection works without it (ValueError: an undecodable file)
                 pass
         res.clients.append(rec)
         tell(client, "error" if rec["status"] == "error" else "done", rec)
