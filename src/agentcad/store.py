@@ -263,8 +263,8 @@ class DrawingStore:
         tmp.write_text(json.dumps(head, indent=1), "utf-8")
         replace_file(tmp, self.head_path)
 
-    def _journal_tail(self, before: int | None = None) -> Iterator[tuple[int, bytes]]:
-        """Read newline-delimited records newest first, including records spanning multiple blocks."""
+    def _journal_tail(self, before: int | None = None, *, complete_only: bool = False) -> Iterator[tuple[int, bytes]]:
+        """Read newline-delimited records newest first, including across multiple blocks."""
         try:
             stream = self.journal_path.open("rb")
         except FileNotFoundError:
@@ -278,13 +278,19 @@ class DrawingStore:
                 if stream.read(1) != b"\n":
                     raise input_error("BAD_PARAMETER", "Timeline cursor does not point to a record boundary")
                 position = before
-            end = position
+            end = None if complete_only else position
             parts = []
             while position:
                 size = min(position, 65536)
                 position -= size
                 stream.seek(position)
                 lines = stream.read(size).split(b"\n")
+                if end is None:
+                    # The bytes after the last newline may belong to an append still in progress.
+                    if len(lines) == 1:
+                        continue
+                    suffix = lines.pop()
+                    end = position + size - len(suffix) - 1
                 parts.append(lines[-1])
                 if len(lines) > 1:
                     lines[-1] = b"".join(reversed(parts))
@@ -293,16 +299,19 @@ class DrawingStore:
                         yield start, raw
                         end = start - 1
                     parts = [lines[0]]
-            yield 0, b"".join(reversed(parts))
+            if end is not None:
+                yield 0, b"".join(reversed(parts))
 
-    def journal_newest(self) -> Iterator[dict[str, Any]]:
-        for _, raw in self._journal_tail():
+    def journal_newest(self, *, complete_only: bool = False) -> Iterator[dict[str, Any]]:
+        """Parse newest records first. Concurrent readers can skip the unfinished append at EOF."""
+        for _, raw in self._journal_tail(complete_only=complete_only):
             if raw.strip():
                 yield json.loads(raw)
 
     def journal_page(self, limit: int, before: int | None = None,
                      before_seq: int | None = None) -> tuple[list[dict[str, Any]], int | None]:
-        parsed = ((offset, json.loads(raw)) for offset, raw in self._journal_tail(before) if raw.strip())
+        parsed = ((offset, json.loads(raw)) for offset, raw in self._journal_tail(before, complete_only=True)
+                  if raw.strip())
         rows = (pair for pair in parsed if before_seq is None or pair[1]["seq"] < before_seq)
         page = list(islice(rows, limit + 1))
         records = [record for _, record in reversed(page[:limit])]

@@ -98,6 +98,38 @@ def test_timeline_pages_preserve_order_even_with_legacy_duplicate_sequences(rt, 
     assert get_json(viewer, "/api/timeline", path=blank, limit=1, cursor=1)[0] == 400
 
 
+@pytest.mark.parametrize("label", ["pending", "x" * 70000 + "图"], ids=["partial-json", "partial-utf8"])
+def test_viewer_ignores_journal_tail_until_newline(rt, blank, workspace, label):
+    first = workspace.timeline(blank)["current"]
+    line(rt, blank, [0, 0], [100, 0])
+    store = workspace.store(blank)
+    encoded_label = label.encode("utf-8")
+    # Pause the append mid-record, including mid-code-point beyond one reverse-read block.
+    with store.journal_path.open("ab") as stream:
+        stream.write(b'{"seq":3,"tool":"export_drawing","ok":true,"label":"' + encoded_label[:-1])
+
+    recent = workspace.timeline(blank, limit=1)
+    assert [r["seq"] for r in recent["records"]] == [2]
+    assert [r["seq"] for r in workspace.timeline(blank, limit=1, cursor=recent["next_cursor"])["records"]] == [1]
+    assert [r["seq"] for r in workspace.timeline(blank)["records"]] == [1, 2]
+    assert workspace.diff(blank, None)["before"] == first
+
+    with store.journal_path.open("ab") as stream:
+        stream.write(encoded_label[-1:] + b'"}\n')
+    records = workspace.timeline(blank, limit=3)["records"]
+    assert [r["seq"] for r in records] == [1, 2, 3]
+    assert records[-1]["label"] == label
+
+
+def test_viewer_surfaces_malformed_completed_journal_records(blank, workspace):
+    with workspace.store(blank).journal_path.open("ab") as stream:
+        stream.write(b'{"seq":2,"label":"unfinished\n')
+    with pytest.raises(json.JSONDecodeError):
+        workspace.timeline(blank)
+    with pytest.raises(json.JSONDecodeError):
+        workspace.timeline(blank, limit=1)
+
+
 def test_old_versions_render_and_diff(rt, blank, workspace):
     line(rt, blank, [0, 0], [100, 0], tag="a")
     v1 = workspace.timeline(blank)["current"]
@@ -721,6 +753,26 @@ def _settle(path: Path) -> None:
     """Make a just-written file look as if its writer finished a while ago (SETTLE)."""
     t = path.stat().st_mtime - 5
     os.utime(path, (t, t))
+
+
+def test_record_save_does_not_append_to_an_unfinished_journal_record(ws, cache):
+    workspace = Workspace(Policy(root=ws), cache)
+    workspace.record = True
+    part = ws / "arm.step"
+    part.write_bytes(b"ISO-10303-21; first")
+    _settle(part)
+    assert workspace.record_save(part.name, announce=False)
+    store = workspace.store(part.name)
+    with store.journal_path.open("ab") as stream:
+        stream.write(b'{"seq":2,"label":"unfinished')
+    interrupted = store.journal_path.read_bytes()
+
+    part.write_bytes(b"ISO-10303-21; second")
+    _settle(part)
+    with pytest.raises(json.JSONDecodeError):
+        workspace.record_save(part.name, announce=False)
+    assert store.journal_path.read_bytes() == interrupted
+    assert len(store.list_checkpoints()) == 1
 
 
 def test_saved_3d_files_become_versions(ws, cache):
