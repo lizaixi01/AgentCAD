@@ -263,8 +263,8 @@ class DrawingStore:
         tmp.write_text(json.dumps(head, indent=1), "utf-8")
         replace_file(tmp, self.head_path)
 
-    def _journal_tail(self, before: int | None = None) -> Iterator[tuple[int, bytes]]:
-        """Read complete newline-terminated records newest first, including across multiple blocks."""
+    def _journal_tail(self, before: int | None = None, *, complete_only: bool = False) -> Iterator[tuple[int, bytes]]:
+        """Read newline-delimited records newest first, including across multiple blocks."""
         try:
             stream = self.journal_path.open("rb")
         except FileNotFoundError:
@@ -278,7 +278,7 @@ class DrawingStore:
                 if stream.read(1) != b"\n":
                     raise input_error("BAD_PARAMETER", "Timeline cursor does not point to a record boundary")
                 position = before
-            end = None
+            end = None if complete_only else position
             parts = []
             while position:
                 size = min(position, 65536)
@@ -302,14 +302,16 @@ class DrawingStore:
             if end is not None:
                 yield 0, b"".join(reversed(parts))
 
-    def journal_newest(self) -> Iterator[dict[str, Any]]:
-        for _, raw in self._journal_tail():
+    def journal_newest(self, *, complete_only: bool = False) -> Iterator[dict[str, Any]]:
+        """Parse newest records first. Concurrent readers can skip the unfinished append at EOF."""
+        for _, raw in self._journal_tail(complete_only=complete_only):
             if raw.strip():
                 yield json.loads(raw)
 
     def journal_page(self, limit: int, before: int | None = None,
                      before_seq: int | None = None) -> tuple[list[dict[str, Any]], int | None]:
-        parsed = ((offset, json.loads(raw)) for offset, raw in self._journal_tail(before) if raw.strip())
+        parsed = ((offset, json.loads(raw)) for offset, raw in self._journal_tail(before, complete_only=True)
+                  if raw.strip())
         rows = (pair for pair in parsed if before_seq is None or pair[1]["seq"] < before_seq)
         page = list(islice(rows, limit + 1))
         records = [record for _, record in reversed(page[:limit])]
@@ -347,9 +349,8 @@ class DrawingStore:
         if limit is not None and limit > 0:
             return list(reversed(list(islice(self.journal_newest(), min(limit, sys.maxsize)))))
         try:
-            with self.journal_path.open("rb") as stream:
-                # Check the delimiter before decoding; an unfinished append may end mid-code-point.
-                recs = [json.loads(line.decode("utf-8")) for line in stream if line.endswith(b"\n") and line.strip()]
+            with self.journal_path.open(encoding="utf-8") as stream:
+                recs = [json.loads(line) for line in stream if line.strip()]
         except FileNotFoundError:
             return []
         return recs[-limit:] if limit else recs

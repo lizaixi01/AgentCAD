@@ -295,7 +295,8 @@ class Workspace:
         cps = {c["id"]: c.get("sha256") for c in st.list_checkpoints()}
         page = {}
         if limit is None:
-            journal = st.read_journal()
+            journal = list(st.journal_newest(complete_only=True))
+            journal.reverse()
         else:
             journal, page["next_cursor"] = st.journal_page(limit, cursor, before_seq)
             page["next_before_seq"] = journal[0]["seq"] if page["next_cursor"] is not None else None
@@ -463,7 +464,7 @@ class Workspace:
         """The version the last commit that produced ``sha`` started from (None for a creation)."""
         st = self.store(rel)
         cps = {c["id"]: c.get("sha256") for c in st.list_checkpoints()}
-        for r in st.journal_newest():
+        for r in st.journal_newest(complete_only=True):
             if r.get("ok") and r.get("sha256") == sha:
                 return cps.get(r.get("checkpoint_before")) if r.get("checkpoint_before") else None
         return None

@@ -755,6 +755,26 @@ def _settle(path: Path) -> None:
     os.utime(path, (t, t))
 
 
+def test_record_save_does_not_append_to_an_unfinished_journal_record(ws, cache):
+    workspace = Workspace(Policy(root=ws), cache)
+    workspace.record = True
+    part = ws / "arm.step"
+    part.write_bytes(b"ISO-10303-21; first")
+    _settle(part)
+    assert workspace.record_save(part.name, announce=False)
+    store = workspace.store(part.name)
+    with store.journal_path.open("ab") as stream:
+        stream.write(b'{"seq":2,"label":"unfinished')
+    interrupted = store.journal_path.read_bytes()
+
+    part.write_bytes(b"ISO-10303-21; second")
+    _settle(part)
+    with pytest.raises(json.JSONDecodeError):
+        workspace.record_save(part.name, announce=False)
+    assert store.journal_path.read_bytes() == interrupted
+    assert len(store.list_checkpoints()) == 1
+
+
 def test_saved_3d_files_become_versions(ws, cache):
     """An agent saves its own CadQuery/FreeCAD result over the same file; each settled save is one version, listed
     in the timeline with the version before it, and reported as a 'save' activity."""
