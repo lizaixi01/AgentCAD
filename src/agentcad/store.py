@@ -264,7 +264,7 @@ class DrawingStore:
         replace_file(tmp, self.head_path)
 
     def _journal_tail(self, before: int | None = None) -> Iterator[tuple[int, bytes]]:
-        """Read newline-delimited records newest first, including records spanning multiple blocks."""
+        """Read complete newline-terminated records newest first, including across multiple blocks."""
         try:
             stream = self.journal_path.open("rb")
         except FileNotFoundError:
@@ -278,13 +278,19 @@ class DrawingStore:
                 if stream.read(1) != b"\n":
                     raise input_error("BAD_PARAMETER", "Timeline cursor does not point to a record boundary")
                 position = before
-            end = position
+            end = None
             parts = []
             while position:
                 size = min(position, 65536)
                 position -= size
                 stream.seek(position)
                 lines = stream.read(size).split(b"\n")
+                if end is None:
+                    # The bytes after the last newline may belong to an append still in progress.
+                    if len(lines) == 1:
+                        continue
+                    suffix = lines.pop()
+                    end = position + size - len(suffix) - 1
                 parts.append(lines[-1])
                 if len(lines) > 1:
                     lines[-1] = b"".join(reversed(parts))
@@ -293,7 +299,8 @@ class DrawingStore:
                         yield start, raw
                         end = start - 1
                     parts = [lines[0]]
-            yield 0, b"".join(reversed(parts))
+            if end is not None:
+                yield 0, b"".join(reversed(parts))
 
     def journal_newest(self) -> Iterator[dict[str, Any]]:
         for _, raw in self._journal_tail():
@@ -340,8 +347,9 @@ class DrawingStore:
         if limit is not None and limit > 0:
             return list(reversed(list(islice(self.journal_newest(), min(limit, sys.maxsize)))))
         try:
-            with self.journal_path.open(encoding="utf-8") as stream:
-                recs = [json.loads(line) for line in stream if line.strip()]
+            with self.journal_path.open("rb") as stream:
+                # Check the delimiter before decoding; an unfinished append may end mid-code-point.
+                recs = [json.loads(line.decode("utf-8")) for line in stream if line.endswith(b"\n") and line.strip()]
         except FileNotFoundError:
             return []
         return recs[-limit:] if limit else recs
