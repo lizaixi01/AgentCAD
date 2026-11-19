@@ -118,3 +118,13 @@ def test_windows_installer_shows_why_it_failed():
     fails = re.findall(r"^\s*(?:else \{ )?Fail \(L .*$", text, re.M)
     assert len(fails) == 2 and all(re.search(r"""\) "\$out\.(uv|err)"(?: \})?$""", f) for f in fails)
     assert '> "\' + $out + \'.uv" 2>&1' in text and "Clipboard]::SetText" in text
+
+
+def test_windows_installer_retries_through_mirrors_in_china():
+    # GitHub and PyPI often do not answer in China: one retry through Aliyun's PyPI mirror and npmmirror's Python
+    text = (ROOT / "installer" / "AgentCAD-Setup.cmd").read_text("utf-8")
+    assert "$env:UV_INDEX_URL = $pypiMirror" in text and "$env:UV_PYTHON_INSTALL_MIRROR = $pythonMirror" in text
+    assert "https://mirrors.aliyun.com/pypi/simple/" in text
+    assert "https://registry.npmmirror.com/-/binary/python-build-standalone" in text
+    assert text.count("UseMirror;") == 2 and "if (-not (Test-Path -LiteralPath $cfg))" in text  # never overwrite
+    assert "Get-FileHash $whl -Algorithm SHA256" in text  # uv from the mirror is checked against the index's hash

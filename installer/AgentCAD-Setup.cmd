@@ -90,6 +90,51 @@ function Run($line) {
   [Diagnostics.Process]::Start($si)
 }
 
+# Where GitHub and PyPI do not answer (often in China), the second try takes Python packages from Aliyun's PyPI
+# mirror and Python itself from npmmirror. AgentCAD's own package (about 1 MB) still comes from GitHub.
+$pypiMirror = 'https://mirrors.aliyun.com/pypi/simple/'
+$pythonMirror = 'https://registry.npmmirror.com/-/binary/python-build-standalone'
+$script:mirror = $false
+function UseMirror {
+  $script:mirror = $true
+  $env:UV_INDEX_URL = $pypiMirror; $env:UV_PYTHON_INSTALL_MIRROR = $pythonMirror
+  # AgentCAD downloads again later (its daily update, or when uv's cache was cleaned): uv's own settings file keeps
+  # the mirrors for that. Only where there is none yet, so nobody's own uv settings get overwritten.
+  $cfg = Join-Path $env:APPDATA 'uv\uv.toml'
+  if (-not (Test-Path -LiteralPath $cfg)) {
+    New-Item -ItemType Directory -Force (Split-Path $cfg) | Out-Null
+    Set-Content -LiteralPath $cfg -Encoding ASCII -Value @(
+      '# Written by the AgentCAD installer: downloads from GitHub / PyPI failed on this computer, so uv uses mirrors.',
+      "index-url = `"$pypiMirror`"", "python-install-mirror = `"$pythonMirror`"")
+  }
+}
+$retrying = (L '国外的下载服务器没有响应，正在改用国内下载源再试一次…' 'The download server did not answer. Trying a mirror in China…')
+
+# uv from Aliyun's PyPI mirror (uv is published there as a wheel), checked against the sha256 the index gives
+$uvFromMirror = @'
+[Console]::OutputEncoding = [Text.Encoding]::UTF8; $ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$index = 'https://mirrors.aliyun.com/pypi/simple/uv/'
+$arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'amd64' }
+$best = [regex]::Matches((Invoke-WebRequest -UseBasicParsing $index).Content,
+  'href="([^"#]*/uv-(\d+\.\d+\.\d+)-py3-none-win_' + $arch + '\.whl)#sha256=([0-9a-f]{64})"') |
+  Sort-Object { [version]$_.Groups[2].Value } | Select-Object -Last 1
+if (-not $best) { throw "no uv for win_$arch at $index" }
+$url = (New-Object Uri ([Uri]$index), $best.Groups[1].Value).AbsoluteUri
+$whl = Join-Path $env:TEMP 'agentcad-uv.whl'
+Invoke-WebRequest -UseBasicParsing $url -OutFile $whl
+if ((Get-FileHash $whl -Algorithm SHA256).Hash -ne $best.Groups[3].Value) { throw "checksum does not match: $url" }
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$dir = Join-Path $env:USERPROFILE '.local\bin'; New-Item -ItemType Directory -Force $dir | Out-Null
+$zip = [IO.Compression.ZipFile]::OpenRead($whl)
+try {
+  foreach ($e in $zip.Entries) {
+    if ($e.FullName -match '\.data/scripts/uv[xw]?\.exe$') { [IO.Compression.ZipFileExtensions]::ExtractToFile($e, (Join-Path $dir $e.Name), $true) }
+  }
+} finally { $zip.Dispose(); Remove-Item $whl }
+"uv $($best.Groups[2].Value) from $url"
+'@
+
 function StartAgentCAD {
   $script:phase = 'agentcad'
   SetStep (L '第 2 步，共 2 步：下载 AgentCAD（第一次大约 1 分钟）' 'Step 2 of 2: downloading AgentCAD (about a minute the first time)') 400 950
@@ -112,7 +157,12 @@ $timer.Add_Tick({
   $pct.Text = "{0}%" -f [int]($bar.Value / 10)
   if ($script:phase -eq 'uv' -and $script:proc.HasExited) {
     if (Get-Command uvx -ErrorAction SilentlyContinue) { StartAgentCAD }
-    else { Fail (L '没能下载需要的小工具。请检查网络连接，然后再双击一次安装程序。' 'Could not download the helper tool. Check your internet connection and double-click the installer again.') "$out.uv" }
+    elseif (-not $script:mirror) {
+      UseMirror; $bar.Value = 150; SetStep $retrying 150 380
+      $code = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($uvFromMirror))
+      $script:proc = Run ('powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand ' + $code + ' > "' + $out + '.uv2" 2>&1')
+    }
+    else { Fail (L '没能下载需要的小工具。请检查网络连接，然后再双击一次安装程序。' 'Could not download the helper tool. Check your internet connection and double-click the installer again.') "$out.uv2" }
   } elseif ($script:phase -eq 'agentcad') {
     $text = if (Test-Path $out) { Get-Content -LiteralPath $out -Raw -ErrorAction SilentlyContinue } else { '' }
     if ($text -match '"setup":\s*"([^"]+)"') {
@@ -122,6 +172,8 @@ $timer.Add_Tick({
       $step.Text = (L '安装页面已经在浏览器里打开了。装好后这个窗口会自己关掉。' 'The setup page is open in your browser. This window closes by itself when you finish.')
       $btn.Text = (L '重新打开安装页面' 'Open the page again'); $btn.Visible = $true
       $btn.Add_Click({ Start-Process $script:url })
+    } elseif ($script:proc.HasExited -and -not $script:mirror) {
+      UseMirror; StartAgentCAD; $bar.Value = 500; SetStep $retrying 500 950
     } elseif ($script:proc.HasExited) {
       Fail (L '没能下载 AgentCAD。请检查网络连接，然后再双击一次安装程序。' 'Could not download AgentCAD. Check your internet connection and double-click the installer again.') "$out.err"
     }
