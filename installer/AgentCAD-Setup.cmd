@@ -54,10 +54,29 @@ $form.Controls.AddRange(@($title, $step, $bar, $pct, $btn))
 
 $script:goal = 0; $script:ceil = 0; $script:url = $null; $script:proc = $null; $script:phase = 'uv'
 function SetStep($text, $from, $to) { $step.Text = $text; $script:goal = $from; $script:ceil = $to }
-function Fail($text) {
+function Fail($text, $log) {
   $script:phase = 'failed'; $title.Text = (L '没能完成安装' 'Setup could not finish')
   $title.ForeColor = [Drawing.Color]::FromArgb(198, 40, 40); $step.Text = $text
   $btn.Text = (L '关闭' 'Close'); $btn.Visible = $true; $btn.Add_Click({ $form.Close() })
+  # what went wrong, from the tool's own output: shown here and one click to copy, so it can be sent to whoever helps
+  $lines = @(if ($log -and (Test-Path $log)) { Get-Content -LiteralPath $log -Encoding UTF8 -ErrorAction SilentlyContinue |
+    Where-Object { $_.Trim() } | Select-Object -Last 40 })
+  if ($lines.Count -eq 0) { return }
+  $script:detail = ($lines -join "`r`n") + "`r`n`r`n" + $log
+  $pct.Visible = $false
+  $box = New-Object Windows.Forms.TextBox
+  $box.Multiline = $true; $box.ReadOnly = $true; $box.ScrollBars = 'Vertical'; $box.BackColor = [Drawing.Color]::White
+  $box.Font = New-Object Drawing.Font('Consolas', 9)
+  $box.Location = New-Object Drawing.Point(34, 176); $box.Size = New-Object Drawing.Size(492, 100)
+  $box.Text = (($lines | Select-Object -Last 6) -join "`r`n")
+  $form.ClientSize = New-Object Drawing.Size(560, 356)
+  $btn.Location = New-Object Drawing.Point(326, 292)
+  $copy = New-Object Windows.Forms.Button
+  $copy.Font = New-Object Drawing.Font($font, 12)
+  $copy.Location = New-Object Drawing.Point(34, 292); $copy.Size = New-Object Drawing.Size(240, 46)
+  $copy.Text = (L '复制出错信息' 'Copy error details')
+  $copy.Add_Click({ [Windows.Forms.Clipboard]::SetText($script:detail); $this.Text = (L '已复制，可以粘贴发给别人' 'Copied') })
+  $form.Controls.AddRange(@($box, $copy))
 }
 
 $uvDir = Join-Path $env:USERPROFILE '.local\bin'
@@ -71,6 +90,57 @@ function Run($line) {
   [Diagnostics.Process]::Start($si)
 }
 
+# Where GitHub and PyPI do not answer (often in China), the second try takes Python packages from Aliyun's PyPI
+# mirror and Python itself from npmmirror. AgentCAD's own package (about 1 MB) still comes from GitHub.
+$pypiMirror = 'https://mirrors.aliyun.com/pypi/simple/'
+$pythonMirror = 'https://registry.npmmirror.com/-/binary/python-build-standalone'
+$script:mirror = $false
+function UseMirror {
+  $script:mirror = $true
+  $env:UV_INDEX_URL = $pypiMirror; $env:UV_PYTHON_INSTALL_MIRROR = $pythonMirror
+}
+function KeepMirror {
+  # the mirrors worked where the normal download did not. AgentCAD downloads again later (its daily update, or when
+  # uv's cache was cleaned): uv's own settings file keeps the mirrors for that. Only where there is none yet, so
+  # nobody's own uv settings get overwritten.
+  $cfg = Join-Path $env:APPDATA 'uv\uv.toml'
+  if (-not (Test-Path -LiteralPath $cfg)) {
+    New-Item -ItemType Directory -Force (Split-Path $cfg) | Out-Null
+    Set-Content -LiteralPath $cfg -Encoding ASCII -Value @(
+      '# Written by the AgentCAD installer: downloads from GitHub / PyPI failed on this computer, so uv uses mirrors.',
+      "index-url = `"$pypiMirror`"", "python-install-mirror = `"$pythonMirror`"")
+  }
+}
+$retrying = (L '国外的下载服务器没有响应，正在改用国内下载源再试一次…' 'The download server did not answer. Trying a mirror in China…')
+
+# uv from Aliyun's PyPI mirror (uv is published there as a wheel), checked against the sha256 the index gives
+$uvFromMirror = @'
+[Console]::OutputEncoding = [Text.Encoding]::UTF8; $ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'
+# errors as plain text: with -EncodedCommand and stderr redirected, PowerShell would write them as CLIXML
+try {
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+$index = 'https://mirrors.aliyun.com/pypi/simple/uv/'
+$arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'amd64' }
+$best = [regex]::Matches((Invoke-WebRequest -UseBasicParsing $index).Content,
+  'href="([^"#]*/uv-(\d+\.\d+\.\d+)-py3-none-win_' + $arch + '\.whl)#sha256=([0-9a-f]{64})"') |
+  Sort-Object { [version]$_.Groups[2].Value } | Select-Object -Last 1
+if (-not $best) { throw "no uv for win_$arch at $index" }
+$url = (New-Object Uri ([Uri]$index), $best.Groups[1].Value).AbsoluteUri
+$whl = Join-Path $env:TEMP 'agentcad-uv.whl'
+Invoke-WebRequest -UseBasicParsing $url -OutFile $whl
+if ((Get-FileHash $whl -Algorithm SHA256).Hash -ne $best.Groups[3].Value) { throw "checksum does not match: $url" }
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$dir = Join-Path $env:USERPROFILE '.local\bin'; New-Item -ItemType Directory -Force $dir | Out-Null
+$zip = [IO.Compression.ZipFile]::OpenRead($whl)
+try {
+  foreach ($e in $zip.Entries) {
+    if ($e.FullName -match '\.data/scripts/uv[xw]?\.exe$') { [IO.Compression.ZipFileExtensions]::ExtractToFile($e, (Join-Path $dir $e.Name), $true) }
+  }
+} finally { $zip.Dispose(); Remove-Item $whl }
+"uv $($best.Groups[2].Value) from $url"
+} catch { [Console]::Out.WriteLine(($_ | Out-String)); exit 1 }
+'@
+
 function StartAgentCAD {
   $script:phase = 'agentcad'
   SetStep (L '第 2 步，共 2 步：下载 AgentCAD（第一次大约 1 分钟）' 'Step 2 of 2: downloading AgentCAD (about a minute the first time)') 400 950
@@ -81,7 +151,7 @@ if (Get-Command uvx -ErrorAction SilentlyContinue) {
   StartAgentCAD
 } else {
   SetStep (L '第 1 步，共 2 步：下载需要的小工具（大约 1 分钟）' 'Step 1 of 2: downloading a small helper tool (about a minute)') 0 380
-  $script:proc = Run 'powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "irm https://astral.sh/uv/install.ps1 | iex"' 
+  $script:proc = Run ('powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "[Console]::OutputEncoding = [Text.Encoding]::UTF8; irm https://astral.sh/uv/install.ps1 | iex" > "' + $out + '.uv" 2>&1')
 }
 
 $timer = New-Object Windows.Forms.Timer
@@ -93,18 +163,26 @@ $timer.Add_Tick({
   $pct.Text = "{0}%" -f [int]($bar.Value / 10)
   if ($script:phase -eq 'uv' -and $script:proc.HasExited) {
     if (Get-Command uvx -ErrorAction SilentlyContinue) { StartAgentCAD }
-    else { Fail (L '没能下载需要的小工具。请检查网络连接，然后再双击一次安装程序。' 'Could not download the helper tool. Check your internet connection and double-click the installer again.') }
+    elseif (-not $script:mirror) {
+      UseMirror; $bar.Value = 150; SetStep $retrying 150 380
+      $code = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($uvFromMirror))
+      $script:proc = Run ('powershell.exe -NoProfile -ExecutionPolicy Bypass -EncodedCommand ' + $code + ' > "' + $out + '.uv2" 2>&1')
+    }
+    else { Fail (L '没能下载需要的小工具。请检查网络连接，然后再双击一次安装程序。' 'Could not download the helper tool. Check your internet connection and double-click the installer again.') "$out.uv2" }
   } elseif ($script:phase -eq 'agentcad') {
     $text = if (Test-Path $out) { Get-Content -LiteralPath $out -Raw -ErrorAction SilentlyContinue } else { '' }
     if ($text -match '"setup":\s*"([^"]+)"') {
       $script:url = $Matches[1]; $script:phase = 'open'
+      if ($script:mirror) { KeepMirror }
       $script:goal = 1000; $script:ceil = 1000; $bar.Value = 1000; $pct.Text = '100%'
       $title.Text = (L '请在浏览器里继续' 'Continue in your browser')
       $step.Text = (L '安装页面已经在浏览器里打开了。装好后这个窗口会自己关掉。' 'The setup page is open in your browser. This window closes by itself when you finish.')
       $btn.Text = (L '重新打开安装页面' 'Open the page again'); $btn.Visible = $true
       $btn.Add_Click({ Start-Process $script:url })
+    } elseif ($script:proc.HasExited -and -not $script:mirror) {
+      UseMirror; StartAgentCAD; $bar.Value = 500; SetStep $retrying 500 950
     } elseif ($script:proc.HasExited) {
-      Fail (L '没能下载 AgentCAD。请检查网络连接，然后再双击一次安装程序。' 'Could not download AgentCAD. Check your internet connection and double-click the installer again.')
+      Fail (L '没能下载 AgentCAD。请检查网络连接，然后再双击一次安装程序。' 'Could not download AgentCAD. Check your internet connection and double-click the installer again.') "$out.err"
     }
   } elseif ($script:phase -eq 'open' -and $script:proc.HasExited) {
     $form.Close()
