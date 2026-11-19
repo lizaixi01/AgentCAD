@@ -98,8 +98,11 @@ $script:mirror = $false
 function UseMirror {
   $script:mirror = $true
   $env:UV_INDEX_URL = $pypiMirror; $env:UV_PYTHON_INSTALL_MIRROR = $pythonMirror
-  # AgentCAD downloads again later (its daily update, or when uv's cache was cleaned): uv's own settings file keeps
-  # the mirrors for that. Only where there is none yet, so nobody's own uv settings get overwritten.
+}
+function KeepMirror {
+  # the mirrors worked where the normal download did not. AgentCAD downloads again later (its daily update, or when
+  # uv's cache was cleaned): uv's own settings file keeps the mirrors for that. Only where there is none yet, so
+  # nobody's own uv settings get overwritten.
   $cfg = Join-Path $env:APPDATA 'uv\uv.toml'
   if (-not (Test-Path -LiteralPath $cfg)) {
     New-Item -ItemType Directory -Force (Split-Path $cfg) | Out-Null
@@ -113,6 +116,8 @@ $retrying = (L '国外的下载服务器没有响应，正在改用国内下载�
 # uv from Aliyun's PyPI mirror (uv is published there as a wheel), checked against the sha256 the index gives
 $uvFromMirror = @'
 [Console]::OutputEncoding = [Text.Encoding]::UTF8; $ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue'
+# errors as plain text: with -EncodedCommand and stderr redirected, PowerShell would write them as CLIXML
+try {
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $index = 'https://mirrors.aliyun.com/pypi/simple/uv/'
 $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'amd64' }
@@ -133,6 +138,7 @@ try {
   }
 } finally { $zip.Dispose(); Remove-Item $whl }
 "uv $($best.Groups[2].Value) from $url"
+} catch { [Console]::Out.WriteLine(($_ | Out-String)); exit 1 }
 '@
 
 function StartAgentCAD {
@@ -167,6 +173,7 @@ $timer.Add_Tick({
     $text = if (Test-Path $out) { Get-Content -LiteralPath $out -Raw -ErrorAction SilentlyContinue } else { '' }
     if ($text -match '"setup":\s*"([^"]+)"') {
       $script:url = $Matches[1]; $script:phase = 'open'
+      if ($script:mirror) { KeepMirror }
       $script:goal = 1000; $script:ceil = 1000; $bar.Value = 1000; $pct.Text = '100%'
       $title.Text = (L '请在浏览器里继续' 'Continue in your browser')
       $step.Text = (L '安装页面已经在浏览器里打开了。装好后这个窗口会自己关掉。' 'The setup page is open in your browser. This window closes by itself when you finish.')
