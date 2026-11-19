@@ -116,7 +116,7 @@ def test_windows_installer_shows_why_it_failed():
     # "check your network" alone left a stuck user nothing to send: every failure shows its tool's own output
     text = (ROOT / "installer" / "AgentCAD-Setup.cmd").read_text("utf-8")
     fails = re.findall(r"^\s*(?:else \{ )?Fail \(L .*$", text, re.M)
-    assert len(fails) == 2 and all(re.search(r"""\) "\$out\.(uv|err)"(?: \})?$""", f) for f in fails)
+    assert len(fails) == 2 and all(re.search(r"""\) "\$out\.(uv2|err)"(?: \})?$""", f) for f in fails)
     assert '> "\' + $out + \'.uv" 2>&1' in text and "Clipboard]::SetText" in text
 
 
