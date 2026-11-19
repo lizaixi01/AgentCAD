@@ -100,7 +100,7 @@ if (Get-Command uvx -ErrorAction SilentlyContinue) {
   StartAgentCAD
 } else {
   SetStep (L '第 1 步，共 2 步：下载需要的小工具（大约 1 分钟）' 'Step 1 of 2: downloading a small helper tool (about a minute)') 0 380
-  $script:proc = Run ('powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "irm https://astral.sh/uv/install.ps1 | iex" > "' + $out + '.uv" 2>&1')
+  $script:proc = Run ('powershell.exe -NoProfile -ExecutionPolicy Bypass -Command "[Console]::OutputEncoding = [Text.Encoding]::UTF8; irm https://astral.sh/uv/install.ps1 | iex" > "' + $out + '.uv" 2>&1')
 }
 
 $timer = New-Object Windows.Forms.Timer
